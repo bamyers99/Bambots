@@ -15,9 +15,14 @@
    limitations under the License.
 */
 
-    $libdir = dirname(__FILE__);
+$libdir = dirname(__FILE__);
 
-    require $libdir . DIRECTORY_SEPARATOR . 'SplClassLoader.php';
+require $libdir . DIRECTORY_SEPARATOR . 'SplClassLoader.php';
 
-    $classLoader = new SplClassLoader(null, $libdir);
-    $classLoader.register();
+$classLoader = new SplClassLoader(null, $libdir);
+$classLoader->register();
+
+use com_brucemyers\Util\Config;
+
+$topdir = dirname(dirname($libdir));
+Config::init($topdir . DIRECTORY_SEPARATOR . 'bot.properties');

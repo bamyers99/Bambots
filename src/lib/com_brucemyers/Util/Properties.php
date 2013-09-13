@@ -22,11 +22,35 @@ namespace com_brucemyers\Util;
  */
 class Properties
 {
+    protected $props = array();
+
     /**
      * Constructor
+     *
+     * @param $filepath string Properties file path
      */
-    public function __construct($propfile)
+    public function __construct($filepath)
     {
+        $data = file_get_contents($filepath);
+        $data = preg_split('/\r?\n/', $data);
 
+        foreach ($data as $line) {
+            if (! empty($line) && $line[0] != '#' && strpos($line, '=') !== false) {
+                list($key, $value) = explode('=', $line, 2);
+                $this->props[$key] = $value;
+            }
+        }
+    }
+
+    /**
+     * Get property
+     *
+     * @param $name string Property name
+     * @return string Property value
+     */
+    public function get($name)
+    {
+        if (isset($this->props[$name])) return $this->props[$name];
+        return '';
     }
 }

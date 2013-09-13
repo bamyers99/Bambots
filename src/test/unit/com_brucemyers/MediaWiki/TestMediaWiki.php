@@ -15,15 +15,19 @@
  limitations under the License.
  */
 
-$testdir = dirname(__FILE__);
+use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\Util\Config;
 
-require $testdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
+class TestMediaWiki extends UnitTestCase
+{
+    public function testLogin()
+    {
+        $url = Config::get(MediaWiki::WIKIURLKEY);
+        $wiki = new MediaWiki($url);
 
-if ($argc == 1) {
-    // Run all tests
-    require $testdir . DIRECTORY_SEPARATOR . 'AllTests.php';
-} else {
-    // Run one test
-    $testcase = str_replace('\\', DIRECTORY_SEPARATOR, $argv[1]) . '.php';
-    require $testdir . DIRECTORY_SEPARATOR . 'unit' . DIRECTORY_SEPARATOR . $testcase;
+        $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+        $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+        $wiki->login($username, $password);
+        $this->pass();
+    }
 }

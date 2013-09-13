@@ -15,12 +15,17 @@
    limitations under the License.
 */
 
-    $testdir = dirname(__FILE__);
-    $libdir = dirname($testdir) . DIRECTORY_SEPARATOR . 'lib';
+$testdir = dirname(__FILE__);
+$libdir = dirname($testdir) . DIRECTORY_SEPARATOR . 'lib';
 
-    require $libdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
+require $libdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
-    $classLoader = new SplClassLoader(null, $testdir);
-    $classLoader.register();
+$classLoader = new SplClassLoader(null, $testdir);
+$classLoader->register();
 
-    require_once $testdir . DIRECTORY_SEPARATOR . 'simpletest' . DIRECTORY_SEPARATOR . 'autorun.php' ;
+require_once $testdir . DIRECTORY_SEPARATOR . 'simpletest' . DIRECTORY_SEPARATOR . 'autorun.php' ;
+
+use com_brucemyers\Util\Config;
+
+$topdir = dirname(dirname($testdir));
+Config::init($topdir . DIRECTORY_SEPARATOR . 'testbot.properties');

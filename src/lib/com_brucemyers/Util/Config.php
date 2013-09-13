@@ -20,8 +20,10 @@ namespace com_brucemyers\Util;
 /**
  * Configuration
  */
-class Config extends Properties
+class Config
 {
+    private static $properties;
+
     /**
      * Private constructor
      */
@@ -29,13 +31,24 @@ class Config extends Properties
     {
     }
 
-    public static function init()
+    /**
+     * Initialize config
+     *
+     * @param $filepath string Config file path
+     */
+    public static function init($filepath)
     {
-
+        self::$properties = new Properties($filepath);
     }
 
-    public static function getProp($name)
+    /**
+     * Get config property
+     *
+     * @param $name string Property name
+     * @return string Property value
+     */
+    public static function get($name)
     {
-
+        return self::$properties->get($name);
     }
 }
