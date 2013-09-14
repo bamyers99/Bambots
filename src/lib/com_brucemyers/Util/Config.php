@@ -22,12 +22,14 @@ namespace com_brucemyers\Util;
  */
 class Config
 {
-    private static $properties;
+    const BASEDIR = 'sys.basedir';
+
+    protected static $properties;
 
     /**
      * Private constructor
      */
-    private function __construct()
+    protected function __construct()
     {
     }
 
@@ -44,11 +46,22 @@ class Config
     /**
      * Get config property
      *
-     * @param $name string Property name
+     * @param $key string Property name
      * @return string Property value
      */
-    public static function get($name)
+    public static function get($key)
     {
-        return self::$properties->get($name);
+        return self::$properties->get($key);
+    }
+
+    /**
+     * Set config property
+     *
+     * @param $key string Property name
+     * @param $value string Property value
+     */
+    public static function set($key, $value)
+    {
+        self::$properties->set($key, $value);
     }
 }

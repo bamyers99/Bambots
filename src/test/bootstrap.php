@@ -20,7 +20,7 @@ $libdir = dirname($testdir) . DIRECTORY_SEPARATOR . 'lib';
 
 require $libdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
-$classLoader = new SplClassLoader(null, $testdir);
+$classLoader = new SplClassLoader(null, $testdir . DIRECTORY_SEPARATOR . 'lib');
 $classLoader->register();
 
 require_once $testdir . DIRECTORY_SEPARATOR . 'simpletest' . DIRECTORY_SEPARATOR . 'autorun.php' ;
@@ -29,3 +29,4 @@ use com_brucemyers\Util\Config;
 
 $topdir = dirname(dirname($testdir));
 Config::init($topdir . DIRECTORY_SEPARATOR . 'testbot.properties');
+Config::set(Config::BASEDIR, $topdir);

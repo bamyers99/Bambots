@@ -18,15 +18,16 @@
 namespace com_brucemyers\MediaWiki;
 
 use ChrisG\wikipedia;
+use com_brucemyers\Util\FileCache;
 
 /**
  * Wrapper for ChrisG's bot classes.
  */
 class MediaWiki extends wikipedia
 {
-    const WIKIURLKEY = 'wikiurl';
-    const WIKIUSERNAMEKEY = 'wikiusername';
-    const WIKIPASSWORDKEY = 'wikipassword';
+    const WIKIURLKEY = 'wiki.url';
+    const WIKIUSERNAMEKEY = 'wiki.username';
+    const WIKIPASSWORDKEY = 'wiki.password';
 
     /**
      * Constructor
@@ -45,15 +46,15 @@ class MediaWiki extends wikipedia
      * @param $username String username
      * @param $password String password
      */
-    public function login ($username, $password)
+    public function login($username, $password)
     {
     	$post = array('lgname' => $username, 'lgpassword' => $password);
-        $ret = $this->query('?action=login&format=php',$post);
+        $ret = $this->query('?action=login&format=php', $post);
 
         /* This is now required - see https://bugzilla.wikimedia.org/show_bug.cgi?id=23076 */
         if ($ret['login']['result'] == 'NeedToken') {
         	$post['lgtoken'] = $ret['login']['token'];
-        	$ret = $this->query( '?action=login&format=php', $post );
+        	$ret = $this->query('?action=login&format=php', $post);
         }
 
         if ($ret['login']['result'] != 'Success') {
@@ -79,6 +80,7 @@ class MediaWiki extends wikipedia
 
 		if ($this->http->http_code() != "200") {
 			if ($repeat < 10) {
+			    sleep($repeat * 10);
 				return $this->query($query, $post, ++$repeat);
 			} else {
 				throw new Exception('HTTP Error ' . $this->http->http_code());
@@ -96,16 +98,70 @@ class MediaWiki extends wikipedia
      */
     public function getPages($pagenames)
     {
+        if (empty($pagenames)) return array();
         $pages = array();
         $pagenames = implode('|', $pagenames);
         $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvlimit=1&rvprop=content');
 
+        $normalized = array();
+
+        if (isset($ret['query']['normalized'])) {
+            foreach ($ret['query']['normalized'] as $normal) {
+                $normalized[$normal['to']] = $normal['from'];
+            }
+        }
+
         foreach ($ret['query']['pages'] as $page) {
-            if (isset($ret['revisions'][0]['*'])) {
-                $pages[$ret['title']] = $ret['revisions'][0]['*'];
+            if (isset($page['revisions'][0]['*'])) {
+                $pagename = $page['title'];
+                if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
+                $pages[$pagename] = $page['revisions'][0]['*'];
             }
         }
 
         return $pages;
+    }
+
+    /**
+     * Get a page with caching
+     *
+     * @param $pagename string Page name
+     * @return string Page text
+     */
+    public function getPageWithCache($pagename)
+    {
+        $pages = $this->getPagesWithCache((array)$pagename);
+        $page = reset($pages);
+        if (! empty($page)) return $page;
+        return '';
+    }
+
+    /**
+     * Get multiple pages with caching
+     *
+     * @param $pagenames array Page names
+     * @return array Page text, pagename=>text
+     */
+    public function getPagesWithCache($pagenames)
+    {
+        $cached = array();
+
+        // Check the cache
+        foreach ($pagenames as $pagename) {
+            $page = FileCache::getData($pagename);
+            if ($page !== false) $cached[$pagename] = $page;
+        }
+
+        $cachednames = array_keys($cached);
+        $uncachednames = array_diff($pagenames, $cachednames);
+
+        $uncached = $this->getPages($uncachednames);
+
+        // Save uncached
+        foreach ($uncached as $pagename => $page) {
+            FileCache::putData($pagename, $page);
+        }
+
+        return $cached + $uncached;
     }
 }

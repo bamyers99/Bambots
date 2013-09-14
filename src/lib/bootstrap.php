@@ -26,3 +26,4 @@ use com_brucemyers\Util\Config;
 
 $topdir = dirname(dirname($libdir));
 Config::init($topdir . DIRECTORY_SEPARATOR . 'bot.properties');
+Config::set(Config::BASEDIR, $topdir);

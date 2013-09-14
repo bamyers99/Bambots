@@ -37,7 +37,7 @@ class Properties
         foreach ($data as $line) {
             if (! empty($line) && $line[0] != '#' && strpos($line, '=') !== false) {
                 list($key, $value) = explode('=', $line, 2);
-                $this->props[$key] = $value;
+                $this->props[trim($key)] = trim($value);
             }
         }
     }
@@ -45,12 +45,23 @@ class Properties
     /**
      * Get property
      *
-     * @param $name string Property name
+     * @param $key string Property name
      * @return string Property value
      */
-    public function get($name)
+    public function get($key)
     {
-        if (isset($this->props[$name])) return $this->props[$name];
+        if (isset($this->props[$key])) return $this->props[$key];
         return '';
+    }
+
+    /**
+     * Set property
+     *
+     * @param $key string Property name
+     * @param $value string Property value
+     */
+    public function set($key, $value)
+    {
+        $this->props[$key] = $value;
     }
 }
