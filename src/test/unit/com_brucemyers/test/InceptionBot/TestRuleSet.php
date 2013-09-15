@@ -26,14 +26,18 @@ class TestRuleSet extends UnitTestCase
     public function testGoodRules()
     {
         $rules = <<<'EOT'
+        {{RuleBanner}}
+        <!-- Multiline
+                        comment -->
         @@40@@
         $$NZ-stub$$
         -5 $$AU-stub$$
         20  /$SIZE>2500/
         -20  /$SIZE<2500/
-        5 /Bay\W*of\W*Plenty/
+        5 /Bay\W*of\W*Plenty\P{M}\x{2460}\p{Greek}\p{isCyrillic}/ <!-- Tests Unicode -->
         /Northland\Wgeo\Wstub/
         6  /\WOtago\W/ , /Australia/ , /Tasmania/ , /Hobart/
+        /$$NZ-stub$$/ , /$$AU-stub$$/
 EOT;
 
         $ruleset = new RuleSet($rules);
@@ -47,7 +51,7 @@ EOT;
         foreach ($ruleset->rules as $rule) {
             $inhibitcnt += count($rule['inhibitors']);
         }
-        $this->assertEqual($inhibitcnt, 3, 'Missing inhibitors');
+        $this->assertEqual($inhibitcnt, 4, 'Missing inhibitors');
 
         //print_r($ruleset->rules);
     }
@@ -59,11 +63,12 @@ EOT;
         +5 /Bay\W*of\W*Plenty/
         /Northland\Wgeo\Wstub
         6  /.?*/ , /.?*/
+        /\p{gfgfgg}/
 EOT;
 
         $ruleset = new RuleSet($rules);
         $errorcnt = count($ruleset->errors);
-        $realerrors = 6; // Includes 'No rules found'
+        $realerrors = 7; // Includes 'No rules found'
         $this->assertEqual($errorcnt, $realerrors);
         if ($errorcnt != $realerrors) print_r($ruleset->errors);
     }

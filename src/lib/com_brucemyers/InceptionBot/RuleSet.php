@@ -19,14 +19,15 @@ namespace com_brucemyers\InceptionBot;
 
 class RuleSet
 {
-    const COMMENT_REGEX = '/<!--[0x00-0xff]*?-->/';
-    const WIKI_TEMPLATE_REGEX = '/{{[0x00-0xff]+?}}/';
-    const RULE_REGEX = '!^(-?\\d*)\\s*(/.*?/)((?:\\s*,\\s*/.*?/)*)$!';
-    const SCORE_REGEX = '/^@@\\s*(\\d+)\\s*@@$/';
-    const TEMPLATE_LINE_REGEX = '/^(-?\\d*)\\s*\\$\\$(.*)\\$\\$$/';
-    const TEMPLATE_REGEX = '!^/\\s*\\$\\$(.*)\\$\\$\\s*/$!';
-    const SIZE_REGEX = '!^/\\s*\\$SIZE\\s*(<|>)\\s*(\\d+)\\s*/$!';
-    const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!';
+    const COMMENT_REGEX = '/<!--.*?-->/us';
+    const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';
+    const RULE_REGEX = '!^(-?\\d*)\\s*(/.*?/)((?:\\s*,\\s*/.*?/)*)$!u';
+    const SCORE_REGEX = '/^@@\\s*(\\d+)\\s*@@$/u';
+    const TEMPLATE_LINE_REGEX = '/^(-?\\d*)\\s*\\$\\$(.*)\\$\\$$/u';
+    const TEMPLATE_REGEX = '!^/\\s*\\$\\$(.*)\\$\\$\\s*/$!u';
+    const SIZE_REGEX = '!^/\\s*\\$SIZE\\s*(<|>)\\s*(\\d+)\\s*/$!u';
+    const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!u';
+    const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)is/';
     const DEFAULT_SCORE = 10;
 
     public $errors = array();
@@ -43,7 +44,7 @@ class RuleSet
         // Strip comments/templates
         $data = preg_replace(self::COMMENT_REGEX, '', $data);
         $data = preg_replace(self::WIKI_TEMPLATE_REGEX, '', $data);
-        $lines = preg_split('/\\r?\\n/', $data);
+        $lines = preg_split('/\\r?\\n/u', $data);
 
         foreach ($lines as $line) {
             $line = trim($line);
@@ -57,8 +58,8 @@ class RuleSet
             } elseif (preg_match(self::TEMPLATE_LINE_REGEX, $line, $matches)) {
                 $score = $matches[1];
                 if (empty($score)) $score = self::DEFAULT_SCORE;
-                $regex = '/\\{\\{' . $matches[2] . '.*?\\}\\}/';
-                $this->rules[] = array('score' => $score, 'regex' => $regex, 'valid' => true, 'size' => false, 'inhibitors' => array());
+                $regex = '/\\{\\{' . $matches[2] . '.*?\\}\\}/ui';
+                $this->rules[] = array('type' => 'regex', 'score' => $score, 'regex' => $regex, 'valid' => true, 'inhibitors' => array());
             } else {
                 $this->errors[] = 'Invalid rule: ' . $line;
             }
@@ -72,7 +73,7 @@ class RuleSet
      *
      * @param $line string Rule line
      * @param $matches Match data
-     * @return array Rule data
+     * @return array Rule data, keys = type, score, regex, inhibitors, sizeoperator, sizeoperand
      */
     protected function parseRule(&$line, &$matches)
     {
@@ -87,15 +88,16 @@ class RuleSet
         $valid = true;
 
         if (! $size) {
-            $valid = (preg_match($regex, '') !== false);
-            echo ($valid ? 'true' : 'false') . "\n";
+            $regex = preg_replace(self::JAVA_UNICODE_REGEX, '$1', $regex);
+            $regex .= 'ui'; // Add Unicode, ignore case options
+            $valid = (@preg_match($regex, '') !== false);
             if (! $valid) $this->errors[] = 'Invalid pattern in rule: ' . $line;
         }
 
-        $rule = array('score' => $score, 'regex' => $regex, 'valid' => $valid, 'size' => false, 'inhibitors' => array());
+        $rule = array('type' => 'regex', 'score' => $score, 'regex' => $regex, 'valid' => $valid, 'inhibitors' => array());
 
         if ($size) {
-            $rule['size'] = true;
+            $rule['type'] = 'size';
             $rule['sizeoperator'] = $sizematches[1];
             $rule['sizeoperand'] = $sizematches[2];
         }
@@ -108,7 +110,10 @@ class RuleSet
                     $regex = '/\\{\\{' . $tmplmatches[1] . '.*?\\}\\}/';
                 }
 
-            	$valid = (preg_match($regex, '') !== false);
+                $regex = preg_replace(self::JAVA_UNICODE_REGEX, '$1', $regex);
+                $regex .= 'ui'; // Add Unicode, ignore case options
+
+            	$valid = (@preg_match($regex, '') !== false);
             	if (! $valid) {
             	    $this->errors[] = "Invalid inhibitor ($regex) in rule: $line";
             	    $rule['valid'] = false;

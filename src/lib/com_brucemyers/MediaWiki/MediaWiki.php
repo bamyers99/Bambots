@@ -20,6 +20,7 @@ namespace com_brucemyers\MediaWiki;
 use ChrisG\wikipedia;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
+use Exception;
 
 /**
  * Wrapper for ChrisG's bot classes.
