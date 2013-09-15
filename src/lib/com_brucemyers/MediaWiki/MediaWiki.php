@@ -19,6 +19,7 @@ namespace com_brucemyers\MediaWiki;
 
 use ChrisG\wikipedia;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\Config;
 
 /**
  * Wrapper for ChrisG's bot classes.
@@ -28,6 +29,7 @@ class MediaWiki extends wikipedia
     const WIKIURLKEY = 'wiki.url';
     const WIKIUSERNAMEKEY = 'wiki.username';
     const WIKIPASSWORDKEY = 'wiki.password';
+    const WIKIPAGEINCREMENT = 'wiki.pagefetchincrement';
 
     /**
      * Constructor
@@ -100,22 +102,26 @@ class MediaWiki extends wikipedia
     {
         if (empty($pagenames)) return array();
         $pages = array();
-        $pagenames = implode('|', $pagenames);
-        $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvlimit=1&rvprop=content');
+        $pageChunks = array_chunk($pagenames, Config::get(self::WIKIPAGEINCREMENT));
 
-        $normalized = array();
+        foreach ($pageChunks as $pageChunk) {
+            $pagenames = implode('|', $pageChunk);
+            $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvlimit=1&rvprop=content');
 
-        if (isset($ret['query']['normalized'])) {
-            foreach ($ret['query']['normalized'] as $normal) {
-                $normalized[$normal['to']] = $normal['from'];
+            $normalized = array();
+
+            if (isset($ret['query']['normalized'])) {
+                foreach ($ret['query']['normalized'] as $normal) {
+                    $normalized[$normal['to']] = $normal['from'];
+                }
             }
-        }
 
-        foreach ($ret['query']['pages'] as $page) {
-            if (isset($page['revisions'][0]['*'])) {
-                $pagename = $page['title'];
-                if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
-                $pages[$pagename] = $page['revisions'][0]['*'];
+            foreach ($ret['query']['pages'] as $page) {
+                if (isset($page['revisions'][0]['*'])) {
+                    $pagename = $page['title'];
+                    if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
+                    $pages[$pagename] = $page['revisions'][0]['*'];
+                }
             }
         }
 
