@@ -1,0 +1,58 @@
+ @@21@@
+ $$Kurdistan-stub$$
+ 21 /Category:[^\]]*Kurdistan/
+ 21 /\WKurdistan/
+ 16 /\WKurd/
+ /(Ö|o)calan/
+ /(Ş|s)anliurfa/
+ /\W(a|e|i)rb(i|ī)l/
+ /\Wbingöl\W/
+ /\Wbitlis\W/
+ /\Wdahuk\W/
+ /\Wdimi?li\W/
+ /\Wduhok\W/
+ /\Welazi(g|ğ)/
+ /\Wg(o|u)rani\W/ , /hala\sgorani/ , /\Walbani/, /\Wserb/ , /\Wkosov/
+ /\Whakk(a|â)ri/
+ /\Wiğdır/
+ /\Wm(a|e)habad/
+ /\Wmardin\W/
+ /\Wmosul\W/
+ /\Wmuş\W/
+ /\Wpkk\W/
+ /\Wsoran(i|î)/
+ /\Wtunceli/
+ /ansar\sal\-islam/
+ /bajelani/
+ /bakhtaran/
+ /batman\sprovince/
+ /d(e|ê)r?s(i|î)m/
+ /diyarb(a|e)k(i|ı)r/
+ /eastern\sanatolia/
+ /h(a|e)wram(an)?i/
+ /hatip\sdicle/
+ /hewl(e|ê)r/
+ /kermanshah/
+ /k(i|e)rk(u|û)k/
+ /kirmanjki/
+ /kordestan/
+ /kurman(j|c)(i|î)/
+ /leyla\szana/
+ /mass?oud\sbarzani/
+ /mêrdîn/
+ /mustafa\sbarzani/
+ /nechervan\sidris\sbarzani/
+ /orhan\sdoğan/
+ /osman\sbaydemir/
+ /peshm(e|a)rg(a|e)/
+ /sanandaj/
+ /selim\ssadak/
+ /shah?raz(u|o)r/
+ /Şı(rn|m)(ak|ex)/
+ /sil(e|ê)man(i|î)/
+ /sula(i|y)m(a|ā)n(i|ī)yah/
+ /y(a|e)zidi/
+ /zazaki/
+ 5 /\Wbarzan/
+ 5 /\Wzaza\W/
+ 5 /jalal\stalabani/
