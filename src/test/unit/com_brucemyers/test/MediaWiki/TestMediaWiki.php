@@ -30,7 +30,6 @@ class TestMediaWiki extends UnitTestCase
     {
         $url = Config::get(MediaWiki::WIKIURLKEY);
         $this->wiki = new MediaWiki($url);
-
     }
 
     public function testLogin()
@@ -43,6 +42,10 @@ class TestMediaWiki extends UnitTestCase
 
     public function testPageGet()
     {
+        $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+        $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+        $this->wiki->login($username, $password);
+
         // Make sure the page was retrieved
         FileCache::purgeAll();
         $page = $this->wiki->getPageWithCache('Main Page');
