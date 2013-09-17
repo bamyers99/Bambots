@@ -93,7 +93,7 @@ class FileCache
         $key = str_replace(' ', '_', $key);
 
         $key = preg_replace_callback('/\W/', function ($c) {
-            return '~' . dechex($c);
+            return '~' . bin2hex($c[0]);
         }, $key);
 
         return $key;

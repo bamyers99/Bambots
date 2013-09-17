@@ -17,12 +17,56 @@
 
 namespace com_brucemyers\test\InceptionBot;
 
-$activeRules = array(
-    'Architecture',
-    'Biomes',
-    'Bivalves',
-    'Cycling',
-    'FoodDrink',
-    'Gastropods',
-    'Michigan'
-);
+use com_brucemyers\InceptionBot\MasterRuleConfig;
+use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\InceptionBot\InceptionBot;
+use com_brucemyers\InceptionBot\NullResultWriter;
+use com_brucemyers\InceptionBot\FileResultWriter;
+use com_brucemyers\Util\Timer;
+use com_brucemyers\Util\Config;
+use UnitTestCase;
+
+class CustomRunner extends UnitTestCase
+{
+    protected $activerules = array(
+        'Architecture' => 'Portal:Architecture/New article announcements',
+        'Biomes' => '',
+        'Bivalves' => '',
+        'Cycling' => 'Wikipedia:WikiProject_Cycling/New_articles',
+        'FoodDrink' => '',
+        'Forestry' => 'Wikipedia:WikiProject Forestry',
+        'Gastropods' => '',
+        'Michigan' => ''
+    );
+
+    public function testRunner()
+    {
+        $ruletype = 'custom'; // 'active', 'custom', 'all'
+
+        $timer = new Timer();
+        $timer->start();
+
+        $url = Config::get(MediaWiki::WIKIURLKEY);
+        $wiki = new MediaWiki($url);
+        $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+        $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+        $wiki->login($username, $password);
+
+        if ($ruletype == 'active') $rules = $this->activerules;
+        elseif ($ruletype== 'custom') $rules = array('Cycling' => '');
+        else {
+            $data = $wiki->getpage('User:AlexNewArtBot/Master');
+
+            $masterconfig = new MasterRuleConfig($data);
+            $rules = $masterconfig->ruleConfig;
+        }
+
+        $earliestTimestamp = '20130910000000';
+
+        $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, new FileResultWriter());
+
+        $ts = $timer->stop();
+
+        echo sprintf("\nElapsed Time: %d days %02d:%02d:%02d\n", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']) . "\n";
+    }
+}

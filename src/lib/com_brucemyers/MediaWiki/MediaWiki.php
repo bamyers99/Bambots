@@ -31,6 +31,7 @@ class MediaWiki extends wikipedia
     const WIKIUSERNAMEKEY = 'wiki.username';
     const WIKIPASSWORDKEY = 'wiki.password';
     const WIKIPAGEINCREMENT = 'wiki.pagefetchincrement';
+    const WIKICHANGESINCREMENT = 'wiki.recentchangesincrement';
 
     /**
      * Constructor
@@ -107,7 +108,7 @@ class MediaWiki extends wikipedia
 
         foreach ($pageChunks as $pageChunk) {
             $pagenames = implode('|', $pageChunk);
-            $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvlimit=1&rvprop=content');
+            $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvprop=content&continue=');
 
             $normalized = array();
 
@@ -170,5 +171,34 @@ class MediaWiki extends wikipedia
         }
 
         return $cached + $uncached;
+    }
+
+    /**
+     * Get recent changes
+     *
+     * https://www.mediawiki.org/wiki/API:Recentchanges
+     *
+     * @param $params array Recent changes query parameters rc...
+     * @return array Recent changes ['query']['recentchanges'], ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getRecentChanges($params)
+    {
+        if (! isset($params['continue'])) {
+            $params['continue'] = '';
+        } elseif (is_array($params['continue'])){
+            $continue = $params['continue'];
+            unset($params['continue']);
+            $params = array_merge($params, $continue);
+        }
+
+        $addparams ='';
+
+        foreach ($params as $key => $value) {
+            $addparams .= "&$key=" . urlencode($value);
+        }
+
+        $ret = $this->query('?action=query&format=php&list=recentchanges' . $addparams);
+
+        return $ret;
     }
 }
