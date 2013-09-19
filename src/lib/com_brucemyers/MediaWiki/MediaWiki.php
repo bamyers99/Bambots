@@ -33,6 +33,35 @@ class MediaWiki extends wikipedia
     const WIKIPAGEINCREMENT = 'wiki.pagefetchincrement';
     const WIKICHANGESINCREMENT = 'wiki.recentchangesincrement';
 
+    public $namespaces = array(
+                    0 => 'Article',
+                    1 => 'Article talk',
+                    2 => 'User',
+                    3 => 'User talk',
+                    4 => 'Wikipedia',
+                    5 => 'Wikipedia talk',
+                    6 => 'File',
+                    7 => 'File talk',
+                    8 => 'MediaWiki',
+                    9 => 'MediaWiki talk',
+                    10 => 'Template',
+                    11 => 'Template talk',
+                    12 => 'Help',
+                    13 => 'Help talk',
+                    14 => 'Category',
+                    15 => 'Category talk',
+                    100 => 'Portal',
+                    101 => 'Portal talk',
+                    108 => 'Book',
+                    109 => 'Book talk',
+                    446 => 'Education Program',
+                    447 => 'Education Program talk',
+                    710 => 'TimedText',
+                    711 => 'TimedText talk',
+                    828 => 'Module',
+                    829 => 'Module talk'
+    );
+
     /**
      * Constructor
      *
@@ -198,6 +227,34 @@ class MediaWiki extends wikipedia
         }
 
         $ret = $this->query('?action=query&format=php&list=recentchanges' . $addparams);
+
+        return $ret;
+    }
+    /**
+     * Get category members
+     *
+     * https://www.mediawiki.org/wiki/API:Recentchanges
+     *
+     * @param $params array Recent changes query parameters cm...
+     * @return array Category members ['query']['categorymembers'], ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getCategoryMembers($params)
+    {
+        if (! isset($params['continue'])) {
+            $params['continue'] = '';
+        } elseif (is_array($params['continue'])){
+            $continue = $params['continue'];
+            unset($params['continue']);
+            $params = array_merge($params, $continue);
+        }
+
+        $addparams ='';
+
+        foreach ($params as $key => $value) {
+            $addparams .= "&$key=" . urlencode($value);
+        }
+
+        $ret = $this->query('?action=query&format=php&list=categorymembers' . $addparams);
 
         return $ret;
     }

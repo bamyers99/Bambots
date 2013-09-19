@@ -29,6 +29,7 @@ class FileResultWriter implements ResultWriter
         $output = '';
         foreach ($results as $result) {
             $pageinfo = $result['pageinfo'];
+            // for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
             $output .= '[[' . $pageinfo['title'] . ']] by [[' . $pageinfo['user'] . ']] started at ' . $pageinfo['timestamp'] . ', score: ' . $result['totalScore'] . "\n";
         }
 
