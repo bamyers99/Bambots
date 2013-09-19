@@ -15,9 +15,9 @@
  limitations under the License.
  */
 
-namespace com_brucemyers\WPPageListBot;
+namespace com_brucemyers\MediaWiki;
 
 interface ResultWriter
 {
-    public function writeResults($resultpage, $output);
+    public function writeResults($resultpage, $output, $comment);
 }

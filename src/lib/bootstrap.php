@@ -23,7 +23,10 @@ $classLoader = new SplClassLoader(null, $libdir);
 $classLoader->register();
 
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\Logger;
 
 $topdir = dirname(dirname($libdir));
-Config::init($topdir . DIRECTORY_SEPARATOR . 'bot.properties');
+Config::init($topdir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $GLOBALS['botname'] . '.properties');
 Config::set(Config::BASEDIR, $topdir);
+
+Logger::init($topdir . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . $GLOBALS['botname'] . '.log');

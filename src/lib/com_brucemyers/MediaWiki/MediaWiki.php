@@ -20,6 +20,7 @@ namespace com_brucemyers\MediaWiki;
 use ChrisG\wikipedia;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\Logger;
 use Exception;
 
 /**
@@ -91,7 +92,7 @@ class MediaWiki extends wikipedia
         }
 
         if ($ret['login']['result'] != 'Success') {
-            throw new Exception('Login Error ' . $ret['login']['result']);
+            throw new Exception('Login Error ' . $ret['error']['info']);
         }
     }
 
@@ -100,7 +101,7 @@ class MediaWiki extends wikipedia
      *
      * @param $query string query string
      * @param $post array Post data using key=>value
-     * @param $repeat int Retry start value, max = 10
+     * @param $repeat int Retry start value, max = 5
      * @return array Response
      */
     public function query($query, $post = null, $repeat = 0)
@@ -111,8 +112,11 @@ class MediaWiki extends wikipedia
             $ret = $this->http->post($this->url . $query, $post);
         }
 
-		if ($this->http->http_code() != "200") {
-			if ($repeat < 10) {
+        $http_code = $this->http->http_code();
+
+		if ($http_code != "200" && $http_code != "504") { // Proxy timesout on large edit requests
+			if ($repeat < 5) {
+			    Logger::log("*** query retry #$repeat $query http_code:" . $http_code . ' errortext:' . $this->http->http_errortext());
 			    sleep($repeat * 10);
 				return $this->query($query, $post, ++$repeat);
 			} else {
@@ -138,6 +142,10 @@ class MediaWiki extends wikipedia
         foreach ($pageChunks as $pageChunk) {
             $pagenames = implode('|', $pageChunk);
             $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvprop=content&continue=');
+
+            if (isset($ret['error'])) {
+                throw new Exception('Query Error ' . $ret['error']['info']);
+            }
 
             $normalized = array();
 
@@ -228,6 +236,10 @@ class MediaWiki extends wikipedia
 
         $ret = $this->query('?action=query&format=php&list=recentchanges' . $addparams);
 
+        if (isset($ret['error'])) {
+           	throw new Exception('RecentChanges Error ' . $ret['error']['info']);
+        }
+
         return $ret;
     }
     /**
@@ -255,6 +267,10 @@ class MediaWiki extends wikipedia
         }
 
         $ret = $this->query('?action=query&format=php&list=categorymembers' . $addparams);
+
+        if (isset($ret['error'])) {
+        	throw new Exception('CategoryMembers Error ' . $ret['error']['info']);
+        }
 
         return $ret;
     }

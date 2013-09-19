@@ -18,7 +18,9 @@
 namespace com_brucemyers\WPPageListBot;
 
 use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\Logger;
 use Exception;
 
 /**
@@ -54,67 +56,72 @@ class WPPageListBot
 
         // Relabel some namespaces
         foreach ($mediawiki->namespaces as $ns => $title) {
-            if ($ns % 2 == 1) $title = str_replace('talk', '(mistagged)', $title);
+            if ($ns % 2 == 1) $title = str_replace('talk', '(non-talk)', $title);
             $this->namespaces[$ns] = $title;
         }
 
         foreach ($configs as $wikiproject => $config) {
-            $this->wikiproject = $wikiproject;
-            $this->curtime = date('G:i l F j, Y');
-            $this->bannertemplate = $config['bannertemplate'];
+            try {
+                Logger::log("Processing $wikiproject");
+                $this->wikiproject = $wikiproject;
+                $this->curtime = date('G:i l F j, Y');
+                $this->bannertemplate = $config['bannertemplate'];
 
-            // Retrieve the category page list
-            $this->category = $config['category'];
-            if (stripos($this->category, 'category:') !== 0) $this->category = 'Category:' . $this->category;
+                // Retrieve the category page list
+                $this->category = $config['category'];
+                if (stripos($this->category, 'category:') !== 0) $this->category = 'Category:' . $this->category;
 
-            $params = array(
-            	'cmtitle' => $this->category,
-            	'cmprop' => 'title',
-            	'cmtype' => 'page',
-            	'cmlimit' => Config::get(MediaWiki::WIKICHANGESINCREMENT)
-            );
+                $params = array(
+                	'cmtitle' => $this->category,
+                	'cmprop' => 'title',
+                	'cmtype' => 'page',
+                	'cmlimit' => Config::get(MediaWiki::WIKICHANGESINCREMENT)
+                );
 
-            $pages = array();
-            $continue = array('continue' => '');
+                $pages = array();
+                $continue = array('continue' => '');
 
-            while ($continue !== false) {
-                $cmparams = array_merge($params, $continue);
+                while ($continue !== false) {
+                    $cmparams = array_merge($params, $continue);
 
-                $ret = $this->mediawiki->getCategoryMembers($cmparams);
+                    $ret = $this->mediawiki->getCategoryMembers($cmparams);
 
-                if (isset($ret['error'])) throw new Exception('WPPageListBot failed ' . $ret['error']);
-                if (isset($ret['continue'])) $continue = $ret['continue'];
-                else $continue = false;
+                    if (isset($ret['error'])) throw new Exception('WPPageListBot failed ' . $ret['error']);
+                    if (isset($ret['continue'])) $continue = $ret['continue'];
+                    else $continue = false;
 
-                foreach ($ret['query']['categorymembers'] as $cm) {
-                    $ns = $cm['ns'] - 1; // Convert from talk to non-talk namespace
-                    // If wasn't in talk namespace flip the namespace
-                    if (abs($ns % 2) == 1) $ns += 2;
-                    if (! isset($pages[$ns])) $pages[$ns] = array();
-                    $title = preg_replace('/(?:^Talk| talk):/', ':', $cm['title']);
-                    if ($title[0] == ':') $title = substr($title, 1);
-                    $pages[$ns][] = $title;
-                }
-            }
-
-            ksort($pages);
-
-            // Generate the result pages
-            if (empty($config['nonarticles'])) {
-                $this->generatePage($config['articles'], '', true, $pages);
-            } else {
-                $articles = array();
-                if (isset($pages[0])) {
-                    $articles[0] = $pages[0];
-                    unset($pages[0]);
-                }
-                if (isset($pages[1])) {
-                    $articles[1] = $pages[1];
-                    unset($pages[1]);
+                    foreach ($ret['query']['categorymembers'] as $cm) {
+                        $ns = $cm['ns'] - 1; // Convert from talk to non-talk namespace
+                        // If wasn't in talk namespace flip the namespace
+                        if (abs($ns % 2) == 1) $ns += 2;
+                        if (! isset($pages[$ns])) $pages[$ns] = array();
+                        $title = preg_replace('/(?:^Talk| talk):/', ':', $cm['title']);
+                        if ($title[0] == ':') $title = substr($title, 1);
+                        $pages[$ns][] = $title;
+                    }
                 }
 
-                $this->generatePage($config['articles'], $config['nonarticles'], true, $articles);
-                $this->generatePage($config['nonarticles'], $config['articles'], false, $pages);
+                ksort($pages);
+
+                // Generate the result pages
+                if (empty($config['nonarticles'])) {
+                    $this->generatePage($config['articles'], '', true, $pages);
+                } else {
+                    $articles = array();
+                    if (isset($pages[0])) {
+                        $articles[0] = $pages[0];
+                        unset($pages[0]);
+                    }
+                    if (isset($pages[1])) {
+                        $articles[1] = $pages[1];
+                        unset($pages[1]);
+                    }
+
+                    $this->generatePage($config['articles'], $config['nonarticles'], true, $articles);
+                    //$this->generatePage($config['nonarticles'], $config['articles'], false, $pages);
+                }
+            } catch (Exception $ex) {
+                Logger::log($ex->getMessage() . "\n" . $ex->getTraceAsString());
             }
         }
     }
@@ -153,6 +160,6 @@ class WPPageListBot
             }
         }
 
-        $this->resultWriter->writeResults($pagename, $output);
+        $this->resultWriter->writeResults($pagename, $output, implode(', ', $totals));
     }
 }

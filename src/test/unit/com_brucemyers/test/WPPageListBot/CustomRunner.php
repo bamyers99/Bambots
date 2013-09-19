@@ -55,7 +55,7 @@ class CustomRunner extends UnitTestCase
         $wiki->login($username, $password);
 
         if ($ruletype == 'active') $rules = $this->activerules;
-        elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $this->activerules['WikiProject Michigan']);
+        elseif ($ruletype== 'custom') $rules = array('WikiProject Oregon' => $this->activerules['WikiProject Oregon']);
         else {
             $data = $wiki->getpage('User:AlexNewArtBot/Master');
 

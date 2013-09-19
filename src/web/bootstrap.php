@@ -32,5 +32,5 @@ require $libdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 use com_brucemyers\Util\Config;
 
 $topdir = dirname(dirname($webdir));
-Config::init($topdir . DIRECTORY_SEPARATOR . 'bot.properties');
+Config::init($topdir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $GLOBALS['botname'] . '.properties');
 Config::set(Config::BASEDIR, $topdir);

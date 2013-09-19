@@ -58,6 +58,10 @@ class http {
 		return curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
 	}
 
+	public function http_errortext() {
+	    return curl_error($this->ch);
+	}
+
     function data_encode ($data, $keyprefix = "", $keypostfix = "") {
         assert( is_array($data) );
         $vars=null;
@@ -101,7 +105,7 @@ class http {
         curl_setopt($this->ch,CURLOPT_MAXREDIRS,10);
         curl_setopt($this->ch, CURLOPT_HTTPHEADER, array('Expect:'));
         curl_setopt($this->ch,CURLOPT_RETURNTRANSFER,1);
-        curl_setopt($this->ch,CURLOPT_TIMEOUT,30);
+        curl_setopt($this->ch,CURLOPT_TIMEOUT,300);
         curl_setopt($this->ch,CURLOPT_CONNECTTIMEOUT,10);
         curl_setopt($this->ch,CURLOPT_POST,1);
 //      curl_setopt($this->ch,CURLOPT_FAILONERROR,1);
@@ -138,7 +142,7 @@ class http {
         curl_setopt($this->ch,CURLOPT_MAXREDIRS,10);
         curl_setopt($this->ch,CURLOPT_HEADER,0);
         curl_setopt($this->ch,CURLOPT_RETURNTRANSFER,1);
-        curl_setopt($this->ch,CURLOPT_TIMEOUT,30);
+        curl_setopt($this->ch,CURLOPT_TIMEOUT,300);
         curl_setopt($this->ch,CURLOPT_CONNECTTIMEOUT,10);
         curl_setopt($this->ch,CURLOPT_HTTPGET,1);
         //curl_setopt($this->ch,CURLOPT_FAILONERROR,1);

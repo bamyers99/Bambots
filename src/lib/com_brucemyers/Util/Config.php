@@ -27,7 +27,7 @@ class Config
     protected static $properties;
 
     /**
-     * Private constructor
+     * Protected constructor
      */
     protected function __construct()
     {

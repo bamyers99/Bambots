@@ -17,9 +17,11 @@
 
 namespace com_brucemyers\WPPageListBot;
 
+use com_brucemyers\MediaWiki\ResultWriter;
+
 class FileResultWriter implements ResultWriter
 {
-    public function writeResults($resultpage, $output)
+    public function writeResults($resultpage, $output, $comment)
     {
         $resultpage = str_replace(array(':','/'), '.', $resultpage);
         $resultpage = str_replace('User.', '', $resultpage);
