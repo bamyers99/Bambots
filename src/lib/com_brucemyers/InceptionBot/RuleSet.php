@@ -32,15 +32,18 @@ class RuleSet
 
     public $errors = array();
     public $rules = array();
+    public $name;
     public $minScore = self::DEFAULT_SCORE;
 
     /**
      * Constructor
      *
+     * @param $name string Rule name
      * @param $data string Rule data
      */
-    public function __construct($data)
+    public function __construct($name, $data)
     {
+        $this->name = $name;
         // Strip comments/templates
         $data = preg_replace(self::COMMENT_REGEX, '', $data);
         $data = preg_replace(self::WIKI_TEMPLATE_REGEX, '', $data);

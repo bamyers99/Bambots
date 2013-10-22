@@ -18,6 +18,7 @@
 namespace com_brucemyers\InceptionBot;
 
 use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\Util\Timer;
 
 class InceptionBot
 {
@@ -26,7 +27,7 @@ class InceptionBot
         // Retrieve the rulesets
         $rulesets = array();
         foreach ($ruleconfigs as $rulename => $portal) {
-            $rulesets[$rulename] = new RuleSet($mediawiki->getpage('User:AlexNewArtBot/' . $rulename));
+            $rulesets[$rulename] = new RuleSet($rulename, $mediawiki->getpage('User:AlexNewArtBot/' . $rulename));
         }
 
         // Retrieve the new pages
@@ -44,9 +45,11 @@ class InceptionBot
         }
 
         $mediawiki->getPagesWithCache($pagenames);
+        $timer = new Timer();
 
         // Score the pages
         foreach ($rulesets as $rulename => $ruleset) {
+            $timer->start();
             $rulesetresult = array();
             $processor = new RuleSetProcessor($ruleset);
 
@@ -64,7 +67,11 @@ class InceptionBot
                 }
             }
 
-            $resultWriter->writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/errors", $rulesetresult, $ruleset);
+            $ts = $timer->stop();
+            $proctime = sprintf("%d:%02d", $ts['minutes'], $ts['seconds']);
+
+            $resultWriter->writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/errors",
+                $rulesetresult, $ruleset, $proctime);
         }
 
     }

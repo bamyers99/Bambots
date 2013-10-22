@@ -45,7 +45,7 @@ EOT;
         {{Michigan-stub}}
 EOT2;
 
-        $ruleset = new RuleSet($rules);
+        $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
         $this->assertEqual($ruleset->minScore, 10, 'Invalid min score');
         $this->assertEqual($errorcnt, 0, 'Parse error');
@@ -85,7 +85,7 @@ EOT;
         {{Michigan-stub}}
 EOT2;
 
-        $ruleset = new RuleSet($rules);
+        $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
         $this->assertEqual($ruleset->minScore, 10, 'Invalid min score');
         $this->assertEqual($errorcnt, 0, 'Parse error');
@@ -112,7 +112,7 @@ EOT2;
         $rules = file_get_contents($curdir . 'UnicodeRuleSet.txt');
         $data = file_get_contents($curdir . 'UnicodeData.txt');
 
-        $ruleset = new RuleSet($rules);
+        $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
         $this->assertEqual($errorcnt, 0, 'Parse error');
         if ($errorcnt) print_r($ruleset->errors);

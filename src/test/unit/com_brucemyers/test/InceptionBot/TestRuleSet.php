@@ -40,7 +40,7 @@ class TestRuleSet extends UnitTestCase
         /$$NZ-stub$$/ , /$$AU-stub$$/
 EOT;
 
-        $ruleset = new RuleSet($rules);
+        $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
         $this->assertEqual($ruleset->minScore, 40, 'Invalid min score');
         $this->assertEqual($errorcnt, 0, 'Parse error');
@@ -66,7 +66,7 @@ EOT;
         /\p{gfgfgg}/
 EOT;
 
-        $ruleset = new RuleSet($rules);
+        $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
         $realerrors = 7; // Includes 'No rules found'
         $this->assertEqual($errorcnt, $realerrors);

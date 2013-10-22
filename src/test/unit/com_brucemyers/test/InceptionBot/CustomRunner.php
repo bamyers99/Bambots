@@ -38,12 +38,13 @@ class CustomRunner extends UnitTestCase
         'FoodDrink' => '',
         'Forestry' => 'Wikipedia:WikiProject Forestry',
         'Gastropods' => '',
-        'Michigan' => ''
+        'Michigan' => '',
+        'Oregon' => ''
     );
 
     public function testRunner()
     {
-        $ruletype = 'custom'; // 'active', 'custom', 'all'
+        $ruletype = 'active'; // 'active', 'custom', 'all'
 
         $timer = new Timer();
         $timer->start();
@@ -63,7 +64,7 @@ class CustomRunner extends UnitTestCase
             $rules = $masterconfig->ruleConfig;
         }
 
-        $earliestTimestamp = '20130910000000';
+        $earliestTimestamp = '20131014000000';
 
         $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, new FileResultWriter());
 

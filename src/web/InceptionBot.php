@@ -112,7 +112,7 @@ function rule_test($rulename, $testpage)
     }
 
     $results = '';
-    $ruleset = new RuleSet($ruledata);
+    $ruleset = new RuleSet($rulename, $ruledata);
     $rulecnt = count($ruleset->rules);
     $errorcnt = count($ruleset->errors);
     $results .= "Pattern count: $rulecnt Error count: $errorcnt<br />";
