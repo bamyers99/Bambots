@@ -30,8 +30,10 @@ class CustomRunner extends UnitTestCase
 {
     protected $activerules = array(
         'Architecture' => 'Portal:Architecture/New article announcements',
+        'Astro' => '',
         'Biomes' => '',
         'Bivalves' => '',
+        'Cuisine' => '',
         'Cycling' => 'Wikipedia:WikiProject_Cycling/New_articles',
         'FoodDrink' => '',
         'Forestry' => 'Wikipedia:WikiProject Forestry',
