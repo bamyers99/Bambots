@@ -68,8 +68,8 @@ class CustomRunner extends UnitTestCase
             $rules = $masterconfig->ruleConfig;
         }
 
-        $expirydays = Config::get(FileCache::CACHEEXPIRYDAYS);
-        $earliestTimestamp = date('Ymd', strtotime("-$expirydays days")) . '000000';
+        $historydays = Config::get(InceptionBot::HISTORYDAYS);
+        $earliestTimestamp = date('Ymd', strtotime("-$historydays days")) . '000000';
         $lastrun = Config::get(InceptionBot::LASTRUN);
 
         $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter());

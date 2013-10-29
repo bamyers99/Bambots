@@ -23,6 +23,7 @@ use com_brucemyers\Util\Timer;
 class InceptionBot
 {
     const LASTRUN = 'InceptionBot.lastrun';
+    const HISTORYDAYS = 'InceptionBot.historydays';
     protected $mediawiki;
     protected $resultWriter;
 
@@ -47,11 +48,13 @@ class InceptionBot
         }
 
         $pagenames = array();
+        $newestpages = array();
         foreach ($allpages as $newpage) {
             $pagenames[] = $newpage['title'];
+            if (strcmp(str_replace(array('-',':','T','Z'), '', $newpage['timestamp']), $lastrun) > 0) $newestpages[] = $newpage['title'];
         }
 
-        $mediawiki->getPagesWithCache($pagenames);
+        $mediawiki->getPagesWithCache($newestpages);
 
         // Retrieve the pages that have changed since the last run
         $revisions = $mediawiki->getPagesLastRevision($pagenames);

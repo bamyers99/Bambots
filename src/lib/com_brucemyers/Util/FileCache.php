@@ -40,14 +40,14 @@ class FileCache
         $rmbefore = strtotime("-$expirydays days");
 
         // Expire the cache
-        if ($dh = opendir($cacheDir)) {
-            while (($file = readdir($dh)) !== false) {
-                $filepath = $cacheDir . DIRECTORY_SEPARATOR . $file;
-                $lastupdate = filemtime($filepath);
-                if ($lastupdate < $rmbefore) unlink($filepath);
-            }
-            closedir($dh);
-        }
+        $handle = opendir($cacheDir);
+    	while (($entry = readdir($handle)) !== false) {
+    		if ($entry == '.' || $entry == '..') continue;
+            $filepath = $cacheDir . DIRECTORY_SEPARATOR . $entry;
+            $lastupdate = filemtime($filepath);
+            if ($lastupdate < $rmbefore) unlink($filepath);
+    	}
+    	closedir($handle);
     }
 
     /**
