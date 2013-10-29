@@ -23,6 +23,7 @@ namespace com_brucemyers\Util;
 class Properties
 {
     protected $props = array();
+    protected $filepath;
 
     /**
      * Constructor
@@ -31,11 +32,16 @@ class Properties
      */
     public function __construct($filepath)
     {
+        $this->filepath = $filepath;
         $data = file_get_contents($filepath);
         $data = preg_split('/\r?\n/', $data);
+        $commentno = 0;
 
         foreach ($data as $line) {
-            if (! empty($line) && $line[0] != '#' && strpos($line, '=') !== false) {
+            if (empty($line)) continue;
+            if ($line[0] == '#' || strpos($line, '=') === false) {
+                $this->props[' ' . $commentno++] = $line;
+            } else {
                 list($key, $value) = explode('=', $line, 2);
                 $this->props[trim($key)] = trim($value);
             }
@@ -63,5 +69,19 @@ class Properties
     public function set($key, $value)
     {
         $this->props[$key] = $value;
+        $this->_save();
+    }
+
+    /**
+     * Save the properties to the file
+     */
+    protected function _save()
+    {
+        $data = '';
+        foreach($this->props as $key => $value) {
+            if (! empty($key) && $key[0] == ' ') $data .= $value . "\n";
+            else $data .= $key . '=' . $value . "\n";
+        }
+        file_put_contents($this->filepath, $data);
     }
 }

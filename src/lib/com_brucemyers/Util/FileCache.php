@@ -36,7 +36,18 @@ class FileCache
         $cacheDir = preg_replace('!(/|\\\\)$!', '', $cacheDir); // Drop trailing slash
         $this->cacheDir = $cacheDir;
 
-        $cacheExpiryDays = (int)Config::get(self::CACHEEXPIRYDAYS);
+        $expirydays = (int)Config::get(self::CACHEEXPIRYDAYS) + 1;
+        $rmbefore = strtotime("-$expirydays days");
+
+        // Expire the cache
+        if ($dh = opendir($cacheDir)) {
+            while (($file = readdir($dh)) !== false) {
+                $filepath = $cacheDir . DIRECTORY_SEPARATOR . $file;
+                $lastupdate = filemtime($filepath);
+                if ($lastupdate < $rmbefore) unlink($filepath);
+            }
+            closedir($dh);
+        }
     }
 
     /**

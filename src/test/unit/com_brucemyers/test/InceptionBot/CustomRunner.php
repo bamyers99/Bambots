@@ -24,6 +24,7 @@ use com_brucemyers\InceptionBot\NullResultWriter;
 use com_brucemyers\InceptionBot\FileResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\FileCache;
 use UnitTestCase;
 
 class CustomRunner extends UnitTestCase
@@ -38,8 +39,11 @@ class CustomRunner extends UnitTestCase
         'FoodDrink' => '',
         'Forestry' => 'Wikipedia:WikiProject Forestry',
         'Gastropods' => '',
+        'HipHop' => '',
+        'Japan' => '',
         'Michigan' => '',
-        'Oregon' => ''
+        'Oregon' => '',
+        'Sweden' => "Wikipedia:Swedish Wikipedians' notice board/New articles"
     );
 
     public function testRunner()
@@ -56,7 +60,7 @@ class CustomRunner extends UnitTestCase
         $wiki->login($username, $password);
 
         if ($ruletype == 'active') $rules = $this->activerules;
-        elseif ($ruletype== 'custom') $rules = array('Cycling' => '');
+        elseif ($ruletype== 'custom') $rules = array('HipHop' => '');
         else {
             $data = $wiki->getpage('User:AlexNewArtBot/Master');
 
@@ -64,9 +68,13 @@ class CustomRunner extends UnitTestCase
             $rules = $masterconfig->ruleConfig;
         }
 
-        $earliestTimestamp = '20131014000000';
+        $expirydays = Config::get(FileCache::CACHEEXPIRYDAYS);
+        $earliestTimestamp = date('Ymd', strtotime("-$expirydays days")) . '000000';
+        $lastrun = Config::get(InceptionBot::LASTRUN);
 
-        $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, new FileResultWriter());
+        $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter());
+
+        Config::set(InceptionBot::LASTRUN, date('Ymd') . '000000');
 
         $ts = $timer->stop();
 

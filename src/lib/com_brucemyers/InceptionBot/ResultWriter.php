@@ -19,5 +19,5 @@ namespace com_brucemyers\InceptionBot;
 
 interface ResultWriter
 {
-    public function writeResults($resultpage, $logpage, $results, RuleSet $ruleset, $proctime);
+    public function writeResults($page, $data);
 }

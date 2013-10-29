@@ -128,6 +128,46 @@ class MediaWiki extends wikipedia
     }
 
     /**
+     * Get multiple pages last revision
+     *
+     * @param $pagenames array Page names
+     * @return array Page text, pagename=>revision info (timestamp|minor|comment|user)
+     */
+    public function getPagesLastRevision($pagenames)
+    {
+        if (empty($pagenames)) return array();
+        $pages = array();
+        $pageChunks = array_chunk($pagenames, Config::get(self::WIKIPAGEINCREMENT));
+
+        foreach ($pageChunks as $pageChunk) {
+        	$pagenames = implode('|', $pageChunk);
+        	$ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvprop=timestamp|flags|comment|user&continue=');
+
+        	if (isset($ret['error'])) {
+        		throw new Exception('Query Error ' . $ret['error']['info']);
+        	}
+
+        	$normalized = array();
+
+        	if (isset($ret['query']['normalized'])) {
+        		foreach ($ret['query']['normalized'] as $normal) {
+        			$normalized[$normal['to']] = $normal['from'];
+        		}
+        	}
+
+        	foreach ($ret['query']['pages'] as $page) {
+        		if (isset($page['revisions'][0])) {
+        			$pagename = $page['title'];
+        			if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
+        			$pages[$pagename] = $page['revisions'][0];
+        		}
+        	}
+        }
+
+        return $pages;
+    }
+
+    /**
      * Get multiple pages
      *
      * @param $pagenames array Page names
@@ -185,20 +225,25 @@ class MediaWiki extends wikipedia
      * Get multiple pages with caching
      *
      * @param $pagenames array Page names
+     * @param $refetch bool true = refetch, false (default) = no refetch
      * @return array Page text, pagename=>text
      */
-    public function getPagesWithCache($pagenames)
+    public function getPagesWithCache($pagenames, $refetch = false)
     {
         $cached = array();
 
-        // Check the cache
-        foreach ($pagenames as $pagename) {
-            $page = FileCache::getData($pagename);
-            if ($page !== false) $cached[$pagename] = $page;
-        }
+        if ($refetch) {
+            $uncachednames = $pagenames;
+        } else {
+            // Check the cache
+            foreach ($pagenames as $pagename) {
+                $page = FileCache::getData($pagename);
+                if ($page !== false) $cached[$pagename] = $page;
+            }
 
-        $cachednames = array_keys($cached);
-        $uncachednames = array_diff($pagenames, $cachednames);
+            $cachednames = array_keys($cached);
+            $uncachednames = array_diff($pagenames, $cachednames);
+        }
 
         $uncached = $this->getPages($uncachednames);
 

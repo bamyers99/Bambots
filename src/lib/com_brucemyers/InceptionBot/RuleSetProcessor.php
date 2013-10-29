@@ -43,7 +43,7 @@ class RuleSetProcessor
     public function processData(&$data)
     {
         $results = array();
-        $ledeEnd = null;
+        $this->ledeEnd = null;
 
         foreach ($this->ruleSet->rules as &$rule) {
             $score = $this->processRule($data, $rule);

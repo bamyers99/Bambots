@@ -19,7 +19,7 @@ namespace com_brucemyers\InceptionBot;
 
 class NullResultWriter implements ResultWriter
 {
-    public function writeResults($resultpage, $logpage, $results, RuleSet $ruleset, $proctime)
+    public function writeResults($page, $data)
     {
 
     }
