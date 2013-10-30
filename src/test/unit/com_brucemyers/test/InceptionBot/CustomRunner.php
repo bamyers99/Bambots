@@ -42,7 +42,9 @@ class CustomRunner extends UnitTestCase
         'HipHop' => '',
         'Japan' => '',
         'Michigan' => '',
+        'Opera' => 'Wikipedia:WikiProject Opera/New article bot',
         'Oregon' => '',
+        'Poland' => 'Portal:Poland/New article announcements',
         'Sweden' => "Wikipedia:Swedish Wikipedians' notice board/New articles"
     );
 

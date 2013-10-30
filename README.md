@@ -4,7 +4,7 @@ Bambots
 Bambots are a collection of Wikipedia bots.
 
 * InceptionBot is a [Wikipedia](https://en.wikipedia.org/) [WikiProject](https://en.wikipedia.org/wiki/Wikipedia:WikiProject) new article locator.
-* WPPageListBot is [Wikipedia](https://en.wikipedia.org/) [WikiProject](https://en.wikipedia.org/wiki/Wikipedia:WikiProject) associated page locator.
+* WPPageListBot is Wikipedia WikiProject associated page locator.
 
 Directory structure
 ===================
@@ -27,3 +27,5 @@ filename - *.properties where * = bot name or testbot
 	# cache.dir Use {basedir} to start in the project root directory
 	cache.dir={basedir}/cache
 	cache.expirydays=14
+	InceptionBot.lastrun=20131029000000
+	InceptionBot.historydays=15
