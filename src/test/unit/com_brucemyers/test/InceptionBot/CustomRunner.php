@@ -34,6 +34,7 @@ class CustomRunner extends UnitTestCase
         'Astro' => '',
         'Biomes' => '',
         'Bivalves' => '',
+        'Cheshire' => '',
         'Cuisine' => '',
         'Cycling' => 'Wikipedia:WikiProject_Cycling/New_articles',
         'FoodDrink' => '',
