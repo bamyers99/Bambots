@@ -20,11 +20,9 @@ namespace com_brucemyers\test\InceptionBot;
 use com_brucemyers\InceptionBot\MasterRuleConfig;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\InceptionBot\InceptionBot;
-use com_brucemyers\InceptionBot\NullResultWriter;
-use com_brucemyers\InceptionBot\FileResultWriter;
+use com_brucemyers\MediaWiki\FileResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Config;
-use com_brucemyers\Util\FileCache;
 use UnitTestCase;
 
 class CustomRunner extends UnitTestCase
@@ -45,6 +43,7 @@ class CustomRunner extends UnitTestCase
         'Michigan' => '',
         'Opera' => 'Wikipedia:WikiProject Opera/New article bot',
         'Oregon' => '',
+        'Philately' => 'Wikipedia:WikiProject Philately/New articles',
         'Poland' => 'Portal:Poland/New article announcements',
         'Sweden' => "Wikipedia:Swedish Wikipedians' notice board/New articles"
     );
@@ -63,7 +62,7 @@ class CustomRunner extends UnitTestCase
         $wiki->login($username, $password);
 
         if ($ruletype == 'active') $rules = $this->activerules;
-        elseif ($ruletype== 'custom') $rules = array('HipHop' => '');
+        elseif ($ruletype == 'custom') $rules = array('HipHop' => '');
         else {
             $data = $wiki->getpage('User:AlexNewArtBot/Master');
 
@@ -75,7 +74,7 @@ class CustomRunner extends UnitTestCase
         $earliestTimestamp = date('Ymd', strtotime("-$historydays days")) . '000000';
         $lastrun = Config::get(InceptionBot::LASTRUN);
 
-        $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter());
+        $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter(Config::get(InceptionBot::OUTPUTDIR)));
 
         Config::set(InceptionBot::LASTRUN, date('Ymd') . '000000');
 

@@ -18,12 +18,14 @@
 namespace com_brucemyers\InceptionBot;
 
 use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
 
 class InceptionBot
 {
     const LASTRUN = 'InceptionBot.lastrun';
     const HISTORYDAYS = 'InceptionBot.historydays';
+    const OUTPUTDIR = 'InceptionBot.outputdir';
     protected $mediawiki;
     protected $resultWriter;
 
@@ -118,14 +120,23 @@ class InceptionBot
         $startpos = strpos($results, '*{{');
         if ($startpos === false) return array();
 
+        $dividerno = 0;
         $existing = array();
         $results = explode("\n", substr($results, $startpos));
         foreach ($results as $line) {
-            if (empty($line)) continue;
-            if (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]]
+            if ($line == '----') {
+                $existing[' ' . $dividerno++] = $line;
+            } elseif (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]]
                 $title = $matches[1];
                 if (in_array($title, $allpages)) $existing[$title] = $line;
             }
+        }
+
+        // Pop trailing dividers
+        $lastline = end($existing);
+        while (count($existing) && $lastline == '----') {
+            array_pop($existing);
+            $lastline = end($existing);
         }
 
         return $existing;
@@ -140,9 +151,9 @@ class InceptionBot
 
     	// Result file
     	$linecnt = 0;
-    	$output = "This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Tedder|are always welcome]]! The search is being run manually, but eventually will run ~daily with the most recent ~14 days of results.
+    	$output = "This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run manually, but eventually will run ~daily with the most recent ~14 days of results.
 
-[[User:AlexNewArtBot/{$rulename}SearchResult/archive|AlexNewArtBot archives]] | [[User:TedderBot/NewPageSearch/{$rulename}/archive|TedderBot archives]] | [[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:TedderBot/NewPageSearch/{$rulename}/errors|Match log and errors]]
+[[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/errors|Match log and errors]] | Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
 
 ";
     	foreach ($newresults as $result) {
@@ -154,13 +165,16 @@ class InceptionBot
         	++$linecnt;
     	}
 
+    	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
+
     	foreach ($existingresults as $line) {
     	    if ($linecnt > 400) break;
     	    $output .= $line . "\n";
         	++$linecnt;
     	}
 
-        $this->resultWriter->writeResults($resultpage, $output);
+    	$artcnt = count($newresults);
+        $this->resultWriter->writeResults($resultpage, $output, "most recent results, $artcnt articles");
 
     	// Log file
     	$output = '';
@@ -193,6 +207,6 @@ class InceptionBot
             }
         }
 
-        $this->resultWriter->writeResults($logpage, $output);
+        $this->resultWriter->writeResults($logpage, $output, 'most recent errors and scoring');
     }
 }

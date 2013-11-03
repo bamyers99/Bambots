@@ -15,9 +15,12 @@
  limitations under the License.
  */
 
-namespace com_brucemyers\InceptionBot;
+namespace com_brucemyers\MediaWiki;
 
-interface ResultWriter
+class NullResultWriter implements ResultWriter
 {
-    public function writeResults($page, $data);
+    public function writeResults($resultpage, $output, $comment)
+    {
+
+    }
 }

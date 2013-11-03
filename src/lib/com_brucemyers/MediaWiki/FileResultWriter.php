@@ -15,15 +15,27 @@
  limitations under the License.
  */
 
-namespace com_brucemyers\InceptionBot;
+namespace com_brucemyers\MediaWiki;
 
 class FileResultWriter implements ResultWriter
 {
-    public function writeResults($page, $data)
+    protected $filepath;
+
+    /**
+     * Constructor
+     *
+     * @param $filepath string Full path to output directory including trailing /
+     */
+    public function __construct($filepath)
     {
-        $page = str_replace(array(':','/'), '.', $page);
-        $page = str_replace('User.', '', $page);
-        $filepath = '/Users/brucemyers/temp/tedderbot/' . $page . '.txt';
-        file_put_contents($filepath, $data);
+        $this->filepath = $filepath;
+    }
+
+    public function writeResults($resultpage, $output, $comment)
+    {
+        $resultpage = str_replace(array(':','/'), '.', $resultpage);
+        $resultpage = str_replace('User.', '', $resultpage);
+        $filepath = $this->filepath . $resultpage . '.txt';
+        file_put_contents($filepath, $output);
     }
 }
