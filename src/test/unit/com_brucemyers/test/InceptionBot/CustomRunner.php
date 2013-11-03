@@ -71,12 +71,13 @@ class CustomRunner extends UnitTestCase
         }
 
         $historydays = Config::get(InceptionBot::HISTORYDAYS);
-        $earliestTimestamp = date('Ymd', strtotime("-$historydays days")) . '000000';
+        $earliestTimestamp = gmdate('Ymd', strtotime("-$historydays days")) . '000000';
         $lastrun = Config::get(InceptionBot::LASTRUN);
+        $newlastrun = gmdate('YmdHis');
 
         $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter(Config::get(InceptionBot::OUTPUTDIR)));
 
-        Config::set(InceptionBot::LASTRUN, date('Ymd') . '000000');
+        Config::set(InceptionBot::LASTRUN, $newlastrun);
 
         $ts = $timer->stop();
 

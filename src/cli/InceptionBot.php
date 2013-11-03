@@ -23,6 +23,7 @@ use com_brucemyers\MediaWiki\WikiResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
+use com_brucemyers\Util\FileCache;
 
 $clidir = dirname(__FILE__);
 $GLOBALS['botname'] = 'InceptionBot';
@@ -69,19 +70,28 @@ try {
         $data = $wiki->getpage('User:AlexNewArtBot/Master');
 
         $masterconfig = new MasterRuleConfig($data);
-        $rules = $masterconfig->ruleConfig;
+
+        // Prioritize the active rules first
+        $rules = array_merge($activerules, $masterconfig->ruleConfig);
     }
 
     $historydays = Config::get(InceptionBot::HISTORYDAYS);
-    $earliestTimestamp = date('Ymd', strtotime("-$historydays days")) . '000000';
+    $earliestTimestamp = gmdate('Ymd', strtotime("-$historydays days")) . '000000';
     $lastrun = Config::get(InceptionBot::LASTRUN);
+    $newlastrun = gmdate('YmdHis');
 
     if ($outputtype == 'wiki') $resultwriter = new WikiResultWriter($wiki);
-    else $resultwriter = new FileResultWriter(Config::get(InceptionBot::OUTPUTDIR));
+    else {
+        $outputDir = Config::get(InceptionBot::OUTPUTDIR);
+        $outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
+        $outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
+        $outputDir .= DIRECTORY_SEPARATOR;
+        $resultwriter = new FileResultWriter($outputDir);
+    }
 
     $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, $resultwriter);
 
-    Config::set(InceptionBot::LASTRUN, date('Ymd') . '000000');
+    Config::set(InceptionBot::LASTRUN, $newlastrun);
 
     $ts = $timer->stop();
 
