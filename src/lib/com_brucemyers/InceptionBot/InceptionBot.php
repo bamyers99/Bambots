@@ -154,7 +154,7 @@ class InceptionBot
 
     	// Result file
     	$linecnt = 0;
-    	$output = "This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run manually, but eventually will run ~daily with the most recent ~14 days of results.
+    	$output = "This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run manually, but eventually will run ~daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
 
 [[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/errors|Match log and errors]] | Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
 

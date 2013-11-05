@@ -64,7 +64,7 @@ try {
     $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
     $wiki->login($username, $password);
 
-    if ($ruletype == 'active') $rules = $this->activerules;
+    if ($ruletype == 'active') $rules = $activerules;
     elseif ($ruletype == 'custom') $rules = array(Config::get(InceptionBot::CUSTOMRULE) => '');
     else {
         $data = $wiki->getpage('User:AlexNewArtBot/Master');
