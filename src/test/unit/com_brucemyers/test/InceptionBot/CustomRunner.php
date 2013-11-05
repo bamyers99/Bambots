@@ -50,7 +50,8 @@ class CustomRunner extends UnitTestCase
 
     public function testRunner()
     {
-        $ruletype = 'active'; // 'active', 'custom', 'all'
+        $ruletype = Config::get(InceptionBot::RULETYPE);
+        $outputtype = Config::get(InceptionBot::OUTPUTTYPE);
 
         $timer = new Timer();
         $timer->start();
@@ -62,12 +63,14 @@ class CustomRunner extends UnitTestCase
         $wiki->login($username, $password);
 
         if ($ruletype == 'active') $rules = $this->activerules;
-        elseif ($ruletype == 'custom') $rules = array('HipHop' => '');
+        elseif ($ruletype == 'custom') $rules = array(Config::get(InceptionBot::CUSTOMRULE) => '');
         else {
             $data = $wiki->getpage('User:AlexNewArtBot/Master');
 
             $masterconfig = new MasterRuleConfig($data);
-            $rules = $masterconfig->ruleConfig;
+
+            // Prioritize the active rules first
+            $rules = array_merge($activerules, $masterconfig->ruleConfig);
         }
 
         $historydays = Config::get(InceptionBot::HISTORYDAYS);

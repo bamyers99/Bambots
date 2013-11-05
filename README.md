@@ -29,3 +29,10 @@ filename - *.properties where * = bot name or testbot
 	cache.expirydays=14
 	InceptionBot.lastrun=20131029000000
 	InceptionBot.historydays=15
+    InceptionBot.outputdir={basedir}/results
+    # InceptionBot.outputtype 'file', 'wiki'
+    InceptionBot.outputtype=file
+    # InceptionBot.ruletype 'active', 'custom', 'all'
+    InceptionBot.ruletype=custom
+    InceptionBot.customrule=HipHop
+	

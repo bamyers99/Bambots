@@ -26,6 +26,9 @@ class InceptionBot
     const LASTRUN = 'InceptionBot.lastrun';
     const HISTORYDAYS = 'InceptionBot.historydays';
     const OUTPUTDIR = 'InceptionBot.outputdir';
+    const OUTPUTTYPE = 'InceptionBot.outputtype';
+    const RULETYPE = 'InceptionBot.ruletype';
+    const CUSTOMRULE = 'InceptionBot.customrule';
     protected $mediawiki;
     protected $resultWriter;
 
