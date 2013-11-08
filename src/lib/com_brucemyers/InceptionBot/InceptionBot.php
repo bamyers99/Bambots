@@ -163,7 +163,8 @@ class InceptionBot
         	$pageinfo = $result['pageinfo'];
         	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
         	if ($linecnt > 200) $output .= '*[[' . $pageinfo['title'] . ']] by [[User:' . $pageinfo['user'] . ']]';
-        	else $output .= '*{{la|' . $pageinfo['title'] . '}} by {{User|' . $pageinfo['user'] . '}}';
+        	else $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . ']]) by [[User:' . $pageinfo['user'] . ']]';
+//        	else $output .= '*{{la|' . $pageinfo['title'] . '}} by {{User|' . $pageinfo['user'] . '}}';
         	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . "\n";
         	++$linecnt;
     	}

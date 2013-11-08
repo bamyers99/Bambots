@@ -47,7 +47,7 @@ namespace ChrisG;
  * @author Cobi
  **/
 class http {
-    private $ch;
+    public $ch;
     private $uid;
     public $cookie_jar;
     public $postfollowredirs;

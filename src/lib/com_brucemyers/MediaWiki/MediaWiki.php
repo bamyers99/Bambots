@@ -72,6 +72,7 @@ class MediaWiki extends wikipedia
     {
         parent::__construct($url);
         $this->http->quiet = true;
+        curl_setopt($this->http->ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
     }
 
     /**
