@@ -66,6 +66,7 @@ class InceptionBot
 
         $updatedpages = array();
         foreach ($revisions as $pagename => $revision) {
+            if (in_array($pagename, $newestpages)) continue;
             if (strcmp(str_replace(array('-',':','T','Z'), '', $revision['timestamp']), $lastrun) > 0) $updatedpages[] = $pagename;
         }
 
@@ -86,7 +87,7 @@ class InceptionBot
                 $title = $newpage['title'];
                 if (isset($existing[$title])) continue;
 
-                if (strcmp(str_replace(array('-',':','T','Z'), '', $newpage['timestamp']), $lastrun) > 0 || in_array($title, $updatedpages)) {
+                if (in_array($title, $newestpages) || in_array($title, $updatedpages)) {
                     $data = $mediawiki->getPageWithCache($title);
                     $results = $processor->processData($data);
 
@@ -104,7 +105,7 @@ class InceptionBot
             $ts = $timer->stop();
             $proctime = sprintf("%d:%02d", $ts['minutes'], $ts['seconds']);
 
-            $this->_writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/errors",
+            $this->_writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/log",
                 $existing, $rulesetresult, $ruleset, $proctime);
         }
     }
@@ -148,15 +149,17 @@ class InceptionBot
     protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime)
     {
         $rulename = $ruleset->name;
+    	$errorcnt = count($ruleset->errors);
         usort($newresults, function($a, $b) {
         	return -strnatcmp($a['pageinfo']['timestamp'], $b['pageinfo']['timestamp']); // sort in reverse date order
         });
 
     	// Result file
     	$linecnt = 0;
-    	$output = "This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run manually, but eventually will run ~daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
+    	$logerror = ($errorcnt) ? "Match log and errors" : "Match log";
+    	$output = "<noinclude>{{fmbox|text= This is a new articles list for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run manually, but eventually will run ~daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
 
-[[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/errors|Match log and errors]] | Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
+[[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/log|$logerror]] | Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
 
 ";
     	foreach ($newresults as $result) {
@@ -184,9 +187,8 @@ class InceptionBot
     	$output = '';
 
     	$rulecnt = count($ruleset->rules);
-    	$errorcnt = count($ruleset->errors);
     	$threshold = $ruleset->minScore;
-    	$output .= "Pattern count: $rulecnt Error count: $errorcnt Threshold: $threshold Processing time: $proctime\n";
+    	$output .= "<noinclude>{{fmbox|text= This is a new articles log for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>Pattern count: $rulecnt &mdash; Error count: $errorcnt &mdash; Threshold: $threshold &mdash; Processing time: $proctime\n";
     	if ($errorcnt) {
     		$output .= "==Errors==\n";
     		foreach ($ruleset->errors as $error) {
@@ -211,6 +213,7 @@ class InceptionBot
             }
         }
 
-        $this->resultWriter->writeResults($logpage, $output, 'most recent errors and scoring');
+    	$logsum = ($errorcnt) ? "most recent errors and scoring" : "most recent scoring";
+        $this->resultWriter->writeResults($logpage, $output, "$logsum");
     }
 }
