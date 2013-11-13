@@ -79,6 +79,7 @@ try {
     $historydays = Config::get(InceptionBot::HISTORYDAYS);
     $earliestTimestamp = gmdate('Ymd', strtotime("-$historydays days")) . '000000';
     $lastrun = Config::get(InceptionBot::LASTRUN);
+    Logger::log("Last run: $lastrun");
     $newlastrun = gmdate('YmdHis');
 
     if ($outputtype == 'wiki') $resultwriter = new WikiResultWriter($wiki);
@@ -90,13 +91,13 @@ try {
         $resultwriter = new FileResultWriter($outputDir);
     }
 
-    $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, $resultwriter);
+    $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, $resultwriter, $newlastrun);
 
     Config::set(InceptionBot::LASTRUN, $newlastrun);
 
     $ts = $timer->stop();
 
-    Logger::log(sprintf("Elapsed Time: %d days %02d:%02d:%02d\n", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']));
+    Logger::log(sprintf("Elapsed time: %d days %02d:%02d:%02d\n", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']));
 } catch (Exception $ex) {
     Logger::log($ex->getMessage() . "\n" . $ex->getTraceAsString());
 }

@@ -20,6 +20,7 @@ namespace com_brucemyers\InceptionBot;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
+use com_brucemyers\Util\Logger;
 
 class InceptionBot
 {
@@ -32,7 +33,7 @@ class InceptionBot
     protected $mediawiki;
     protected $resultWriter;
 
-    public function __construct(MediaWiki $mediawiki, $ruleconfigs, $earliestTimestamp, $lastrun, ResultWriter $resultWriter)
+    public function __construct(MediaWiki $mediawiki, $ruleconfigs, $earliestTimestamp, $lastrun, ResultWriter $resultWriter, $latestTimestamp)
     {
         $this->mediawiki = $mediawiki;
         $this->resultWriter = $resultWriter;
@@ -44,13 +45,14 @@ class InceptionBot
         }
 
         // Retrieve the new pages
-        $lister = new NewPageLister($mediawiki, $earliestTimestamp);
+        $lister = new NewPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
         $allpages = array();
 
         while (($pages = $lister->getNextBatch()) !== false) {
             $allpages = array_merge($allpages, $pages);
         }
+        Logger::log('New page count = ' . count($allpages));
 
         $pagenames = array();
         $newestpages = array();
@@ -58,6 +60,7 @@ class InceptionBot
             $pagenames[] = $newpage['title'];
             if (strcmp(str_replace(array('-',':','T','Z'), '', $newpage['timestamp']), $lastrun) > 0) $newestpages[] = $newpage['title'];
         }
+        Logger::log('Newest page count = ' . count($newestpages));
 
         $mediawiki->getPagesWithCache($newestpages);
 
@@ -69,6 +72,7 @@ class InceptionBot
             if (in_array($pagename, $newestpages)) continue;
             if (strcmp(str_replace(array('-',':','T','Z'), '', $revision['timestamp']), $lastrun) > 0) $updatedpages[] = $pagename;
         }
+        Logger::log('Updated page count = ' . count($updatedpages));
 
         $mediawiki->getPagesWithCache($updatedpages, true);
 
@@ -157,7 +161,7 @@ class InceptionBot
     	// Result file
     	$linecnt = 0;
     	$logerror = ($errorcnt) ? "Match log and errors" : "Match log";
-    	$output = "<noinclude>{{fmbox|text= This is a new articles list for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run manually, but eventually will run ~daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
+    	$output = "<noinclude>{{fmbox|text= This is a new articles list for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
 
 [[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/log|$logerror]] | Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
 
@@ -165,9 +169,8 @@ class InceptionBot
     	foreach ($newresults as $result) {
         	$pageinfo = $result['pageinfo'];
         	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
-        	if ($linecnt > 200) $output .= '*[[' . $pageinfo['title'] . ']] by [[User:' . $pageinfo['user'] . ']]';
+        	if ($linecnt > 400) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $pageinfo['user'] . '|' . $pageinfo['user'] . ']]';
         	else $output .= '*{{la|' . $pageinfo['title'] . '}} by {{User|' . $pageinfo['user'] . '}}';
-//        	else $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $pageinfo['user'] . '|' . $pageinfo['user'] . ']]';
         	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . "\n";
         	++$linecnt;
     	}
@@ -175,8 +178,16 @@ class InceptionBot
     	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
 
     	foreach ($existingresults as $line) {
-    	    if ($linecnt > 400) break;
-    	    $output .= $line . "\n";
+    	    if ($linecnt > 400) {
+                if (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by (?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(.*)!', $line, $matches)) {
+                    $title = $matches[1];
+                    $user = $matches[2];
+                    $rest = $matches[3];
+                    $output .= '*[[' . $title . ']] ([[Talk:' . $title . '|talk]]) by [[User:' . $user . '|' . $user . ']]' . $rest . "\n";
+                }
+    	    } else {
+    	        $output .= $line . "\n";
+    	    }
         	++$linecnt;
     	}
 

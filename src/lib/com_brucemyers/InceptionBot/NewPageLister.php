@@ -32,8 +32,9 @@ class NewPageLister
      *
      * @param $mediawiki Media wiki
      * @param $earliestTimestamp (20130917000000) format
+     * @param $latestTimestamp
      */
-    public function __construct($mediawiki, $earliestTimestamp)
+    public function __construct($mediawiki, $earliestTimestamp, $latestTimestamp)
     {
         $this->mediawiki = $mediawiki;
         $this->params = array(
@@ -42,7 +43,7 @@ class NewPageLister
             'rcdir' => 'newer',
             'rctype' => 'new',
             'rcstart' => $earliestTimestamp,
-            'rcend' => date('YmdHis'),
+            'rcend' => $latestTimestamp,
             'rcnamespace' => 0
         );
     }

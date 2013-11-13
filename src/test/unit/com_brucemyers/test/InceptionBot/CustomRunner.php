@@ -78,7 +78,7 @@ class CustomRunner extends UnitTestCase
         $lastrun = Config::get(InceptionBot::LASTRUN);
         $newlastrun = gmdate('YmdHis');
 
-        $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter(Config::get(InceptionBot::OUTPUTDIR)));
+        $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter(Config::get(InceptionBot::OUTPUTDIR)), $newlastrun);
 
         Config::set(InceptionBot::LASTRUN, $newlastrun);
 

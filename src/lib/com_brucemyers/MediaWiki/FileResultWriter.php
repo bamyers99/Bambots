@@ -36,6 +36,7 @@ class FileResultWriter implements ResultWriter
         $resultpage = str_replace(array(':','/'), '.', $resultpage);
         $resultpage = str_replace('User.', '', $resultpage);
         $filepath = $this->filepath . $resultpage . '.txt';
+        $output .= "$comment\n";
         file_put_contents($filepath, $output);
     }
 }

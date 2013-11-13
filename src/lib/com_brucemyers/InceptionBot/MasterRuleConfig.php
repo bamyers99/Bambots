@@ -26,6 +26,9 @@ class MasterRuleConfig
 
     public function __construct($data)
     {
+        $data = preg_replace(RuleSet::COMMENT_REGEX, '', $data);
+        $data = preg_replace(RuleSet::WIKI_TEMPLATE_REGEX, '', $data);
+        $data = preg_replace(RuleSet::CATEGORY_REGEX, '', $data);
         $lines = preg_split('/\\r?\\n/', $data);
         foreach ($lines as $line) {
             $line = trim($line);

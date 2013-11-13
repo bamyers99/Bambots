@@ -20,6 +20,7 @@ namespace com_brucemyers\InceptionBot;
 class RuleSet
 {
     const COMMENT_REGEX = '/<!--.*?-->/us';
+    const CATEGORY_REGEX = '/\\[\\[Category:.+?\\]\\]/usi';
     const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';
     const RULE_REGEX = '!^(-?\\d*)\\s*(/.*?/)((?:\\s*,\\s*/.*?/)*)$!u';
     const SCORE_REGEX = '/^@@\\s*(\\d+)\\s*@@$/u';
@@ -27,7 +28,7 @@ class RuleSet
     const TEMPLATE_REGEX = '!^/\\s*\\$\\$(.*)\\$\\$\\s*/$!u';
     const SIZE_REGEX = '!^/\\s*\\$SIZE\\s*(<|>)\\s*(\\d+)\\s*/$!u';
     const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!u';
-    const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)is/';
+    const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)[iI]s/';
     const DEFAULT_SCORE = 10;
 
     public $errors = array();
@@ -44,9 +45,10 @@ class RuleSet
     public function __construct($name, $data)
     {
         $this->name = $name;
-        // Strip comments/templates
+        // Strip comments/templates/categories
         $data = preg_replace(self::COMMENT_REGEX, '', $data);
         $data = preg_replace(self::WIKI_TEMPLATE_REGEX, '', $data);
+        $data = preg_replace(self::CATEGORY_REGEX, '', $data);
         $lines = preg_split('/\\r?\\n/u', $data);
 
         foreach ($lines as $line) {
