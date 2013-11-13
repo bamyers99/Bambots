@@ -37,6 +37,9 @@ class InceptionBot
     {
         $this->mediawiki = $mediawiki;
         $this->resultWriter = $resultWriter;
+        $totaltimer = new Timer();
+        $totaltimer->start();
+        $errorrulsets = array();
 
         // Retrieve the rulesets
         $rulesets = array();
@@ -83,6 +86,7 @@ class InceptionBot
             $timer->start();
             $rulesetresult = array();
             $processor = new RuleSetProcessor($ruleset);
+            if (count($ruleset->errors)) $errorrulsets[] = $rulename;
 
             // Retrieve the existing results
             $existing = $this->_getExistingResults($rulename, $pagenames);
@@ -112,6 +116,11 @@ class InceptionBot
             $this->_writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/log",
                 $existing, $rulesetresult, $ruleset, $proctime);
         }
+
+        $ts = $totaltimer->stop();
+        $totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
+
+        $this->_writeStatus(count($rulesets), $errorrulsets, $totaltime, count($allpages), count($newestpages), count($updatedpages));
     }
 
     /**
@@ -150,6 +159,9 @@ class InceptionBot
         return $existing;
     }
 
+    /**
+     * Write a rulesets results and log
+     */
     protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime)
     {
         $rulename = $ruleset->name;
@@ -169,7 +181,7 @@ class InceptionBot
     	foreach ($newresults as $result) {
         	$pageinfo = $result['pageinfo'];
         	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
-        	if ($linecnt > 400) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $pageinfo['user'] . '|' . $pageinfo['user'] . ']]';
+        	if ($linecnt > 300) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $pageinfo['user'] . '|' . $pageinfo['user'] . ']]';
         	else $output .= '*{{la|' . $pageinfo['title'] . '}} by {{User|' . $pageinfo['user'] . '}}';
         	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . "\n";
         	++$linecnt;
@@ -178,7 +190,7 @@ class InceptionBot
     	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
 
     	foreach ($existingresults as $line) {
-    	    if ($linecnt > 400) {
+    	    if ($linecnt > 300) {
                 if (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by (?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(.*)!', $line, $matches)) {
                     $title = $matches[1];
                     $user = $matches[2];
@@ -226,5 +238,34 @@ class InceptionBot
 
     	$logsum = ($errorcnt) ? "most recent errors and scoring" : "most recent scoring";
         $this->resultWriter->writeResults($logpage, $output, "$logsum");
+    }
+
+    /**
+     * Write the bot status page
+     */
+    protected function _writeStatus($rulesetcnt, $errorrulsets, $totaltime, $allpagecnt, $newestpagecnt, $updatedpagecnt)
+    {
+        $errcnt = count($errorrulsets);
+        $allpagecnt = number_format($allpagecnt);
+        $newestpagecnt = number_format($newestpagecnt);
+        $updatedpagecnt = number_format($updatedpagecnt);
+        $output = <<<EOT
+'''Last run:''' {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />
+'''Processing time:''' $totaltime<br />
+'''Project count:''' $rulesetcnt<br />
+'''New pages (14 days):''' $allpagecnt<br />
+'''New pages (past day):''' $newestpagecnt<br />
+'''Updated new pages (past day):''' $updatedpagecnt<br />
+'''Rule errors:''' $errcnt
+EOT;
+
+    	if ($errcnt) {
+    	    $output .= "===Rule errors===\n";
+    	    foreach ($errorrulsets as $rulename) {
+    	        $output .= "*$rulename ([[User:AlexNewArtBot/$rulename|Rules]] | [[User:InceptionBot/NewPageSearch/$rulename/log|Log]])\n";
+    	    }
+    	}
+
+        $this->resultWriter->writeResults('User:InceptionBot/Status', $output, "$errcnt errors; Total time: $totaltime");
     }
 }

@@ -41,6 +41,8 @@ class CustomRunner extends UnitTestCase
         'HipHop' => '',
         'Japan' => '',
         'Michigan' => '',
+        'MMA' => '',
+        'NZ' => '',
         'Opera' => 'Wikipedia:WikiProject Opera/New article bot',
         'Oregon' => '',
         'Philately' => 'Wikipedia:WikiProject Philately/New articles',

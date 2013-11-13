@@ -44,6 +44,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
         'HipHop' => '',
         'Japan' => '',
         'Michigan' => '',
+        'MMA' => '',
         'NZ' => '',
         'Opera' => 'Wikipedia:WikiProject Opera/New article bot',
         'Oregon' => '',
