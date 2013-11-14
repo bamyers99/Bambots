@@ -115,7 +115,7 @@ class MediaWiki extends wikipedia
 
         $http_code = $this->http->http_code();
 
-		if ($http_code != "200" && $http_code != "504") { // Proxy timesout on large edit requests
+		if ($http_code != "200" && $http_code != "504" && $http_code != "503") { // Proxy timesout on large edit requests
 			if ($repeat < 5) {
 			    Logger::log("*** query retry #$repeat $query http_code:" . $http_code . ' errortext:' . $this->http->http_errortext());
 			    sleep($repeat * 10);
