@@ -260,7 +260,7 @@ class InceptionBot
 EOT;
 
     	if ($errcnt) {
-    	    $output .= "===Rule errors===\n";
+    	    $output .= "\n===Rule errors===\n";
     	    foreach ($errorrulsets as $rulename) {
     	        $output .= "*$rulename ([[User:AlexNewArtBot/$rulename|Rules]] | [[User:InceptionBot/NewPageSearch/$rulename/log|Log]])\n";
     	    }
