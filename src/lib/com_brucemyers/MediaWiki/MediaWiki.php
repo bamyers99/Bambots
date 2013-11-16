@@ -117,7 +117,9 @@ class MediaWiki extends wikipedia
 
         $ok = false;
         if ($http_code == '200') $ok = true;
-        elseif (strpos($query, 'action=edit') !== false && ($http_code == '504' || $http_code == '503')) $ok = true; // Proxy timeout on large edit requests
+        elseif (strpos($query, 'action=edit') !== false && ($http_code == '504' || $http_code == '503')){
+            return array(); // Proxy timeout on large edit requests
+        }
 
 		if (! $ok) {
 			if ($repeat < 5) {
