@@ -100,5 +100,9 @@ try {
 
     Logger::log(sprintf("Elapsed time: %d days %02d:%02d:%02d\n", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']));
 } catch (Exception $ex) {
-    Logger::log($ex->getMessage() . "\n" . $ex->getTraceAsString());
+    $msg = $ex->getMessage() . "\n" . $ex->getTraceAsString();
+    Logger::log($msg);
+    $headers  = 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'From: Linode Server <admin@brucemyers.com>' . "\r\n";
+    mail(Config::get(InceptionBot::ERROREMAIL), 'InceptionBot failed', $msg, $headers);
 }

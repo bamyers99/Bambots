@@ -30,6 +30,7 @@ class InceptionBot
     const OUTPUTTYPE = 'InceptionBot.outputtype';
     const RULETYPE = 'InceptionBot.ruletype';
     const CUSTOMRULE = 'InceptionBot.customrule';
+    const ERROREMAIL = 'InceptionBot.erroremail';
     protected $mediawiki;
     protected $resultWriter;
 
