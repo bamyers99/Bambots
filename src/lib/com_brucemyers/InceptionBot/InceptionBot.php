@@ -31,6 +31,7 @@ class InceptionBot
     const RULETYPE = 'InceptionBot.ruletype';
     const CUSTOMRULE = 'InceptionBot.customrule';
     const ERROREMAIL = 'InceptionBot.erroremail';
+    const EXISTINGREGEX = '!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?(.*)!';
     protected $mediawiki;
     protected $resultWriter;
 
@@ -41,6 +42,7 @@ class InceptionBot
         $totaltimer = new Timer();
         $totaltimer->start();
         $errorrulsets = array();
+        $creators =  array();
 
         // Retrieve the rulesets
         $rulesets = array();
@@ -61,6 +63,9 @@ class InceptionBot
         $pagenames = array();
         $newestpages = array();
         foreach ($allpages as $newpage) {
+            $creator = $newpage['user'];
+            if (isset($creators[$creator])) ++$creators[$creator];
+            else $creators[$creator] = 1;
             $pagenames[] = $newpage['title'];
             if (strcmp(str_replace(array('-',':','T','Z'), '', $newpage['timestamp']), $lastrun) > 0) $newestpages[] = $newpage['title'];
         }
@@ -115,13 +120,16 @@ class InceptionBot
             $proctime = sprintf("%d:%02d", $ts['minutes'], $ts['seconds']);
 
             $this->_writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/log",
-                $existing, $rulesetresult, $ruleset, $proctime);
+                $existing, $rulesetresult, $ruleset, $proctime, $earliestTimestamp, $creators);
         }
 
         $ts = $totaltimer->stop();
         $totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
 
-        $this->_writeStatus(count($rulesets), $errorrulsets, $totaltime, count($allpages), count($newestpages), count($updatedpages));
+        $this->_writeStatus(count($rulesets), $errorrulsets, $totaltime, count($allpages), count($newestpages), count($updatedpages),
+                        count($creators));
+
+        $this->_writeCreators($creators, $earliestTimestamp);
     }
 
     /**
@@ -163,7 +171,7 @@ class InceptionBot
     /**
      * Write a rulesets results and log
      */
-    protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime)
+    protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime, $earliestTimestamp, &$creators)
     {
         $rulename = $ruleset->name;
     	$errorcnt = count($ruleset->errors);
@@ -181,9 +189,13 @@ class InceptionBot
 ";
     	foreach ($newresults as $result) {
         	$pageinfo = $result['pageinfo'];
+        	$displayuser = $pageinfo['user'];
+            $user = str_replace(' ', '_', $displayuser);
+            $urlencodeduser = urlencode($displayuser);
+            $newpagecnt = $creators[$displayuser];
         	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
-        	if ($linecnt > 300) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $pageinfo['user'] . '|' . $pageinfo['user'] . ']]';
-        	else $output .= '*{{la|' . $pageinfo['title'] . '}} by {{User|' . $pageinfo['user'] . '}}';
+        	if ($linecnt > 600) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
+        	else $output .= '*{{la|' . $pageinfo['title'] . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''á'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''á'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt]&#41;</span>)";
         	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . "\n";
         	++$linecnt;
     	}
@@ -191,12 +203,13 @@ class InceptionBot
     	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
 
     	foreach ($existingresults as $line) {
-    	    if ($linecnt > 300) {
-                if (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by (?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(.*)!', $line, $matches)) {
+    	    if ($linecnt > 600) {
+                if (preg_match(self.EXISTINGREGEX, $line, $matches)) {
                     $title = $matches[1];
-                    $user = $matches[2];
+                    $displayuser = $matches[2];
+                    $user = str_replace(' ', '_', $displayuser);
                     $rest = $matches[3];
-                    $output .= '*[[' . $title . ']] ([[Talk:' . $title . '|talk]]) by [[User:' . $user . '|' . $user . ']]' . $rest . "\n";
+                    $output .= '*[[' . $title . ']] ([[Talk:' . $title . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]' . $rest . "\n";
                 }
     	    } else {
     	        $output .= $line . "\n";
@@ -244,7 +257,7 @@ class InceptionBot
     /**
      * Write the bot status page
      */
-    protected function _writeStatus($rulesetcnt, $errorrulsets, $totaltime, $allpagecnt, $newestpagecnt, $updatedpagecnt)
+    protected function _writeStatus($rulesetcnt, $errorrulsets, $totaltime, $allpagecnt, $newestpagecnt, $updatedpagecnt, $creatorcnt)
     {
         $errcnt = count($errorrulsets);
         $allpagecnt = number_format($allpagecnt);
@@ -257,6 +270,7 @@ class InceptionBot
 '''New pages (14 days):''' $allpagecnt<br />
 '''New pages (past day):''' $newestpagecnt<br />
 '''Updated new pages (past day):''' $updatedpagecnt<br />
+'''Page creators:''' [[User:InceptionBot/Creators|$creatorcnt]]<br />
 '''Rule errors:''' $errcnt
 EOT;
 
@@ -268,5 +282,31 @@ EOT;
     	}
 
         $this->resultWriter->writeResults('User:InceptionBot/Status', $output, "$errcnt errors; Total time: $totaltime");
+    }
+
+    /**
+     * Write creators page
+     */
+    protected function _writeCreators($creators, $earliestTimestamp)
+    {
+        arsort($creators);
+        $creatorcnt = count($creators);
+        preg_match('!^(\d{4})(\d{2})(\d{2})!', $earliestTimestamp, $matches);
+        $etyear = $matches[1];
+        $etmonth = $matches[2];
+        $etday = $matches[3];
+
+        $output = "New page creators (10+ pages) since $etyear-$etmonth-$etday.\n\n{| class=\"wikitable sortable\"\n|-\n!User !! Page count\n";
+
+        foreach ($creators as $displayuser => $pagecnt) {
+            if ($pagecnt < 10) continue;
+            $user = str_replace(' ', '_', $displayuser);
+            $urlencodeduser = urlencode($displayuser);
+            $output .= "|-\n|[[User:$user|$displayuser]] ([[User_talk:$user|talk]]&nbsp;'''á'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''á'''&#32;<span class=\"plainlinks\">[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages]</span>) || $pagecnt\n";
+        }
+
+        $output .= "|}\n";
+
+        $this->resultWriter->writeResults('User:InceptionBot/Creators', $output, "$creatorcnt creators");
     }
 }

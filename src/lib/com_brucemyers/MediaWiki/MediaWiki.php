@@ -294,6 +294,40 @@ class MediaWiki extends wikipedia
 
         return $ret;
     }
+
+    /**
+     * Get user contributions
+     *
+     * https://www.mediawiki.org/wiki/API:Usercontribs
+     *
+     * @param $params array Recent changes query parameters uc...
+     * @return array Recent changes ['query']['usercontribs'], ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getContributions($params)
+    {
+        if (! isset($params['continue'])) {
+        	$params['continue'] = '';
+        } elseif (is_array($params['continue'])){
+        	$continue = $params['continue'];
+        	unset($params['continue']);
+        	$params = array_merge($params, $continue);
+        }
+
+        $addparams ='';
+
+        foreach ($params as $key => $value) {
+        	$addparams .= "&$key=" . urlencode($value);
+        }
+
+        $ret = $this->query('?action=query&format=php&list=usercontribs' . $addparams);
+
+        if (isset($ret['error'])) {
+        	throw new Exception('UserContributions Error ' . $ret['error']['info']);
+        }
+
+        return $ret;
+    }
+
     /**
      * Get category members
      *

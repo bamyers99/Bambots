@@ -31,6 +31,7 @@ $GLOBALS['botname'] = 'InceptionBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
+        'Ants' => '',
         'Architecture' => 'Portal:Architecture/New article announcements',
         'Astro' => '',
         'Biomes' => '',

@@ -23,6 +23,7 @@
 <h1>BamBots</h1>
 <ul>
     <li><a href="InceptionBot.php">InceptionBot - WikiProject New Page Detector</a></li>
+    <li><a href="UserNewPages.php">User New Page Lister</a></li>
 </ul>
 </body>
 </html>
