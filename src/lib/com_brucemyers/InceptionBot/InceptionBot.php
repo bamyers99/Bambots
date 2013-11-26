@@ -95,7 +95,8 @@ class InceptionBot
             if (count($ruleset->errors)) $errorrulsets[] = $rulename;
 
             // Retrieve the existing results
-            $existing = $this->_getExistingResults($rulename, $pagenames);
+            $deletedexistingcnt = 0;
+            $existing = $this->_getExistingResults($rulename, $pagenames, $deletedexistingcnt);
 
             foreach ($allpages as $newpage) {
                 $title = $newpage['title'];
@@ -120,7 +121,7 @@ class InceptionBot
             $proctime = sprintf("%d:%02d", $ts['minutes'], $ts['seconds']);
 
             $this->_writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/log",
-                $existing, $rulesetresult, $ruleset, $proctime, $earliestTimestamp, $creators);
+                $existing, $rulesetresult, $ruleset, $proctime, $earliestTimestamp, $creators, $deletedexistingcnt);
         }
 
         $ts = $totaltimer->stop();
@@ -137,10 +138,12 @@ class InceptionBot
      *
      * @param $rulename string Rulename
      * @param $allpages array Pagenames to keep
+     * @param $deletedcnt int (write only) Deleted existing results count
      * @return array Existing results
      */
-    protected function _getExistingResults($rulename, &$allpages)
+    protected function _getExistingResults($rulename, &$allpages, &$deletedcnt)
     {
+        $deletedcnt = 0;
         $results = $this->mediawiki->getpage("User:AlexNewArtBot/{$rulename}SearchResult");
 
         $startpos = strpos($results, '*{{');
@@ -155,6 +158,7 @@ class InceptionBot
             } elseif (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]]
                 $title = $matches[1];
                 if (in_array($title, $allpages)) $existing[$title] = $line;
+                else ++$deletedcnt;
             }
         }
 
@@ -171,8 +175,11 @@ class InceptionBot
     /**
      * Write a rulesets results and log
      */
-    protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime, $earliestTimestamp, &$creators)
+    protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime, $earliestTimestamp,
+       &$creators, $deletedexistingcnt)
     {
+        if (count($newresults) == 0 && $deletedexistingcnt == 0) return; // No changes
+
         $rulename = $ruleset->name;
     	$errorcnt = count($ruleset->errors);
         usort($newresults, function($a, $b) {
@@ -218,7 +225,12 @@ class InceptionBot
     	}
 
     	$artcnt = count($newresults);
-        $this->resultWriter->writeResults($resultpage, $output, "most recent results, $artcnt articles");
+    	$totalcnt = $artcnt + count($existingresults);
+    	if ($artcnt > 0 && $deletedexistingcnt > 0) $msg = "added $artcnt, removed $deletedexistingcnt";
+    	elseif ($artcnt > 0) $msg = "added $artcnt";
+    	else $msg = "removed $deletedexistingcnt";
+
+        $this->resultWriter->writeResults($resultpage, $output, "most recent results, $msg, total $totalcnt");
 
     	// Log file
     	$output = '';

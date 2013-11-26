@@ -49,7 +49,7 @@ class UserContribLister
     /**
      * Get next batch of new pages
      *
-     * @return mixed false: no more pages, array: keys = title, user, timestamp (2013-09-17T19:24:15Z) format
+     * @return mixed false: no more pages, array: keys = title, size, comment, new, bot, minor, timestamp (2013-09-17T19:24:15Z) format
      */
     public function getNextBatch()
     {
