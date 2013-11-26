@@ -65,11 +65,12 @@ class Properties
      *
      * @param $key string Property name
      * @param $value string Property value
+     * @param $writefile bool default:false Write to the prop file
      */
-    public function set($key, $value)
+    public function set($key, $value, $writefile = false)
     {
         $this->props[$key] = $value;
-        $this->_save();
+        if ($writefile) $this->_save();
     }
 
     /**

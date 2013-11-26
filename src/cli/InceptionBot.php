@@ -95,7 +95,7 @@ try {
 
     $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, $resultwriter, $newlastrun);
 
-    Config::set(InceptionBot::LASTRUN, $newlastrun);
+    Config::set(InceptionBot::LASTRUN, $newlastrun, true);
 
     $ts = $timer->stop();
 

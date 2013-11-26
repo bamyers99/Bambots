@@ -82,7 +82,7 @@ class CustomRunner extends UnitTestCase
 
         $bot = new InceptionBot($wiki, $rules, $earliestTimestamp, $lastrun, new FileResultWriter(Config::get(InceptionBot::OUTPUTDIR)), $newlastrun);
 
-        Config::set(InceptionBot::LASTRUN, $newlastrun);
+        Config::set(InceptionBot::LASTRUN, $newlastrun, true);
 
         $ts = $timer->stop();
 

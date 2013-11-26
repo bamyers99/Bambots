@@ -59,9 +59,10 @@ class Config
      *
      * @param $key string Property name
      * @param $value string Property value
+     * @param $writefile bool default:false Write to the prop file
      */
-    public static function set($key, $value)
+    public static function set($key, $value, $writefile = false)
     {
-        self::$properties->set($key, $value);
+        self::$properties->set($key, $value, $writefile);
     }
 }
