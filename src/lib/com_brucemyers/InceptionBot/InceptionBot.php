@@ -58,6 +58,7 @@ class InceptionBot
         while (($pages = $lister->getNextBatch()) !== false) {
             $allpages = array_merge($allpages, $pages);
         }
+        $allpages = array_unique($allpages); // It happens
         Logger::log('New page count = ' . count($allpages));
 
         $pagenames = array();
@@ -213,7 +214,7 @@ class InceptionBot
     	foreach ($existingresults as $line) {
     	    if ($line != '----') ++$existingcnt;
     	    if ($linecnt > 600) {
-                if (preg_match(self.EXISTINGREGEX, $line, $matches)) {
+                if (preg_match(self::EXISTINGREGEX, $line, $matches)) {
                     $title = $matches[1];
                     $displayuser = $matches[2];
                     $user = str_replace(' ', '_', $displayuser);
