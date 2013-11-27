@@ -33,11 +33,14 @@ class TestRuleSetProcessor extends UnitTestCase
         7 /$SIZE>10/
         9 /$SIZE<50000/
         -50 /$SIZE<10/
+        100 /InComment/
 EOT;
 
         $data = <<<'EOT2'
         {{Infobox|title=Michigan}}
         '''Michigan''' is in the United States.
+
+        <!-- Shouldn't match rule InComment -->
 
         ==See also==
         [[Michigan City, Indiana]]
