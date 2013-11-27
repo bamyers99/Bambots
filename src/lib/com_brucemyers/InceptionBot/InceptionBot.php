@@ -208,8 +208,10 @@ class InceptionBot
     	}
 
     	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
+    	$existingcnt = 0;
 
     	foreach ($existingresults as $line) {
+    	    if ($line != '----') ++$existingcnt;
     	    if ($linecnt > 600) {
                 if (preg_match(self.EXISTINGREGEX, $line, $matches)) {
                     $title = $matches[1];
@@ -225,7 +227,7 @@ class InceptionBot
     	}
 
     	$artcnt = count($newresults);
-    	$totalcnt = $artcnt + count($existingresults);
+    	$totalcnt = $artcnt + $existingcnt;
     	if ($artcnt > 0 && $deletedexistingcnt > 0) $msg = "added $artcnt, removed $deletedexistingcnt";
     	elseif ($artcnt > 0) $msg = "added $artcnt";
     	else $msg = "removed $deletedexistingcnt";
