@@ -18,6 +18,7 @@
 <html>
 <head>
     <title>BamBots</title>
+    <meta name="robots" content="noindex, nofollow">
 </head>
 <body>
 <h1>BamBots</h1>

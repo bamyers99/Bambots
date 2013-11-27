@@ -23,6 +23,7 @@ $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'InceptionBot';
+define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -44,6 +45,7 @@ function display_pages($user, $days)
     <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	    <meta name="robots" content="noindex, nofollow">
 	    <title>User New Pages</title>
 	    <style>
            table {
@@ -82,7 +84,7 @@ function display_pages($user, $days)
         </script>
     <?php
 
-    if (! empty($user)) {
+    if (! empty($user) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
         display_articles($user, $days);
     }
 

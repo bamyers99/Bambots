@@ -189,7 +189,7 @@ class InceptionBot
     	// Result file
     	$linecnt = 0;
     	$logerror = ($errorcnt) ? "Match log and errors" : "Match log";
-    	$output = "<noinclude>{{fmbox|text= This is a new articles list for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
+    	$output = "<noinclude>__NOINDEX__\n{{fmbox|text= This is a new articles list for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
 
 [[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/log|$logerror]] | Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
 
@@ -237,7 +237,7 @@ class InceptionBot
 
     	$rulecnt = count($ruleset->rules);
     	$threshold = $ruleset->minScore;
-    	$output .= "<noinclude>{{fmbox|text= This is a new articles log for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>Pattern count: $rulecnt &mdash; Error count: $errorcnt &mdash; Threshold: $threshold &mdash; Processing time: $proctime\n";
+    	$output .= "<noinclude>__NOINDEX__\n{{fmbox|text= This is a new articles log for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>Pattern count: $rulecnt &mdash; Error count: $errorcnt &mdash; Threshold: $threshold &mdash; Processing time: $proctime\n";
     	if ($errorcnt) {
     		$output .= "==Errors==\n";
     		foreach ($ruleset->errors as $error) {
@@ -276,6 +276,7 @@ class InceptionBot
         $newestpagecnt = number_format($newestpagecnt);
         $updatedpagecnt = number_format($updatedpagecnt);
         $output = <<<EOT
+<noinclude>__NOINDEX__</noinclude>
 '''Last run:''' {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />
 '''Processing time:''' $totaltime<br />
 '''Project count:''' $rulesetcnt<br />
@@ -308,7 +309,7 @@ EOT;
         $etmonth = $matches[2];
         $etday = $matches[3];
 
-        $output = "New page creators (10+ pages) since $etyear-$etmonth-$etday.\n\n{| class=\"wikitable sortable\"\n|-\n!User !! Page count\n";
+        $output = "<noinclude>__NOINDEX__</noinclude>\nNew page creators (10+ pages) since $etyear-$etmonth-$etday.\n\n{| class=\"wikitable sortable\"\n|-\n!User !! Page count\n";
 
         foreach ($creators as $displayuser => $pagecnt) {
             if ($pagecnt < 10) continue;

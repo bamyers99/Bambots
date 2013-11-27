@@ -48,13 +48,14 @@ switch ($action) {
  * @param $testpage string (Optional) Page to test the rules against
  * @param $results string (Optional) Test results to display
  */
-function rule_display($rulename , $testpage, $results = null)
+function rule_display($rulename, $testpage, $results = null)
 {
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	    <meta name="robots" content="noindex, nofollow">
 	    <title>New Page Search Rule Test</title>
 	    <style>
 	        li {
@@ -93,6 +94,10 @@ function rule_display($rulename , $testpage, $results = null)
  */
 function rule_test($rulename, $testpage)
 {
+    if (empty($rulename)) {
+        rule_display($rulename, $testpage);
+        return;
+    }
     $prefix = 'User:AlexNewArtBot/';
     $fullrulename = $rulename;
     if (strpos($fullrulename, $prefix) === false) $fullrulename = $prefix . $rulename;
@@ -106,7 +111,7 @@ function rule_test($rulename, $testpage)
     $ruledata = $wiki->getPage($fullrulename);
 
     if (empty($ruledata)) {
-        $results = 'Rule page ' . htmlentities($rulename, ENT_HTML401, 'UTF-8') . ' not found.';
+        $results = 'Rule page ' . htmlentities($rulename, ENT_COMPAT, 'UTF-8') . ' not found.';
         rule_display($rulename, $testpage, $results);
         return;
     }

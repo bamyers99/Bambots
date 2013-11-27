@@ -39,10 +39,12 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
         'Cheshire' => '',
         'Cuisine' => '',
         'Cycling' => 'Wikipedia:WikiProject_Cycling/New_articles',
+        'DnD' => '',
         'FoodDrink' => '',
         'Forestry' => 'Wikipedia:WikiProject Forestry',
         'Gastropods' => '',
         'HipHop' => '',
+        'Ireland' => '',
         'Japan' => '',
         'Michigan' => '',
         'MMA' => '',
@@ -51,6 +53,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
         'Oregon' => '',
         'Philately' => 'Wikipedia:WikiProject Philately/New articles',
         'Poland' => 'Portal:Poland/New article announcements',
+        'RPGames' => '',
         'Sweden' => "Wikipedia:Swedish Wikipedians' notice board/New articles"
     );
 
