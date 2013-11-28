@@ -179,7 +179,7 @@ class InceptionBot
     protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime, $earliestTimestamp,
        &$creators, $deletedexistingcnt)
     {
-        if (count($newresults) == 0 && $deletedexistingcnt == 0) return; // No changes
+        if (count($newresults) == 0) return;
 
         $rulename = $ruleset->name;
     	$errorcnt = count($ruleset->errors);
