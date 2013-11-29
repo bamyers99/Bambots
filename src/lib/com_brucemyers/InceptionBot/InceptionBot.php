@@ -53,12 +53,20 @@ class InceptionBot
         // Retrieve the new pages
         $lister = new NewPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
-        $allpages = array();
+        $temppages = array();
 
         while (($pages = $lister->getNextBatch()) !== false) {
-            $allpages = array_merge($allpages, $pages);
+            $temppages = array_merge($temppages, $pages);
         }
-        $allpages = array_unique($allpages); // It happens
+
+        // Get rid of duplicates
+        $allpages = array();
+        foreach ($temppages as $newpage) {
+            $allpages[$newpage['title']] = $newpage;
+        }
+
+        unset($temppages); // Free-up the memory
+
         Logger::log('New page count = ' . count($allpages));
 
         $pagenames = array();
