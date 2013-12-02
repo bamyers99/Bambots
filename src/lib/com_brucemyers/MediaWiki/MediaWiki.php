@@ -360,4 +360,37 @@ class MediaWiki extends wikipedia
 
         return $ret;
     }
+
+    /**
+     * Get log events
+     *
+     * https://www.mediawiki.org/wiki/API:Logevents
+     *
+     * @param $params array Log events query parameters le...
+     * @return array Recent changes ['query']['logevents'], ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getLogEvents($params)
+    {
+        if (! isset($params['continue'])) {
+        	$params['continue'] = '';
+        } elseif (is_array($params['continue'])){
+        	$continue = $params['continue'];
+        	unset($params['continue']);
+        	$params = array_merge($params, $continue);
+        }
+
+        $addparams ='';
+
+        foreach ($params as $key => $value) {
+        	$addparams .= "&$key=" . urlencode($value);
+        }
+
+        $ret = $this->query('?action=query&format=php&list=logevents' . $addparams);
+
+        if (isset($ret['error'])) {
+        	throw new Exception('LogEvents Error ' . $ret['error']['info']);
+        }
+
+        return $ret;
+    }
 }

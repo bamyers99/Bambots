@@ -69,6 +69,28 @@ class InceptionBot
 
         Logger::log('New page count = ' . count($allpages));
 
+        // Rename moved pages
+        $movedpagecnt = 0;
+        $lister = new MovedPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
+
+        while (($movedpages = $lister->getNextBatch()) !== false) {
+        	foreach ($movedpages as $movedpage) {
+                if ($movedpage['oldns'] != 0 || $movedpage['newns'] != 0) continue;
+                $oldtitle = $movedpage['oldtitle'];
+
+                if (isset($allpages[$oldtitle])) {
+                    $newtitle = $movedpage['newtitle'];
+                    $temppage = $allpages[$oldtitle];
+                    $temppage['title'] = $newtitle;
+                    unset($allpages[$oldtitle]);
+                    $allpages[$newtitle] = $temppage;
+                    ++$movedpagecnt;
+                }
+        	}
+        }
+
+        Logger::log("Moved page count = $movedpagecnt");
+
         $pagenames = array();
         $newestpages = array();
         foreach ($allpages as $newpage) {
