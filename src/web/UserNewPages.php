@@ -126,7 +126,7 @@ function display_articles($user, $days)
                 $timestamp = str_replace(array('T','Z'), array(' ',''), $page['timestamp']);
                 $size = number_format($page['size']);
                 $redirect = '';
-                if (strpos($page['comment'], 'Redirected page to') !== false || strpos($page['comment'], 'moved page') !== false) $redirect = ' (redirect)';
+                if (strpos($page['comment'], 'Redirect') !== false || strpos($page['comment'], 'moved page') !== false) $redirect = ' (redirect)';
                 $class = '';
                 if ($line++ % 2 == 1) $class = ' class="altrow"';
                 echo "<tr$class><td><a href='https://en.wikipedia.org/wiki/$urlencodedtitle'>$title</a>$redirect</td><td>$timestamp</td><td style='text-align:right'>$size</td></tr>";
