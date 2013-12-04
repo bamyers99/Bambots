@@ -71,6 +71,7 @@ class InceptionBot
 
         // Rename moved pages
         $movedpagecnt = 0;
+        $oldtitles = array();
         $lister = new MovedPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
         while (($movedpages = $lister->getNextBatch()) !== false) {
@@ -82,8 +83,14 @@ class InceptionBot
                     $newtitle = $movedpage['newtitle'];
                     $temppage = $allpages[$oldtitle];
                     $temppage['title'] = $newtitle;
+
+                    if (! isset($temppage['oldtitles'])) $temppage['oldtitles'] = array();
+                    $temppage['oldtitles'][] = $oldtitle;
+
                     unset($allpages[$oldtitle]);
                     $allpages[$newtitle] = $temppage;
+
+                    $oldtitles[] = $oldtitle;
                     ++$movedpagecnt;
                 }
         	}
@@ -127,11 +134,16 @@ class InceptionBot
 
             // Retrieve the existing results
             $deletedexistingcnt = 0;
-            $existing = $this->_getExistingResults($rulename, $pagenames, $deletedexistingcnt);
+            $existing = $this->_getExistingResults($rulename, $pagenames, $deletedexistingcnt, $oldtitles);
 
             foreach ($allpages as $newpage) {
                 $title = $newpage['title'];
                 if (isset($existing[$title])) continue;
+                if (isset($newpage['oldtitles'])) {
+                    foreach ($newpage['oldtitles'] as $oldtitle) {
+                        if (isset($existing[$oldtitle])) continue 2;
+                    }
+                }
 
                 if (in_array($title, $newestpages) || in_array($title, $updatedpages)) {
                     $data = $mediawiki->getPageWithCache($title);
@@ -170,9 +182,10 @@ class InceptionBot
      * @param $rulename string Rulename
      * @param $allpages array Pagenames to keep
      * @param $deletedcnt int (write only) Deleted existing results count
+     * @param $oldtitles array Old page titles
      * @return array Existing results
      */
-    protected function _getExistingResults($rulename, &$allpages, &$deletedcnt)
+    protected function _getExistingResults($rulename, &$allpages, &$deletedcnt, &$oldtitles)
     {
         $deletedcnt = 0;
         $results = $this->mediawiki->getpage("User:AlexNewArtBot/{$rulename}SearchResult");
@@ -188,7 +201,7 @@ class InceptionBot
                 $existing[' ' . $dividerno++] = $line;
             } elseif (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]]
                 $title = $matches[1];
-                if (in_array($title, $allpages)) $existing[$title] = $line;
+                if (in_array($title, $allpages) || in_array($title, $oldtitles)) $existing[$title] = $line;
                 else ++$deletedcnt;
             }
         }
