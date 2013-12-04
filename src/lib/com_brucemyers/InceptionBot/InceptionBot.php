@@ -194,16 +194,18 @@ class InceptionBot
         if ($startpos === false) return array();
 
         $dividerno = 0;
+        $prevline = '';
         $existing = array();
         $results = explode("\n", substr($results, $startpos));
         foreach ($results as $line) {
-            if ($line == '----') {
+            if ($line == '----' && $prevline != '----') {
                 $existing[' ' . $dividerno++] = $line;
             } elseif (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]]
                 $title = $matches[1];
                 if (in_array($title, $allpages) || in_array($title, $oldtitles)) $existing[$title] = $line;
                 else ++$deletedcnt;
             }
+            $prevline = $line;
         }
 
         // Pop trailing dividers
@@ -251,7 +253,7 @@ class InceptionBot
         	++$linecnt;
     	}
 
-    	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
+    	if (! empty($newresults) && ! empty($existingresults) && reset($existingresults) != '----') $output .= "----\n";
     	$existingcnt = 0;
 
     	foreach ($existingresults as $line) {
