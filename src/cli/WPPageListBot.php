@@ -17,6 +17,7 @@
 
 use com_brucemyers\WPPageListBot\WPPageListBot;
 use com_brucemyers\MediaWiki\WikiResultWriter;
+use com_brucemyers\MediaWiki\FileResultWriter;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Config;
@@ -41,20 +42,20 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
                         'bannertemplate' => ''
         ),
     );
-    $activerules = array(
-    	'WikiProject Oregon' => array(
-    		'category' => 'WikiProject Oregon pages',
-    		'articles' => 'User:Bamyers99/sandbox/WP Oregon Admin',
-    		'nonarticles' => 'User:Bamyers99/sandbox/WP Oregon Admin2',
-    		'bannertemplate' => 'Wikipedia:WikiProject Oregon/Nav'
-    	),
-    	'WikiProject Michigan' => array(
-    		'category' => 'WikiProject Michigan articles',
-    		'articles' => 'User:Bamyers99/sandbox/WP Michigan recent changes',
-    		'nonarticles' => '',
-    		'bannertemplate' => ''
-    	),
-    );
+//     $activerules = array(
+//     	'WikiProject Oregon' => array(
+//     		'category' => 'WikiProject Oregon pages',
+//     		'articles' => 'User:Bamyers99/sandbox/WP Oregon Admin',
+//     		'nonarticles' => 'User:Bamyers99/sandbox/WP Oregon Admin2',
+//     		'bannertemplate' => 'Wikipedia:WikiProject Oregon/Nav'
+//     	),
+//     	'WikiProject Michigan' => array(
+//     		'category' => 'WikiProject Michigan articles',
+//     		'articles' => 'User:Bamyers99/sandbox/WP Michigan recent changes',
+//     		'nonarticles' => '',
+//     		'bannertemplate' => ''
+//     	),
+//     );
 
 try {
     $ruletype = 'custom'; // 'active', 'custom', 'all'
@@ -70,14 +71,15 @@ try {
     $wiki->login($username, $password);
 
     if ($ruletype == 'active') $rules = $activerules;
-    elseif ($ruletype== 'custom') $rules = array('WikiProject Oregon' => $activerules['WikiProject Oregon']);
+    elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $activerules['WikiProject Michigan']);
     else {
         $data = $wiki->getpage('User:AlexNewArtBot/Master');
         $rules = $data; // TODO: Parse WPPageListBot page for rules
     }
 
 
-    $bot = new WPPageListBot($wiki, $rules, new WikiResultWriter($wiki));
+    //$bot = new WPPageListBot($wiki, $rules, new WikiResultWriter($wiki));
+    $bot = new WPPageListBot($wiki, $rules, new FileResultWriter('/Users/brucemyers/temp/tedderbot/'));
 
     $ts = $timer->stop();
 
