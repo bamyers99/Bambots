@@ -107,6 +107,8 @@ class FileCache
             return '~' . bin2hex($c[0]);
         }, $key);
 
+        if (strlen($key) > 254) $key = md5($key);
+
         return $key;
     }
 
