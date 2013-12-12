@@ -272,27 +272,7 @@ class MediaWiki extends wikipedia
      */
     public function getRecentChanges($params)
     {
-        if (! isset($params['continue'])) {
-            $params['continue'] = '';
-        } elseif (is_array($params['continue'])){
-            $continue = $params['continue'];
-            unset($params['continue']);
-            $params = array_merge($params, $continue);
-        }
-
-        $addparams ='';
-
-        foreach ($params as $key => $value) {
-            $addparams .= "&$key=" . urlencode($value);
-        }
-
-        $ret = $this->query('?action=query&format=php&list=recentchanges' . $addparams);
-
-        if (isset($ret['error'])) {
-           	throw new Exception('RecentChanges Error ' . $ret['error']['info']);
-        }
-
-        return $ret;
+        return $this->getList('recentchanges', $params);
     }
 
     /**
@@ -305,27 +285,7 @@ class MediaWiki extends wikipedia
      */
     public function getContributions($params)
     {
-        if (! isset($params['continue'])) {
-        	$params['continue'] = '';
-        } elseif (is_array($params['continue'])){
-        	$continue = $params['continue'];
-        	unset($params['continue']);
-        	$params = array_merge($params, $continue);
-        }
-
-        $addparams ='';
-
-        foreach ($params as $key => $value) {
-        	$addparams .= "&$key=" . urlencode($value);
-        }
-
-        $ret = $this->query('?action=query&format=php&list=usercontribs' . $addparams);
-
-        if (isset($ret['error'])) {
-        	throw new Exception('UserContributions Error ' . $ret['error']['info']);
-        }
-
-        return $ret;
+        return $this->getList('usercontribs', $params);
     }
 
     /**
@@ -338,27 +298,7 @@ class MediaWiki extends wikipedia
      */
     public function getCategoryMembers($params)
     {
-        if (! isset($params['continue'])) {
-            $params['continue'] = '';
-        } elseif (is_array($params['continue'])){
-            $continue = $params['continue'];
-            unset($params['continue']);
-            $params = array_merge($params, $continue);
-        }
-
-        $addparams ='';
-
-        foreach ($params as $key => $value) {
-            $addparams .= "&$key=" . urlencode($value);
-        }
-
-        $ret = $this->query('?action=query&format=php&list=categorymembers' . $addparams);
-
-        if (isset($ret['error'])) {
-        	throw new Exception('CategoryMembers Error ' . $ret['error']['info']);
-        }
-
-        return $ret;
+        return $this->getList('categorymembers', $params);
     }
 
     /**
@@ -370,6 +310,18 @@ class MediaWiki extends wikipedia
      * @return array Recent changes ['query']['logevents'], ['continue']; pass ['continue'] back in as a param to get more results
      */
     public function getLogEvents($params)
+    {
+        return $this->getList('logevents', $params);
+    }
+
+    /**
+     * Get list
+     *
+     * @param $listtype string List type
+     * @param $params array Log events query parameters le...
+     * @return ..., ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getList($listtype, $params)
     {
         if (! isset($params['continue'])) {
         	$params['continue'] = '';
@@ -385,10 +337,10 @@ class MediaWiki extends wikipedia
         	$addparams .= "&$key=" . urlencode($value);
         }
 
-        $ret = $this->query('?action=query&format=php&list=logevents' . $addparams);
+        $ret = $this->query("?action=query&format=php&list=$listtype" . $addparams);
 
         if (isset($ret['error'])) {
-        	throw new Exception('LogEvents Error ' . $ret['error']['info']);
+        	throw new Exception("$listtype Error " . $ret['error']['info']);
         }
 
         return $ret;
