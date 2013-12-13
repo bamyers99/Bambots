@@ -31,19 +31,20 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
     $activerules = array(
         'WikiProject Protected areas' => array(
                         'WPCategory' => 'Articles of WikiProject Protected areas',
-                        'altCategory' => '',
-                        'articleCategoryPart' => 'Protected area',
+                        'altWPCategory' => '',
+                        'articleCategoryPart' => array('Protected area'),
                         'resultPage' => 'Wikiproject:Protected areas/Missing template',
                         'excludeWords' => array()
         ),
         'WikiProject Michigan' => array(
                         'WPCategory' => 'WikiProject Michigan articles',
-                        'altCategory' => 'Michigan road transport articles',
-                        'articleCategoryPart' => 'Michigan',
+                        'altWPCategory' => 'Michigan road transport articles',
+                        'articleCategoryPart' => array('Michigan','Detroit'),
                         'resultPage' => 'Wikiproject:Michigan/Missing template',
                         'excludeWords' => array('alumni','people','faculty','actors','actresses','mayors','members','coaches','players','seasons',
-                            'artists','musicians','presidents','prisoners','personalities','writers','wikipedians','womens','directors',
-                            'politicians','athletes','article','template','from Michigan','swimmers','deaths','suicides','Michigan City, Indiana')
+                            'artists','musicians','presidents','prisoners','personalities','writers','wikipedian','directors','legislators',
+                            'politicians','athletes','article','from Michigan','swimmers','deaths','suicides','Michigan City, Indiana',
+                            'executives','owners','personnel','scouts','broadcasters','draft picks','managers','judges','bishops')
         ),
     );
 

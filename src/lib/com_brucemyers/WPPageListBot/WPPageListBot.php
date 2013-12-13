@@ -30,7 +30,7 @@ class WPPageListBot
 {
     protected $mediawiki;
     protected $curtime;
-    protected $category;
+    protected $categories;
     protected $bannertemplate;
     protected $wikiproject;
     protected $resultWriter;
@@ -44,7 +44,7 @@ class WPPageListBot
      * @param $resultWriter ResultWriter
      *
      * Configs:
-     *   'category' => 'WikiProject Oregon pages',
+     *   'categories' => array('WikiProject Oregon pages'),
      *   'articles' => 'Wikipedia:WikiProject Oregon/Admin',
      *   'nonarticles' => 'Wikipedia:WikiProject Oregon/Admin2',
      *   'bannertemplate' => 'Wikipedia:WikiProject Oregon/Nav'
@@ -67,37 +67,41 @@ class WPPageListBot
                 $this->curtime = date('G:i l F j, Y');
                 $this->bannertemplate = $config['bannertemplate'];
 
-                // Retrieve the category page list
-                $this->category = $config['category'];
-                if (stripos($this->category, 'category:') !== 0) $this->category = 'Category:' . $this->category;
-
-                $params = array(
-                	'cmtitle' => $this->category,
-                	'cmprop' => 'title',
-                	'cmtype' => 'page',
-                	'cmlimit' => Config::get(MediaWiki::WIKICHANGESINCREMENT)
-                );
-
+                // Retrieve the category page lists
                 $pages = array();
-                $continue = array('continue' => '');
+                $this->$categories = $config['$categories'];
 
-                while ($continue !== false) {
-                    $cmparams = array_merge($params, $continue);
+                foreach ($config['$categories'] as $key => $category) {
+                    if (stripos($category, 'category:') !== 0) $category = 'Category:' . $category;
+                    $this->$categories[$key] = $category;
 
-                    $ret = $this->mediawiki->getCategoryMembers($cmparams);
+                    $params = array(
+                    	'cmtitle' => $category,
+                    	'cmprop' => 'title',
+                    	'cmtype' => 'page',
+                    	'cmlimit' => Config::get(MediaWiki::WIKICHANGESINCREMENT)
+                    );
 
-                    if (isset($ret['error'])) throw new Exception('WPPageListBot failed ' . $ret['error']);
-                    if (isset($ret['continue'])) $continue = $ret['continue'];
-                    else $continue = false;
+                    $continue = array('continue' => '');
 
-                    foreach ($ret['query']['categorymembers'] as $cm) {
-                        $ns = $cm['ns'] - 1; // Convert from talk to non-talk namespace
-                        // If wasn't in talk namespace flip the namespace
-                        if (abs($ns % 2) == 1) $ns += 2;
-                        if (! isset($pages[$ns])) $pages[$ns] = array();
-                        $title = preg_replace('/(?:^Talk| talk):/', ':', $cm['title']);
-                        if ($title[0] == ':') $title = substr($title, 1);
-                        $pages[$ns][] = $title;
+                    while ($continue !== false) {
+                        $cmparams = array_merge($params, $continue);
+
+                        $ret = $this->mediawiki->getCategoryMembers($cmparams);
+
+                        if (isset($ret['error'])) throw new Exception('WPPageListBot failed ' . $ret['error']);
+                        if (isset($ret['continue'])) $continue = $ret['continue'];
+                        else $continue = false;
+
+                        foreach ($ret['query']['categorymembers'] as $cm) {
+                            $ns = $cm['ns'] - 1; // Convert from talk to non-talk namespace
+                            // If wasn't in talk namespace flip the namespace
+                            if (abs($ns % 2) == 1) $ns += 2;
+                            if (! isset($pages[$ns])) $pages[$ns] = array();
+                            $title = preg_replace('/(?:^Talk| talk):/', ':', $cm['title']);
+                            if ($title[0] == ':') $title = substr($title, 1);
+                            $pages[$ns][] = $title;
+                        }
                     }
                 }
 
@@ -135,8 +139,11 @@ class WPPageListBot
 
         if (! empty($this->bannertemplate)) $output .= '{{' . $this->bannertemplate . '}}' . "\n";
         $output .= 'This list was constructed from articles tagged with {{tl|' . $this->wikiproject .
-            '}} (or any other article in [[:' . $this->category .
-            ']]) as of ' . $this->curtime . '. This list makes possible [http://en.wikipedia.org/w/index.php?title=Special:Recentchangeslinked&target=' .
+            '}} (or any other article in';
+        foreach ($this->categories as $category) {
+            $output .= ' [[:' . $category .']])';
+        }
+        $output .= ' as of ' . $this->curtime . '. This list makes possible [http://en.wikipedia.org/w/index.php?title=Special:Recentchangeslinked&target=' .
             urlencode(str_replace(' ', '_', $pagename)) . ' Recent article changes].' . "\n\n";
 
         // Print totals

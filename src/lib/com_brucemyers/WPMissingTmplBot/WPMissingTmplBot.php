@@ -45,8 +45,8 @@ class WPMissingTmplBot
      *
      * Configs:
      *   'WPCategory' => 'WikiProject Michigan articles',
-     *   'altCategory' => 'Michigan road transport articles',
-     *   'articleCategoryPart' => 'Michigan',
+     *   'altWPCategory' => 'Michigan road transport articles',
+     *   'articleCategoryPart' => array('Michigan','Detroit'),
      *   'resultPage => 'Wikiproject:Michigan/Missing template',
      *   'excludeWords' => array('alumni','people','faculty')
      */
@@ -68,15 +68,17 @@ class WPMissingTmplBot
                 $this->curtime = date('G:i l F j, Y');
 
                 // Retrieve the category page list
+                $talkns = '1|5|11|101|109';
+                $nontalkns = '0|4|10|100|108';
                 $this->category = $config['WPCategory'];
                 if (stripos($this->category, 'category:') !== 0) $this->category = 'Category:' . $this->category;
-                $WPpages = $this->getCategoryMembers($this->category, '1');
+                $WPpages = $this->getCategoryMembers($this->category, $talkns);
 
                 // Retrieve the alternate category page list
-                $this->altcategory = $config['altCategory'];
+                $this->altcategory = $config['altWPCategory'];
                 if (! empty($this->altcategory)) {
                     if (stripos($this->altcategory, 'category:') !== 0) $this->altcategory = 'Category:' . $this->altcategory;
-                    $temppages = $this->getCategoryMembers($this->altcategory, '1');
+                    $temppages = $this->getCategoryMembers($this->altcategory, $talkns);
                     $WPpages = array_merge($WPpages, $temppages);
                 }
 
@@ -86,6 +88,7 @@ class WPMissingTmplBot
                 $excludewords = $config['excludeWords'];
                 if (! empty($excludewords)) $excludewords = implode('|', $excludewords);
                 $articleCategoryPart = $config['articleCategoryPart'];
+                $articleCategoryPart = implode('|', $articleCategoryPart);
 
                 $artpages = array();
 
@@ -96,10 +99,10 @@ class WPMissingTmplBot
                 	$buffer = trim($buffer);
                 	if (empty($buffer)) continue;
 
-                	if (stripos($buffer, $articleCategoryPart) !== false &&
-                	        (empty($excludewords) || preg_match("!(?:$excludewords)!i", $buffer) == 0)) {
+                	if (preg_match("!(?:$articleCategoryPart)!i", $buffer) &&
+                	        (empty($excludewords) || preg_match("!\\b(?:$excludewords)!i", $buffer) == 0)) {
                 	    echo $buffer . "\n";
-                	    $pages = $this->getCategoryMembers($buffer, '0');
+                	    $pages = $this->getCategoryMembers($buffer, $nontalkns);
 
                 	    foreach ($pages as $pagename => $dummy) {
                             if (! isset($WPpages[$pagename])) $artpages[$pagename] = true;
@@ -111,7 +114,7 @@ class WPMissingTmplBot
 
                 ksort($artpages);
 
-                // Generate the result pages
+                // Generate the result page
                 $this->generatePage($config['resultPage'], $artpages);
 
              } catch (Exception $ex) {

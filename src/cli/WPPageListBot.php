@@ -30,13 +30,13 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
         'WikiProject Oregon' => array(
-                        'category' => 'WikiProject Oregon pages',
+                        'categories' => array('WikiProject Oregon pages'),
                         'articles' => 'Wikipedia:WikiProject Oregon/Admin',
                         'nonarticles' => 'Wikipedia:WikiProject Oregon/Admin2',
                         'bannertemplate' => 'Wikipedia:WikiProject Oregon/Nav'
         ),
         'WikiProject Michigan' => array(
-                        'category' => 'WikiProject Michigan articles',
+                        'categories' => array('WikiProject Michigan articles','Michigan road transport articles'),
                         'articles' => 'Wikipedia:WikiProject Michigan/Michigan recent changes',
                         'nonarticles' => '',
                         'bannertemplate' => ''
@@ -44,13 +44,13 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
     );
 //     $activerules = array(
 //     	'WikiProject Oregon' => array(
-//     		'category' => 'WikiProject Oregon pages',
+//     		'categories' => array('WikiProject Oregon pages'),
 //     		'articles' => 'User:Bamyers99/sandbox/WP Oregon Admin',
 //     		'nonarticles' => 'User:Bamyers99/sandbox/WP Oregon Admin2',
 //     		'bannertemplate' => 'Wikipedia:WikiProject Oregon/Nav'
 //     	),
 //     	'WikiProject Michigan' => array(
-//     		'category' => 'WikiProject Michigan articles',
+//     		'categories' => array('WikiProject Michigan articles'),
 //     		'articles' => 'User:Bamyers99/sandbox/WP Michigan recent changes',
 //     		'nonarticles' => '',
 //     		'bannertemplate' => ''
