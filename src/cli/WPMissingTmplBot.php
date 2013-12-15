@@ -62,7 +62,7 @@ try {
     $wiki->login($username, $password);
 
     if ($ruletype == 'active') $rules = $activerules;
-    elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $activerules['WikiProject Michigan']);
+    elseif ($ruletype== 'custom') $rules = array('WikiProject Protected areas' => $activerules['WikiProject Protected areas']);
     else {
         $data = $wiki->getpage('User:AlexNewArtBot/Master');
         $rules = $data; // TODO: Parse WPMissingTmplBot page for rules

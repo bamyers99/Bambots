@@ -69,11 +69,11 @@ class WPPageListBot
 
                 // Retrieve the category page lists
                 $pages = array();
-                $this->$categories = $config['$categories'];
+                $this->categories = $config['categories'];
 
-                foreach ($config['$categories'] as $key => $category) {
+                foreach ($config['categories'] as $key => $category) {
                     if (stripos($category, 'category:') !== 0) $category = 'Category:' . $category;
-                    $this->$categories[$key] = $category;
+                    $this->categories[$key] = $category;
 
                     $params = array(
                     	'cmtitle' => $category,
@@ -141,9 +141,9 @@ class WPPageListBot
         $output .= 'This list was constructed from articles tagged with {{tl|' . $this->wikiproject .
             '}} (or any other article in';
         foreach ($this->categories as $category) {
-            $output .= ' [[:' . $category .']])';
+            $output .= ' [[:' . $category .']]';
         }
-        $output .= ' as of ' . $this->curtime . '. This list makes possible [http://en.wikipedia.org/w/index.php?title=Special:Recentchangeslinked&target=' .
+        $output .= ') as of ' . $this->curtime . '. This list makes possible [http://en.wikipedia.org/w/index.php?title=Special:Recentchangeslinked&target=' .
             urlencode(str_replace(' ', '_', $pagename)) . ' Recent article changes].' . "\n\n";
 
         // Print totals
