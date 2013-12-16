@@ -21,6 +21,7 @@ use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;
+use com_brucemyers\Util\Config;
 
 class InceptionBot
 {
@@ -31,6 +32,8 @@ class InceptionBot
     const RULETYPE = 'InceptionBot.ruletype';
     const CUSTOMRULE = 'InceptionBot.customrule';
     const ERROREMAIL = 'InceptionBot.erroremail';
+    const CURRENTPROJECT = 'InceptionBot.currentproject';
+    const CURRENTEND = 'InceptionBot.currentend';
     const EXISTINGREGEX = '!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?(.*)!';
     protected $mediawiki;
     protected $resultWriter;
@@ -43,6 +46,7 @@ class InceptionBot
         $totaltimer->start();
         $errorrulsets = array();
         $creators =  array();
+        $startProject = Config::get(self::CURRENTPROJECT);
 
         // Retrieve the rulesets
         $rulesets = array();
@@ -127,6 +131,10 @@ class InceptionBot
 
         // Score new or updated pages
         foreach ($rulesets as $rulename => $ruleset) {
+            if (! empty($startProject) && $rulename != $startProject) continue;
+            $startProject = '';
+            Config::set(self::CURRENTPROJECT, $rulename, true);
+
             $timer->start();
             $rulesetresult = array();
             $processor = new RuleSetProcessor($ruleset);
@@ -166,6 +174,8 @@ class InceptionBot
             $this->_writeResults("User:AlexNewArtBot/{$rulename}SearchResult", "User:InceptionBot/NewPageSearch/$rulename/log",
                 $existing, $rulesetresult, $ruleset, $proctime, $earliestTimestamp, $creators, $deletedexistingcnt);
         }
+
+        Config::set(self::CURRENTPROJECT, '', true);
 
         $ts = $totaltimer->stop();
         $totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);

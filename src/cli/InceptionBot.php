@@ -89,6 +89,9 @@ try {
     $lastrun = Config::get(InceptionBot::LASTRUN);
     Logger::log("Last run: $lastrun");
     $newlastrun = gmdate('YmdHis');
+    $startProject = Config::get(InceptionBot::CURRENTPROJECT);
+    if (! empty($startProject)) $newlastrun = Config::get(InceptionBot::CURRENTEND);
+    Config::set(InceptionBot::CURRENTEND, $newlastrun, true);
 
     if ($outputtype == 'wiki') $resultwriter = new WikiResultWriter($wiki);
     else {
