@@ -57,7 +57,7 @@ class MovedPageLister
         if ($this->continue === false) return false;
         $params = array_merge($this->params, $this->continue);
 
-        $ret = $this->mediawiki->getLogEvents($params);
+        $ret = $this->mediawiki->getList('logevents', $params);
 
         if (isset($ret['error'])) throw new Exception('MovedPageLister.getNextBatch() failed ' . $ret['error']);
         if (isset($ret['continue'])) $this->continue = $ret['continue'];

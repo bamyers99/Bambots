@@ -87,7 +87,7 @@ class WPPageListBot
                     while ($continue !== false) {
                         $cmparams = array_merge($params, $continue);
 
-                        $ret = $this->mediawiki->getCategoryMembers($cmparams);
+                        $ret = $this->mediawiki->getList('categorymembers', $cmparams);
 
                         if (isset($ret['error'])) throw new Exception('WPPageListBot failed ' . $ret['error']);
                         if (isset($ret['continue'])) $continue = $ret['continue'];
@@ -122,7 +122,7 @@ class WPPageListBot
                     }
 
                     $this->generatePage($config['articles'], $config['nonarticles'], true, $articles);
-                    //$this->generatePage($config['nonarticles'], $config['articles'], false, $pages);
+                    $this->generatePage($config['nonarticles'], $config['articles'], false, $pages);
                 }
             } catch (Exception $ex) {
                 Logger::log($ex->getMessage() . "\n" . $ex->getTraceAsString());

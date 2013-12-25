@@ -4,7 +4,8 @@ Bambots
 Bambots are a collection of Wikipedia bots.
 
 * InceptionBot is a [Wikipedia](https://en.wikipedia.org/) [WikiProject](https://en.wikipedia.org/wiki/Wikipedia:WikiProject) new article locator.
-* WPPageListBot is Wikipedia WikiProject associated page locator.
+* WPMissingTmplBot is a Wikipedia WikiProject talk page missing banner locator.
+* WPPageListBot is a Wikipedia WikiProject associated page locator.
 
 Directory structure
 ===================
@@ -35,4 +36,9 @@ filename - *.properties where * = bot name or testbot
     # InceptionBot.ruletype 'active', 'custom', 'all'
     InceptionBot.ruletype=custom
     InceptionBot.customrule=HipHop
+    InceptionBot.erroremail=a@b.com
+    # InceptionBot.currentproject (for restart capability)
+    InceptionBot.currentproject=
+    # InceptionBot.currentend (for restart capability)
+    InceptionBot.currentend=
 	

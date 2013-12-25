@@ -54,8 +54,8 @@ class InceptionBot
             $rulesets[$rulename] = new RuleSet($rulename, $mediawiki->getpage('User:AlexNewArtBot/' . $rulename));
         }
 
-        // Retrieve the new pages
-        $lister = new NewPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
+        // Retrieve the new pages in namespaces: Article, Template, Category, Draft
+        $lister = new NewPageLister($mediawiki, $earliestTimestamp, $latestTimestamp, '0|10|14|118');
 
         $temppages = array();
 
@@ -76,11 +76,12 @@ class InceptionBot
         // Rename moved pages
         $movedpagecnt = 0;
         $oldtitles = array();
+        $targetns = array('0','118'); // Article, Draft
         $lister = new MovedPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
         while (($movedpages = $lister->getNextBatch()) !== false) {
         	foreach ($movedpages as $movedpage) {
-                if ($movedpage['oldns'] != 0 || $movedpage['newns'] != 0) continue;
+                if (! in_array($movedpage['oldns'], $targetns) || ! in_array($movedpage['newns'], $targetns)) continue;
                 $oldtitle = $movedpage['oldtitle'];
 
                 if (isset($allpages[$oldtitle])) {
@@ -210,7 +211,7 @@ class InceptionBot
         foreach ($results as $line) {
             if ($line == '----' && $prevline != '----') {
                 $existing[' ' . $dividerno++] = $line;
-            } elseif (preg_match('!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]]
+            } elseif (preg_match('!^(?:\\*\\{\\{la\\||\\*\\[\\[|\\{\\{User:AlexNewArtBot/MaintDisplay\\|\\*\\{\\{pagelinks\\|)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]] or {{User:AlexNewArtBot/MaintDisplay|*{{pagelinks|...}}
                 $title = $matches[1];
                 if (in_array($title, $allpages) || in_array($title, $oldtitles)) $existing[$title] = $line;
                 else ++$deletedcnt;
@@ -253,12 +254,16 @@ class InceptionBot
     	foreach ($newresults as $result) {
         	$pageinfo = $result['pageinfo'];
         	$displayuser = $pageinfo['user'];
+        	$ns = $pageinfo['ns'];
             $user = str_replace(' ', '_', $displayuser);
             $urlencodeduser = urlencode($displayuser);
             $newpagecnt = $creators[$displayuser];
         	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
-        	if ($linecnt > 600) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
+
+        	if ($ns != 0) $output .= '{{User:AlexNewArtBot/MaintDisplay|*{{pagelinks|' . $pageinfo['title'] . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)}}";
+        	elseif ($linecnt > 600) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
         	else $output .= '*{{la|' . $pageinfo['title'] . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
+
         	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . "\n";
         	++$linecnt;
     	}

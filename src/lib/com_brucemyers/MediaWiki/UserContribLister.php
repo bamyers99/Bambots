@@ -29,7 +29,7 @@ class UserContribLister
     /**
      * Constructor
      *
-     * @param $mediawiki Media wiki
+     * @param $mediawiki MediaWiki
      * @param $user string Username
      * @param $earliestTimestamp string (20130917000000) format
      * @param $namespace string (optional) default = 0, separate multiple with '|'
@@ -56,7 +56,7 @@ class UserContribLister
         if ($this->continue === false) return false;
         $params = array_merge($this->params, $this->continue);
 
-        $ret = $this->mediawiki->getContributions($params);
+        $ret = $this->mediawiki->getList('usercontribs', $params);
 
         if (isset($ret['error'])) throw new Exception('UserContribLister.getNextBatch() failed ' . $ret['error']);
         if (isset($ret['continue'])) $this->continue = $ret['continue'];

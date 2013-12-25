@@ -115,7 +115,7 @@ function display_articles($user, $days)
 
     echo '<table><caption>New Pages</caption><tr><th>Title</th><th>Created</th><th>Size</th></tr>';
 
-    $lister = new UserContribLister($wiki, $user, $earliest);
+    $lister = new UserContribLister($wiki, $user, $earliest, '0|10|14|118'); // Article, Template, Category, Draft
     $line = 1;
 
     while (($pages = $lister->getNextBatch()) !== false) {

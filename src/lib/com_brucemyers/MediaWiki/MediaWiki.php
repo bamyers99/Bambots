@@ -55,6 +55,8 @@ class MediaWiki extends wikipedia
                     101 => 'Portal talk',
                     108 => 'Book',
                     109 => 'Book talk',
+                    118 => 'Draft',
+                    119 => 'Draft talk',
                     446 => 'Education Program',
                     447 => 'Education Program talk',
                     710 => 'TimedText',
@@ -269,8 +271,9 @@ class MediaWiki extends wikipedia
      *
      * @param $params array Recent changes query parameters rc...
      * @return array Recent changes ['query']['recentchanges'], ['continue']; pass ['continue'] back in as a param to get more results
+     * @deprecated Use MediaWiki::getList('recentchanges', $params)
      */
-    public function getRecentChanges($params)
+    public function getRecentChanges(&$params)
     {
         return $this->getList('recentchanges', $params);
     }
@@ -282,8 +285,9 @@ class MediaWiki extends wikipedia
      *
      * @param $params array Recent changes query parameters uc...
      * @return array Recent changes ['query']['usercontribs'], ['continue']; pass ['continue'] back in as a param to get more results
+     * @deprecated Use MediaWiki::getList('usercontribs', $params)
      */
-    public function getContributions($params)
+    public function getContributions(&$params)
     {
         return $this->getList('usercontribs', $params);
     }
@@ -291,12 +295,13 @@ class MediaWiki extends wikipedia
     /**
      * Get category members
      *
-     * https://www.mediawiki.org/wiki/API:Recentchanges
+     * https://www.mediawiki.org/wiki/API:Categorymembers
      *
      * @param $params array Recent changes query parameters cm...
      * @return array Category members ['query']['categorymembers'], ['continue']; pass ['continue'] back in as a param to get more results
+     * @deprecated Use MediaWiki::getList('categorymembers', $params)
      */
-    public function getCategoryMembers($params)
+    public function getCategoryMembers(&$params)
     {
         return $this->getList('categorymembers', $params);
     }
@@ -308,8 +313,9 @@ class MediaWiki extends wikipedia
      *
      * @param $params array Log events query parameters le...
      * @return array Recent changes ['query']['logevents'], ['continue']; pass ['continue'] back in as a param to get more results
+     * @deprecated Use MediaWiki::getList('logevents', $params)
      */
-    public function getLogEvents($params)
+    public function getLogEvents(&$params)
     {
         return $this->getList('logevents', $params);
     }
@@ -317,8 +323,13 @@ class MediaWiki extends wikipedia
     /**
      * Get list
      *
-     * @param $listtype string List type
-     * @param $params array Log events query parameters le...
+     * https://www.mediawiki.org/wiki/API:Categorymembers
+     * https://www.mediawiki.org/wiki/API:Logevents
+     * https://www.mediawiki.org/wiki/API:Recentchanges
+     * https://www.mediawiki.org/wiki/API:Usercontribs
+     *
+     * @param $listtype string List type - categorymembers, logevents, recentchanges, usercontribs, etc.
+     * @param $params array Query parameters xx...
      * @return ..., ['continue']; pass ['continue'] back in as a param to get more results
      */
     public function getList($listtype, $params)

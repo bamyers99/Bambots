@@ -30,11 +30,12 @@ class NewPageLister
     /**
      * Constructor
      *
-     * @param $mediawiki Media wiki
+     * @param $mediawiki MediaWiki
      * @param $earliestTimestamp (20130917000000) format
      * @param $latestTimestamp
+     * @param $namespace string (optional) default = 0, separate multiple with '|'
      */
-    public function __construct($mediawiki, $earliestTimestamp, $latestTimestamp)
+    public function __construct($mediawiki, $earliestTimestamp, $latestTimestamp, $namespace = '0')
     {
         $this->mediawiki = $mediawiki;
         $this->params = array(
@@ -44,7 +45,7 @@ class NewPageLister
             'rctype' => 'new',
             'rcstart' => $earliestTimestamp,
             'rcend' => $latestTimestamp,
-            'rcnamespace' => 0
+            'rcnamespace' => $namespace
         );
     }
 
@@ -58,7 +59,7 @@ class NewPageLister
         if ($this->continue === false) return false;
         $params = array_merge($this->params, $this->continue);
 
-        $ret = $this->mediawiki->getRecentChanges($params);
+        $ret = $this->mediawiki->getList('recentchanges', $params);
 
         if (isset($ret['error'])) throw new Exception('NewPageLister.getNextBatch() failed ' . $ret['error']);
         if (isset($ret['continue'])) $this->continue = $ret['continue'];
