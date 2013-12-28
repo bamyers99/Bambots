@@ -351,7 +351,12 @@ class InceptionBot
         	    foreach ($result['scoring'] as $match) {
         		    $totscore += $match['score'];
         	    }
-        	    $output .= '*[[' . $result['pageinfo']['title'] . "]] Total score: $totscore\n";
+
+        	    $ns = $result['pageinfo']['ns'];
+
+        	    if ($ns != 0) $output .= '*[[:' . $result['pageinfo']['title'] . "]] Total score: $totscore\n";
+        	    else$output .= '*[[' . $result['pageinfo']['title'] . "]] Total score: $totscore\n";
+
         	    foreach ($result['scoring'] as $match) {
         		    $output .= "**Score: " . $match['score'] . ', pattern: <nowiki>' . $match['regex'] . "</nowiki>\n";
         	    }
