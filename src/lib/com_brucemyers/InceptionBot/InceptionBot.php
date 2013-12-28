@@ -34,14 +34,15 @@ class InceptionBot
     const ERROREMAIL = 'InceptionBot.erroremail';
     const CURRENTPROJECT = 'InceptionBot.currentproject';
     const CURRENTEND = 'InceptionBot.currentend';
-    const EXISTINGREGEX = '!^\\*(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?(.*)!';
     protected $mediawiki;
     protected $resultWriter;
+    protected $existingResultParser;
 
     public function __construct(MediaWiki $mediawiki, $ruleconfigs, $earliestTimestamp, $lastrun, ResultWriter $resultWriter, $latestTimestamp)
     {
         $this->mediawiki = $mediawiki;
         $this->resultWriter = $resultWriter;
+        $this->existingResultParser = new ExistingResultParser();
         $totaltimer = new Timer();
         $totaltimer->start();
         $errorrulsets = array();
@@ -65,9 +66,10 @@ class InceptionBot
 
         // Get rid of duplicates
         $allpages = array();
-        foreach ($temppages as $newpage) {
+        foreach ($temppages as &$newpage) {
             $allpages[$newpage['title']] = $newpage;
         }
+        unset($newpage);
 
         unset($temppages); // Free-up the memory
 
@@ -80,7 +82,7 @@ class InceptionBot
         $lister = new MovedPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
         while (($movedpages = $lister->getNextBatch()) !== false) {
-        	foreach ($movedpages as $movedpage) {
+        	foreach ($movedpages as &$movedpage) {
                 if (! in_array($movedpage['oldns'], $targetns) || ! in_array($movedpage['newns'], $targetns)) continue;
                 $oldtitle = $movedpage['oldtitle'];
 
@@ -88,6 +90,7 @@ class InceptionBot
                     $newtitle = $movedpage['newtitle'];
                     $temppage = $allpages[$oldtitle];
                     $temppage['title'] = $newtitle;
+                    $temppage['ns'] = $movedpage['newns'];
 
                     if (! isset($temppage['oldtitles'])) $temppage['oldtitles'] = array();
                     $temppage['oldtitles'][] = $oldtitle;
@@ -100,18 +103,20 @@ class InceptionBot
                 }
         	}
         }
+        unset($movedpage);
 
         Logger::log("Moved page count = $movedpagecnt");
 
         $pagenames = array();
         $newestpages = array();
-        foreach ($allpages as $newpage) {
+        foreach ($allpages as &$newpage) {
             $creator = $newpage['user'];
             if (isset($creators[$creator])) ++$creators[$creator];
             else $creators[$creator] = 1;
             $pagenames[] = $newpage['title'];
             if (strcmp(str_replace(array('-',':','T','Z'), '', $newpage['timestamp']), $lastrun) > 0) $newestpages[] = $newpage['title'];
         }
+        unset($newpage);
         Logger::log('Newest page count = ' . count($newestpages));
 
         $mediawiki->getPagesWithCache($newestpages);
@@ -145,12 +150,12 @@ class InceptionBot
             $deletedexistingcnt = 0;
             $existing = $this->_getExistingResults($rulename, $pagenames, $deletedexistingcnt, $oldtitles);
 
-            foreach ($allpages as $newpage) {
+            foreach ($allpages as &$newpage) {
                 $title = $newpage['title'];
-                if (isset($existing[$title])) continue;
+                if ($this->_inExisting($existing, $title)) continue;
                 if (isset($newpage['oldtitles'])) {
                     foreach ($newpage['oldtitles'] as $oldtitle) {
-                        if (isset($existing[$oldtitle])) continue 2;
+                        if ($this->_inExisting($existing, $oldtitle)) continue 2;
                     }
                 }
 
@@ -159,15 +164,17 @@ class InceptionBot
                     $results = $processor->processData($data);
 
                     $totalScore = 0;
-                    foreach ($results as $result) {
+                    foreach ($results as &$result) {
                         $totalScore += $result['score'];
                     }
+                    unset($result);
 
                     if ($totalScore >= $ruleset->minScore) {
                         $rulesetresult[] = array('pageinfo' => $newpage, 'scoring' => $results, 'totalScore' => $totalScore);
                     }
                 }
             }
+            unset($newpage);
 
             $ts = $timer->stop();
             $proctime = sprintf("%d:%02d", $ts['minutes'], $ts['seconds']);
@@ -188,6 +195,22 @@ class InceptionBot
     }
 
     /**
+     * Is title in existing results
+     *
+     * @param $existing array of arrays of existing titles
+     * @param $title string Title to check
+     * @return bool Title in results
+     */
+    protected function _inExisting($existing, $title)
+    {
+        foreach ($existing as &$section) {
+            if (isset($section[$title])) return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Get the existing results page for a rule, excluding old results
      *
      * @param $rulename string Rulename
@@ -196,44 +219,34 @@ class InceptionBot
      * @param $oldtitles array Old page titles
      * @return array Existing results
      */
-    protected function _getExistingResults($rulename, &$allpages, &$deletedcnt, &$oldtitles)
+    protected function _getExistingResults($rulename, $allpages, &$deletedcnt, $oldtitles)
     {
         $deletedcnt = 0;
         $results = $this->mediawiki->getpage("User:AlexNewArtBot/{$rulename}SearchResult");
 
-        $startpos = strpos($results, '*{{');
-        if ($startpos === false) return array();
+        $results = $this->existingResultParser->parsePage($results);
 
-        $dividerno = 0;
-        $prevline = '';
-        $existing = array();
-        $results = explode("\n", substr($results, $startpos));
-        foreach ($results as $line) {
-            if ($line == '----' && $prevline != '----') {
-                $existing[' ' . $dividerno++] = $line;
-            } elseif (preg_match('!^(?:\\*\\{\\{la\\||\\*\\[\\[|\\{\\{User:AlexNewArtBot/MaintDisplay\\|\\*\\{\\{pagelinks\\|)([^\\]\\}]+)!', $line, $matches)) { // Matches *{{la|...}} or *[[...]] or {{User:AlexNewArtBot/MaintDisplay|*{{pagelinks|...}}
-                $title = $matches[1];
-                if (in_array($title, $allpages) || in_array($title, $oldtitles)) $existing[$title] = $line;
-                else ++$deletedcnt;
+        foreach ($results as $sectionno => $section) {
+            foreach ($section as $lineno => $line) {
+                $title = $line['title'];
+                if (! in_array($title, $allpages) && ! in_array($title, $oldtitles)) {
+                    unset($results[$sectionno][$lineno]);
+                    ++$deletedcnt;
+                }
             }
-            $prevline = $line;
+
+            // Delete an empty section
+            if (empty($results[$sectionno])) unset($results[$sectionno]);
         }
 
-        // Pop trailing dividers
-        $lastline = end($existing);
-        while (count($existing) && $lastline == '----') {
-            array_pop($existing);
-            $lastline = end($existing);
-        }
-
-        return $existing;
+        return $results;
     }
 
     /**
      * Write a rulesets results and log
      */
     protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime, $earliestTimestamp,
-       &$creators, $deletedexistingcnt)
+       $creators, $deletedexistingcnt)
     {
         if (count($newresults) == 0) return;
 
@@ -251,6 +264,9 @@ class InceptionBot
 [[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/log|$logerror]] <includeonly>| [[$resultpage|Results page]] (for watching) </includeonly>| Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
 
 ";
+
+    	if (! empty($newresults)) $output .= "<ul>\n";
+
     	foreach ($newresults as $result) {
         	$pageinfo = $result['pageinfo'];
         	$displayuser = $pageinfo['user'];
@@ -260,33 +276,48 @@ class InceptionBot
             $newpagecnt = $creators[$displayuser];
         	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
 
-        	if ($ns != 0) $output .= '{{User:AlexNewArtBot/MaintDisplay|*{{pagelinks|' . $pageinfo['title'] . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
-        	elseif ($linecnt > 600) $output .= '*[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
-        	else $output .= '*{{la|' . $pageinfo['title'] . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
+        	if ($ns != 0) $output .= '{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|' . $pageinfo['title'] . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
+        	elseif ($linecnt > 600) $output .= '<li>[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
+        	else $output .= '<li>{{la|' . $pageinfo['title'] . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
 
-        	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'];
+        	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . '</li>';
         	if ($ns != 0) $output .= '}}';
         	$output .= "\n";
         	++$linecnt;
     	}
 
-    	if (! empty($newresults) && ! empty($existingresults) && reset($existingresults) != '----') $output .= "----\n";
+    	if (! empty($newresults)) $output .= "</ul>\n";
+    	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
     	$existingcnt = 0;
+    	$sectioncnt = 0;
 
-    	foreach ($existingresults as $line) {
-    	    if ($line != '----') ++$existingcnt;
-    	    if ($linecnt > 600) {
-                if (preg_match(self::EXISTINGREGEX, $line, $matches)) {
-                    $title = $matches[1];
-                    $displayuser = $matches[2];
-                    $user = str_replace(' ', '_', $displayuser);
-                    $rest = $matches[3];
-                    $output .= '*[[' . $title . ']] ([[Talk:' . $title . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]' . $rest . "\n";
+    	foreach ($existingresults as $section) {
+    	    if ($sectioncnt++ > 0) $output .= "----\n";
+    	    $output .= "<ul>\n";
+
+    	    foreach ($section as $line) {
+        	    ++$existingcnt;
+                $title = $line['title'];
+                $displayuser = $line['user'];
+                $user = str_replace(' ', '_', $displayuser);
+                $urlencodeduser = urlencode($displayuser);
+                $timestamp = $line['timestamp'];
+                $totalScore = $line['totalScore'];
+                $newpagecnt = $creators[$displayuser];
+
+        	    if ($linecnt > 600 && $line['type'] != 'MD') {
+                    $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
+        	    } elseif ($linecnt > 600 && $line['type'] == 'MD') {
+                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>}}\n";
+        	    } elseif ($line['type'] == 'MD') {
+                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|$title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>}}\n";
+        	    } else {
+                    $output .= "<li>{{la|$title}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
                 }
-    	    } else {
-    	        $output .= $line . "\n";
+            	++$linecnt;
     	    }
-        	++$linecnt;
+
+    	    $output .= "</ul>\n";
     	}
 
     	$artcnt = count($newresults);
