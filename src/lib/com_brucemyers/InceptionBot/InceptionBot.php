@@ -303,7 +303,8 @@ class InceptionBot
                 $urlencodeduser = urlencode($displayuser);
                 $timestamp = $line['timestamp'];
                 $totalScore = $line['totalScore'];
-                $newpagecnt = $creators[$displayuser];
+                if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
+                else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
 
         	    if ($linecnt > 600 && $line['type'] != 'MD') {
                     $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
