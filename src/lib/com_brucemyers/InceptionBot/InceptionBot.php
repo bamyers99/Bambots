@@ -253,7 +253,15 @@ class InceptionBot
         $rulename = $ruleset->name;
     	$errorcnt = count($ruleset->errors);
         usort($newresults, function($a, $b) {
-        	return -strnatcmp($a['pageinfo']['timestamp'], $b['pageinfo']['timestamp']); // sort in reverse date order
+            $ans = $a['pageinfo']['ns'];
+            $bns = $b['pageinfo']['ns'];
+            if ($ans == 118) $ans = 0; // Sort drafts with articles
+            if ($bns == 118) $bns = 0;
+
+            if ($ans < $bns) return -1;
+            if ($ans > $bns) return 1;
+
+            return -strnatcmp($a['pageinfo']['timestamp'], $b['pageinfo']['timestamp']); // sort in reverse date order
         });
 
     	// Result file
