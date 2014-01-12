@@ -143,7 +143,7 @@ class WPPageListBot
         foreach ($this->categories as $category) {
             $output .= ' [[:' . $category .']]';
         }
-        $output .= ') as of ' . $this->curtime . '. This list makes possible [http://en.wikipedia.org/w/index.php?title=Special:Recentchangeslinked&target=' .
+        $output .= ') as of ' . $this->curtime . '. This list makes possible [http://en.wikipedia.org/w/index.php?title=Special:RecentChangesLinked&target=' .
             urlencode(str_replace(' ', '_', $pagename)) . ' Recent article changes].' . "\n\n";
 
         // Print totals
