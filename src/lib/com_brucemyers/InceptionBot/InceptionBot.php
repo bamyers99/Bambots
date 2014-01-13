@@ -317,7 +317,7 @@ class InceptionBot
         	    if ($linecnt > 600 && $line['type'] != 'MD') {
                     $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
         	    } elseif ($linecnt > 600 && $line['type'] == 'MD') {
-                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>}}\n";
+                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>}}\n";
         	    } elseif ($line['type'] == 'MD') {
                     $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|$title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>}}\n";
         	    } else {
