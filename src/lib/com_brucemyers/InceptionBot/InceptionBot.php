@@ -201,7 +201,7 @@ class InceptionBot
      * @param $title string Title to check
      * @return bool Title in results
      */
-    protected function _inExisting($existing, $title)
+    protected function _inExisting(&$existing, $title)
     {
         foreach ($existing as &$section) {
             if (isset($section[$title])) return true;
@@ -219,7 +219,7 @@ class InceptionBot
      * @param $oldtitles array Old page titles
      * @return array Existing results
      */
-    protected function _getExistingResults($rulename, $allpages, &$deletedcnt, $oldtitles)
+    protected function _getExistingResults($rulename, &$allpages, &$deletedcnt, &$oldtitles)
     {
         $deletedcnt = 0;
         $results = $this->mediawiki->getpage("User:AlexNewArtBot/{$rulename}SearchResult");
@@ -245,7 +245,7 @@ class InceptionBot
     /**
      * Write a rulesets results and log
      */
-    protected function _writeResults($resultpage, $logpage, $existingresults, $newresults, RuleSet $ruleset, $proctime, $earliestTimestamp,
+    protected function _writeResults($resultpage, $logpage, &$existingresults, $newresults, RuleSet $ruleset, $proctime, $earliestTimestamp,
        $creators, $deletedexistingcnt)
     {
         if (count($newresults) == 0) return;
