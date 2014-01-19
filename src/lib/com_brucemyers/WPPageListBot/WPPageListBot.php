@@ -175,7 +175,7 @@ class WPPageListBot
 
                 if ($ns != 0 && $ns != 1) $title = ':' . $title;
                 $output .= "*[[$title]]";
-                if (! empty($talktitle)) $output .= " ([[$talktitle|talk]])";
+                //if (! empty($talktitle)) $output .= " ([[$talktitle|talk]])";
                 $output .= "\n";
             }
         }
