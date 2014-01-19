@@ -160,10 +160,23 @@ class WPPageListBot
 
         // Print the titles for each namespace
         foreach ($pages as $ns => $titles) {
+            sort($titles);
             $output .= '==' . $this->namespaces[$ns] . "==\n";
             foreach ($titles as $title) {
+                $talktitle = '';
+
+                if ($ns % 2 == 0 && $ns != 2) { // Exclude talk and User
+                    if ($ns == 0) $talktitle = 'Talk:' . $title;
+                    else {
+                        $parts = explode(':', $title, 2);
+                        $talktitle = $parts[0] . '_talk:' . $parts[1];
+                    }
+                }
+
                 if ($ns != 0 && $ns != 1) $title = ':' . $title;
-                $output .= "*[[$title]]\n";
+                $output .= "*[[$title]]";
+                if (! empty($talktitle)) $output .= " ([[$talktitle|talk]])";
+                $output .= "\n";
             }
         }
 
