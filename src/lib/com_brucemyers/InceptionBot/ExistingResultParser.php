@@ -19,7 +19,7 @@ namespace com_brucemyers\InceptionBot;
 
 class ExistingResultParser
 {
-    protected $startTokens = array('<li>{{', '<li>{{User:AlexNewArtBot/MaintDisplay', '*{{');
+    protected $startTokens = array('<li>{{', '{{User:AlexNewArtBot/MaintDisplay|<li>', '*{{');
     protected $linePatterns = array(
         '!^(?:\\*|<li>)(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)!',
         '!^\\{\\{User:AlexNewArtBot/MaintDisplay\\|<li>\\{\\{pagelinks\\|([^\\}]+)\\}+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)!',

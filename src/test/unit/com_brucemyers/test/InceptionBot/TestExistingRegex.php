@@ -37,14 +37,15 @@ class TestExistingRegex extends UnitTestCase
 {{User:AlexNewArtBot/MaintDisplay|<li>[[Template:PitchforkSong]] ([[Template talk:PitchforkSong{{!}}talk]]) by [[User:Lu0490{{!}}Lu0490]] (<span class{{=}}"plainlinks">[[User_talk:Lu0490{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Lu0490{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Lu0490&days{{=}}14 new pages &#40;6&#41;]</span>) started on 2013-12-27, score: 21</li>}}
 {{User:AlexNewArtBot/MaintDisplay|<li>[[:Category:Municipal coats of arms in Romania]] by [[User:Arms_Jones{{!}}Arms Jones]] started on 2014-01-02, score: 50</li>}}
 <li>[[Madhuca malvina]] ([[Talk:Madhuca malvina|talk]]) by [[User:Declangi|Declangi]] started on 2013-11-16, score: 40</li>
+{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|Draft:M-54 and M-83 (Michigan highway)}} by [[User:Highway_231{{!}}Highway 231]] (<span class{{=}}"plainlinks">[[User_talk:Highway_231{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Highway_231{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Highway+231&days{{=}}14 new pages &#40;4&#41;]</span>) started on 2014-01-21, score: 34</li>}}
 </ul>
 ----
 EOT;
 
-        $articles = array('Shoichiro Sakai', 'Ikumi Hayama', 'Madhuca markleeana', 'Basketball uniform', 'Draft:DJ Many', 'Template:PitchforkSong', 'Category:Municipal coats of arms in Romania', 'Madhuca malvina');
-        $users = array('TakuyaMurata', 'Darkslug', 'Declangi', 'Accedie', 'Ocaasi', 'Lu0490', 'Arms Jones', 'Declangi');
-        $timestamps = array('2013-11-23', '2013-11-21', '2013-11-16', '2013-12-25', '2013-12-23', '2013-12-27', '2014-01-02', '2013-11-16');
-        $totalScores = array('100', '180', '40', '24', '25', '21', '50', '40');
+        $articles = array('Shoichiro Sakai', 'Ikumi Hayama', 'Madhuca markleeana', 'Basketball uniform', 'Draft:DJ Many', 'Template:PitchforkSong', 'Category:Municipal coats of arms in Romania', 'Madhuca malvina', 'Draft:M-54 and M-83 (Michigan highway)');
+        $users = array('TakuyaMurata', 'Darkslug', 'Declangi', 'Accedie', 'Ocaasi', 'Lu0490', 'Arms Jones', 'Declangi', 'Highway 231');
+        $timestamps = array('2013-11-23', '2013-11-21', '2013-11-16', '2013-12-25', '2013-12-23', '2013-12-27', '2014-01-02', '2013-11-16', '2014-01-21');
+        $totalScores = array('100', '180', '40', '24', '25', '21', '50', '40', '34');
 
         $parser = new ExistingResultParser();
         $results = $parser->parsePage($data);
@@ -52,7 +53,7 @@ EOT;
 
         $this->assertEqual(count($results), 2, 'Wrong section count');
         $this->assertEqual(count($results[0]), 3, 'Wrong section 1 count');
-        $this->assertEqual(count($results[1]), 5, 'Wrong section 2 count');
+        $this->assertEqual(count($results[1]), 6, 'Wrong section 2 count');
 
         $results = array_merge($results[0], $results[1]);
 
