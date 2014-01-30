@@ -30,6 +30,7 @@ class TestRuleSet extends UnitTestCase
         <!-- Multiline
                         comment -->
         @@40@@
+        ##SuppressNS=Category|Template|Draft##
         $$NZ-stub$$
         -5 $$AU-stub$$
         20  /$SIZE>2500/
@@ -45,6 +46,8 @@ EOT;
         $errorcnt = count($ruleset->errors);
         $this->assertEqual($ruleset->minScore, 40, 'Invalid min score');
         $this->assertEqual($errorcnt, 0, 'Parse error');
+        $this->assertTrue(isset($ruleset->options['SuppressNS']), 'Missing option SuppressNS');
+        $this->assertEqual($ruleset->options['SuppressNS'], array('Category','Template','Draft'), 'SuppressNS option value mismatch');
         if ($errorcnt) print_r($ruleset->errors);
 
         // Check inhibitors
@@ -60,6 +63,8 @@ EOT;
     public function testBadRules()
     {
         $rules = <<<'EOT'
+        ##SuppressNS=User##
+        ##InvalidOption##
         xxx
         +5 /Bay\W*of\W*Plenty/
         /Northland\Wgeo\Wstub
@@ -69,7 +74,7 @@ EOT;
 
         $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
-        $realerrors = 7; // Includes 'No rules found'
+        $realerrors = 9; // Includes 'No rules found'
         $this->assertEqual($errorcnt, $realerrors);
         if ($errorcnt != $realerrors) print_r($ruleset->errors);
     }

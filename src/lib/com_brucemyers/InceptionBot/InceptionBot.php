@@ -273,6 +273,16 @@ class InceptionBot
 
 ";
 
+    	// Determine suppressed namespaces
+    	$suppressedNS = array();
+    	if (isset($ruleset->options['SuppressNS'])) {
+            foreach ($ruleset->options['SuppressNS'] as $snsoption) {
+                if ($snsoption == 'Category') $suppressedNS[] = '14';
+                elseif (($snsoption == 'Draft')) $suppressedNS[] = '118';
+                elseif (($snsoption == 'Template')) $suppressedNS[] = '10';
+            }
+    	}
+
     	if (! empty($newresults)) $output .= "<ul>\n";
 
     	foreach ($newresults as $result) {
@@ -289,7 +299,11 @@ class InceptionBot
         	else $output .= '<li>{{la|' . $pageinfo['title'] . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
 
         	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . '</li>';
-        	if ($ns != 0) $output .= '}}';
+        	if ($ns != 0) {
+        	    $wikipediaNS = '1';
+        	    if (in_array($ns, $suppressedNS)) $wikipediaNS = '0';
+        	    $output .= "|$wikipediaNS}}";
+        	}
         	$output .= "\n";
         	++$linecnt;
     	}
@@ -311,15 +325,16 @@ class InceptionBot
                 $urlencodeduser = urlencode($displayuser);
                 $timestamp = $line['timestamp'];
                 $totalScore = $line['totalScore'];
+                $wikipediaNS = $line['WikipediaNS'];
                 if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
                 else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
 
         	    if ($linecnt > 600 && $line['type'] != 'MD') {
                     $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
         	    } elseif ($linecnt > 600 && $line['type'] == 'MD') {
-                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>}}\n";
+                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>|$wikipediaNS}}\n";
         	    } elseif ($line['type'] == 'MD') {
-                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|$title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>}}\n";
+                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|$title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>|$wikipediaNS}}\n";
         	    } else {
                     $output .= "<li>{{la|$title}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
                 }

@@ -22,8 +22,8 @@ class ExistingResultParser
     protected $startTokens = array('<li>{{', '{{User:AlexNewArtBot/MaintDisplay|<li>', '*{{');
     protected $linePatterns = array(
         '!^(?:\\*|<li>)(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)!',
-        '!^\\{\\{User:AlexNewArtBot/MaintDisplay\\|<li>\\{\\{pagelinks\\|([^\\}]+)\\}+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)!',
-        '!^\\{\\{User:AlexNewArtBot/MaintDisplay\\|<li>\\[\\[:?([^\\]]+)[\\]]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)!'
+        '!^\\{\\{User:AlexNewArtBot/MaintDisplay\\|<li>\\{\\{pagelinks\\|([^\\}]+)\\}+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+</li>\\|?\d?)}}!',
+        '!^\\{\\{User:AlexNewArtBot/MaintDisplay\\|<li>\\[\\[:?([^\\]]+)[\\]]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+</li>\\|?\d?)}}!'
     );
 
     /**
@@ -62,8 +62,20 @@ class ExistingResultParser
                     if (preg_match($pattern, $line, $matches)) {
                         if (strpos($line, 'User:AlexNewArtBot/MaintDisplay') !== false) $type = 'MD';
                         else $type = 'N';
+
+                        // Extract the score and optional Wikipedia namespace suppression
+                        $WikipediaNS = '1';
+                        $totalScore = $matches[4];
+                        if (preg_match('!(\\d+)</li>\\|?\d?!', $totalScore, $scoreMatches)) {
+                            $temp = $totalScore;
+                            $totalScore = $scoreMatches[1];
+                            if (strpos($temp, '|') !== false) {
+                                list($dummy, $WikipediaNS) = explode('|', $temp);
+                            }
+                        }
+
                         $results[$section][$matches[1]] = array('title' => $matches[1], 'user' => $matches[2], 'timestamp' => $matches[3],
-                                        'totalScore' => $matches[4], 'type' => $type);
+                                        'totalScore' => $totalScore, 'type' => $type, 'WikipediaNS' => $WikipediaNS);
                         break;
                     }
                 }

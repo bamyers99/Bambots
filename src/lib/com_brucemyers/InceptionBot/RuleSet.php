@@ -29,12 +29,15 @@ class RuleSet
     const SIZE_REGEX = '!^/\\s*\\$SIZE\\s*(<|>)\\s*(\\d+)\\s*/$!u';
     const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!u';
     const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)[iI]s/';
+    const OPTION_REGEX = '!^##(\w+\s*=?[^#]*)##$!';
     const DEFAULT_SCORE = 10;
 
     public $errors = array();
     public $rules = array();
     public $name;
     public $minScore = self::DEFAULT_SCORE;
+    public $options = array();
+    public $optiontypes = array('SuppressNS' => array('values' => array('Category', 'Draft', 'Template'), 'separator' => '|'));
 
     /**
      * Constructor
@@ -58,19 +61,64 @@ class RuleSet
             if (preg_match(self::RULE_REGEX, $line, $matches)) {
                 $rule = $this->parseRule($line, $matches);
                 if ($rule['valid']) $this->rules[] = $rule;
+
             } elseif (preg_match(self::SCORE_REGEX, $line, $matches)) {
                 $this->minScore = $matches[1];
+
             } elseif (preg_match(self::TEMPLATE_LINE_REGEX, $line, $matches)) {
                 $score = $matches[1];
                 if (empty($score)) $score = self::DEFAULT_SCORE;
                 $regex = '/\\{\\{' . $matches[2] . '.*?\\}\\}/ui';
                 $this->rules[] = array('type' => 'regex', 'score' => $score, 'regex' => $regex, 'valid' => true, 'inhibitors' => array());
+
+            } elseif (preg_match(self::OPTION_REGEX, $line, $matches)) {
+                $this->parseOption($line, $matches);
             } else {
                 $this->errors[] = 'Invalid rule: ' . $line;
             }
         }
 
         if (empty($this->rules)) $this->errors[] = 'No rules found';
+    }
+
+    /**
+     * Parse an option
+     *
+     * @param $line string Option line
+     * @param $matches Match data
+     */
+    protected function parseOption(&$line, &$matches)
+    {
+        $optionparts = explode('=', $matches[1], 2);
+        $option = $optionparts[0];
+        $value = '';
+        if (count($optionparts) == 2) $value = $optionparts[1];
+
+        if (! isset($this->optiontypes[$option])) {
+            $this->errors[] = 'Invalid option name: ' . $line;
+            return;
+        }
+
+        if (! empty($this->optiontypes[$option]['values'])) {
+            if (! empty($this->optiontypes[$option]['separator'])) {
+                $values = explode($this->optiontypes[$option]['separator'], $value);
+
+                foreach ($values as $value) {
+                    if (! in_array($value, $this->optiontypes[$option]['values'])) {
+                        $this->errors[] = 'Invalid option value: ' . $line;
+                        return;
+                    }
+                }
+
+                $value = $values;
+
+            } elseif (! in_array($value, $this->optiontypes[$option]['values'])) {
+                $this->errors[] = 'Invalid option value: ' . $line;
+                return;
+            }
+        }
+
+        $this->options[$option] = $value;
     }
 
     /**

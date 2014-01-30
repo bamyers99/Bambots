@@ -33,8 +33,8 @@ class TestExistingRegex extends UnitTestCase
 ----
 <ul>
 <li>{{la|Basketball uniform}} by [[User:Accedie|Accedie]] (<span class="plainlinks">[[User_talk:Accedie|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Accedie|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=Accedie&days=14 new pages &#40;1&#41;]</span>) started on 2013-12-25, score: 24</li>
-{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|Draft:DJ Many}} by [[User:Ocaasi{{!}}Ocaasi]] (<span class{{=}}"plainlinks">[[User_talk:Ocaasi{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Ocaasi{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Ocaasi&days{{=}}14 new pages &#40;1&#41;]</span>) started on 2013-12-23, score: 25</li>}}
-{{User:AlexNewArtBot/MaintDisplay|<li>[[Template:PitchforkSong]] ([[Template talk:PitchforkSong{{!}}talk]]) by [[User:Lu0490{{!}}Lu0490]] (<span class{{=}}"plainlinks">[[User_talk:Lu0490{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Lu0490{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Lu0490&days{{=}}14 new pages &#40;6&#41;]</span>) started on 2013-12-27, score: 21</li>}}
+{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|Draft:DJ Many}} by [[User:Ocaasi{{!}}Ocaasi]] (<span class{{=}}"plainlinks">[[User_talk:Ocaasi{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Ocaasi{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Ocaasi&days{{=}}14 new pages &#40;1&#41;]</span>) started on 2013-12-23, score: 25</li>|0}}
+{{User:AlexNewArtBot/MaintDisplay|<li>[[Template:PitchforkSong]] ([[Template talk:PitchforkSong{{!}}talk]]) by [[User:Lu0490{{!}}Lu0490]] (<span class{{=}}"plainlinks">[[User_talk:Lu0490{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Lu0490{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Lu0490&days{{=}}14 new pages &#40;6&#41;]</span>) started on 2013-12-27, score: 21</li>|1}}
 {{User:AlexNewArtBot/MaintDisplay|<li>[[:Category:Municipal coats of arms in Romania]] by [[User:Arms_Jones{{!}}Arms Jones]] started on 2014-01-02, score: 50</li>}}
 <li>[[Madhuca malvina]] ([[Talk:Madhuca malvina|talk]]) by [[User:Declangi|Declangi]] started on 2013-11-16, score: 40</li>
 {{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|Draft:M-54 and M-83 (Michigan highway)}} by [[User:Highway_231{{!}}Highway 231]] (<span class{{=}}"plainlinks">[[User_talk:Highway_231{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Highway_231{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Highway+231&days{{=}}14 new pages &#40;4&#41;]</span>) started on 2014-01-21, score: 34</li>}}
@@ -46,6 +46,7 @@ EOT;
         $users = array('TakuyaMurata', 'Darkslug', 'Declangi', 'Accedie', 'Ocaasi', 'Lu0490', 'Arms Jones', 'Declangi', 'Highway 231');
         $timestamps = array('2013-11-23', '2013-11-21', '2013-11-16', '2013-12-25', '2013-12-23', '2013-12-27', '2014-01-02', '2013-11-16', '2014-01-21');
         $totalScores = array('100', '180', '40', '24', '25', '21', '50', '40', '34');
+        $wikipediaNSs = array('1', '1', '1', '1', '0', '1', '1', '1', '1');
 
         $parser = new ExistingResultParser();
         $results = $parser->parsePage($data);
@@ -63,6 +64,7 @@ EOT;
             $this->assertEqual($line['user'], $users[$x], 'User mismatch #' . ($x + 1));
             $this->assertEqual($line['timestamp'], $timestamps[$x], 'Timestamp mismatch #' . ($x + 1));
             $this->assertEqual($line['totalScore'], $totalScores[$x], 'totalScore mismatch #' . ($x + 1));
+            $this->assertEqual($line['WikipediaNS'], $wikipediaNSs[$x], 'WikipediaNS mismatch #' . ($x + 1));
             ++$x;
         }
     }
