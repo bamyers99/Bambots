@@ -83,7 +83,17 @@ class InceptionBot
 
         while (($movedpages = $lister->getNextBatch()) !== false) {
         	foreach ($movedpages as &$movedpage) {
-                if (! in_array($movedpage['oldns'], $targetns) || ! in_array($movedpage['newns'], $targetns)) continue;
+                if (! in_array($movedpage['oldns'], $targetns) || ! in_array($movedpage['newns'], $targetns)) {
+                    if ($movedpage['newns'] != '0' || $movedpage['oldns'] == '0') continue;
+                    $newtitle = $movedpage['newtitle'];
+
+                    if (! isset($allpages[$newtitle])) {
+                        $allpages[$newtitle] = array('ns' => '0', 'title' => $newtitle, 'user' => $movedpage['user'],
+                            'timestamp' => $movedpage['timestamp']);
+                    }
+                    continue;
+                }
+
                 $oldtitle = $movedpage['oldtitle'];
 
                 if (isset($allpages[$oldtitle])) {
@@ -100,6 +110,9 @@ class InceptionBot
 
                     $oldtitles[] = $oldtitle;
                     ++$movedpagecnt;
+                } elseif ($movedpage['newns'] == '0' && $movedpage['oldns'] != '0' && ! isset($allpages[$movedpage['newtitle']])) {
+                    $allpages[$movedpage['newtitle']] = array('ns' => '0', 'title' => $movedpage['newtitle'], 'user' => $movedpage['user'],
+                    	'timestamp' => $movedpage['timestamp']);
                 }
         	}
         }
@@ -113,6 +126,7 @@ class InceptionBot
             $creator = $newpage['user'];
             if (isset($creators[$creator])) ++$creators[$creator];
             else $creators[$creator] = 1;
+
             $pagenames[] = $newpage['title'];
             if (strcmp(str_replace(array('-',':','T','Z'), '', $newpage['timestamp']), $lastrun) > 0) $newestpages[] = $newpage['title'];
         }
@@ -291,7 +305,8 @@ class InceptionBot
         	$ns = $pageinfo['ns'];
             $user = str_replace(' ', '_', $displayuser);
             $urlencodeduser = urlencode($displayuser);
-            $newpagecnt = $creators[$displayuser];
+            if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
+            else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
         	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
 
         	if ($ns != 0) $output .= '{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|' . $pageinfo['title'] . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
