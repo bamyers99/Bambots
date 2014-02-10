@@ -27,7 +27,7 @@ class TestExistingRegex extends UnitTestCase
     {
         $data = <<<'EOT'
 *{{la|Shoichiro Sakai}} by [[User:TakuyaMurata|TakuyaMurata]] (<span class="plainlinks">[[User_talk:TakuyaMurata|talk]]&nbsp;'''á'''&#32;[[Special:Contributions/TakuyaMurata|contribs]]&nbsp;'''á'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=TakuyaMurata&earliest=20131121000000 new pages &#40;14]&#41;</span>) started on 2013-11-23, score: 100
-*{{la|Ikumi Hayama}} by {{User|Darkslug}} started on 2013-11-21, score: 180
+*{{la|0 &#61; 1}} by {{User|Darkslug}} started on 2013-11-21, score: 180
 *[[Madhuca markleeana]] ([[Talk:Madhuca markleeana|talk]]) by [[User:Declangi|Declangi]] started on 2013-11-16, score: 40
 ----
 ----
@@ -42,7 +42,7 @@ class TestExistingRegex extends UnitTestCase
 ----
 EOT;
 
-        $articles = array('Shoichiro Sakai', 'Ikumi Hayama', 'Madhuca markleeana', 'Basketball uniform', 'Draft:DJ Many', 'Template:PitchforkSong', 'Category:Municipal coats of arms in Romania', 'Madhuca malvina', 'Draft:M-54 and M-83 (Michigan highway)');
+        $articles = array('Shoichiro Sakai', '0 = 1', 'Madhuca markleeana', 'Basketball uniform', 'Draft:DJ Many', 'Template:PitchforkSong', 'Category:Municipal coats of arms in Romania', 'Madhuca malvina', 'Draft:M-54 and M-83 (Michigan highway)');
         $users = array('TakuyaMurata', 'Darkslug', 'Declangi', 'Accedie', 'Ocaasi', 'Lu0490', 'Arms Jones', 'Declangi', 'Highway 231');
         $timestamps = array('2013-11-23', '2013-11-21', '2013-11-16', '2013-12-25', '2013-12-23', '2013-12-27', '2014-01-02', '2013-11-16', '2014-01-21');
         $totalScores = array('100', '180', '40', '24', '25', '21', '50', '40', '34');

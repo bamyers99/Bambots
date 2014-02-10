@@ -73,8 +73,9 @@ class ExistingResultParser
                                 list($dummy, $WikipediaNS) = explode('|', $temp);
                             }
                         }
+                        $title = str_replace('&#61;', '=', $matches[1]);
 
-                        $results[$section][$matches[1]] = array('title' => $matches[1], 'user' => $matches[2], 'timestamp' => $matches[3],
+                        $results[$section][$title] = array('title' => $title, 'user' => $matches[2], 'timestamp' => $matches[3],
                                         'totalScore' => $totalScore, 'type' => $type, 'WikipediaNS' => $WikipediaNS);
                         break;
                     }
