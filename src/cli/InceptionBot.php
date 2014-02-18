@@ -52,6 +52,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
         'NZ' => '',
         'Opera' => 'Wikipedia:WikiProject Opera/New article bot',
         'Oregon' => '',
+        'Palestine' => '',
         'Philately' => 'Wikipedia:WikiProject Philately/New articles',
         'Poland' => 'Portal:Poland/New article announcements',
         'RPGames' => '',
