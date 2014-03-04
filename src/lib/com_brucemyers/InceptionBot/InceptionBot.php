@@ -123,6 +123,7 @@ class InceptionBot
         $pagenames = array();
         $newestpages = array();
         foreach ($allpages as &$newpage) {
+        	if (! isset($newpage['user'])) $newpage['user'] = 'Unknown';
             $creator = $newpage['user'];
             if (isset($creators[$creator])) ++$creators[$creator];
             else $creators[$creator] = 1;

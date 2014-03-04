@@ -65,6 +65,7 @@ class MovedPageLister
 
         $events = array();
         foreach ($ret['query']['logevents'] as $event) {
+        	if (! isset($event['action']) || $event['action'] != 'move') continue;
             $events[] = array('oldns' => $event['ns'], 'oldtitle' => $event['title'], 'newns' => $event['move']['new_ns'],
                             'newtitle' => $event['move']['new_title'], 'timestamp' => $event['timestamp'],
                             'user' => $event['user']);
