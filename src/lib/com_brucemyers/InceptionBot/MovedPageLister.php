@@ -38,7 +38,7 @@ class MovedPageLister
     {
         $this->mediawiki = $mediawiki;
         $this->params = array(
-            'leprop' => 'title|details|timestamp|user',
+            'leprop' => 'title|details|timestamp|user|type',
             'lelimit' => Config::get(MediaWiki::WIKICHANGESINCREMENT),
             'ledir' => 'newer',
             'letype' => 'move',
@@ -65,6 +65,7 @@ class MovedPageLister
 
         $events = array();
         foreach ($ret['query']['logevents'] as $event) {
+        	if (isset($event['actionhidden'])) continue;
         	if (! isset($event['action']) || $event['action'] != 'move') continue;
             $events[] = array('oldns' => $event['ns'], 'oldtitle' => $event['title'], 'newns' => $event['move']['new_ns'],
                             'newtitle' => $event['move']['new_title'], 'timestamp' => $event['timestamp'],
