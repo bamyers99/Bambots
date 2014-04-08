@@ -32,7 +32,7 @@ class TestMediaWiki extends UnitTestCase
         $this->wiki = new MediaWiki($url);
     }
 
-    public function testLogin()
+    public function notestLogin()
     {
         $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
         $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
@@ -40,7 +40,7 @@ class TestMediaWiki extends UnitTestCase
         $this->pass();
     }
 
-    public function testPageGet()
+    public function notestPageGet()
     {
         $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
         $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
@@ -66,5 +66,27 @@ class TestMediaWiki extends UnitTestCase
         clearstatcache();
         $modified2 = filemtime($cacheFile);
         $this->assertEqual($modified, $modified2, "File cache wasn't used");
+    }
+
+    public function testGetEditToken()
+    {
+    	$this->wiki->http->quiet = false;
+     	$username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+    	$password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+    	$this->wiki->login($username, $password);
+
+        $x = $this->wiki->query('?action=query&meta=userinfo&uiprop=blockinfo|hasmsg|groups|rights&format=php');
+   		print_r($x);
+
+   		$token = $this->wiki->getedittoken();
+    	print_r($token);
+
+    	$result = 0;
+    	$answer = 'abc';
+    	$test = 'abc';
+    	$i = 0;
+
+    	$result |= ord( $answer{$i} ) ^ ord( $test{$i} );
+    	echo $result;
     }
 }

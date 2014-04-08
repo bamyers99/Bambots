@@ -47,7 +47,7 @@ namespace ChrisG;
  * @author Chris G and Cobi
  **/
 class wikipedia {
-    protected $http;
+    public $http;
     private $token;
     private $ecTimestamp;
     public $url;

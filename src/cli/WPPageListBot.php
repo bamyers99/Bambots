@@ -79,7 +79,7 @@ try {
 
 
     //$bot = new WPPageListBot($wiki, $rules, new WikiResultWriter($wiki));
-    $bot = new WPPageListBot($wiki, $rules, new FileResultWriter('/Users/brucemyers/temp/tedderbot/'));
+    $bot = new WPPageListBot($wiki, $rules, new FileResultWriter('/home/bruce/temp/tedderbot/'));
 
     $ts = $timer->stop();
 
