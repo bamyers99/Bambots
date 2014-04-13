@@ -59,6 +59,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
         'Sweden' => "Wikipedia:Swedish Wikipedians' notice board/New articles",
         'Syracuse' => '',
         'Thailand' => '',
+    	'Trauma' => '',
     	'Wales' => '',
         'Womenartists' => ''
     );
