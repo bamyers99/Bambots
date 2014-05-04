@@ -44,7 +44,8 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
                         'excludeWords' => array('alumni','people','faculty','actors','actresses','mayors','members','coaches','players','seasons',
                             'artists','musicians','presidents','prisoners','personalities','writers','wikipedian','directors','legislators',
                             'politicians','athletes','article','from Michigan','swimmers','deaths','suicides','Michigan City, Indiana',
-                            'executives','owners','personnel','scouts','broadcasters','draft picks','managers','judges','bishops')
+                            'executives','owners','personnel','scouts','broadcasters','draft picks','managers','judges','bishops',
+                        	'sportspeople','republicans','democrats','lawyers','burials','fellows')
         ),
     );
 
@@ -62,7 +63,8 @@ try {
     $wiki->login($username, $password);
 
     if ($ruletype == 'active') $rules = $activerules;
-    elseif ($ruletype== 'custom') $rules = array('WikiProject Protected areas' => $activerules['WikiProject Protected areas']);
+//    elseif ($ruletype== 'custom') $rules = array('WikiProject Protected areas' => $activerules['WikiProject Protected areas']);
+    elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $activerules['WikiProject Michigan']);
     else {
         $data = $wiki->getpage('User:AlexNewArtBot/Master');
         $rules = $data; // TODO: Parse WPMissingTmplBot page for rules
@@ -70,7 +72,7 @@ try {
 
 
     //$bot = new WPMissingTmplBot($wiki, $rules, new WikiResultWriter($wiki));
-    $bot = new WPMissingTmplBot($wiki, $rules, new FileResultWriter('/Users/brucemyers/temp/tedderbot/'));
+    $bot = new WPMissingTmplBot($wiki, $rules, new FileResultWriter('/home/bruce/temp/tedderbot/'));
 
     $ts = $timer->stop();
 

@@ -55,6 +55,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
         'Palestine' => '',
         'Philately' => 'Wikipedia:WikiProject Philately/New articles',
         'Poland' => 'Portal:Poland/New article announcements',
+    	'ProtectedAreas' => '',
         'RPGames' => '',
         'Sweden' => "Wikipedia:Swedish Wikipedians' notice board/New articles",
         'Syracuse' => '',
