@@ -176,7 +176,7 @@ class InceptionBot
 
                 if (in_array($title, $newestpages) || in_array($title, $updatedpages)) {
                     $data = $mediawiki->getPageWithCache($title);
-                    $results = $processor->processData($data);
+                    $results = $processor->processData($data, $title);
 
                     $totalScore = 0;
                     foreach ($results as &$result) {

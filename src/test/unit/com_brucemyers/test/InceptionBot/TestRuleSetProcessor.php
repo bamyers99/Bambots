@@ -33,6 +33,7 @@ class TestRuleSetProcessor extends UnitTestCase
         7 /$SIZE>10/
         9 /$SIZE<50000/
         -50 /$SIZE<10/
+        /$TITLE:National Park/
         100 /InComment/
 EOT;
 
@@ -53,13 +54,14 @@ EOT2;
         $this->assertEqual($ruleset->minScore, 10, 'Invalid min score');
         $this->assertEqual($errorcnt, 0, 'Parse error');
         if ($errorcnt) print_r($ruleset->errors);
+        $title = 'Yellowstone National Park';
 
         $processor = new RuleSetProcessor($ruleset);
-        $results = $processor->processData($data);
-        $this->assertEqual(count($results), 5, 'Mismatched rule count');
+        $results = $processor->processData($data, $title);
+        $this->assertEqual(count($results), 6, 'Mismatched rule count');
 
         $totalScore = 0;
-        $realScore = 51; // Includes lede match
+        $realScore = 61; // Includes lede match
         foreach ($results as $result) {
             $totalScore += $result['score'];
         }
@@ -93,9 +95,10 @@ EOT2;
         $this->assertEqual($ruleset->minScore, 10, 'Invalid min score');
         $this->assertEqual($errorcnt, 0, 'Parse error');
         if ($errorcnt) print_r($ruleset->errors);
+        $title = 'Yellowstone National Park';
 
         $processor = new RuleSetProcessor($ruleset);
-        $results = $processor->processData($data);
+        $results = $processor->processData($data, $title);
         $this->assertEqual(count($results), 3, 'Mismatched rule count');
 
         $totalScore = 0;
@@ -119,11 +122,12 @@ EOT2;
         $errorcnt = count($ruleset->errors);
         $this->assertEqual($errorcnt, 0, 'Parse error');
         if ($errorcnt) print_r($ruleset->errors);
+        $title = 'Yellowstone National Park';
 
         //print_r($ruleset);
 
         $processor = new RuleSetProcessor($ruleset);
-        $results = $processor->processData($data);
+        $results = $processor->processData($data, $title);
         $this->assertEqual(count($results), 2, 'Mismatched rule count');
 
         $totalScore = 0;

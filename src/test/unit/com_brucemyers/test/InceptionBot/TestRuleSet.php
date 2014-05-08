@@ -35,6 +35,7 @@ class TestRuleSet extends UnitTestCase
         -5 $$AU-stub$$
         20  /$SIZE>2500/
         -20  /$SIZE<2500/
+        /$TITLE:National Park/
         5 /Bay\W*of\W*Plenty\P{M}\x{2460}\p{Greek}\p{isCyrillic}\P{IsArmenian}/ <!-- Tests Unicode -->
         /Northland\Wgeo\Wstub/
         6  /\WOtago\W/ , /Australia/ , /Tasmania/ , /Hobart/

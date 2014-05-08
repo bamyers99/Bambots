@@ -38,16 +38,17 @@ class RuleSetProcessor
      * Process data against the RuleSet
      *
      * @param $data string Data
+     * @param $title string Article title
      * @return array Results, one record per rule match, record keys = score, regex
      */
-    public function processData(&$data)
+    public function processData(&$data, &$title)
     {
         $results = array();
         $this->ledeEnd = null;
         $cleandata = preg_replace(RuleSet::COMMENT_REGEX, '', $data);
 
         foreach ($this->ruleSet->rules as &$rule) {
-            $score = $this->processRule($cleandata, $rule);
+            $score = $this->processRule($cleandata, $rule, $title);
             if ($score != 0) {
                 $results[] = array('score' => $score, 'regex' => preg_replace('/ui$/u', '', $rule['regex']));
             }
@@ -61,9 +62,10 @@ class RuleSetProcessor
      *
      * @param $data string Data
      * @param $rule array Rule
+     * @param $title string Article title
      * @return int Score
      */
-    protected function processRule(&$data, &$rule)
+    protected function processRule(&$data, &$rule, &$title)
     {
         $score = 0;
 
@@ -96,6 +98,12 @@ class RuleSetProcessor
                         break;
                 }
                 break;
+
+            case 'title':
+                if (preg_match($rule['regex'], $title)) {
+                    $score = $rule['score'];
+                }
+            	break;
 
             default:
                 throw new Exception('Unknown rule type ' . $rule['type']);

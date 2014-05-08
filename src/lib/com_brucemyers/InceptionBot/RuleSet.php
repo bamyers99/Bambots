@@ -27,6 +27,7 @@ class RuleSet
     const TEMPLATE_LINE_REGEX = '/^(-?\\d*)\\s*\\$\\$(.*)\\$\\$$/u';
     const TEMPLATE_REGEX = '!^/\\s*\\$\\$(.*)\\$\\$\\s*/$!u';
     const SIZE_REGEX = '!^/\\s*\\$SIZE\\s*(<|>)\\s*(\\d+)\\s*/$!u';
+    const TITLE_REGEX = '!^/\\s*\\$TITLE\\s*:(.+)/$!u';
     const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!u';
     const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)[iI]s/';
     const OPTION_REGEX = '!^##(\w+\s*=?[^#]*)##$!';
@@ -137,8 +138,14 @@ class RuleSet
             $regex = '/\\{\\{' . $tmplmatches[1] . '.*?\\}\\}/';
         }
 
-        $size = preg_match(self::SIZE_REGEX, $regex, $sizematches);
+        $type = 'regex';
         $valid = true;
+        $size = preg_match(self::SIZE_REGEX, $regex, $sizematches);
+
+        if (preg_match(self::TITLE_REGEX, $regex, $titlematches)) {
+        	$regex = '/' . $titlematches[1] . '/';
+        	$type = 'title';
+        }
 
         if (! $size) {
             $regex = preg_replace(self::JAVA_UNICODE_REGEX, '$1', $regex);
@@ -147,7 +154,7 @@ class RuleSet
             if (! $valid) $this->errors[] = 'Invalid pattern in rule: ' . $line;
         }
 
-        $rule = array('type' => 'regex', 'score' => $score, 'regex' => $regex, 'valid' => $valid, 'inhibitors' => array());
+        $rule = array('type' => $type, 'score' => $score, 'regex' => $regex, 'valid' => $valid, 'inhibitors' => array());
 
         if ($size) {
             $rule['type'] = 'size';
