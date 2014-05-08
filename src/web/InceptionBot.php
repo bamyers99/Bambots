@@ -134,7 +134,7 @@ function rule_test($rulename, $testpage)
             $results .= 'Test page ' . htmlentities($testpage, ENT_COMPAT, 'UTF-8') . ' not found.<br />';
         } else {
             $processor = new RuleSetProcessor($ruleset);
-            $scores = $processor->processData($testpagedata);
+            $scores = $processor->processData($testpagedata, $testpage);
 
             $totscore = 0;
             foreach ($scores as $score) {
