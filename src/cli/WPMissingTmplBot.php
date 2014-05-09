@@ -32,9 +32,12 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
         'WikiProject Protected areas' => array(
                         'WPCategory' => 'Articles of WikiProject Protected areas',
                         'altWPCategory' => '',
-                        'articleCategoryPart' => array('Protected area'),
+                        'articleCategoryPart' => array('Protected area','Special Areas of Conservation','Special Protection Area‎',
+        					'Game p?reserve','Marine park‎','Marine p?reserve','Natural monument‎','Nature park','Nature p?reserve',
+                        	'Conservation area','Special Protection Area','Wildlife sanctuar','Faunal p?reserve',
+                        	'Biosphere p?reserve','Bird sanctuar','Wildlife refuge','Wilderness area'),
                         'resultPage' => 'Wikiproject:Protected areas/Missing template',
-                        'excludeWords' => array()
+                        'excludeWords' => array('National Park Service')
         ),
         'WikiProject Michigan' => array(
                         'WPCategory' => 'WikiProject Michigan articles',
@@ -63,8 +66,8 @@ try {
     $wiki->login($username, $password);
 
     if ($ruletype == 'active') $rules = $activerules;
-//    elseif ($ruletype== 'custom') $rules = array('WikiProject Protected areas' => $activerules['WikiProject Protected areas']);
-    elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $activerules['WikiProject Michigan']);
+    elseif ($ruletype== 'custom') $rules = array('WikiProject Protected areas' => $activerules['WikiProject Protected areas']);
+//    elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $activerules['WikiProject Michigan']);
     else {
         $data = $wiki->getpage('User:AlexNewArtBot/Master');
         $rules = $data; // TODO: Parse WPMissingTmplBot page for rules
