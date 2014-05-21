@@ -35,18 +35,18 @@ class CreateTables
     	$sql = "CREATE TABLE IF NOT EXISTS `categorylinks` (
 		  `cl_from` int(10) unsigned NOT NULL,
 		  `cat_id` int(10) unsigned NOT NULL,
-		  UNIQUE KEY `cl_from` (`cl_from`,`cat_id`)
+		  UNIQUE KEY `cl_from` (`cl_from`,`cat_id`),
+    	  KEY `cat_id` (`cat_id`, `cl_from`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
     	$sql = "CREATE TABLE IF NOT EXISTS `category` (
 		  `cat_id` int(10) unsigned NOT NULL,
 		  `cat_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-		  `cat_pages` int(11) NOT NULL DEFAULT '0',
-          `month` tinyint(2) unsigned NULL DEFAULT NULL,
+    	  `month` tinyint(2) unsigned NULL DEFAULT NULL,
           `year` smallint(4) unsigned NULL DEFAULT NULL,
     	  PRIMARY KEY (`cat_id`),
-		  UNIQUE KEY `cat_title` (`cat_title`)
+		  UNIQUE KEY `cat_title` (`cat_title`,`month`,`year`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
@@ -59,7 +59,8 @@ class CreateTables
 		  `page_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
           `importance` ENUM($importances_string),
           `class` ENUM($classes_string),
-    	  PRIMARY KEY (`article_id`)
+    	  PRIMARY KEY (`article_id`),
+    	  UNIQUE KEY `talk_id` (`talk_id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 

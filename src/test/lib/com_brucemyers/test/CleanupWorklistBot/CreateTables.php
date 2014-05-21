@@ -73,11 +73,12 @@ class CreateTables
     	// category - x articles by quality (subcats)
     	$dbh_enwiki->exec("INSERT INTO category VALUES (1,'Michigan_articles_by_quality',2,2,0)");
     	$dbh_enwiki->exec("INSERT INTO category VALUES (2,'B-Class_Michigan_articles',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (3,'Unassessed_Michigan_articles',1,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (3,'Unassessed_Michigan_articles',2,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (4,'Top-importance_Michigan_articles',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (5,'NA-importance_Michigan_articles',1,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (5,'NA-importance_Michigan_articles',2,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (6,'All_articles_needing_coordinates',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (7,'Articles_needing_cleanup_from_May_2013',1,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (7,'Articles_needing_cleanup_from_May_2013',2,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (8,'Articles_needing_cleanup_from_March_2013',1,0,0)");
 
    		$dbh_enwiki->exec("INSERT INTO page VALUES (1, 14, 'B-Class_Michigan_articles')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (2, 14, 'Unassessed_Michigan_articles')");
@@ -85,6 +86,8 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO page VALUES (4, 1, 'Michigan')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (5, 0, 'Detroit,_Michigan')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (6, 1, 'Detroit,_Michigan')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (7, 0, 'Mackinac_Island')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (8, 1, 'Mackinac_Island')");
 
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat')");
@@ -92,11 +95,13 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'B-Class_Michigan_articles', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'Top-importance_Michigan_articles', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_May_2013', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_March_2013', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'Unassessed_Michigan_articles', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'NA-importance_Michigan_articles', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'Unassessed_Michigan_articles', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'NA-importance_Michigan_articles', 'page')");
 
-
-    	// category - WikiProject x articles
+   	 	// category - WikiProject x articles
     	$dbh_enwiki->exec("INSERT INTO category VALUES (100,'WikiProject_India_articles',1,0,0)");
     	$dbh_enwiki->exec("INSERT INTO category VALUES (101,'Stub-Class_India_articles',1,0,0)");
     	$dbh_enwiki->exec("INSERT INTO category VALUES (102,'Unknown-importance_India_articles',1,0,0)");
@@ -113,26 +118,27 @@ class CreateTables
 
     	// category - x (talk namespace); subcats = only
     	$dbh_enwiki->exec("INSERT INTO category VALUES (200,'Good_article_nominees',1,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (201,'Articles with incorrect citation syntax',1,1,0)");
+    	$dbh_enwiki->exec("INSERT INTO category VALUES (201,'Articles_with_incorrect_citation_syntax',1,1,0)");
     	$dbh_enwiki->exec("INSERT INTO category VALUES (202,'Pages_using_citations_with_format_and_no_URL',1,0,0)");
 
     	$dbh_enwiki->exec("INSERT INTO page VALUES (200, 14, 'Pages_using_citations_with_format_and_no_URL')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (201, 0, 'United States')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (202, 1, 'United States')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (201, 0, 'United_States')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (202, 1, 'United_States')");
 
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (200, 'Articles with incorrect citation syntax', 'subcat')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (200, 'Articles_with_incorrect_citation_syntax', 'subcat')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (201, 'Pages_using_citations_with_format_and_no_URL', 'page')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (202, 'Good_article_nominees', 'page')");
 
 
     	// category - x (article namespace)
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (300,'Featured articles',1,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (301,'Pages with DOIs inactive since 2013',1,0,0)");
+    	$dbh_enwiki->exec("INSERT INTO category VALUES (300,'Featured_articles',1,0,0)");
+    	$dbh_enwiki->exec("INSERT INTO category VALUES (301,'Pages_with_DOIs_inactive_since_2013',1,0,0)");
 
     	$dbh_enwiki->exec("INSERT INTO page VALUES (301, 0, 'Earth')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (302, 1, 'Earth')");
 
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured articles', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages with DOIs inactive since 2013', 'page')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured_articles', 'page')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages_with_DOIs_inactive_since_2013', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Articles_needing_cleanup_from_May_2013', 'page')");
     }
 }

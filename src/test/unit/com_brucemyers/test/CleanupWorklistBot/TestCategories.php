@@ -17,18 +17,17 @@
 
 namespace com_brucemyers\test\CleanupWorklistBot;
 
-use com_brucemyers\CleanupWorklistBot\Categories;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
-use com_brucemyers\CleanupWorklistBot\ProjectPages;
+use com_brucemyers\CleanupWorklistBot\Categories;
 use com_brucemyers\Util\Config;
 use com_brucemyers\test\CleanupWorklistBot\CreateTables;
 use UnitTestCase;
 use PDO;
 
-class TestProjectPage extends UnitTestCase
+class TestCategories extends UnitTestCase
 {
 
-    public function testPageLoad()
+    public function testCategoryLoad()
     {
     	$enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
     	$tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
@@ -41,26 +40,12 @@ class TestProjectPage extends UnitTestCase
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     	new CreateTables($dbh_enwiki, $dbh_tools);
-
     	$categories = new Categories($dbh_enwiki, $dbh_tools);
     	$count = $categories->load();
+    	$this->assertEqual($count, 6, 'Wrong category count');
 
-    	$project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
-
-    	$category = 'Michigan';
-    	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 3, "Wrong page count for $category");
-
-    	$category = 'India';
-    	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 1, "Wrong page count for $category");
-
-    	$category = 'Good_article_nominees';
-    	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 1, "Wrong page count for $category");
-
-    	$category = 'Featured articles';
-    	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 1, "Wrong page count for $category");
+    	$result = $dbh_tools->query('SELECT count(*) as linkcount FROM categorylinks', PDO::FETCH_ASSOC);
+    	$row = $result->fetch();
+    	$this->assertEqual($row['linkcount'], 7, 'Wrong category link count');
     }
 }

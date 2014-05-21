@@ -17,6 +17,8 @@
 
 namespace com_brucemyers\CleanupWorklistBot;
 
+use PDO;
+
 class Categories
 {
     public static $categories = array(
@@ -140,4 +142,134 @@ class Categories
     	// since-yearly
     	'Pages with DOIs inactive' 							=> array('type' => 'since-yearly')
     );
+
+    var $dbh_enwiki;
+    var $dbh_tools;
+
+    /**
+     * Constructor
+     *
+     * @param PDO $dbh_enwiki
+     * @param PDO $dbh_tools
+     */
+    public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
+    {
+    	$this->dbh_enwiki = $dbh_enwiki;
+    	$this->dbh_tools = $dbh_tools;
+    }
+
+    /**
+     * Load the articles in the above categories.
+     *
+     * @return int Category count
+     */
+    public function load()
+    {
+   	$this->dbh_tools->exec('TRUNCATE category');
+   	$this->dbh_tools->exec('TRUNCATE categorylinks');
+
+    	$isth = $this->dbh_tools->prepare('INSERT INTO category VALUES (:id, :title, :month, :year)');
+    	$count = 0;
+
+    	foreach (self::$categories as $cat => $attribs) {
+			$cattype = $attribs['type'];
+			$subcatsonly = isset($attribs['subcats']);
+			$sqls = array();
+
+			switch ($cattype) {
+			    case 'from-monthly':
+			    	$param = str_replace(' ', '\_', "$cat from %");
+					$sqls[$param] = "SELECT cat_id as id, cat_title as title,
+						MONTH(STR_TO_DATE(SUBSTRING_INDEX(SUBSTRING_INDEX(cat_title, '_', -2), '_', 1), '%M')) as month,
+						SUBSTRING_INDEX(cat_title, '_', -1) as year
+						FROM category WHERE cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
+
+			    	$param = str_replace(' ', '_', $cat);
+					$sqls[$param] = "SELECT cat_id as id, cat_title as title,
+						NULL as month,
+						NULL as year
+						FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0";
+					break;
+
+			    case 'since-yearly':
+			    	$param = str_replace(' ', '\_', "$cat since %");
+					$sqls[$param] = "SELECT cat_id as id, cat_title as title,
+						NULL as month,
+						SUBSTRING_INDEX(cat_title, '_', -1) as year
+						FROM category WHERE cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
+			    	break;
+
+			    case 'no-date':
+			    	$param = str_replace(' ', '_', $cat);
+
+			    	if ($subcatsonly) {
+						$sqls[$param] = "SELECT c.cat_id as id, c.cat_title as title,
+							NULL as month,
+							NULL as year
+							FROM category c
+							JOIN page AS cat ON c.cat_title = cat.page_title
+							JOIN categorylinks AS cl ON cat.page_id = cl.cl_from
+							WHERE cl.cl_to = ? AND c.cat_pages - (c.cat_subcats + c.cat_files) > 0";
+			    	} else {
+			    		$sqls[$param] = "SELECT cat_id as id, cat_title as title,
+							NULL as month,
+							NULL as year
+							FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0";
+			    	}
+			    	break;
+			}
+
+			foreach ($sqls as $param => $sql) {
+		    	$sth = $this->dbh_enwiki->prepare($sql);
+		    	$sth->bindParam(1, $param);
+    			$sth->setFetchMode(PDO::FETCH_ASSOC);
+		    	$sth->execute();
+
+		    	while($row = $sth->fetch()) {
+		    		$title = $row['title'];
+		    		if (! $subcatsonly) $row['title'] = str_replace(' ', '_', $cat);
+					$isth->execute($row);
+					++$count;
+
+					$this->loadCategoryMembers($title);
+		    	}
+
+		    	$sth->closeCursor();
+			}
+    	}
+
+    	return $count;
+    }
+
+    /**
+     * Load article ids for a category.
+     *
+     * @param string $cat Category
+     */
+    function loadCategoryMembers($cat)
+    {
+    	$count = 0;
+    	$this->dbh_tools->beginTransaction();
+    	$isth = $this->dbh_tools->prepare('INSERT INTO categorylinks VALUES (:cl_from, :cat_id)');
+    	$sql = "SELECT cl.cl_from, cat.cat_id
+				FROM categorylinks cl, category cat
+				WHERE cat.cat_title = ? AND cl.cl_to = cat.cat_title AND cl.cl_type = 'page'";
+
+		$sth = $this->dbh_enwiki->prepare($sql);
+		$sth->bindParam(1, $cat);
+    	$sth->setFetchMode(PDO::FETCH_ASSOC);
+		$sth->execute();
+
+		while($row = $sth->fetch()) {
+			++$count;
+		    if ($count % 1000 == 0) {
+    			$this->dbh_tools->commit();
+    			$this->dbh_tools->beginTransaction();
+    		}
+			$isth->execute($row);
+		}
+
+		$sth->closeCursor();
+    	$this->dbh_tools->commit();
+    }
 }

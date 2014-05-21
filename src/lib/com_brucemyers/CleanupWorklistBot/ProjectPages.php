@@ -17,6 +17,7 @@
 
 namespace com_brucemyers\CleanupWorklistBot;
 
+use com_brucemyers\CleanupWorklistBot\CreateTables;
 use Exception;
 use PDO;
 
@@ -25,7 +26,13 @@ class ProjectPages
 	var $dbh_enwiki;
 	var $dbh_tools;
 
-    public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
+    /**
+     * Constructor
+     *
+     * @param PDO $dbh_enwiki
+     * @param PDO $dbh_tools
+     */
+     public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
     {
         $this->dbh_enwiki = $dbh_enwiki;
         $this->dbh_tools = $dbh_tools;
@@ -40,6 +47,7 @@ class ProjectPages
      */
     public function load($category)
     {
+    	$category = str_replace(' ', '_', $category);
     	// Determine the category type
     	$sql = '';
 
@@ -132,16 +140,85 @@ class ProjectPages
     	$sth->setFetchMode(PDO::FETCH_ASSOC);
     	$sth->execute();
 
+    	$this->dbh_tools->beginTransaction();
     	$isth = $this->dbh_tools->prepare('INSERT INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
-    	$count = 0;
+    	$page_count = 0;
 
     	while($row = $sth->fetch()) {
+			++$page_count;
+    		if ($page_count % 1000 == 0) {
+    			$this->dbh_tools->commit();
+    			$this->dbh_tools->beginTransaction();
+    		}
 			$isth->execute($row);
-			++$count;
     	}
 
     	$sth->closeCursor();
+    	$this->dbh_tools->commit();
 
-    	return $count;
+    	// Delete the pages with no issues
+    	$sql = 'DELETE FROM page
+    		WHERE article_id NOT IN (
+    			SELECT cl_from
+    			FROM categorylinks
+			)';
+
+    	$this->dbh_tools->exec($sql);
+
+    	// Set importance
+    	foreach(CreateTables::$IMPORTANCES as $importance) {
+    		$sth = $this->dbh_enwiki->prepare("SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'");
+    		$sth->bindValue(1, "{$importance}-importance_{$category}_articles");
+    		$sth->setFetchMode(PDO::FETCH_ASSOC);
+    		$sth->execute();
+    		$count = 0;
+
+    		$this->dbh_tools->beginTransaction();
+    		$isth = $this->dbh_tools->prepare("UPDATE page SET importance = '$importance' WHERE talk_id = :cl_from");
+
+    	    while($row = $sth->fetch()) {
+				++$count;
+    			if ($count % 1000 == 0) {
+    				$this->dbh_tools->commit();
+    				$this->dbh_tools->beginTransaction();
+    			}
+				$isth->execute($row);
+    		}
+
+    		$sth->closeCursor();
+    		$this->dbh_tools->commit();
+    	}
+
+    	// Set class
+    	foreach(CreateTables::$CLASSES as $class) {
+	        if ($class == 'Unassessed')
+  		        $theclass = "{$class}_{$category}_articles";
+       		else
+          		$theclass = "{$class}-Class_{$category}_articles";
+
+    		$sth = $this->dbh_enwiki->prepare("SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'");
+    		$sth->bindValue(1, $theclass);
+    		$sth->setFetchMode(PDO::FETCH_ASSOC);
+    		$sth->execute();
+    		$count = 0;
+
+    		$this->dbh_tools->beginTransaction();
+
+    		$isth = $this->dbh_tools->prepare("UPDATE page SET class = '$class' WHERE talk_id = :cl_from");
+
+    		while($row = $sth->fetch()) {
+    			++$count;
+    			if ($count % 1000 == 0) {
+    				$this->dbh_tools->commit();
+    				$this->dbh_tools->beginTransaction();
+    			}
+    			$isth->execute($row);
+    		}
+
+    		$sth->closeCursor();
+    		$this->dbh_tools->commit();
+    	}
+
+    	return $page_count;
     }
 }
