@@ -31,6 +31,11 @@ class CleanupWorklistBot
     const CUSTOMRULE = 'CleanupWorklistBot.customrule';
     const ERROREMAIL = 'CleanupWorklistBot.erroremail';
     const CURRENTPROJECT = 'CleanupWorklistBot.currentproject';
+    const HTMLDIR = 'CleanupWorklistBot.htmldir';
+    const ENWIKI_HOST = 'CleanupWorklistBot.enwiki_host';
+    const TOOLS_HOST = 'CleanupWorklistBot.tools_host';
+    const LABSDB_USERNAME = 'CleanupWorklistBot.labsdb_username';
+    const LABSDB_PASSWORD = 'CleanupWorklistBot.labsdb_password';
     protected $mediawiki;
     protected $resultWriter;
 

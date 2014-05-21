@@ -49,7 +49,7 @@ try {
 		    	$hndl = fopen($outfile, 'w');
 
 		    	foreach($projlist as $projname) {
-		    		fwrite($hndl, $projname . "\n");
+		    		fwrite($hndl, ' ' . $projname . "\n");
 		    	}
 
 		    	fclose($hndl);

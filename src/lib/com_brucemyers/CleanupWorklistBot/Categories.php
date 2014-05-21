@@ -1,6 +1,6 @@
 <?php
 /**
- Copyright 2013 Myers Enterprises II
+ Copyright 2014 Myers Enterprises II
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ namespace com_brucemyers\CleanupWorklistBot;
 
 class Categories
 {
-    public $categories = array(
+    public static $categories = array(
     	// from-monthly
     	'1911 Britannica articles needing updates' 			=> array('type' => 'from-monthly'),
-    	'Articles containing potentially dated statements' 	=> array('type' => 'from-monthly'),
-    	'Accuracy disputes' 								=> array('type' => 'from-monthly'),
-    	'Article sections to be split' 						=> array('type' => 'from-monthly'),
+   		'Accuracy disputes' 								=> array('type' => 'from-monthly'),
+     	'Article sections to be split' 						=> array('type' => 'from-monthly'),
    		'Articles about possible neologisms' 				=> array('type' => 'from-monthly'),
+    	'Articles containing potentially dated statements' 	=> array('type' => 'from-monthly'),
     	'Articles lacking in-text citations' 				=> array('type' => 'from-monthly'),
     	'Articles lacking page references' 					=> array('type' => 'from-monthly'),
    		'Articles lacking reliable references' 				=> array('type' => 'from-monthly'),
@@ -123,6 +123,7 @@ class Categories
     	'All articles needing expert attention' 			=> array('type' => 'no-date'),
     	'Animals cleanup' 									=> array('type' => 'no-date'),
     	'Articles needing more detailed references' 		=> array('type' => 'no-date'),
+    	'Articles with incorrect citation syntax'			=> array('type' => 'no-date', 'subcats' => 'only'),
  		'Invalid conservation status' 						=> array('type' => 'no-date'),
     	'Missing taxobox' 									=> array('type' => 'no-date'),
     	'Pages with several capitalization mistakes' 		=> array('type' => 'no-date'),
@@ -139,5 +140,4 @@ class Categories
     	// since-yearly
     	'Pages with DOIs inactive' 							=> array('type' => 'since-yearly')
     );
-
 }
