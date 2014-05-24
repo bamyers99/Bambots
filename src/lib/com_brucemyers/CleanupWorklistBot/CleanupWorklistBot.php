@@ -32,6 +32,7 @@ class CleanupWorklistBot
     const ERROREMAIL = 'CleanupWorklistBot.erroremail';
     const CURRENTPROJECT = 'CleanupWorklistBot.currentproject';
     const HTMLDIR = 'CleanupWorklistBot.htmldir';
+    const URLPATH = 'CleanupWorklistBot.urlpath';
     const ENWIKI_HOST = 'CleanupWorklistBot.enwiki_host';
     const TOOLS_HOST = 'CleanupWorklistBot.tools_host';
     const LABSDB_USERNAME = 'CleanupWorklistBot.labsdb_username';

@@ -165,8 +165,8 @@ class Categories
      */
     public function load()
     {
-   	$this->dbh_tools->exec('TRUNCATE category');
-   	$this->dbh_tools->exec('TRUNCATE categorylinks');
+   		$this->dbh_tools->exec('TRUNCATE category');
+   		$this->dbh_tools->exec('TRUNCATE categorylinks');
 
     	$isth = $this->dbh_tools->prepare('INSERT INTO category VALUES (:id, :title, :month, :year)');
     	$count = 0;
