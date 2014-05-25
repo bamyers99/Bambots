@@ -29,7 +29,7 @@ class ReportGenerator
 	var $dbh_tools;
 	var $asof_date;
 
-	function ReportGenerator(PDO $dbh_tools, $outputdir, $urlpath, $asof_date)
+	function __construct(PDO $dbh_tools, $outputdir, $urlpath, $asof_date)
 	{
 		$this->dbh_tools = $dbh_tools;
 		$this->outputdir = $outputdir;
@@ -49,7 +49,7 @@ class ReportGenerator
 				WHERE p.article_id = cl.cl_from AND cl.cat_id = cat.cat_id
 				ORDER by `page_title`, `cat_title`');
 
-		while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			++$issue_count;
 			$title = $row['page_title'];
 			if (! isset($curclean[$title])) {
@@ -83,17 +83,22 @@ class ReportGenerator
 
 		// Load the previous csv to detect changes.
 		$prevclean = array();
-		$hndl = fopen($bakcsvpath, 'rb');
-		$x = 0;
 
-		while (! feof($hndl)) {
-			$buffer = rtrim(fgets($hndl));
-			if (strlen($buffer) == 0) continue; // Skip empty lines
-			if ($x++ == 0) continue; // Skip header
-			$fields = CSVString::parse($buffer);
-			$prevclean[$fields[0]] = $fields;
+		if (file_exists($bakcsvpath)) {
+			$hndl = fopen($bakcsvpath, 'rb');
+			$x = 0;
+
+			while (! feof($hndl)) {
+				$buffer = rtrim(fgets($hndl));
+				if (strlen($buffer) == 0) continue; // Skip empty lines
+				if ($x++ == 0) continue; // Skip header
+				$fields = CSVString::parse($buffer);
+				$prevclean[$fields[0]] = $fields;
+			}
+			fclose($hndl);
 		}
-		fclose($hndl);
+
+		// Write alpha and csv
 
 		$csvhndl = fopen($tmpcsvpath, 'wb');
 		fwrite($csvhndl, '"Article","Importance","Class","Count","Oldest month","Categories"' . "\n");
@@ -105,26 +110,44 @@ class ReportGenerator
 		fwrite($alphahndl, "<html><head>
 			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
     		<title>Cleanup listing for {$wikiproject}{$project}</title>
+    		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
+			<script type='text/javascript' src='../../js/jquery-2.1.1.min.js'></script>
+			<script type='text/javascript' src='../../js/jquery.tablesorter.min.js'></script>
 			</head><body>
+			<script type='text/javascript'>
+				$(document).ready(function()
+				    {
+				        $('#myTable').tablesorter({ headers: { 5: { sorter: false} } });
+				    }
+				);
+			</script>
 			<p>Cleanup listing for <a href='$projecturl'>{$wikiproject}{$project}</a> as of $asof_date.</p>
 			<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
-			<table><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th><th>Oldest month</th><th>Categories</th></tr>
+			<p>Listings: Alphabetic <b>·</b> <a href='$bycaturl'>By Category</a> <b>·</b> <a href='$csvurl'>CSV</a> <b>·</b> <a href='$histurl'>History</a></p>
+			<table id='myTable' class='wikitable'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th><th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>
     		");
 
-		// Write alpha and csv
-
 		foreach ($curclean as $title => $art) {
-			$cats = implode(', ', $this->_consolidateCats($art['issues']));
+			$arturl = 'https://en.wikipedia.org/wiki/' . urlencode($title);;
+			$title = str_replace('_', ' ', $title);
+			$consolidated = $this->_consolidateCats($art['issues']);
+			$cats = implode(', ', $consolidated['issues']);
 			$icount = count($art['issues']);
-			fwrite($csvhndl, CSVString::format(array($title, $art['imp'], $art['cls'], $icount, $cats['earliest'], $cats['issues'])) . "\n");
+			fwrite($csvhndl, CSVString::format(array($title, $art['imp'], $art['cls'], $icount, $consolidated['earliest'], $cats)) . "\n");
 
-			fwrite($alphahndl, "<tr><td>$title</td><td>{$art['imp']}</td><td>{$art['cls']}</td><td>$icount</td><td>{$cats['earliest']}</td><td>{$cats['issues']}</td></tr>\n");
+			fwrite($alphahndl, "<tr><td><a href='$arturl'>$title</a></td><td>{$art['imp']}</td><td>{$art['cls']}</td><td align='right'>$icount</td><td>{$consolidated['earliest']}</td><td>$cats</td></tr>\n");
 		}
 
-		fwrite($alphahndl, '</table></body></html>');
+		fwrite($alphahndl, '</tbody></table></body></html>');
 
-		$this->generateByCat();
-		$this->generateHistory();
+		fclose($csvhndl);
+		fclose($alphahndl);
+
+		//$this->generateByCat();
+		//$this->generateHistory();
+
+		//Finished successfully
+		rename($tmpcsvpath, $csvpath);
 	}
 
 	/**
@@ -141,7 +164,7 @@ class ReportGenerator
 		$earliestmonth = 99;
 
 		foreach ($issues as $issue) {
-			$cat = $issue['title'];
+			$cat = str_replace('_', ' ', $issue['title']);
 			if (! isset($results[$cat])) {
 				$results[$cat] = array();
 			}

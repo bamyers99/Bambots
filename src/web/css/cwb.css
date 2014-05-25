@@ -1,0 +1,45 @@
+@CHARSET "UTF-8";
+
+table.wikitable {
+	margin: 1em 1em 1em 0;
+	background-color: #f9f9f9;
+	border: 1px #aaa solid;
+	border-collapse: collapse;
+	color: black;
+}
+table.wikitable > tr > th,
+table.wikitable > tr > td,
+table.wikitable > * > tr > th,
+table.wikitable > * > tr > td {
+	border: 1px #aaa solid;
+	padding: 0.2em;
+}
+table.wikitable > tr > th,
+table.wikitable > * > tr > th {
+	background-color: #f2f2f2;
+	text-align: center;
+}
+table.wikitable > caption {
+	font-weight: bold;
+}
+
+table.wikitable th.header { 
+    background-image: url(../img/cwb/ts_bg.gif);
+    cursor: pointer;
+    font-weight: bold;
+    background-repeat: no-repeat;
+    background-position: center right;
+    padding-right: 20px;
+    border-right: 1px solid #dad9c7;
+    margin-left: -1px;
+}
+
+table.wikitable th.headerSortUp {
+    background-image: url(../img/cwb/ts_desc.gif);
+    background-color: #d2d2d2;
+}
+
+table.wikitable th.headerSortDown {
+    background-image: url(../img/cwb/ts_asc.gif);
+    background-color: #d2d2d2;
+}
