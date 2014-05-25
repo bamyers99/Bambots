@@ -21,9 +21,12 @@ use PDO;
 
 class CreateTables
 {
-	static $CLASSES = array('FA', 'A', 'GA', 'Bplus', 'B', 'C', 'Start', 'Stub', 'FL', 'List', 'Unassessed', 'NA', 'Book',
-		'Category', 'Current', 'Disambig', 'File', 'Future', 'Merge', 'Needed', 'Portal', 'Project', 'Redirect', 'Template');
-	static $IMPORTANCES = array('Top', 'High', 'Mid', 'Low', 'Unknown', 'NA', 'Bottom', 'No');
+	static $CLASSES = array('FA' => '00', 'FL' => '01', 'A' => '02', 'GA' => '03', 'Bplus' => '04', 'B' => '05', 'C' => '06',
+		'Start' => '07', 'Stub' => '08', 'List' => '09', 'Unassessed' => '10', 'NA' => '11', 'Book' => '12',
+		'Category' => '13', 'Current' => '14', 'Disambig' => '15', 'File' => '16', 'Future' => '17', 'Merge' => '18',
+		'Needed' => '19', 'Portal' => '20', 'Project' => '21', 'Redirect' => '22', 'Template' => '23', '' => '24');
+	static $IMPORTANCES = array('Top' => '0', 'High' => '1', 'Mid' => '2', 'Low' => '3', 'Unknown' => '4', 'NA' => '5',
+		'Bottom' => '6', 'No' => '7', '' => '8');
 
 	/**
 	 * Create work tables
@@ -50,8 +53,8 @@ class CreateTables
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
-		$classes_string = "'" . implode("', '", self::$CLASSES) . "'";
-		$importances_string = "'" . implode("', '", self::$IMPORTANCES) . "'";
+		$classes_string = "'" . implode("', '", array_keys(self::$CLASSES)) . "'";
+		$importances_string = "'" . implode("', '", array_keys(self::$IMPORTANCES)) . "'";
 
     	$sql = "CREATE TABLE IF NOT EXISTS `page` (
 		  `article_id` int(10) unsigned NOT NULL,

@@ -166,7 +166,7 @@ class ProjectPages
     	$this->dbh_tools->exec($sql);
 
     	// Set importance
-    	foreach(CreateTables::$IMPORTANCES as $importance) {
+    	foreach(array_keys(CreateTables::$IMPORTANCES) as $importance) {
     		$sth = $this->dbh_enwiki->prepare("SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'");
     		$sth->bindValue(1, "{$importance}-importance_{$category}_articles");
     		$sth->setFetchMode(PDO::FETCH_ASSOC);
@@ -190,7 +190,7 @@ class ProjectPages
     	}
 
     	// Set class
-    	foreach(CreateTables::$CLASSES as $class) {
+    	foreach(array_keys(CreateTables::$CLASSES) as $class) {
 	        if ($class == 'Unassessed')
   		        $theclass = "{$class}_{$category}_articles";
        		else

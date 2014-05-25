@@ -22,6 +22,8 @@ use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\CleanupWorklistBot\ProjectPages;
 use com_brucemyers\CleanupWorklistBot\ReportGenerator;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\FileCache;
+use com_brucemyers\MediaWiki\FileResultWriter;
 use com_brucemyers\test\CleanupWorklistBot\CreateTables;
 use UnitTestCase;
 use PDO;
@@ -52,11 +54,32 @@ class TestReports extends UnitTestCase
 
     	$project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
 
+    	$outputDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
+    	$outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
+    	$outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
+    	$outputDir .= DIRECTORY_SEPARATOR;
+    	$resultwriter = new FileResultWriter($outputDir);
+
+    	$repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultwriter);
+
     	$category = 'Michigan';
     	$page_count = $project_pages->load($category);
 
-    	$repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date);
-
     	$repgen->generateReports($category, true, $page_count);
+
+    	$category = 'Good_article_nominees';
+    	$page_count = $project_pages->load($category);
+
+    	$repgen->generateReports($category, false, $page_count);
+
+    	$category = 'Featured_articles';
+    	$page_count = $project_pages->load($category);
+
+    	$repgen->generateReports($category, false, $page_count);
+
+        $category = 'India';
+    	$page_count = $project_pages->load($category);
+
+    	$repgen->generateReports($category, false, $page_count);
     }
 }

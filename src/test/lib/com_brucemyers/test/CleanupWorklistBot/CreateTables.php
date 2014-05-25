@@ -73,11 +73,11 @@ class CreateTables
     	// category - x articles by quality (subcats)
     	$dbh_enwiki->exec("INSERT INTO category VALUES (1,'Michigan_articles_by_quality',2,2,0)");
     	$dbh_enwiki->exec("INSERT INTO category VALUES (2,'B-Class_Michigan_articles',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (3,'Unassessed_Michigan_articles',2,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (3,'Unassessed_Michigan_articles',3,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (4,'Top-importance_Michigan_articles',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (5,'NA-importance_Michigan_articles',2,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (5,'NA-importance_Michigan_articles',3,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (6,'All_articles_needing_coordinates',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (7,'Articles_needing_cleanup_from_May_2013',2,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (7,'Articles_needing_cleanup_from_May_2013',3,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (8,'Articles_needing_cleanup_from_March_2013',1,0,0)");
 
    		$dbh_enwiki->exec("INSERT INTO page VALUES (1, 14, 'B-Class_Michigan_articles')");
@@ -88,6 +88,8 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO page VALUES (6, 1, 'Detroit,_Michigan')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (7, 0, 'Mackinac_Island')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (8, 1, 'Mackinac_Island')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (9, 0, 'Lansing,_Michigan')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (10, 1, 'Lansing,_Michigan')");
 
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat')");
@@ -100,6 +102,9 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'NA-importance_Michigan_articles', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'Unassessed_Michigan_articles', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'NA-importance_Michigan_articles', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (9, 'Articles_needing_cleanup_from_May_2013', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'Unassessed_Michigan_articles', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'NA-importance_Michigan_articles', 'page')");
 
    	 	// category - WikiProject x articles
     	$dbh_enwiki->exec("INSERT INTO category VALUES (100,'WikiProject_India_articles',1,0,0)");

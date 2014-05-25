@@ -43,13 +43,13 @@ class TestProjectPage extends UnitTestCase
     	new CreateTables($dbh_enwiki, $dbh_tools);
 
     	$categories = new Categories($dbh_enwiki, $dbh_tools);
-    	$count = $categories->load();
+    	$categories->load();
 
     	$project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
 
     	$category = 'Michigan';
     	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 3, "Wrong page count for $category");
+    	$this->assertEqual($page_count, 4, "Wrong page count for $category");
 
     	$category = 'India';
     	$page_count = $project_pages->load($category);
