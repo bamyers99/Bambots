@@ -65,6 +65,13 @@ class TestReports extends UnitTestCase
     	$category = 'Michigan';
     	$page_count = $project_pages->load($category);
 
+    	$csvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $category . '.csv';
+    	$hndl = fopen($csvpath, 'wb');
+    	fwrite($hndl, '"Article","Importance","Class","Count","Oldest month","Categories"' . "\n");
+    	fwrite($hndl, '"Detroit, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
+    	fwrite($hndl, '"Brighton, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
+    	fclose($hndl);
+
     	$repgen->generateReports($category, true, $page_count);
 
     	$category = 'Good_article_nominees';

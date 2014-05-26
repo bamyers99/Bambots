@@ -48,7 +48,7 @@ class CleanupWorklistBot
         $totaltimer->start();
         $startProject = Config::get(self::CURRENTPROJECT);
 
-        // Write the index page
+        // Generate the index page
     }
 
     /**

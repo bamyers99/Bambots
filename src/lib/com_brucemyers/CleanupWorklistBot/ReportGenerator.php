@@ -58,7 +58,7 @@ class ReportGenerator
 
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			++$issue_count;
-			$title = $row['page_title'];
+			$title = str_replace('_', ' ', $row['page_title']);
 			if (! isset($curclean[$title])) {
 				if ($row['importance'] == null) $row['importance'] = '';
 				if ($row['class'] == null) $row['class'] = '';
@@ -138,8 +138,7 @@ class ReportGenerator
     		");
 
 		foreach ($curclean as $title => $art) {
-			$arturl = 'https://en.wikipedia.org/wiki/' . urlencode($title);;
-			$title = str_replace('_', ' ', $title);
+			$arturl = 'https://en.wikipedia.org/wiki/' . urlencode(str_replace(' ', '_', $title));
 			$consolidated = $this->_consolidateCats($art['issues']);
 			$cats = implode(', ', $consolidated['issues']);
 			$icount = count($art['issues']);
@@ -175,6 +174,36 @@ class ReportGenerator
 		$output = "<noinclude>__NOINDEX__</noinclude>Cleanup listing for [[Wikipedia:{$wikiproject}{$project}|{$wikiproject}{$project_title}]] as of $asof_date.\n\n";
 		$output .= "Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.\n\n";
 		$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> By Category <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
+		$output .= "Sections can be transcluded using <nowiki>{{#lst:User:CleanupWorklistBot/lists/$project|</nowiki>''section''<nowiki>}}</nowiki> Examples: <nowiki>{{#lst:User:CleanupWorklistBot/lists/$project|Neutrality}}</nowiki>, <nowiki>{{#lst:User:CleanupWorklistBot/lists/$project|Articles needing cleanup}}</nowiki>\n\n";
+
+		// Write the changes
+		$output .= "==Changes since last update==\n<section begin='Changes since last update' />\n";
+
+		$newarts = array_diff_key($curclean, $prevclean);
+		$artcount = count($newarts);
+		$output .= "===New articles ($artcount)===\n<section begin='New articles' />\n";
+		$x=0;
+
+		foreach ($newarts as $title => $art) {
+			if ($x++ > 0) $output .= ' <b>·</b> ';
+			$consolidated = $this->_consolidateCats($art['issues']);
+			$cats = implode(', ', $consolidated['issues']);
+			$output .= "[[$title]] ($cats)";
+		}
+		$output .= "<section end='New articles' />\n";
+
+		$resarts = array_diff_key($prevclean, $curclean);
+		$artcount = count($resarts);
+		$output .= "===Resolved articles ($artcount)===\n<section begin='Resolved articles' />\n";
+		$x=0;
+
+		foreach ($resarts as $title => $fields) {
+			if ($x++ > 0) $output .= ' <b>·</b> ';
+			$output .= "[[$title]] ({$fields[5]})";
+		}
+		$output .= "<section end='Resolved articles' />\n";
+
+		$output .= "<section end='Changes since last update' />\n";
 
 		// Group the cats
 		$catgroups = array();
