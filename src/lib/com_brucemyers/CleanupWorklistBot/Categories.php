@@ -181,10 +181,13 @@ class Categories
 			switch ($cattype) {
 			    case 'from-monthly':
 			    	$param = str_replace(' ', '\_', "$cat from %");
+			    	// Making sure a page for the category exists to weed out bad categories.
 					$sqls[$param] = "SELECT cat_id as id, cat_title as title,
 						MONTH(STR_TO_DATE(SUBSTRING_INDEX(SUBSTRING_INDEX(cat_title, '_', -2), '_', 1), '%M')) as month,
 						SUBSTRING_INDEX(cat_title, '_', -1) as year
-						FROM category WHERE cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
+						FROM category, page
+						WHERE cat_title = page_title AND page_namespace = 14 AND
+							cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
 
 			    	$param = str_replace(' ', '_', $cat);
 					$sqls[$param] = "SELECT cat_id as id, cat_title as title,
@@ -198,7 +201,9 @@ class Categories
 					$sqls[$param] = "SELECT cat_id as id, cat_title as title,
 						NULL as month,
 						SUBSTRING_INDEX(cat_title, '_', -1) as year
-						FROM category WHERE cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
+						FROM category, page
+						WHERE cat_title = page_title AND page_namespace = 14 AND
+							cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
 			    	break;
 
 			    case 'no-date':

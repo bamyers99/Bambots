@@ -91,6 +91,9 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO page VALUES (8, 1, 'Mackinac_Island')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (9, 0, 'Lansing,_Michigan')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (10, 1, 'Lansing,_Michigan')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (11, 14, 'All_articles_needing_coordinates')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (12, 14, 'Articles_needing_cleanup_from_May_2013')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (13, 14, 'Articles_needing_cleanup_from_March_2013')");
 
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat')");
@@ -118,6 +121,7 @@ class CreateTables
 
     	$dbh_enwiki->exec("INSERT INTO page VALUES (100, 0, 'India')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (101, 1, 'India')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (102, 14, 'Articles_needing_cleanup')");
 
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (100, 'Articles_needing_cleanup', 'page')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (101, 'WikiProject_India_articles', 'page')");
@@ -133,6 +137,7 @@ class CreateTables
     	$dbh_enwiki->exec("INSERT INTO page VALUES (200, 14, 'Pages_using_citations_with_format_and_no_URL')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (201, 0, 'United_States')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (202, 1, 'United_States')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (203, 14, 'Articles_with_incorrect_citation_syntax')");
 
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (200, 'Articles_with_incorrect_citation_syntax', 'subcat')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (201, 'Pages_using_citations_with_format_and_no_URL', 'page')");
@@ -145,6 +150,7 @@ class CreateTables
 
     	$dbh_enwiki->exec("INSERT INTO page VALUES (301, 0, 'Earth')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (302, 1, 'Earth')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (303, 14, 'Pages_with_DOIs_inactive_since_2013')");
 
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured_articles', 'page')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages_with_DOIs_inactive_since_2013', 'page')");
