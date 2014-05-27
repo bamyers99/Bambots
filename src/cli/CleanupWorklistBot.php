@@ -31,28 +31,28 @@ $GLOBALS['botname'] = 'CleanupWorklistBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
-        'Michigan' => '',
-    	'Protected areas' => ''
+    	'WikiProject_Biophysics' => '',
+        'WikiProject_Michigan' => '',
+    	'WikiProject_Physics' => '',
+    	'WikiProject_Protected_areas' => ''
         );
 
 try {
+    $url = Config::get(MediaWiki::WIKIURLKEY);
+    $wiki = new MediaWiki($url);
+    $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+    $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+    $wiki->login($username, $password);
+
 	if ($argc > 1) {
 		$action = $argv[1];
 		switch ($action) {
-		    case 'isWikiproject':
-		    	$dir = '/home/bruce/Downloads/wikipedia/CleanupListing';
-		    	$projlist = array();
-		    	isWikiproject($dir, '', $projlist);
-		    	sort($projlist);
+		    case 'retrieveCSV':
+		    	retrieveCSV($wiki);
+		    	break;
 
-		    	$outfile = '/home/bruce/Downloads/wikipedia/CleanupListing/AProjectList.txt';
-		    	$hndl = fopen($outfile, 'w');
-
-		    	foreach($projlist as $projname) {
-		    		fwrite($hndl, ' ' . $projname . "\n");
-		    	}
-
-		    	fclose($hndl);
+		    case 'retrieveHistory':
+		    	retrieveHistory($wiki);
 		    	break;
 
 		    default:
@@ -62,28 +62,18 @@ try {
 		exit;
 	}
 
-
     $ruletype = Config::get(CleanupWorklistBot::RULETYPE);
     $outputtype = Config::get(CleanupWorklistBot::OUTPUTTYPE);
 
     $timer = new Timer();
     $timer->start();
 
-    $url = Config::get(MediaWiki::WIKIURLKEY);
-    $wiki = new MediaWiki($url);
-    $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
-    $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
-    $wiki->login($username, $password);
-
     if ($ruletype == 'active') $rules = $activerules;
     elseif ($ruletype == 'custom') $rules = array(Config::get(CleanupWorklistBot::CUSTOMRULE) => '');
     else {
-        $data = $wiki->getpage('User:AlexNewArtBot/Master');
-
+        $data = $wiki->getpage('User:CleanupWorklistBot/Master');
         $masterconfig = new MasterRuleConfig($data);
-
-        // Prioritize the active rules first
-        $rules = array_merge($activerules, $masterconfig->ruleConfig);
+        $rules = $masterconfig->ruleConfig;
     }
 
     if ($outputtype == 'wiki') $resultwriter = new WikiResultWriter($wiki);
@@ -95,9 +85,7 @@ try {
         $resultwriter = new FileResultWriter($outputDir);
     }
 
-    $bot = new CleanupWorklistBot($wiki, $rules, $resultwriter);
-
-    Config::set(CleanupWorklistBot::LASTRUN, $newlastrun, true);
+    $bot = new CleanupWorklistBot($rules, $resultwriter);
 
     $ts = $timer->stop();
 
@@ -111,40 +99,96 @@ try {
 }
 
 /**
- * Determine WikiProject names.
+ * Retrieve CSV files from toolserver.
  */
-function isWikiproject($dir, $subdir, &$projlist)
+function retrieveCSV($wiki)
 {
-    $handle = opendir($dir);
+    $data = $wiki->getpage('User:CleanupWorklistBot/Master');
+    $masterconfig = new MasterRuleConfig($data);
+    $outputdir = Config::get(CleanupWorklistBot::HTMLDIR);
+    $ch = curl_init();
 
-    while (($entry = readdir($handle)) !== false) {
-    	if ($entry == '.' || $entry == '..') continue;
-    	if (strpos($entry, '.csv') !== false) continue;
-    	if (strpos($entry, '-history.') !== false) continue;
-    	if ($entry == 'AProjectList.txt') continue;
-
-    	$filepath = $dir . '/' . $entry;
-
-    	if (is_dir($filepath)) {
-    		isWikiproject($filepath, $entry, $projlist);
-    		continue;
+    foreach ($masterconfig->ruleConfig as $project => $category) {
+    	if (strpos($project, 'WikiProject_') === 0) {
+    		$project = substr($project, 12);
     	}
 
-    	if (! empty($subdir)) $entry = $subdir . '/' . $entry;
+    	$csvurl = 'http://toolserver.org/~svick/CleanupListing/CleanupListing.php?project=' . urlencode($project) . '&format=csv';
+		$bakcsvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $project . '.csv.bak';
 
-    	if (preg_match('!^project=(.*)\\.html$!', $entry, $matches) == 0) {
-    		echo "Project not found = $entry\n";
-    		continue;
-    	}
-    	$projname = urldecode($matches[1]);
+		if (file_exists($bakcsvpath)) continue;
 
-    	$data = file_get_contents($filepath);
-    	if (strpos($data, 'Wikipedia:WikiProject_') === false) {
-    		$projlist[] = $projname;
-    	} else {
-    		$projlist[] = 'WikiProject_' . $projname;
-    	}
+		$fp = fopen($bakcsvpath, 'w');
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_setopt($ch, CURLOPT_FILE, $fp);
+		curl_setopt($ch, CURLOPT_URL, $csvurl);
+
+		$stat = curl_exec($ch);
+		if ($stat !== true) echo "curl_exec failed: $project | " . curl_error($ch);
+
+		fclose($fp);
+
+		clearstatcache();
+		$filesize = filesize($bakcsvpath);
+		if ($filesize < 66) {
+			echo "No data for: $project\n";
+    		unlink($bakcsvpath);
+		};
     }
 
-   	closedir($handle);
+	curl_close($ch);
+}
+
+/**
+ * Retrieve history from toolserver.
+ */
+function retrieveHistory($wiki)
+{
+    $data = $wiki->getpage('User:CleanupWorklistBot/Master');
+    $masterconfig = new MasterRuleConfig($data);
+    $ch = curl_init();
+
+    $tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
+    $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+    $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+
+    $dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot", $user, $pass);
+    $dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $isth = $dbh_tools->prepare('INSERT INTO history VALUES (?,?,?,?,?)');
+
+    foreach ($masterconfig->ruleConfig as $project => $category) {
+    	if (strpos($project, 'WikiProject_') === 0) {
+    		$project = substr($project, 12);
+    	}
+
+    	$histurl = 'http://toolserver.org/~svick/CleanupListing/CleanupListingHistory.php?project=' . urlencode($project);
+
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_setopt($ch, CURLOPT_URL, $histurl);
+    	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$page = curl_exec($ch);
+
+		if ($page === false) {
+			echo "curl_exec failed: $project | " . curl_error($ch);
+			continue;
+		}
+
+		if (strpos($page, 'Timestamp') === false) {
+			echo "No data for: $project\n";
+			continue;
+		}
+
+		preg_match_all('`<tr>\s*<td>(\d{4}-\d{2}-\d{2})\s\d{2}:\d{2}:\d{2}</td>\s*<td>(\d+)</td>\s*<td>(\d+)</td>\s*<td>(\d+)</td>\s*</tr>`i', $page, $rows, PREG_SET_ORDER);
+
+		foreach ($rows as $row) {
+			$date = $row[1];
+			$totart = $row[2];
+			$cuart = $row[3];
+			$istot = $row[4];
+
+			$isth->execute(array($project, $date, $totart, $cuart, $istot));
+		}
+    }
+
+	curl_close($ch);
 }

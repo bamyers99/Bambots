@@ -17,10 +17,12 @@
 
 namespace com_brucemyers\CleanupWorklistBot;
 
+use com_brucemyers\InceptionBot\RuleSet;
+
 class MasterRuleConfig
 {
     /**
-     * Master rule configuration, key = Rule page name, value = Project 'already found new pages' name
+     * Master rule configuration, key = Wikiproject, value = Category
      */
     public $ruleConfig = array();
 

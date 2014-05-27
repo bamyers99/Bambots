@@ -48,31 +48,19 @@ class TestReports extends UnitTestCase
     	$categories = new Categories($dbh_enwiki, $dbh_tools);
     	$categories->load();
 
-    	$asof_date = date('F j, Y');
+    	$asof_date = getdate();
     	$outputdir = Config::get(CleanupWorklistBot::HTMLDIR);
     	$urlpath = Config::get(CleanupWorklistBot::URLPATH);
 
     	$project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
 
-    	$outputDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
-    	$outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
-    	$outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
-    	$outputDir .= DIRECTORY_SEPARATOR;
-    	$resultwriter = new FileResultWriter($outputDir);
+    	$wikiDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
+    	$wikiDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $wikiDir);
+    	$wikiDir = preg_replace('!(/|\\\\)$!', '', $wikiDir); // Drop trailing slash
+    	$wikiDir .= DIRECTORY_SEPARATOR;
+    	$resultwriter = new FileResultWriter($wikiDir);
 
     	$repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultwriter);
-
-    	$category = 'Michigan';
-    	$page_count = $project_pages->load($category);
-
-    	$csvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $category . '.csv';
-    	$hndl = fopen($csvpath, 'wb');
-    	fwrite($hndl, '"Article","Importance","Class","Count","Oldest month","Categories"' . "\n");
-    	fwrite($hndl, '"Detroit, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
-    	fwrite($hndl, '"Brighton, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
-    	fclose($hndl);
-
-    	$repgen->generateReports($category, true, $page_count);
 
     	$category = 'Good_article_nominees';
     	$page_count = $project_pages->load($category);
@@ -88,5 +76,17 @@ class TestReports extends UnitTestCase
     	$page_count = $project_pages->load($category);
 
     	$repgen->generateReports($category, false, $page_count);
+
+    	$category = 'Michigan';
+    	$page_count = $project_pages->load($category);
+
+    	$csvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $category . '.csv';
+    	$hndl = fopen($csvpath, 'wb');
+    	fwrite($hndl, '"Article","Importance","Class","Count","Oldest month","Categories"' . "\n");
+    	fwrite($hndl, '"Detroit, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
+    	fwrite($hndl, '"Brighton, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
+    	fclose($hndl);
+
+    	$repgen->generateReports($category, true, $page_count);
     }
 }

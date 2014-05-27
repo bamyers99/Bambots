@@ -69,11 +69,10 @@ class CreateTables
 
     	$sql = "CREATE TABLE IF NOT EXISTS `history` (
     	  `project` varchar(255) NOT NULL,
-    	  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    	  `time` date NOT NULL,
 		  `total_articles` int(8) unsigned NOT NULL,
 		  `cleanup_articles` int(8) unsigned NOT NULL,
 		  `issues` int(8) unsigned NOT NULL,
-    	  `runtime` varchar(5) NOT NULL,
     	  KEY `project` (`project`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);

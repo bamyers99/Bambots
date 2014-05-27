@@ -17,11 +17,11 @@
 
 namespace com_brucemyers\CleanupWorklistBot;
 
-use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
+use PDO;
 
 class CleanupWorklistBot
 {
@@ -37,185 +37,131 @@ class CleanupWorklistBot
     const TOOLS_HOST = 'CleanupWorklistBot.tools_host';
     const LABSDB_USERNAME = 'CleanupWorklistBot.labsdb_username';
     const LABSDB_PASSWORD = 'CleanupWorklistBot.labsdb_password';
-    protected $mediawiki;
     protected $resultWriter;
 
-    public function __construct(MediaWiki $mediawiki, $ruleconfigs, ResultWriter $resultWriter)
+    public function __construct($ruleconfigs, ResultWriter $resultWriter)
     {
-        $this->mediawiki = $mediawiki;
+    	$errorrulsets = array();
         $this->resultWriter = $resultWriter;
         $totaltimer = new Timer();
         $totaltimer->start();
         $startProject = Config::get(self::CURRENTPROJECT);
 
-        // Generate the index page
+    	$enwiki_host = Config::get(self::ENWIKI_HOST);
+    	$tools_host = Config::get(self::TOOLS_HOST);
+    	$user = Config::get(self::LABSDB_USERNAME);
+    	$pass = Config::get(self::LABSDB_PASSWORD);
+
+    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot", $user, $pass);
+    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        new CreateTables($dbh_tools);
+
+        $categories = new Categories($dbh_enwiki, $dbh_tools);
+        $categories->load();
+
+        $asof_date = getdate();
+    	$outputdir = Config::get(self::HTMLDIR);
+        $urlpath = Config::get(self::URLPATH);
+
+        $project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
+
+        $repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultWriter);
+
+        // Generate each projects reports.
+
+        foreach ($ruleconfigs as $project => $category) {
+        	if (! empty($startProject) && $project != $startProject) continue;
+            $startProject = '';
+            Config::set(self::CURRENTPROJECT, $project, true);
+
+        	$isWikiProject = false;
+        	if (strpos($project, 'WikiProject_') === 0) {
+        		$project = substr($project, 12);
+        		$isWikiProject = true;
+        	}
+        	if (empty($category)) $category = $project;
+
+        	try {
+	        	$page_count = $project_pages->load($category);
+
+	        	$repgen->generateReports($project, $isWikiProject, $page_count);
+        	} catch (CatTypeNotFoundException $ex) {
+        		$errorrulsets[] = $project;
+        	}
+
+        	Config::set(self::CURRENTPROJECT, '', true);
+        }
+
+        // Generate the index page, doing separate from above because do not want the file open for a long time.
+        $this->_writeIndex($ruleconfigs, $outputdir, $urlpath);
+
+		$ts = $totaltimer->stop();
+		$totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
+
+        $this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);
     }
 
     /**
-     * Write a rulesets results
+     * Write the project index page
      */
-    protected function _writeResults($resultpage, RuleSet $ruleset, $proctime)
+    protected function _writeIndex(&$ruleconfigs, $outputdir, $urlpath)
     {
-        if (count($newresults) == 0) return;
+        $idxpath = $outputdir . 'index.html';
+        $idxhndl = fopen($idxpath, 'wb');
+        fwrite($idxhndl, "<html><head>
+        <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+        <title>WikiProject Cleanup Listings</title>
+        <link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
+        </head><body>
+        <p>WikiProject Cleanup Listings</p>\n\n
+        <ul>\n
+        ");
 
-        $rulename = $ruleset->name;
-    	$errorcnt = count($ruleset->errors);
-        usort($newresults, function($a, $b) {
-            $ans = $a['pageinfo']['ns'];
-            $bns = $b['pageinfo']['ns'];
-            if ($ans == 118) $ans = 0; // Sort drafts with articles
-            if ($bns == 118) $bns = 0;
-
-            if ($ans < $bns) return -1;
-            if ($ans > $bns) return 1;
-
-            return -strnatcmp($a['pageinfo']['timestamp'], $b['pageinfo']['timestamp']); // sort in reverse date order
-        });
-
-    	// Result file
-    	$linecnt = 0;
-    	$logerror = ($errorcnt) ? "Match log and errors" : "Match log";
-    	$output = "<noinclude>__NOINDEX__\n{{fmbox|text= This is a new articles list for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>This list was generated from [[User:AlexNewArtBot/{$rulename}|these rules]]. Questions and feedback [[User talk:Bamyers99|are always welcome]]! The search is being run daily with the most recent ~14 days of results. ''Note: Some articles may not be relevant to this project.''
-
-[[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/log|$logerror]] <includeonly>| [[$resultpage|Results page]] (for watching) </includeonly>| Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
-
-";
-
-    	// Determine suppressed namespaces
-    	$suppressedNS = array();
-    	if (isset($ruleset->options['SuppressNS'])) {
-            foreach ($ruleset->options['SuppressNS'] as $snsoption) {
-                if ($snsoption == 'Category') $suppressedNS[] = '14';
-                elseif (($snsoption == 'Draft')) $suppressedNS[] = '118';
-                elseif (($snsoption == 'Template')) $suppressedNS[] = '10';
-            }
-    	}
-
-    	if (! empty($newresults)) $output .= "<ul>\n";
-
-    	foreach ($newresults as $result) {
-        	$pageinfo = $result['pageinfo'];
-        	$displayuser = $pageinfo['user'];
-        	$ns = $pageinfo['ns'];
-            $user = str_replace(' ', '_', $displayuser);
-            $urlencodeduser = urlencode($displayuser);
-            if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
-            else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
-        	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
-
-            $sanitized_title = str_replace('=', '&#61;', $pageinfo['title']);
-
-        	if ($ns != 0) $output .= '{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|' . $sanitized_title . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
-        	elseif ($linecnt > 600) $output .= '<li>[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
-        	else $output .= '<li>{{la|' . $sanitized_title . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
-
-        	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . '</li>';
-        	if ($ns != 0) {
-        	    $wikipediaNS = '1';
-        	    if (in_array($ns, $suppressedNS)) $wikipediaNS = '0';
-        	    $output .= "|$wikipediaNS}}";
+        foreach ($ruleconfigs as $project => $category) {
+            $isWikiProject = false;
+        	if (strpos($project, 'WikiProject_') === 0) {
+        		$project = substr($project, 12);
+        		$isWikiProject = true;
         	}
-        	$output .= "\n";
-        	++$linecnt;
-    	}
+        	$wikiproject = ($isWikiProject) ? 'WikiProject_' : '';
+			$projecturl = "https://en.wikipedia.org/wiki/Wikipedia:{$wikiproject}" . urlencode($project);
+			$histurl = $urlpath . 'history/' . urlencode($project) . '.html';
+			$bycaturl = 'https://en.wikipedia.org/wiki/User:CleanupWorklistBot/lists/' . urlencode($project);
+			$csvurl = $urlpath . 'csv/' . urlencode($project) . '.csv';
+			$alphaurl = $urlpath . 'alpha/' . urlencode($project) . '.html';
 
-    	if (! empty($newresults)) $output .= "</ul>\n";
-    	if (! empty($newresults) && ! empty($existingresults)) $output .= "----\n";
-    	$existingcnt = 0;
-    	$sectioncnt = 0;
-
-    	foreach ($existingresults as $section) {
-    	    if ($sectioncnt++ > 0) $output .= "----\n";
-    	    $output .= "<ul>\n";
-
-    	    foreach ($section as $line) {
-        	    ++$existingcnt;
-                $title = $line['title'];
-                $displayuser = $line['user'];
-                $user = str_replace(' ', '_', $displayuser);
-                $urlencodeduser = urlencode($displayuser);
-                $timestamp = $line['timestamp'];
-                $totalScore = $line['totalScore'];
-                $wikipediaNS = $line['WikipediaNS'];
-                if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
-                else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
-
-                $sanitized_title = str_replace('=', '&#61;', $title);
-
-        	    if ($linecnt > 600 && $line['type'] != 'MD') {
-                    $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
-        	    } elseif ($linecnt > 600 && $line['type'] == 'MD') {
-                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>|$wikipediaNS}}\n";
-        	    } elseif ($line['type'] == 'MD') {
-                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|$sanitized_title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>|$wikipediaNS}}\n";
-        	    } else {
-                    $output .= "<li>{{la|$sanitized_title}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
-                }
-            	++$linecnt;
-    	    }
-
-    	    $output .= "</ul>\n";
-    	}
-
-    	$artcnt = count($newresults);
-    	$totalcnt = $artcnt + $existingcnt;
-    	if ($artcnt > 0 && $deletedexistingcnt > 0) $msg = "added $artcnt, removed $deletedexistingcnt";
-    	elseif ($artcnt > 0) $msg = "added $artcnt";
-    	else $msg = "removed $deletedexistingcnt";
-
-        $this->resultWriter->writeResults($resultpage, $output, "most recent results, $msg, total $totalcnt");
-
-    	// Log file
-    	$output = '';
-
-    	$rulecnt = count($ruleset->rules);
-    	$threshold = $ruleset->minScore;
-    	$output .= "<noinclude>__NOINDEX__\n{{fmbox|text= This is a new articles log for a Portal or WikiProject. See \"What links here\" for the Portal or WikiProject. See [[User:AlexNewArtBot|AlexNewArtBot]] for more information.}}</noinclude>Pattern count: $rulecnt &mdash; Error count: $errorcnt &mdash; Threshold: $threshold &mdash; Processing time: $proctime\n";
-    	if ($errorcnt) {
-    		$output .= "==Errors==\n";
-    		foreach ($ruleset->errors as $error) {
-    		    $output .= '*' . $error . "\n";
-            }
+	        fwrite($idxhndl, "<li><a href='$projecturl'>$project</a> (<a href='$alphaurl'>alphabetic</a>, <a href='$bycaturl'>by cat</a>, <a href='$csvurl'>CSV</a>, <a href='$histurl'>history</a>)</li>\n");
         }
 
-        if (empty($newresults)) {
-            $output .= "No pattern matches.\n";
-        } else {
-        	$output .= "==Scoring notes==\n";
-
-        	foreach ($newresults as $result) {
-        	    $totscore = 0;
-        	    foreach ($result['scoring'] as $match) {
-        		    $totscore += $match['score'];
-        	    }
-
-        	    $ns = $result['pageinfo']['ns'];
-
-        	    if ($ns != 0) $output .= '*[[:' . $result['pageinfo']['title'] . "]] Total score: $totscore\n";
-        	    else$output .= '*[[' . $result['pageinfo']['title'] . "]] Total score: $totscore\n";
-
-        	    foreach ($result['scoring'] as $match) {
-        		    $output .= "**Score: " . $match['score'] . ', pattern: <nowiki>' . $match['regex'] . "</nowiki>\n";
-        	    }
-            }
-        }
-
-    	$logsum = ($errorcnt) ? "most recent errors and scoring" : "most recent scoring";
-        $this->resultWriter->writeResults($logpage, $output, "$logsum");
+        fwrite($idxhndl, "</ul>\nGenerated by <a href='https://en.wikipedia.org/wiki/User:CleanupWorklistBot'>CleanupWorklistBot</a></body></html>");
+		fclose($idxhndl);
     }
 
     /**
      * Write the bot status page
      */
-    protected function _writeStatus($rulesetcnt, $totaltime)
+    protected function _writeStatus($rulesetcnt, $totaltime, $errorrulsets)
     {
-        $output = <<<EOT
+        $errcnt = count($errorrulsets);
+
+    	$output = <<<EOT
 <noinclude>__NOINDEX__</noinclude>
 '''Last run:''' {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />
 '''Processing time:''' $totaltime<br />
 '''Project count:''' $rulesetcnt<br />
+'''Rule errors:''' $errcnt
 EOT;
 
-        $this->resultWriter->writeResults('User:CleanupWorklistBot/Status', $output, "Total time: $totaltime");
+        if ($errcnt) {
+    	    $output .= "\n===Rule errors (project category not found)===\n";
+    	    foreach ($errorrulsets as $project) {
+    	        $output .= "*$project\n";
+    	    }
+    	}
+
+    	$this->resultWriter->writeResults('User:CleanupWorklistBot/Status', $output, "$errcnt errors; Total time: $totaltime");
     }
 }

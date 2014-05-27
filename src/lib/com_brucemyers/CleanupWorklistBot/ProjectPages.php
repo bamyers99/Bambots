@@ -17,8 +17,6 @@
 
 namespace com_brucemyers\CleanupWorklistBot;
 
-use com_brucemyers\CleanupWorklistBot\CreateTables;
-use Exception;
 use PDO;
 
 class ProjectPages
@@ -130,7 +128,7 @@ class ProjectPages
     		$sth->closeCursor();
     	}
 
-    	if (empty($sql)) throw new Exception("Category type not found for '$category'");
+    	if (empty($sql)) throw new CatTypeNotFoundException("Category type not found for '$category'");
 
     	// Load the pages
    		$this->dbh_tools->exec('TRUNCATE page');

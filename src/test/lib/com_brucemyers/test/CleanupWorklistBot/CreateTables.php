@@ -67,6 +67,7 @@ class CreateTables
    		$dbh_enwiki->exec('TRUNCATE category');
    		$dbh_enwiki->exec('TRUNCATE page');
    		$dbh_enwiki->exec('TRUNCATE categorylinks');
+   		$dbh_tools->exec('TRUNCATE history');
 
      	// project article categories
 
@@ -105,6 +106,9 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (9, 'Articles_needing_cleanup_from_May_2013', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'Unassessed_Michigan_articles', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'NA-importance_Michigan_articles', 'page')");
+
+   		$dbh_tools->exec("INSERT INTO history VALUES ('Michigan', '2014-05-14', 2, 1, 2)");
+   		$dbh_tools->exec("INSERT INTO history VALUES ('Michigan', '2014-05-21', 3, 2, 3)");
 
    	 	// category - WikiProject x articles
     	$dbh_enwiki->exec("INSERT INTO category VALUES (100,'WikiProject_India_articles',1,0,0)");

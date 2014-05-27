@@ -1,11 +1,12 @@
 Bambots
 =======
 
-Bambots are a collection of Wikipedia bots.
+Bambots are a collection of [Wikipedia](https://en.wikipedia.org/) bots.
 
-* InceptionBot is a [Wikipedia](https://en.wikipedia.org/) [WikiProject](https://en.wikipedia.org/wiki/Wikipedia:WikiProject) new article locator.
-* WPMissingTmplBot is a Wikipedia WikiProject talk page missing banner locator.
-* WPPageListBot is a Wikipedia WikiProject associated page locator.
+* CleanupWorklistBot is a [WikiProject](https://en.wikipedia.org/wiki/Wikipedia:WikiProject) cleanup list generator.
+* InceptionBot is a WikiProject new article locator.
+* WPMissingTmplBot is a WikiProject talk page missing banner locator.
+* WPPageListBot is a WikiProject associated page locator.
 
 Directory structure
 ===================
@@ -41,4 +42,20 @@ filename - *.properties where * = bot name or testbot
     InceptionBot.currentproject=
     # InceptionBot.currentend (for restart capability)
     InceptionBot.currentend=
+	
+    CleanupWorklistBot.outputdir={basedir}/results
+    # CleanupWorklistBot.outputtype 'file', 'wiki'
+    CleanupWorklistBot.outputtype=file
+    # CleanupWorklistBot.ruletype 'active', 'custom', 'all'
+    CleanupWorklistBot.ruletype=custom
+    CleanupWorklistBot.customrule=WikiProject_Michigan
+    CleanupWorklistBot.erroremail=a@b.com
+    # CleanupWorklistBot.currentproject (for restart capability)
+    CleanupWorklistBot.currentproject=
+    CleanupWorklistBot.htmldir=/home/html/cwb/
+    CleanupWorklistBot.urlpath=https://tools.wmflabs.org/bambots/cwb/
+    CleanupWorklistBot.enwiki_host=
+    CleanupWorklistBot.tools_host=
+    CleanupWorklistBot.labsdb_username=
+    CleanupWorklistBot.labsdb_password=
 	
