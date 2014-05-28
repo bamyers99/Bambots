@@ -93,6 +93,9 @@ class CleanupWorklistBot
         	} catch (CatTypeNotFoundException $ex) {
         		$errorrulsets[] = $project . ' (project category not found)';
         	} catch (Exception $ex2) {
+        		echo $ex2->getMessage() . "\n";
+        		$strpos = strpos($ex2->getMessage(), 'exceeds the article size limit');
+        		print_r($strpos);
         		if (strpos($ex2->getMessage(), 'exceeds the article size limit') !== false) $errorrulsets[] = $project . ' (wikipage too big)';
         		else throw $ex2;
         	}
