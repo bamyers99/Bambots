@@ -43,23 +43,30 @@ try {
     $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
     $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
     $wiki->login($username, $password);
+    $skipCatLoad = false;
 
 	if ($argc > 1) {
 		$action = $argv[1];
 		switch ($action) {
 		    case 'retrieveCSV':
 		    	retrieveCSV($wiki);
+				exit;
 		    	break;
 
 		    case 'retrieveHistory':
 		    	retrieveHistory($wiki);
+				exit;
+		    	break;
+
+		    case 'skipCatLoad':
+		    	$skipCatLoad = true;
 		    	break;
 
 		    default:
 		    	echo 'Unknown action = ' . $action;
+				exit;
 		    	break;
 		}
-		exit;
 	}
 
     $ruletype = Config::get(CleanupWorklistBot::RULETYPE);
@@ -85,7 +92,7 @@ try {
         $resultwriter = new FileResultWriter($outputDir);
     }
 
-    $bot = new CleanupWorklistBot($rules, $resultwriter);
+    $bot = new CleanupWorklistBot($rules, $resultwriter, $skipCatLoad);
 
     $ts = $timer->stop();
 

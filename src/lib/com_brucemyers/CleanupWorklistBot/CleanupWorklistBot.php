@@ -39,7 +39,7 @@ class CleanupWorklistBot
     const LABSDB_PASSWORD = 'CleanupWorklistBot.labsdb_password';
     protected $resultWriter;
 
-    public function __construct($ruleconfigs, ResultWriter $resultWriter)
+    public function __construct($ruleconfigs, ResultWriter $resultWriter, $skipCatLoad)
     {
     	$errorrulsets = array();
         $this->resultWriter = $resultWriter;
@@ -59,8 +59,10 @@ class CleanupWorklistBot
 
         new CreateTables($dbh_tools);
 
-        $categories = new Categories($dbh_enwiki, $dbh_tools);
-        $categories->load();
+        if (! $skipCatLoad) {
+        	$categories = new Categories($dbh_enwiki, $dbh_tools);
+        	$categories->load();
+        }
 
         $asof_date = getdate();
     	$outputdir = Config::get(self::HTMLDIR);
