@@ -31,6 +31,8 @@ $GLOBALS['botname'] = 'CleanupWorklistBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
+    	"SGpedians'_notice_board" => 'Singapore',
+    	'WikiProject_Beer/Pub_Taskforce' => 'Pubs',
     	'WikiProject_Biophysics' => '',
         'WikiProject_Michigan' => '',
     	'WikiProject_Physics' => '',
@@ -119,9 +121,10 @@ function retrieveCSV($wiki)
     	if (strpos($project, 'WikiProject_') === 0) {
     		$project = substr($project, 12);
     	}
+    	$filesafe_project = str_replace('/', '_', $project);
 
     	$csvurl = 'http://toolserver.org/~svick/CleanupListing/CleanupListing.php?project=' . urlencode($project) . '&format=csv';
-		$bakcsvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $project . '.csv.bak';
+		$bakcsvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $filesafe_project . '.csv.bak';
 
 		if (file_exists($bakcsvpath)) continue;
 
