@@ -128,12 +128,14 @@ class CleanupWorklistBot
         		$project = substr($project, 12);
         		$isWikiProject = true;
         	}
+    		$filesafe_project = str_replace('/', '_', $project);
+
         	$wikiproject = ($isWikiProject) ? 'WikiProject_' : '';
 			$projecturl = "https://en.wikipedia.org/wiki/Wikipedia:{$wikiproject}" . urlencode($project);
-			$histurl = $urlpath . 'history/' . urlencode($project) . '.html';
-			$bycaturl = 'https://en.wikipedia.org/wiki/User:CleanupWorklistBot/lists/' . urlencode($project);
-			$csvurl = $urlpath . 'csv/' . urlencode($project) . '.csv';
-			$alphaurl = $urlpath . 'alpha/' . urlencode($project) . '.html';
+			$histurl = $urlpath . 'history/' . urlencode($filesafe_project) . '.html';
+			$bycaturl = 'https://en.wikipedia.org/wiki/User:CleanupWorklistBot/lists/' . urlencode($filesafe_project);
+			$csvurl = $urlpath . 'csv/' . urlencode($filesafe_project) . '.csv';
+			$alphaurl = $urlpath . 'alpha/' . urlencode($filesafe_project) . '.html';
 
 	        fwrite($idxhndl, "<li><a href='$projecturl'>$project</a> (<a href='$alphaurl'>alphabetic</a>, <a href='$bycaturl'>by cat</a>, <a href='$csvurl'>CSV</a>, <a href='$histurl'>history</a>)</li>\n");
         }
