@@ -43,9 +43,13 @@ class CSVString
 					$char = $buffer[$x];
 
 					if ($char == '\\') {
-						$string .= $buffer[++$x];
+						if ($x+1 < $buflen) $string .= $buffer[++$x];
 					} elseif ($char == '"') {
-						break;
+						if ($x+1 < $buflen && $buffer[$x+1] != ',') { // Hack because svick didn't escape "s
+							$string .= $char;
+						} else {
+							break;
+						}
 					} else {
 						$string .= $char;
 					}
@@ -65,6 +69,7 @@ class CSVString
 
 	/**
 	 * Format a csv line with "ed fields.
+	 * \ is escaped using \\
      * " is escaped using \"
 	 *
 	 * @param array $fields
@@ -73,6 +78,7 @@ class CSVString
 	static function format($fields)
 	{
 		foreach ($fields as $key => $field) {
+			$field = str_replace('\\', "\\\\", $field);
 			$fields[$key] = str_replace('"', "\\\"", $field);
 		}
 

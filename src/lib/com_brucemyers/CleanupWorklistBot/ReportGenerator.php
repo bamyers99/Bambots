@@ -159,7 +159,7 @@ class ReportGenerator
 				if (! isset($groups[$cat])) $groups[$cat] = array();
 				$groups[$cat][$title] = array('cls' => $art['cls'], 'clssort' => $clssort, 'imp' => $art['imp'],
 					'impsort' => $impsort, 'earliest' => $consolidated['earliest'], 'earliestsort' => $consolidated['earliestsort'],
-					'cats' => $cats);
+					'cats' => $consolidated['issues']);
 			}
 		}
 
@@ -229,14 +229,24 @@ class ReportGenerator
 			$output .= "==$catgroup==\n<section begin='$catgroup' />\n";
 
 			foreach ($cats as $cat => $arts) {
+				$catlen = strlen($cat);
 				$artcount = count($arts);
 				$output .= "===$cat ($artcount)===\n";
 				$output .= "<section begin='$cat' />\n";
 				$output .= "{| class='wikitable sortable'\n|-\n!Article!!Importance!!Class!!Earliest!!class='unsortable'|Categories\n";
 
 				foreach ($arts as $title => $art) {
+					//Strip the current cat prefix to make page smaller
+					foreach ($art['cats'] as $key => $value) {
+						if (strpos($value, $cat) === 0) {
+							if (strlen($value) > $catlen) $art['cats'][$key] = '...' . substr($value, $catlen);
+							else unset ($art['cats'][$key]);
+						}
+					}
+					$cats = implode(', ', $art['cats']);
+
 					// a space is added after values that can be empty so ||| does not happen
-					$output .= "|-\n|[[$title]]||data-sort-value='{$art['impsort']}'|{$art['imp']} ||data-sort-value='{$art['clssort']}'|{$art['cls']} ||data-sort-value='{$art['earliestsort']}'|{$art['earliest']} ||{$art['cats']}\n";
+					$output .= "|-\n|[[$title]]||data-sort-value='{$art['impsort']}'|{$art['imp']} ||data-sort-value='{$art['clssort']}'|{$art['cls']} ||data-sort-value='{$art['earliestsort']}'|{$art['earliest']} ||{$cats}\n";
 				}
 
 				$output .= "|}\n";

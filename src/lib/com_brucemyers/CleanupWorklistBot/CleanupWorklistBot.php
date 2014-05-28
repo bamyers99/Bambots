@@ -91,7 +91,10 @@ class CleanupWorklistBot
 
 	        	$repgen->generateReports($project, $isWikiProject, $page_count);
         	} catch (CatTypeNotFoundException $ex) {
-        		$errorrulsets[] = $project;
+        		$errorrulsets[] = $project . ' (project category not found)';
+        	} catch (Exception $ex2) {
+        		if (strpos($ex2->getMessage(), 'exceeds the article size limit') !== false) $errorrulsets[] = $project . ' (wikipage too big)';
+        		else throw $ex2;
         	}
 
         	Config::set(self::CURRENTPROJECT, '', true);
@@ -160,7 +163,7 @@ class CleanupWorklistBot
 EOT;
 
         if ($errcnt) {
-    	    $output .= "\n===Rule errors (project category not found)===\n";
+    	    $output .= "\n===Rule errors===\n";
     	    foreach ($errorrulsets as $project) {
     	        $output .= "*$project\n";
     	    }
