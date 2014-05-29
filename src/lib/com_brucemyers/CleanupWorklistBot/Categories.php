@@ -155,19 +155,23 @@ class Categories
     /**
      * Load the articles in the above categories.
      *
+     * @param bool $skipCatLoad Skip the category load, only load parent cats
      * @return int Category count
      */
-    public function load()
+    public function load($skipCatLoad)
     {
-   		$this->dbh_tools->exec('TRUNCATE category');
-   		$this->dbh_tools->exec('TRUNCATE categorylinks');
-
-    	$isth = $this->dbh_tools->prepare('INSERT INTO category VALUES (:id, :title, :month, :year)');
     	$count = 0;
+    	if (! $skipCatLoad) {
+	   		$this->dbh_tools->exec('TRUNCATE category');
+	   		$this->dbh_tools->exec('TRUNCATE categorylinks');
+
+	    	$isth = $this->dbh_tools->prepare('INSERT INTO category VALUES (:id, :title, :month, :year)');
+    	}
 
     	foreach (self::$CATEGORIES as $cat => $attribs) {
 			$cattype = $attribs['type'];
 			$subcatsonly = isset($attribs['subcats']);
+			if ($skipCatLoad && ! $subcatsonly) continue;
 			$sqls = array();
 
 			switch ($cattype) {
@@ -232,10 +236,13 @@ class Categories
 		    		} else {
 		    			$row['title'] = str_replace(' ', '_', $cat);
 		    		}
-					$isth->execute($row);
-					++$count;
 
-					$this->loadCategoryMembers($title);
+		    		if (! $skipCatLoad) {
+						$isth->execute($row);
+						++$count;
+
+						$this->loadCategoryMembers($title);
+		    		}
 		    	}
 
 		    	$sth->closeCursor();

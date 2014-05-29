@@ -43,7 +43,7 @@ class TestProjectPage extends UnitTestCase
     	new CreateTables($dbh_enwiki, $dbh_tools);
 
     	$categories = new Categories($dbh_enwiki, $dbh_tools);
-    	$categories->load();
+    	$categories->load(false);
 
     	$project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
 

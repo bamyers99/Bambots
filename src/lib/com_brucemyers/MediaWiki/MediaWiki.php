@@ -33,6 +33,7 @@ class MediaWiki extends wikipedia
     const WIKIPASSWORDKEY = 'wiki.password';
     const WIKIPAGEINCREMENT = 'wiki.pagefetchincrement';
     const WIKICHANGESINCREMENT = 'wiki.recentchangesincrement';
+    const MAX_PAGE_SIZE = 2000000;
 
     public $namespaces = array(
                     0 => 'Article',

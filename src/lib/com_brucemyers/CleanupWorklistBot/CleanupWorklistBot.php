@@ -38,8 +38,9 @@ class CleanupWorklistBot
     const LABSDB_USERNAME = 'CleanupWorklistBot.labsdb_username';
     const LABSDB_PASSWORD = 'CleanupWorklistBot.labsdb_password';
     protected $resultWriter;
+    protected $dbh_tools;
 
-    public function __construct($ruleconfigs, ResultWriter $resultWriter, $skipCatLoad)
+    public function __construct(&$ruleconfigs, ResultWriter $resultWriter, $skipCatLoad)
     {
     	$errorrulsets = array();
         $this->resultWriter = $resultWriter;
@@ -56,13 +57,14 @@ class CleanupWorklistBot
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$this->dbh_tools = $dbh_tools;
 
         new CreateTables($dbh_tools);
 
-        if (! $skipCatLoad) {
-        	$categories = new Categories($dbh_enwiki, $dbh_tools);
-        	$categories->load();
-        }
+        if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('TRUNCATE project');
+
+        $categories = new Categories($dbh_enwiki, $dbh_tools);
+        $categories->load($skipCatLoad);
 
         $asof_date = getdate();
     	$outputdir = Config::get(self::HTMLDIR);
@@ -89,22 +91,17 @@ class CleanupWorklistBot
         	try {
 	        	$page_count = $project_pages->load($category);
 
-	        	$repgen->generateReports($project, $isWikiProject, $page_count);
+	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
+	        	if (! $wikiPageCreated) $repgen->generateReports($project, $isWikiProject, $page_count, true);;
         	} catch (CatTypeNotFoundException $ex) {
         		$errorrulsets[] = $project . ' (project category not found)';
-        	} catch (Exception $ex2) {
-        		echo $ex2->getMessage() . "\n";
-        		$strpos = strpos($ex2->getMessage(), 'exceeds the article size limit');
-        		print_r($strpos);
-        		if (strpos($ex2->getMessage(), 'exceeds the article size limit') !== false) $errorrulsets[] = $project . ' (wikipage too big)';
-        		else throw $ex2;
         	}
 
         	Config::set(self::CURRENTPROJECT, '', true);
         }
 
         // Generate the index page, doing separate from above because do not want the file open for a long time.
-        $this->_writeIndex($ruleconfigs, $outputdir, $urlpath);
+        $this->_writeIndex($outputdir, $urlpath);
 
 		$ts = $totaltimer->stop();
 		$totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
@@ -115,7 +112,7 @@ class CleanupWorklistBot
     /**
      * Write the project index page
      */
-    protected function _writeIndex(&$ruleconfigs, $outputdir, $urlpath)
+    protected function _writeIndex($outputdir, $urlpath)
     {
         $idxpath = $outputdir . 'index.html';
         $idxhndl = fopen($idxpath, 'wb');
@@ -128,7 +125,12 @@ class CleanupWorklistBot
         <ul>\n
         ");
 
-        foreach ($ruleconfigs as $project => $category) {
+        $results = $this->dbh_tools->query('SELECT * FROM `project` ORDER BY `name`');
+
+        while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+        	$project = $row['name'];
+        	$wiki_too_big = (int)$row['wiki_too_big'];
+
             $isWikiProject = false;
         	if (strpos($project, 'WikiProject_') === 0) {
         		$project = substr($project, 12);
@@ -137,11 +139,12 @@ class CleanupWorklistBot
     		$filesafe_project = str_replace('/', '_', $project);
 
         	$wikiproject = ($isWikiProject) ? 'WikiProject_' : '';
-			$projecturl = "https://en.wikipedia.org/wiki/Wikipedia:{$wikiproject}" . urlencode($project);
-			$histurl = $urlpath . 'history/' . urlencode($filesafe_project) . '.html';
-			$bycaturl = 'https://en.wikipedia.org/wiki/User:CleanupWorklistBot/lists/' . urlencode($filesafe_project);
-			$csvurl = $urlpath . 'csv/' . urlencode($filesafe_project) . '.csv';
-			$alphaurl = $urlpath . 'alpha/' . urlencode($filesafe_project) . '.html';
+			$projecturl = "https://en.wikipedia.org/wiki/Wikipedia:{$wikiproject}" . $project;
+			$histurl = $urlpath . 'history/' . $filesafe_project . '.html';
+			if ($wiki_too_big) $bycaturl = $urlpath . 'bycat/' . $filesafe_project . '.html';
+			else $bycaturl = 'https://en.wikipedia.org/wiki/User:CleanupWorklistBot/lists/' . $filesafe_project;
+			$csvurl = $urlpath . 'csv/' . $filesafe_project . '.csv';
+			$alphaurl = $urlpath . 'alpha/' . $filesafe_project . '.html';
 
 	        fwrite($idxhndl, "<li><a href='$projecturl'>$project</a> (<a href='$alphaurl'>alphabetic</a>, <a href='$bycaturl'>by cat</a>, <a href='$csvurl'>CSV</a>, <a href='$histurl'>history</a>)</li>\n");
         }
@@ -162,11 +165,11 @@ class CleanupWorklistBot
 '''Last run:''' {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />
 '''Processing time:''' $totaltime<br />
 '''Project count:''' $rulesetcnt<br />
-'''Rule errors:''' $errcnt
+'''Errors:''' $errcnt
 EOT;
 
         if ($errcnt) {
-    	    $output .= "\n===Rule errors===\n";
+    	    $output .= "\n===Errors===\n";
     	    foreach ($errorrulsets as $project) {
     	        $output .= "*$project\n";
     	    }

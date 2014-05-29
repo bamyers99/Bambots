@@ -46,7 +46,7 @@ class TestReports extends UnitTestCase
     	new CreateTables($dbh_enwiki, $dbh_tools);
 
     	$categories = new Categories($dbh_enwiki, $dbh_tools);
-    	$categories->load();
+    	$categories->load(false);
 
     	$asof_date = getdate();
     	$outputdir = Config::get(CleanupWorklistBot::HTMLDIR);
@@ -87,6 +87,7 @@ class TestReports extends UnitTestCase
     	fwrite($hndl, '""K" Brighton, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
     	fclose($hndl);
 
-    	$repgen->generateReports($category, true, $page_count);
+    	$repgen->generateReports($category, true, $page_count, false, 1);
+    	$repgen->generateReports($category, true, $page_count, true);
     }
 }

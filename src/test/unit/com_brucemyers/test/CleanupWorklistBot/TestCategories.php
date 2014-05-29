@@ -41,7 +41,7 @@ class TestCategories extends UnitTestCase
 
     	new CreateTables($dbh_enwiki, $dbh_tools);
     	$categories = new Categories($dbh_enwiki, $dbh_tools);
-    	$count = $categories->load();
+    	$count = $categories->load(false);
     	$this->assertEqual($count, 6, 'Wrong category count');
 
     	$result = $dbh_tools->query('SELECT count(*) as linkcount FROM categorylinks', PDO::FETCH_ASSOC);

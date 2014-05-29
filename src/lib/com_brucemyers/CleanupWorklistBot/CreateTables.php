@@ -76,5 +76,12 @@ class CreateTables
     	  KEY `project` (`project`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
+
+    	$sql = "CREATE TABLE IF NOT EXISTS `project` (
+    	  `name` varchar(255) NOT NULL,
+    	  `wiki_too_big` int(8) NOT NULL,
+    	  PRIMARY KEY `name` (`name`)
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
     }
 }
