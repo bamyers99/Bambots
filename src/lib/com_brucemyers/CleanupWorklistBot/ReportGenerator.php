@@ -407,6 +407,8 @@ class ReportGenerator
 
 						// a space is added after values that can be empty so ||| does not happen
 						$output .= "|-\n|[[$title]]||data-sort-value='{$art['impsort']}'|{$art['imp']} ||data-sort-value='{$art['clssort']}'|{$art['cls']} ||data-sort-value='{$art['earliestsort']}'|{$art['earliest']} ||{$cats}\n";
+
+						if (strlen($output) > $max_page_size) return false;
 					}
 
 					$output .= "|}\n";
