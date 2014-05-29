@@ -90,6 +90,11 @@ class CleanupWorklistBot
 
         	try {
 	        	$page_count = $project_pages->load($category);
+	        	if (! $page_count) {
+	        		$errorrulsets[] = $project . ' (no pages in project)';
+	        		Logger::log($project . ' (no pages in project)');
+	        		continue;
+	        	}
 
 	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
 	        	if (! $wikiPageCreated) $repgen->generateReports($project, $isWikiProject, $page_count, true);;

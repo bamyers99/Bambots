@@ -50,7 +50,7 @@ class ProjectPages
     	$sql = '';
 
     	// category - x articles by quality (subcats)
-    	$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ?');
+    	$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? LIMIT 1');
     	$param = "{$category}_articles_by_quality";
     	$sth->bindParam(1, $param);
     	$sth->execute();
@@ -71,7 +71,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - WikiProject x articles
-    		$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ?');
+    		$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? LIMIT 1');
     		$param = "WikiProject_{$category}_articles";
     		$sth->bindParam(1, $param);
     		$sth->execute();
