@@ -166,7 +166,7 @@ class ReportGenerator
 				if (! isset($groups[$cat])) $groups[$cat] = array();
 				$groups[$cat][$title] = array('cls' => $art['cls'], 'clssort' => $clssort, 'imp' => $art['imp'],
 					'impsort' => $impsort, 'earliest' => $consolidated['earliest'], 'earliestsort' => $consolidated['earliestsort'],
-					'cats' => $consolidated['issues']);
+					'cats' => $consolidated['issues'], 'icount' => $icount);
 			}
 		}
 
@@ -182,55 +182,6 @@ class ReportGenerator
 			//
 			// Write the By Cat list html style
 			//
-
-			$bycatpath = $this->outputdir . 'bycat' . DIRECTORY_SEPARATOR . $filesafe_project . '.html';
-			$bycathndl = fopen($bycatpath, 'wb');
-
-			fwrite($bycathndl, "<html><head>
-				<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-	    		<title>Cleanup listing for {$wikiproject}{$project_title}</title>
-	    		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
-				<script type='text/javascript' src='../../js/jquery-2.1.1.min.js'></script>
-				<script type='text/javascript' src='../../js/jquery.tablesorter.min.js'></script>
-				</head><body>
-				<script type='text/javascript'>
-					$(document).ready(function()
-					    {
-					        $('table').tablesorter({ headers: { 5: { sorter: false} } });
-					    }
-					);
-				</script>
-				<p>Cleanup listing for <a href='$projecturl'>{$wikiproject}{$project_title}</a> as of $asof_date.</p>
-				<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
-				<p>Listings: <a href='$alphaurl'>Alphabetic</a> <b>·</b> By Category <b>·</b> <a href='$csvurl'>CSV</a> <b>·</b> <a href='$histurl'>History</a></p>
-	    		");
-
-			// Write the changes
-			if (! empty($prevclean)) {
-				fwrite($bycathndl, "<h2>Changes since last update</h2>\n");
-
-				$newarts = array_diff_key($curclean, $prevclean);
-				$artcount = count($newarts);
-				fwrite($bycathndl, "<h3>New articles ($artcount)</h3>\n");
-				$x=0;
-
-				foreach ($newarts as $title => $art) {
-					if ($x++ > 0) fwrite($bycathndl, ' <b>·</b> ');
-					$consolidated = $this->_consolidateCats($art['issues']);
-					$cats = implode(', ', $consolidated['issues']);
-					fwrite($bycathndl, "<a href='$wikiprefix$title'>$title</a> ($cats)");
-				}
-
-				$resarts = array_diff_key($prevclean, $curclean);
-				$artcount = count($resarts);
-				fwrite($bycathndl, "<h3>Resolved articles ($artcount)</h3>\n");
-				$x=0;
-
-				foreach ($resarts as $title => $fields) {
-					if ($x++ > 0) fwrite($bycathndl, ' <b>·</b> ');
-					fwrite($bycathndl, "<a href='$wikiprefix$title'>$title</a> ({$fields[5]})");
-				}
-			}
 
 			// Group the cats
 			$catgroups = array();
@@ -249,13 +200,96 @@ class ReportGenerator
 
 			ksort($catgroups);
 
+
+			$bycatpath = $this->outputdir . 'bycat' . DIRECTORY_SEPARATOR . $filesafe_project . '.html';
+			$bycathndl = fopen($bycatpath, 'wb');
+
+			fwrite($bycathndl, "<html><head>
+				<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+	    		<title>Cleanup listing for {$wikiproject}{$project_title}</title>
+	    		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
+				<script type='text/javascript' src='../../js/jquery-2.1.1.min.js'></script>
+				<script type='text/javascript' src='../../js/jquery.tablesorter.min.js'></script>
+				</head><body>
+				<script type='text/javascript'>
+					$(document).ready(function()
+					    {
+					        $('.tablesorter').tablesorter({ headers: { 6: { sorter: false} } });
+					    }
+					);
+				</script>
+				<p>Cleanup listing for <a href='$projecturl'>{$wikiproject}{$project_title}</a> as of $asof_date.</p>
+				<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
+				<p>Listings: <a href='$alphaurl'>Alphabetic</a> <b>·</b> By Category <b>·</b> <a href='$csvurl'>CSV</a> <b>·</b> <a href='$histurl'>History</a></p>
+	    		");
+
+			//Write the TOC
+			fwrite($bycathndl, "<div class='toc'><center>Contents</center>\n");
+			fwrite($bycathndl, "<ul>\n");
+
+			if (! empty($prevclean)) {
+				fwrite($bycathndl, "<li><a href='#Changes since last update'>Changes since last update</a></li>\n");
+				fwrite($bycathndl, "<ul>\n");
+				$newarts = array_diff_key($curclean, $prevclean);
+				$artcount = count($newarts);
+				fwrite($bycathndl, "<li><a href='#New articles'>New articles ($artcount)</a></li>\n");
+
+				$resarts = array_diff_key($prevclean, $curclean);
+				$artcount = count($resarts);
+				fwrite($bycathndl, "<li><a href='#Resolved articles'>Resolved articles ($artcount)</a></li>\n");
+				fwrite($bycathndl, "</ul>\n");
+			}
+
 			foreach ($catgroups as $catgroup => $cats) {
-				fwrite($bycathndl, "<h2>$catgroup</h2>\n");
+				fwrite($bycathndl, "<li><a href='#$catgroup'>$catgroup</a></li>\n");
+				fwrite($bycathndl, "<ul>\n");
 
 				foreach ($cats as $cat => $arts) {
 					$catlen = strlen($cat);
 					$artcount = count($arts);
-					fwrite($bycathndl, "<h3>$cat ($artcount)</h3>\n");
+					fwrite($bycathndl, "<li><a href='#$cat'>$cat ($artcount)</a></li>\n");
+				}
+
+				fwrite($bycathndl, "</ul>\n");
+			}
+
+			fwrite($bycathndl, "</ul></div>\n");
+
+			// Write the changes
+			if (! empty($prevclean)) {
+				fwrite($bycathndl, "<a name='Changes since last update'></a><h2>Changes since last update</h2>\n");
+
+				$newarts = array_diff_key($curclean, $prevclean);
+				$artcount = count($newarts);
+				fwrite($bycathndl, "<a name='New articles'></a><h3>New articles ($artcount)</h3>\n");
+				$x=0;
+
+				foreach ($newarts as $title => $art) {
+					if ($x++ > 0) fwrite($bycathndl, ' <b>·</b> ');
+					$consolidated = $this->_consolidateCats($art['issues']);
+					$cats = implode(', ', $consolidated['issues']);
+					fwrite($bycathndl, "<a href='$wikiprefix$title'>$title</a> ($cats)");
+				}
+
+				$resarts = array_diff_key($prevclean, $curclean);
+				$artcount = count($resarts);
+				fwrite($bycathndl, "<a name='Resolved articles'></a><h3>Resolved articles ($artcount)</h3>\n");
+				$x=0;
+
+				foreach ($resarts as $title => $fields) {
+					if ($x++ > 0) fwrite($bycathndl, ' <b>·</b> ');
+					fwrite($bycathndl, "<a href='$wikiprefix$title'>$title</a> ({$fields[5]})");
+				}
+			}
+
+			// Write the cats
+			foreach ($catgroups as $catgroup => $cats) {
+				fwrite($bycathndl, "<a name='$catgroup'></a><h2>$catgroup</h2>\n");
+
+				foreach ($cats as $cat => $arts) {
+					$catlen = strlen($cat);
+					$artcount = count($arts);
+					fwrite($bycathndl, "<a name='$cat'></a><h3>$cat ($artcount)</h3>\n");
 					fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
 						<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>\n
 						");
@@ -272,7 +306,7 @@ class ReportGenerator
 
 						fwrite($bycathndl, "<tr><td><a href='$wikiprefix$title'>$title</a></td>
 							<td data-sort-value='{$art['impsort']}'>{$art['imp']}</td>
-							<td data-sort-value='{$art['clssort']}'>{$art['cls']}</td>
+							<td data-sort-value='{$art['clssort']}'>{$art['cls']}</td><td align='right'>{$art['icount']}</td>
 							<td data-sort-value='{$art['earliestsort']}'>{$art['earliest']}</td><td>{$cats}</td></tr>\n");
 					}
 
@@ -282,6 +316,15 @@ class ReportGenerator
 
 			fwrite($bycathndl, "<br />Generated by <a href='https://en.wikipedia.org/wiki/User:CleanupWorklistBot'>CleanupWorklistBot</a></body></html>");
 			fclose($bycathndl);
+
+			// Write stub wiki page
+
+			$output = "<noinclude>__NOINDEX__</noinclude>Cleanup listing for [[Wikipedia:{$wikiproject}{$project}|{$wikiproject}{$project_title}]] as of $asof_date.\n\n";
+			$output .= "Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.\n\n";
+			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> [$bycaturl By Category] <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
+			$output .= "'''Note''': The listing is too large to fit in a wiki page. An alternate listing can be found [$bycaturl here].\n";
+
+			$this->resultWriter->writeResults("User:CleanupWorklistBot/lists/$filesafe_project", $output, "most recent results, articles: $cleanup_pages, issues: $issue_count");
 
 		} else {
 
