@@ -18,6 +18,7 @@
 use com_brucemyers\CleanupWorklistBot\MasterRuleConfig;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
+use com_brucemyers\CleanupWorklistBot\CreateTables;
 use com_brucemyers\MediaWiki\FileResultWriter;
 use com_brucemyers\MediaWiki\WikiResultWriter;
 use com_brucemyers\Util\Timer;
@@ -57,6 +58,11 @@ try {
 
 		    case 'retrieveHistory':
 		    	retrieveHistory($wiki);
+				exit;
+		    	break;
+
+		    case 'checkWPCategory':
+		    	checkWPCategory($wiki);
 				exit;
 		    	break;
 
@@ -201,4 +207,47 @@ function retrieveHistory($wiki)
     }
 
 	curl_close($ch);
+}
+
+/**
+ * Check WikiProject class category.
+ */
+function checkWPCategory($wiki)
+{
+    $enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
+    $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+    $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
+	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $data = $wiki->getpage('User:CleanupWorklistBot/Master');
+    $masterconfig = new MasterRuleConfig($data);
+
+    foreach ($masterconfig->ruleConfig as $wikiproject => $category) {
+    	$project = $wikiproject;
+    	if (strpos($wikiproject, 'WikiProject_') === 0) {
+    		$project = substr($project, 12);
+    	}
+
+        if (empty($category)) $category = $project;
+
+        $total_count = 0;
+
+    	foreach(array_keys(CreateTables::$CLASSES) as $class) {
+	        if ($class == 'Unassessed')
+  		        $theclass = "{$class}_{$category}_articles";
+       		else
+          		$theclass = "{$class}-Class_{$category}_articles";
+
+	    	$sth = $dbh_enwiki->prepare("SELECT count(*) as `count` FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'");
+	    	$sth->bindValue(1, $theclass);
+	    	$sth->execute();
+
+	    	$row = $sth->fetch(PDO::FETCH_ASSOC);
+
+	    	$total_count += (int)$row['count'];
+    	}
+
+    	if (! $total_count) echo "WPCategory not found = $wikiproject ($category)\n";
+    }
 }

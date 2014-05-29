@@ -18,6 +18,7 @@
 namespace com_brucemyers\CleanupWorklistBot;
 
 use PDO;
+use com_brucemyers\Util\Logger;
 
 class ProjectPages
 {
@@ -50,7 +51,7 @@ class ProjectPages
     	$sql = '';
 
     	// category - x articles by quality (subcats)
-    	$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? LIMIT 1');
+    	$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0 LIMIT 1');
     	$param = "{$category}_articles_by_quality";
     	$sth->bindParam(1, $param);
     	$sth->execute();
@@ -71,7 +72,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - WikiProject x articles
-    		$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? LIMIT 1');
+    		$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0 LIMIT 1');
     		$param = "WikiProject_{$category}_articles";
     		$sth->bindParam(1, $param);
     		$sth->execute();
@@ -187,6 +188,8 @@ class ProjectPages
     		$this->dbh_tools->commit();
     	}
 
+    	$total_class = 0;
+
     	// Set class
     	foreach(array_keys(CreateTables::$CLASSES) as $class) {
 	        if ($class == 'Unassessed')
@@ -215,7 +218,10 @@ class ProjectPages
 
     		$sth->closeCursor();
     		$this->dbh_tools->commit();
+    		$total_class += $count;
     	}
+
+    	if (! $total_class) Logger::log("$category (no classes found)");
 
     	return $page_count;
     }

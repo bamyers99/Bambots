@@ -36,8 +36,8 @@ class MasterRuleConfig
             $line = trim($line);
             if (empty($line)) continue;
             $parts = explode('=>', $line, 2);
-            $key = trim($parts[0]);
-            $value = (count($parts) > 1) ? trim($parts[1]) : '';
+            $key = str_replace(' ', '_', trim($parts[0]));
+            $value = (count($parts) > 1) ? str_replace(' ', '_', trim($parts[1])) : '';
             $this->ruleConfig[$key] = $value;
         }
     }
