@@ -36,7 +36,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
     	'WikiProject_Beer/Pub_Taskforce' => 'Pubs',
     	'WikiProject_Biophysics' => '',
         'WikiProject_Michigan' => '',
-    	'WikiProject_Physics' => '',
+    	'WikiProject_Physics' => 'physics',
     	'WikiProject_Protected_areas' => ''
         );
 

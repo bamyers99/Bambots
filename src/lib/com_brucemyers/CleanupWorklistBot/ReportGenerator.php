@@ -416,7 +416,7 @@ class ReportGenerator
 				$output .= "{| class='wikitable sortable'\n|-\n!Article!!Importance!!Class!!class='unsortable'|Categories\n";
 
 				foreach ($resarts as $title => &$fields) {
-					$output .= "|-\n|[[$title]]||{{$fields[0]} ||{$fields[1]} ||{$fields[4]}\n";
+					$output .= "|-\n|[[$title]]||{$fields[0]} ||{$fields[1]} ||{$fields[4]}\n";
 				}
 				unset($fields);
 				$output .= "|}\n";
