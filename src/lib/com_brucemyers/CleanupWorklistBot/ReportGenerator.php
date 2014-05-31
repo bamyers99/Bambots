@@ -160,9 +160,9 @@ class ReportGenerator
 				    }
 				);
 			</script>
-			<p>Cleanup listing for <a href='$projecturl'>{$wikiproject}{$project_title}</a> as of $asof_date.</p>
+			<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of $asof_date.</p>
 			<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
-			<p>Listings: Alphabetic <b>·</b> <a href='$bycaturl'>By Category</a> <b>·</b> <a href='$csvurl'>CSV</a> <b>·</b> <a href='$histurl'>History</a></p>
+			<p>Listings: Alphabetic <b>·</b> <a href=\"$bycaturl\">By Category</a> <b>·</b> <a href=\"$csvurl\">CSV</a> <b>·</b> <a href=\"$histurl\">History</a></p>
 			<table id='myTable' class='wikitable'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
 				<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>
     		");
@@ -251,9 +251,9 @@ class ReportGenerator
 					    }
 					);
 				</script>
-				<p>Cleanup listing for <a href='$projecturl'>{$wikiproject}{$project_title}</a> as of $asof_date.</p>
+				<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of $asof_date.</p>
 				<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
-				<p>Listings: <a href='$alphaurl'>Alphabetic</a> <b>·</b> By Category <b>·</b> <a href='$csvurl'>CSV</a> <b>·</b> <a href='$histurl'>History</a></p>
+				<p>Listings: <a href=\"$alphaurl\">Alphabetic</a> <b>·</b> By Category <b>·</b> <a href=\"$csvurl\">CSV</a> <b>·</b> <a href=\"$histurl\">History</a></p>
 	    		");
 
 			//Write the TOC
@@ -503,8 +503,8 @@ class ReportGenerator
 		<title>Cleanup history for {$wikiproject}{$project_title}</title>
 		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
 		</head><body>
-		<p>Cleanup history for <a href='$projecturl'>{$wikiproject}{$project_title}</a>.</p>
-		<p>Listings: <a href='$alphaurl'>Alphabetic<a> <b>·</b> <a href='$bycaturl'>By Category</a> <b>·</b> <a href='$csvurl'>CSV</a> <b>·</b> History</p>
+		<p>Cleanup history for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a>.</p>
+		<p>Listings: <a href=\"$alphaurl\">Alphabetic<a> <b>·</b> <a href=\"$bycaturl\">By Category</a> <b>·</b> <a href=\"$csvurl\">CSV</a> <b>·</b> History</p>
 		<table class='wikitable'><thead><tr><th>Date</th><th>Total articles</th><th>Cleanup articles</th><th>Cleanup issues</th></tr></thead><tbody>\n
 		");
 
