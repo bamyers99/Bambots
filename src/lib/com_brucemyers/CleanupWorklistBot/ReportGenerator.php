@@ -121,7 +121,8 @@ class ReportGenerator
 				$fields = CSVString::parse($buffer);
 				$title = $fields[0];
 				array_shift($fields);
-				$prevclean[$title] = SplFixedArray::fromArray($fields, false);
+				if (isset($curclean[$title])) $prevclean[$title] = true;
+				else $prevclean[$title] = SplFixedArray::fromArray($fields, false);
 			}
 			fclose($hndl);
 		}
@@ -163,7 +164,7 @@ class ReportGenerator
 		foreach ($curclean as $title => &$art) {
 			$arturl = 'https://en.wikipedia.org/wiki/' . str_replace(' ', '_', $title);
 			$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES]);
-			$cats = implode(', ', $consolidated['issues']->toArray());
+			$cats = implode(', ', $consolidated['issues']);
 			$icount = count($art[self::KEY_ISSUES]);
 
 			if (! $wiki_too_big) {
@@ -186,6 +187,8 @@ class ReportGenerator
 					self::KEY_CATS => $consolidated['issues'], self::KEY_ICOUNT => $icount);
 			}
 			unset($issue);
+
+			if (isset($prevclean[$title])) $art = true; // Free up the memory
 		}
 		unset($art);
 
@@ -290,7 +293,7 @@ class ReportGenerator
 
 				foreach ($newarts as $title => &$art) {
 					$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES]);
-					$artcats = implode(', ', $consolidated['issues']->toArray());
+					$artcats = implode(', ', $consolidated['issues']);
 					$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 					$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
 					fwrite($bycathndl, "<tr><td><a href='$wikiprefix$title'>$title</a></td>
@@ -332,7 +335,7 @@ class ReportGenerator
 
 					foreach ($arts as $title => &$art) {
 						//Strip the current cat prefix to make page smaller
-						$keycats = $art[self::KEY_CATS]->toArray();
+						$keycats = $art[self::KEY_CATS];
 						foreach ($keycats as $key => $value) {
 							if (strpos($value, $cat) === 0) {
 								if (strlen($value) > $catlen) $keycats[$key] = '...' . substr($value, $catlen);
@@ -388,7 +391,7 @@ class ReportGenerator
 
 				foreach ($newarts as $title => &$art) {
 					$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES]);
-					$artcats = implode(', ', $consolidated['issues']->toArray());
+					$artcats = implode(', ', $consolidated['issues']);
 					$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 					$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
 					$output .= "|-\n|[[$title]]||data-sort-value='{$impsort}'|{$art[self::KEY_IMP]} ||data-sort-value='{$clssort}'|{$art[self::KEY_CLS]} ||{$artcats}\n";
@@ -442,7 +445,7 @@ class ReportGenerator
 
 					foreach ($arts as $title => &$art) {
 						//Strip the current cat prefix to make page smaller
-						$keycats = $art[self::KEY_CATS]->toArray();
+						$keycats = $art[self::KEY_CATS];
 						foreach ($keycats as $key => $value) {
 							if (strpos($value, $cat) === 0) {
 								if (strlen($value) > $catlen) $keycats[$key] = '...' . substr($value, $catlen);
@@ -579,6 +582,6 @@ class ReportGenerator
 			$earliestsort = $earliestyear . $monthsort;
 		}
 
-		return array('earliest' => $earliestdate, 'issues' => SplFixedArray::fromArray($cats, false), 'earliestsort' => $earliestsort);
+		return array('earliest' => $earliestdate, 'issues' => $cats, 'earliestsort' => $earliestsort);
 	}
 }
