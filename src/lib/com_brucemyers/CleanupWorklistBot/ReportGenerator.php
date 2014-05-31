@@ -34,6 +34,7 @@ class ReportGenerator
 	var $dbh_tools;
 	var $asof_date;
 	var $resultWriter;
+	var $categories;
 
 	// Key atoms to save memory
 	const KEY_IMP = 0;
@@ -65,24 +66,29 @@ class ReportGenerator
 		$curclean = array();
 		$asof_date = $this->asof_date['month'] . ' '. $this->asof_date['mday'] . ', ' . $this->asof_date['year'];
 		$groups = array();
+		$this->categories = array();
+		$titles = array();
 		$project_title = str_replace('_', ' ', $project);
 		$filesafe_project = str_replace('/', '_', $project);
 
-		$results = $this->dbh_tools->query('SELECT `page_title`, `importance`, `class`, `cat_title`, `month`, `year`
+		$results = $this->dbh_tools->query('SELECT `page_title`, `importance`, `class`, cat.`cat_id`, `cat_title`, `month`, `year`
 				FROM `page` p, `categorylinks` cl, `category` cat
 				WHERE p.article_id = cl.cl_from AND cl.cat_id = cat.cat_id
 				ORDER BY `page_title`, `cat_title`');
 
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			++$issue_count;
+			$cat_id = (int)$row['cat_id'];
 			$title = str_replace('_', ' ', $row['page_title']);
+
 			if (! isset($curclean[$title])) {
 				if ($row['importance'] == null) $row['importance'] = '';
 				if ($row['class'] == null) $row['class'] = '';
 				$curclean[$title] = array(self::KEY_IMP => $row['importance'], self::KEY_CLS => $row['class'], self::KEY_ISSUES => array());
 				++$cleanup_pages;
 			}
-			$curclean[$title][self::KEY_ISSUES][] = array(self::KEY_TITLE => $row['cat_title'], self::KEY_MTH => $row['month'], self::KEY_YR => $row['year']);
+			if (! isset($this->categories[$cat_id])) $this->categories[$cat_id] = array(self::KEY_TITLE => $row['cat_title'], self::KEY_MTH => $row['month'], self::KEY_YR => $row['year']);
+			$curclean[$title][self::KEY_ISSUES][] = $cat_id;
 		}
 
 		$results->closeCursor();
@@ -178,15 +184,18 @@ class ReportGenerator
 				<td data-sort-value='$clssort'>{$art[self::KEY_CLS]}</td><td align='right'>$icount</td>
 				<td data-sort-value='{$consolidated['earliestsort']}'>{$consolidated['earliest']}</td><td>$cats</td></tr>\n");
 
+			$titles[$title]= array(self::KEY_CLS => $art[self::KEY_CLS],
+				self::KEY_CLSSORT => $clssort, self::KEY_IMP => $art[self::KEY_IMP],
+				self::KEY_IMPSORT => $impsort, self::KEY_EARLIEST => $consolidated['earliest'],
+				self::KEY_EARLIESTSORT => $consolidated['earliestsort'],
+				self::KEY_CATS => $consolidated['issues'], self::KEY_ICOUNT => $icount);
+
 			// Group by cat
-			foreach ($art[self::KEY_ISSUES] as &$issue) {
-				$cat = str_replace('_', ' ', $issue[self::KEY_TITLE]);
+			foreach ($art[self::KEY_ISSUES] as $cat_id) {
+				$cat = str_replace('_', ' ', $this->categories[$cat_id][self::KEY_TITLE]);
 				if (! isset($groups[$cat])) $groups[$cat] = array();
-				$groups[$cat][$title] = array(self::KEY_CLS => $art[self::KEY_CLS], self::KEY_CLSSORT => $clssort, self::KEY_IMP => $art[self::KEY_IMP],
-					self::KEY_IMPSORT => $impsort, self::KEY_EARLIEST => $consolidated['earliest'], self::KEY_EARLIESTSORT => $consolidated['earliestsort'],
-					self::KEY_CATS => $consolidated['issues'], self::KEY_ICOUNT => $icount);
+				$groups[$cat][$title] = true;
 			}
-			unset($issue);
 
 			if (isset($prevclean[$title])) $art = true; // Free up the memory
 		}
@@ -220,6 +229,7 @@ class ReportGenerator
 				$catgroups[$catgroup][$cat] = $group;
 			}
 			unset($group);
+			unset($groups);
 
 			ksort($catgroups);
 
@@ -333,8 +343,9 @@ class ReportGenerator
 						<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>\n
 						");
 
-					foreach ($arts as $title => &$art) {
+					foreach ($arts as $title => $dummy) {
 						//Strip the current cat prefix to make page smaller
+						$art = $titles[$title];
 						$keycats = $art[self::KEY_CATS];
 						foreach ($keycats as $key => $value) {
 							if (strpos($value, $cat) === 0) {
@@ -349,7 +360,6 @@ class ReportGenerator
 							<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
 							<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n");
 					}
-					unset($art);
 
 					fwrite($bycathndl, "</tbody></table>\n");
 				}
@@ -430,6 +440,7 @@ class ReportGenerator
 				$catgroups[$catgroup][$cat] = $group;
 			}
 			unset($group);
+			unset($groups);
 
 			ksort($catgroups);
 
@@ -443,8 +454,9 @@ class ReportGenerator
 					$output .= "<section begin='$cat' />\n";
 					$output .= "{| class='wikitable sortable'\n|-\n!Article!!Importance!!Class!!Earliest!!class='unsortable'|Categories\n";
 
-					foreach ($arts as $title => &$art) {
+					foreach ($arts as $title => $dummy) {
 						//Strip the current cat prefix to make page smaller
+						$art = $titles[$title];
 						$keycats = $art[self::KEY_CATS];
 						foreach ($keycats as $key => $value) {
 							if (strpos($value, $cat) === 0) {
@@ -459,7 +471,6 @@ class ReportGenerator
 
 						if (strlen($output) > $max_page_size) return false;
 					}
-					unset($art);
 
 					$output .= "|}\n";
 					$output .= "<section end='$cat' />\n";
@@ -522,27 +533,27 @@ class ReportGenerator
 	 * Consolidate issues that have multiple dates.
 	 * Determine the earliest date.
 	 *
-	 * @param array $issues keys = 'title', 'mth', 'yr'
-	 * @return array Earliest date 'earliest', 'issues' Consolidated issues, one string per category
+	 * @param array $cat_ids index into $this->categories keys = 'title', 'mth', 'yr'
+	 * @return array Earliest date 'earliest', 'issues', 'earliestsort' Consolidated issues, one string per category
 	 */
-	function _consolidateCats(&$issues)
+	function _consolidateCats(&$cat_ids)
 	{
 		$results = array();
 		$earliestyear = 9999;
 		$earliestmonth = 99;
 
-		foreach ($issues as $issue) {
-			$cat = str_replace('_', ' ', $issue[self::KEY_TITLE]);
+		foreach ($cat_ids as $cat_id) {
+			$cat = str_replace('_', ' ', $this->categories[$cat_id][self::KEY_TITLE]);
 			if (! isset($results[$cat])) {
 				$results[$cat] = array();
 			}
 
-			if ($issue[self::KEY_YR] != null) {
-				$intyear = (int)$issue[self::KEY_YR];
+			if ($this->categories[$cat_id][self::KEY_YR] != null) {
+				$intyear = (int)$this->categories[$cat_id][self::KEY_YR];
 				$month = '';
 
-				if ($issue[self::KEY_MTH] != null) {
-					$intmonth = (int)$issue[self::KEY_MTH];
+				if ($this->categories[$cat_id][self::KEY_MTH] != null) {
+					$intmonth = (int)$this->categories[$cat_id][self::KEY_MTH];
 					$month = self::$MONTHS[$intmonth] . ' ';
 
 					if ($intyear == $earliestyear && $intmonth < $earliestmonth) {
@@ -556,7 +567,7 @@ class ReportGenerator
 					$earliestmonth = 99;
 				}
 
-				$results[$cat][] = $month . $issue[self::KEY_YR];
+				$results[$cat][] = $month . $this->categories[$cat_id][self::KEY_YR];
 			}
 		}
 
