@@ -521,10 +521,12 @@ class ReportGenerator
 		//Finished successfully
 		rename($tmpcsvpath, $csvpath);
 
+		$wikiproject = (($isWikiProject) ? 'WikiProject_' : '') . $project;
+
 		$sth = $this->dbh_tools->prepare("DELETE FROM project WHERE `name` = ?");
-		$sth->execute(array($project));
+		$sth->execute(array($wikiproject));
 		$sth = $this->dbh_tools->prepare("INSERT INTO project VALUES (?, ?)");
-		$sth->execute(array($project, $wiki_too_big ? 1 : 0));
+		$sth->execute(array($wikiproject, $wiki_too_big ? 1 : 0));
 
 		return true;
 	}
