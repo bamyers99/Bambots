@@ -270,6 +270,8 @@ class InceptionBot
         usort($newresults, function($a, $b) {
             $ans = $a['pageinfo']['ns'];
             $bns = $b['pageinfo']['ns'];
+            if ($ans == 118) $ans = 2; // Sort drafts after articles
+            if ($bns == 118) $bns = 2;
 
             if ($ans < $bns) return -1;
             if ($ans > $bns) return 1;
