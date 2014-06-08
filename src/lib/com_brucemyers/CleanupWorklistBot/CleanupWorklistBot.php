@@ -17,6 +17,7 @@
 
 namespace com_brucemyers\CleanupWorklistBot;
 
+use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;
@@ -96,8 +97,10 @@ class CleanupWorklistBot
 	        		continue;
 	        	}
 
-	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
-	        	if (! $wikiPageCreated) $repgen->generateReports($project, $isWikiProject, $page_count, true);;
+	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count, true); // Temporary until bot approval.
+	        	//$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
+	        	if (! $wikiPageCreated) $repgen->generateReports($project, $isWikiProject, $page_count, true,
+	        		MediaWiki::MAX_PAGE_SIZE, false);
         	} catch (CatTypeNotFoundException $ex) {
         		$errorrulsets[] = $project . ' (project category not found)';
         	}
