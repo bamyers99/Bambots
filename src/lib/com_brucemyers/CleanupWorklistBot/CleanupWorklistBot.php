@@ -112,7 +112,7 @@ class CleanupWorklistBot
         $this->_writeIndex($outputdir, $urlpath);
 
 		$ts = $totaltimer->stop();
-		$totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
+		$totaltime = sprintf("%d days %d:%02d:%02d", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']);
 
         $this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);
     }
