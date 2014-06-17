@@ -22,6 +22,7 @@ use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\FileCache;
 use PDO;
 
 class CleanupWorklistBot
@@ -115,6 +116,8 @@ class CleanupWorklistBot
 		$totaltime = sprintf("%d days %d:%02d:%02d", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']);
 
         $this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);
+
+        $this->_backupHistory($tools_host, $user, $pass);
     }
 
     /**
@@ -184,5 +187,24 @@ EOT;
     	}
 
     	$this->resultWriter->writeResults('User:CleanupWorklistBot/Status', $output, "$errcnt errors; Total time: $totaltime");
+    }
+
+    /**
+     * Backup history table
+     *
+     * @param string $tools_host
+     * @param string $user
+     * @param string $pass
+     */
+    protected function _backupHistory($tools_host, $user, $pass)
+    {
+        $outputDir = Config::get(self::OUTPUTDIR);
+        $outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
+        $outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
+        $outputDir .= DIRECTORY_SEPARATOR;
+
+    	$backupFile = $outputDir . 'CleanupWorklistBot_History.bz2';
+    	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CleanupWorklistBot history | bzip2 -9 > $backupFile";
+    	system($command);
     }
 }
