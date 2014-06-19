@@ -110,7 +110,7 @@ class ReportGenerator
 
 		// Save the previous csv.
 		if ($write_csv && file_exists($csvpath)) {
-			unlink($bakcsvpath);
+			@unlink($bakcsvpath);
 			rename($csvpath, $bakcsvpath);
 		}
 

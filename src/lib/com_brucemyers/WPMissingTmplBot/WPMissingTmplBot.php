@@ -75,11 +75,14 @@ class WPMissingTmplBot
                 $WPpages = $this->getCategoryMembers($this->category, $talkns);
 
                 // Retrieve the alternate category page list
-                $this->altcategory = $config['altWPCategory'];
+                $this->altcategory = (array)$config['altWPCategory'];
                 if (! empty($this->altcategory)) {
-                    if (stripos($this->altcategory, 'category:') !== 0) $this->altcategory = 'Category:' . $this->altcategory;
-                    $temppages = $this->getCategoryMembers($this->altcategory, $talkns);
-                    $WPpages = array_merge($WPpages, $temppages);
+                	foreach ($this->altcategory as &$cat) {
+	                    if (stripos($cat, 'category:') !== 0) $cat = 'Category:' . $cat;
+	                    $temppages = $this->getCategoryMembers($cat, $talkns);
+	                    $WPpages = array_merge($WPpages, $temppages);
+                	}
+                	unset($cat);
                 }
 
                 ksort($WPpages);
@@ -132,7 +135,11 @@ class WPMissingTmplBot
 
         $output .= "This list was constructed from articles '''not''' tagged with {{tl|" . $this->wikiproject .
             '}} or in [[:' . $this->category . ']]';
-        if (! empty($this->altcategory)) $output .= ' or in [[:' . $this->altcategory . ']]';
+        if (! empty($this->altcategory)) {
+        	foreach ($this->altcategory as $cat) {
+        		$output .= ' or in [[:' . $cat . ']]';
+        	}
+        }
         $output .= ' as of ' . $this->curtime . "\n\n";
 
         // Print totals
@@ -178,7 +185,7 @@ class WPMissingTmplBot
     }
 
     /**
-     * Get category members; for talk namespaces, returns non-talk page name
+     * Get category members; For talk namespaces, returns non-talk page name
      *
      * @param $catname string Category name
      * @param $namespace string (optional) Pipe separated list of namespaces or empty for all (default)
