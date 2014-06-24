@@ -48,8 +48,8 @@ namespace ChrisG;
  **/
 class wikipedia {
     public $http;
-    private $token;
-    private $ecTimestamp;
+    protected $token;
+    protected $ecTimestamp;
     public $url;
 
     /**

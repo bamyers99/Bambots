@@ -86,6 +86,17 @@ class MediaWiki extends wikipedia
      */
     public function login($username, $password)
     {
+    	static $saveusername = null;
+    	static $savepassword = null;
+
+    	if ($username == null && $password == null) {
+    		$username = $saveusername;
+    		$password = $savepassword;
+    	} else {
+    		$saveusername = $username;
+    		$savepassword = $password;
+    	}
+
     	$post = array('lgname' => $username, 'lgpassword' => $password);
         $ret = $this->query('?action=login&format=php', $post);
 
@@ -135,6 +146,58 @@ class MediaWiki extends wikipedia
 		}
 
         return unserialize($ret);
+    }
+
+    /**
+     * Edits a page.
+     * @param $page Page name to edit.
+     * @param $data Data to post to page.
+     * @param $summary Edit summary to use.
+     * @param $minor Whether or not to mark edit as minor.  (Default false)
+     * @param $bot Whether or not to mark edit as a bot edit.  (Default true)
+     * @param $repeat int Retry start value, max = 5
+     * @return api result
+     **/
+    public function edit($page, &$data, $summary = '', $minor = false, $bot = true, $section = null, $detectEC=false, $maxlag='', $repeat = 0) {
+    	if ($this->token==null) {
+    		$this->token = $this->getedittoken();
+    	}
+    	$params = array(
+    			'title' => $page,
+    			'text' => $data,
+    			'token' => $this->token,
+    			'summary' => $summary,
+    			($minor?'minor':'notminor') => '1',
+    			($bot?'bot':'notbot') => '1'
+    	);
+    	if ($section != null) {
+    		$params['section'] = $section;
+    	}
+    	if ($this->ecTimestamp != null && $detectEC == true) {
+    		$params['basetimestamp'] = $this->ecTimestamp;
+    		$this->ecTimestamp = null;
+    	}
+    	$tmaxlag = '';
+    	if ($maxlag!='') {
+    		$tmaxlag='&maxlag='.$maxlag;
+    	}
+
+    	$ret = $this->query('?action=edit&format=php'.$tmaxlag,$params);
+
+    	if (isset($ret['error']) && $ret['error']['info'] == 'Invalid token') {
+    		if ($repeat < 5) {
+			    Logger::log("*** edit retry #$repeat $page errortext:Invalid token");
+			    sleep($repeat * 10);
+			    $this->token = null;
+			    $this->login(null, null);
+
+				return $this->edit($page, $data, $summary, $minor, $bot, $section, $detectEC, $maxlag, ++$repeat);
+			} else {
+				throw new Exception('Edit Error Invalid token');
+			}
+     	}
+
+    	return $ret;
     }
 
     /**
