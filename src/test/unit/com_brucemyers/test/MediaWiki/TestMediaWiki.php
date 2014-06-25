@@ -68,7 +68,7 @@ class TestMediaWiki extends UnitTestCase
         $this->assertEqual($modified, $modified2, "File cache wasn't used");
     }
 
-    public function testGetEditToken()
+    public function notestGetEditToken()
     {
     	$this->wiki->http->quiet = false;
      	$username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
@@ -88,5 +88,15 @@ class TestMediaWiki extends UnitTestCase
 
     	$result |= ord( $answer{$i} ) ^ ord( $test{$i} );
     	echo $result;
+    }
+
+    public function testDoubleLogin()
+    {
+        $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+        $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+        $this->wiki->login($username, $password);
+        $this->wiki->getedittoken();
+        $this->wiki->login(null, null);
+        $this->pass();
     }
 }

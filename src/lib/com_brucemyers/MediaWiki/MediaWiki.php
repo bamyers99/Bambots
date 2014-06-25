@@ -107,7 +107,7 @@ class MediaWiki extends wikipedia
         }
 
         if ($ret['login']['result'] != 'Success') {
-            throw new Exception('Login Error ' . $ret['error']['info']);
+            throw new Exception('Login Error ' . print_r($ret, true));
         }
     }
 
