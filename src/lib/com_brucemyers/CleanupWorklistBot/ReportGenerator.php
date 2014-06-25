@@ -495,7 +495,7 @@ class ReportGenerator
 
 		$sth = $this->dbh_tools->prepare("INSERT INTO history VALUES (?, ?, $project_pages, $cleanup_pages, $issue_count)");
 		$histdate = sprintf('%d-%02d-%02d', $this->asof_date['year'], $this->asof_date['mon'], $this->asof_date['mday']);
-		//$sth->execute(array($project, $histdate));
+		$sth->execute(array($project, $histdate));
 
 		$histpath = $this->outputdir . 'history' . DIRECTORY_SEPARATOR . $filesafe_project . '.html';
 		$histhndl = fopen($histpath, 'wb');

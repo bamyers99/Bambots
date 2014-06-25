@@ -63,7 +63,7 @@ class CleanupWorklistBot
 
         new CreateTables($dbh_tools);
 
-        //if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('TRUNCATE project');
+        if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('TRUNCATE project');
 
         $categories = new Categories($dbh_enwiki, $dbh_tools);
         $categories->load($skipCatLoad);
@@ -77,7 +77,6 @@ class CleanupWorklistBot
         $repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultWriter);
 
         // Generate each projects reports.
-        $x = 0;
 
         foreach ($ruleconfigs as $project => $category) {
         	if (! empty($startProject) && $project != $startProject) continue;
@@ -99,8 +98,8 @@ class CleanupWorklistBot
 	        		continue;
 	        	}
 
-	        	//$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count, true); // Temporary until bot approval.
-	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
+	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count, true); // Temporary until bot approval.
+	        	//$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
 	        	if (! $wikiPageCreated) $repgen->generateReports($project, $isWikiProject, $page_count, true,
 	        		MediaWiki::MAX_PAGE_SIZE, false);
         	} catch (CatTypeNotFoundException $ex) {
@@ -108,11 +107,10 @@ class CleanupWorklistBot
         	}
 
         	Config::set(self::CURRENTPROJECT, '', true);
-        	if (++$x == 49) break;
         }
 
         // Generate the index page, doing separate from above because do not want the file open for a long time.
-        //$this->_writeIndex($outputdir, $urlpath);
+        $this->_writeIndex($outputdir, $urlpath);
 
 		$ts = $totaltimer->stop();
 		$totaltime = sprintf("%d days %d:%02d:%02d", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']);
