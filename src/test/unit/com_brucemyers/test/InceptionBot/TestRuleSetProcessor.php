@@ -35,16 +35,19 @@ class TestRuleSetProcessor extends UnitTestCase
         -50 /$SIZE<10/
         /$TITLE:National Park/
         100 /InComment/
+        100 /Reference/
 EOT;
 
         $data = <<<'EOT2'
         {{Infobox|title=Michigan}}
-        '''Michigan''' is in the United States.
+        '''Michigan''' is in the United States.<ref name="USAReference">{{Cite web
+        	|url=http://usa.gov
+        	|title=USA Reference}}</ref>
 
         <!-- Shouldn't match rule InComment -->
 
         ==See also==
-        [[Michigan City, Indiana]]
+        [[Michigan City, Indiana]]<ref>{{Cite web|url=http://indiana.gov|title=Indiana Reference}}</ref>
 
         {{Michigan-stub}}
 EOT2;

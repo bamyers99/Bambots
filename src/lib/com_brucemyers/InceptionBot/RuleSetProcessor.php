@@ -45,7 +45,7 @@ class RuleSetProcessor
     {
         $results = array();
         $this->ledeEnd = null;
-        $cleandata = preg_replace(RuleSet::COMMENT_REGEX, '', $data);
+        $cleandata = preg_replace(array(RuleSet::COMMENT_REGEX, RuleSet::REFERENCE_REGEX), '', $data);
 
         foreach ($this->ruleSet->rules as &$rule) {
             $score = $this->processRule($cleandata, $rule, $title);
