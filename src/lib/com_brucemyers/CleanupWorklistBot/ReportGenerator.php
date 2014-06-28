@@ -255,9 +255,10 @@ class ReportGenerator
 				<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of $asof_date.</p>
 				<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
 				<p>Listings: <a href=\"$alphaurl\">Alphabetic</a> <b>&bull;</b> By Category <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
+				<p>... represents the current category name.</p>
 	    		");
 
-			//Write the TOC
+			// Write the TOC
 			fwrite($bycathndl, "<div class='toc'><center>Contents</center>\n");
 			fwrite($bycathndl, "<ul>\n");
 
@@ -390,6 +391,7 @@ class ReportGenerator
 			$output .= "Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.\n\n";
 			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> By Category <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
 			$output .= "Sections can be transcluded using <nowiki>{{#lst:User:CleanupWorklistBot/lists/$filesafe_project|</nowiki>''section''<nowiki>}}</nowiki> Examples: <nowiki>{{#lst:User:CleanupWorklistBot/lists/$filesafe_project|Neutrality}}</nowiki>, <nowiki>{{#lst:User:CleanupWorklistBot/lists/$filesafe_project|Articles needing cleanup}}</nowiki>\n\n";
+			$output .= "... represents the current category name.\n\n";
 
 			// Write the changes
 			if (! empty($prevclean)) {
