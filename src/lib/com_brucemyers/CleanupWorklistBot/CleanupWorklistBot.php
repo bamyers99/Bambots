@@ -171,20 +171,22 @@ class CleanupWorklistBot
     {
         $errcnt = count($errorrulsets);
 
-    	$output = <<<EOT
+        $date = "{{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)";
+
+        $output = <<<EOT
 <noinclude>__NOINDEX__</noinclude>
-'''Last run:''' {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />
+'''Last run:''' $date ({{time ago|$date}})<br />
 '''Processing time:''' $totaltime<br />
 '''Project count:''' $rulesetcnt<br />
 '''Errors:''' $errcnt
 EOT;
 
         if ($errcnt) {
-    	    $output .= "\n===Errors===\n";
-    	    foreach ($errorrulsets as $project) {
-    	        $output .= "*$project\n";
-    	    }
-    	}
+            $output .= "\n===Errors===\n";
+            foreach ($errorrulsets as $project) {
+                $output .= "*$project\n";
+            }
+        }
 
     	$this->resultWriter->writeResults('User:CleanupWorklistBot/Status', $output, "$errcnt errors; Total time: $totaltime");
     }
