@@ -70,6 +70,11 @@ try {
 		    	$skipCatLoad = true;
 		    	break;
 
+		    case 'toolserver':
+		    	toolserverLinks($wiki);
+		    	exit;
+		    	break;
+
 		    default:
 		    	echo 'Unknown action = ' . $action;
 				exit;
@@ -251,3 +256,39 @@ function checkWPCategory($wiki)
     	if (! $total_count) echo "WPCategory not found = $wikiproject ($category)\n";
     }
 }
+
+    /**
+     * Find toolserver cleanup listing links
+     */
+    function toolserverLinks($wiki)
+    {
+    	$outputDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
+    	$outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
+    	$outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
+    	$outputDir .= DIRECTORY_SEPARATOR;
+    	$resultwriter = new FileResultWriter($outputDir);
+
+	    $enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
+		$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+		$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+		$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
+		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$output = '';
+
+	    $results = $dbh_enwiki->query("SELECT DISTINCT el_to, page_namespace, page_title FROM externallinks
+	    		LEFT JOIN page ON page_id = el_from
+	    		WHERE el_to LIKE 'http://toolserver.org/~svick/CleanupListing%'
+	    			AND page_namespace IN (2,4,100) -- User, Wikipedia, Portal
+	    		ORDER BY el_to, page_namespace, page_title");
+
+    	while($row = $results->fetch(PDO::FETCH_ASSOC)) {
+    		if (strpos($row['el_to'], '=')) list($url, $project) = explode('=', $row['el_to'], 2);
+    		else $project = '?';
+
+			$wikilink = $wiki->namespaces[(int)$row['page_namespace']] . ':' . $row['page_title'];
+			$output .= "*$project - [[$wikilink]]\n";
+    	}
+
+		$resultwriter->writeResults("User:CleanupWorklistBot/ToolserverLinks", $output, "");
+    }
+
