@@ -274,6 +274,7 @@ function checkWPCategory($wiki)
 		$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
 		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$output = '';
+		$projects = array();
 
 	    $results = $dbh_enwiki->query("SELECT DISTINCT el_to, page_namespace, page_title FROM externallinks
 	    		LEFT JOIN page ON page_id = el_from
@@ -285,8 +286,17 @@ function checkWPCategory($wiki)
     		if (strpos($row['el_to'], '=')) list($url, $project) = explode('=', $row['el_to'], 2);
     		else $project = '?';
 
-			$wikilink = $wiki->namespaces[(int)$row['page_namespace']] . ':' . $row['page_title'];
-			$output .= "*$project - [[$wikilink]]\n";
+    		if (strpos($project, '&')) list($project, $params) = explode('&', $project, 2);
+    		$wikilink = $wiki->namespaces[(int)$row['page_namespace']] . ':' . $row['page_title'];
+
+    		if (! isset($projects[$project])) $projects[$project] = array();
+    		$projects[$project][] = $wikilink;
+    	}
+
+    	ksort($projects);
+
+    	foreach ($projects as $project => $wikilinks) {
+    		foreach ($wikilinks as $wikilink) $output .= "*$project - [[$wikilink]]\n";
     	}
 
 		$resultwriter->writeResults("User:CleanupWorklistBot/ToolserverLinks", $output, "");
