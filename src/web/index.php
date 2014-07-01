@@ -23,7 +23,7 @@
 <body>
 <h1>BamBots</h1>
 <ul>
-    <li><a href="cwb/index.html">CleanupWorklistBot - WikiProject cleanup list generator</a></li>
+    <li><a href="cwb/index.html">CleanupWorklistBot - WikiProject cleanup list generator</a> (<a href="CleanupWorklistBot.php">Project test tool</a>)</li>
     <li><a href="InceptionBot.php">InceptionBot - WikiProject new page detector</a></li>
     <li><a href="UserNewPages.php">User new page lister</a></li>
 </ul>

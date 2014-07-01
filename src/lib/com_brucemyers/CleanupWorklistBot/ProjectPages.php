@@ -22,6 +22,15 @@ use com_brucemyers\Util\Logger;
 
 class ProjectPages
 {
+	const SQL_Articles_by_quality = 'SELECT * FROM category WHERE cat_title = ? AND cat_pages > 0 LIMIT 1';
+	const SQL_WikiProject_articles = 'SELECT * FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0 LIMIT 1';
+	const SQL_Category_talk = 'SELECT * FROM categorylinks as cl, page WHERE cl.cl_from = page.page_id AND
+    			page.page_namespace = 1 AND cl.cl_to = ? LIMIT 1';
+	const SQL_Category_article = 'SELECT * FROM categorylinks as cl, page WHERE cl.cl_from = page.page_id AND
+    			page.page_namespace = 0 AND cl.cl_to = ? LIMIT 1';
+	const SQL_Importance = "SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'";
+	const SQL_Class = "SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'";
+
 	var $dbh_enwiki;
 	var $dbh_tools;
 
@@ -51,7 +60,7 @@ class ProjectPages
     	$sql = '';
 
     	// category - x articles by quality (subcats)
-    	$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? AND cat_pages > 0 LIMIT 1');
+    	$sth = $this->dbh_enwiki->prepare(self::SQL_Articles_by_quality);
     	$ucfcategory = ucfirst($category);
     	$param = "{$ucfcategory}_articles_by_quality";
     	$sth->bindParam(1, $param);
@@ -73,7 +82,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - WikiProject x articles
-    		$sth = $this->dbh_enwiki->prepare('SELECT * FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0 LIMIT 1');
+    		$sth = $this->dbh_enwiki->prepare(self::SQL_WikiProject_articles);
     		$param = "WikiProject_{$category}_articles";
     		$sth->bindParam(1, $param);
     		$sth->execute();
@@ -92,8 +101,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - x (talk namespace)
-    		$sth = $this->dbh_enwiki->prepare('SELECT * FROM categorylinks as cl, page WHERE cl.cl_from = page.page_id AND
-    			page.page_namespace = 1 AND cl.cl_to = ? LIMIT 1');
+    		$sth = $this->dbh_enwiki->prepare(self::SQL_Category_talk);
     		$param = $category;
     		$sth->bindParam(1, $param);
     		$sth->execute();
@@ -112,8 +120,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - x (article namespace)
-    		$sth = $this->dbh_enwiki->prepare('SELECT * FROM categorylinks as cl, page WHERE cl.cl_from = page.page_id AND
-    			page.page_namespace = 0 AND cl.cl_to = ? LIMIT 1');
+    		$sth = $this->dbh_enwiki->prepare(self::SQL_Category_article);
     		$param = $category;
     		$sth->bindParam(1, $param);
     		$sth->execute();
@@ -167,7 +174,7 @@ class ProjectPages
 
     	// Set importance
     	foreach(array_keys(CreateTables::$IMPORTANCES) as $importance) {
-    		$sth = $this->dbh_enwiki->prepare("SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'");
+    		$sth = $this->dbh_enwiki->prepare(self::SQL_Importance);
     		$sth->bindValue(1, "{$importance}-importance_{$category}_articles");
     		$sth->setFetchMode(PDO::FETCH_ASSOC);
     		$sth->execute();
@@ -198,7 +205,7 @@ class ProjectPages
        		else
           		$theclass = "{$class}-Class_{$category}_articles";
 
-    		$sth = $this->dbh_enwiki->prepare("SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'");
+    		$sth = $this->dbh_enwiki->prepare(self::SQL_Class);
     		$sth->bindValue(1, $theclass);
     		$sth->setFetchMode(PDO::FETCH_ASSOC);
     		$sth->execute();
