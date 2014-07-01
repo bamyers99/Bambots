@@ -279,7 +279,8 @@ function checkWPCategory($wiki)
 	    $results = $dbh_enwiki->query("SELECT DISTINCT el_to, page_namespace, page_title FROM externallinks
 	    		LEFT JOIN page ON page_id = el_from
 	    		WHERE el_to LIKE 'http://toolserver.org/~svick/CleanupListing%'
-	    			AND page_namespace IN (2,4,100) -- User, Wikipedia, Portal
+	    			AND page_namespace = 10 -- Template
+	    			-- AND page_namespace IN (2,4,100,10) -- User, Wikipedia, Portal, Template
 	    		ORDER BY el_to, page_namespace, page_title");
 
     	while($row = $results->fetch(PDO::FETCH_ASSOC)) {
