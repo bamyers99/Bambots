@@ -164,7 +164,7 @@ class ReportGenerator
 			</script>
 			<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of $asof_date.</p>
 			<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
-			<p>Listings: Alphabetic <b>&bull;</b> <a href=\"$bycaturl\">By Category</a> <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
+			<p>Listings: Alphabetic <b>&bull;</b> <a href=\"$bycaturl\">By category</a> <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
 			<table id='myTable' class='wikitable'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
 				<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>
     		");
@@ -256,7 +256,7 @@ class ReportGenerator
 				</script>
 				<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of $asof_date.</p>
 				<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.</p>
-				<p>Listings: <a href=\"$alphaurl\">Alphabetic</a> <b>&bull;</b> By Category <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
+				<p>Listings: <a href=\"$alphaurl\">Alphabetic</a> <b>&bull;</b> By category <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
 				<p>... represents the current category name.</p>
 	    		");
 
@@ -378,7 +378,7 @@ class ReportGenerator
 
 			$output = "<noinclude>__NOINDEX__</noinclude>Cleanup listing for [[Wikipedia:{$wikiproject}{$project}|{$wikiproject}{$project_title}]] as of $asof_date.\n\n";
 			$output .= "Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.\n\n";
-			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> [$bycaturl By Category] <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
+			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> [$bycaturl By category] <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
 			$output .= "'''Note''': The listing is too large to fit in a wiki page. An alternate listing can be found [$bycaturl here].\n";
 
 			//$this->resultWriter->writeResults("User:CleanupWorklistBot/lists/$filesafe_project", $output, "most recent results, articles: $cleanup_pages, issues: $issue_count");
@@ -391,7 +391,7 @@ class ReportGenerator
 
 			$output = "<noinclude>__NOINDEX__</noinclude>Cleanup listing for [[Wikipedia:{$wikiproject}{$project}|{$wikiproject}{$project_title}]] as of $asof_date.\n\n";
 			$output .= "Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.\n\n";
-			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> By Category <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
+			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> By category <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
 			$output .= "Sections can be transcluded using <nowiki>{{#lst:User:CleanupWorklistBot/lists/$filesafe_project|</nowiki>''section''<nowiki>}}</nowiki> Examples: <nowiki>{{#lst:User:CleanupWorklistBot/lists/$filesafe_project|Neutrality}}</nowiki>, <nowiki>{{#lst:User:CleanupWorklistBot/lists/$filesafe_project|Articles needing cleanup}}</nowiki>\n\n";
 			$output .= "... represents the current category name.\n\n";
 
@@ -510,7 +510,7 @@ class ReportGenerator
 		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
 		</head><body>
 		<p>Cleanup history for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a>.</p>
-		<p>Listings: <a href=\"$alphaurl\">Alphabetic<a> <b>&bull;</b> <a href=\"$bycaturl\">By Category</a> <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> History</p>
+		<p>Listings: <a href=\"$alphaurl\">Alphabetic<a> <b>&bull;</b> <a href=\"$bycaturl\">By category</a> <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> History</p>
 		<table class='wikitable'><thead><tr><th>Date</th><th>Total articles</th><th>Cleanup articles</th><th>Cleanup issues</th></tr></thead><tbody>\n
 		");
 
