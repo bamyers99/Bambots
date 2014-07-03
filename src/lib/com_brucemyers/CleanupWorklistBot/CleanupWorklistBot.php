@@ -115,7 +115,8 @@ class CleanupWorklistBot
 		$ts = $totaltimer->stop();
 		$totaltime = sprintf("%d days %d:%02d:%02d", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']);
 
-        $this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);
+        $this->_writeHtmlStatus(count($ruleconfigs), $totaltime, $errorrulsets, $asof_date, $outputdir);
+        //$this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);
 
         $this->_backupHistory($tools_host, $user, $pass);
     }
@@ -127,12 +128,13 @@ class CleanupWorklistBot
     {
         $idxpath = $outputdir . 'index.html';
         $idxhndl = fopen($idxpath, 'wb');
-        fwrite($idxhndl, "<html><head>
+        fwrite($idxhndl, "<!DOCTYPE html>
+        <html><head>
         <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
         <title>WikiProject Cleanup Listings</title>
         <link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
         </head><body>
-        <p>WikiProject Cleanup Listings</p>\n\n
+        <h2>WikiProject Cleanup Listings</h2>\n
         <ul>\n
         ");
 
@@ -167,9 +169,47 @@ class CleanupWorklistBot
     /**
      * Write the bot status page
      */
+    protected function _writeHtmlStatus($rulesetcnt, $totaltime, $errorrulsets, $asof_date, $outputdir)
+    {
+    	$errcnt = count($errorrulsets);
+    	$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+
+		$path = $outputdir . 'status.html';
+		$hndl = fopen($path, 'wb');
+
+    	$output = <<<EOT
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+<title>CleanupWorklistBot Status</title></head>
+<body>
+<h2>CleanupWorklistBot Status</h2>
+<b>Last run:</b> $asof_date<br />
+<b>Processing time:</b> $totaltime<br />
+<b>Project count:</b> $rulesetcnt<br />
+<b>Errors:</b> $errcnt
+EOT;
+
+    	if ($errcnt) {
+    		$output .= '<h3>Errors</h3><ul>';
+    		foreach ($errorrulsets as $project) {
+    			$output .= "<li>$project</li>";
+    		}
+    		$output .= '</ul>';
+    	}
+
+    	$output .= '</body></html>';
+
+    	fwrite($hndl, $output);
+    	fclose($hndl);
+    }
+
+    /**
+     * Write the bot status page
+     */
     protected function _writeStatus($rulesetcnt, $totaltime, $errorrulsets)
     {
-        $errcnt = count($errorrulsets);
+    	$errcnt = count($errorrulsets);
 
     	$output = <<<EOT
 <noinclude>__NOINDEX__</noinclude>
@@ -179,11 +219,11 @@ class CleanupWorklistBot
 '''Errors:''' $errcnt
 EOT;
 
-        if ($errcnt) {
-    	    $output .= "\n===Errors===\n";
-    	    foreach ($errorrulsets as $project) {
-    	        $output .= "*$project\n";
-    	    }
+    	if ($errcnt) {
+    		$output .= "\n===Errors===\n";
+    		foreach ($errorrulsets as $project) {
+    			$output .= "*$project\n";
+    		}
     	}
 
     	$this->resultWriter->writeResults('User:CleanupWorklistBot/Status', $output, "$errcnt errors; Total time: $totaltime");

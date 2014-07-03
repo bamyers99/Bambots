@@ -147,7 +147,8 @@ class ReportGenerator
 		$alphapath = $this->outputdir . 'alpha' . DIRECTORY_SEPARATOR . $filesafe_project . '.html';
 		$alphahndl = fopen($alphapath, 'wb');
 		$wikiproject = ($isWikiProject) ? 'WikiProject ' : '';
-		fwrite($alphahndl, "<html><head>
+		fwrite($alphahndl, "<!DOCTYPE html>
+			<html><head>
 			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
     		<title>Cleanup listing for {$wikiproject}{$project_title}</title>
     		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
@@ -238,7 +239,8 @@ class ReportGenerator
 			$bycatpath = $this->outputdir . 'bycat' . DIRECTORY_SEPARATOR . $filesafe_project . '.html';
 			$bycathndl = fopen($bycatpath, 'wb');
 
-			fwrite($bycathndl, "<html><head>
+			fwrite($bycathndl, "<!DOCTYPE html>
+				<html><head>
 				<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
 	    		<title>Cleanup listing for {$wikiproject}{$project_title}</title>
 	    		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
@@ -379,7 +381,7 @@ class ReportGenerator
 			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> [$bycaturl By Category] <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
 			$output .= "'''Note''': The listing is too large to fit in a wiki page. An alternate listing can be found [$bycaturl here].\n";
 
-			$this->resultWriter->writeResults("User:CleanupWorklistBot/lists/$filesafe_project", $output, "most recent results, articles: $cleanup_pages, issues: $issue_count");
+			//$this->resultWriter->writeResults("User:CleanupWorklistBot/lists/$filesafe_project", $output, "most recent results, articles: $cleanup_pages, issues: $issue_count");
 
 		} else {
 
@@ -501,7 +503,8 @@ class ReportGenerator
 
 		$histpath = $this->outputdir . 'history' . DIRECTORY_SEPARATOR . $filesafe_project . '.html';
 		$histhndl = fopen($histpath, 'wb');
-		fwrite($histhndl, "<html><head>
+		fwrite($histhndl, "<!DOCTYPE html>
+		<html><head>
 		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
 		<title>Cleanup history for {$wikiproject}{$project_title}</title>
 		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
