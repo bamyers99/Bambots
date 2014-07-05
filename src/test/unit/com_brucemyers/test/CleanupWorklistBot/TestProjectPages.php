@@ -61,6 +61,6 @@ class TestProjectPage extends UnitTestCase
 
     	$category = 'Featured articles';
     	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 1, "Wrong page count for $category");
+    	$this->assertEqual($page_count, 2, "Wrong page count for $category");
     }
 }

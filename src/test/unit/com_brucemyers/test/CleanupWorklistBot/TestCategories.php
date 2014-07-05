@@ -46,6 +46,6 @@ class TestCategories extends UnitTestCase
 
     	$result = $dbh_tools->query('SELECT count(*) as linkcount FROM categorylinks', PDO::FETCH_ASSOC);
     	$row = $result->fetch();
-    	$this->assertEqual($row['linkcount'], 8, 'Wrong category link count');
+    	$this->assertEqual($row['linkcount'], 10, 'Wrong category link count');
     }
 }

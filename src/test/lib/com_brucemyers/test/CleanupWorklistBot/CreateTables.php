@@ -145,15 +145,20 @@ class CreateTables
 
 
     	// category - x (article namespace)
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (300,'Featured_articles',1,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (301,'Pages_with_DOIs_inactive_since_2013',1,0,0)");
+    	$dbh_enwiki->exec("INSERT INTO category VALUES (300,'Featured_articles',2,0,0)");
+    	$dbh_enwiki->exec("INSERT INTO category VALUES (301,'Pages_with_DOIs_inactive_since_2013',2,0,0)");
 
     	$dbh_enwiki->exec("INSERT INTO page VALUES (301, 0, 'Earth')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (302, 1, 'Earth')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (303, 14, 'Pages_with_DOIs_inactive_since_2013')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (303, 0, 'Read\'s Cavern')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (304, 1, 'Read\'s Cavern')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (305, 14, 'Pages_with_DOIs_inactive_since_2013')");
 
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured_articles', 'page')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages_with_DOIs_inactive_since_2013', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Articles_needing_cleanup_from_May_2013', 'page')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Featured_articles', 'page')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Pages_with_DOIs_inactive_since_2013', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Articles_needing_cleanup_from_May_2013', 'page')");
     }
 }
