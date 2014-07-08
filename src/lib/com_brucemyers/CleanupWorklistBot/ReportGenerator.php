@@ -182,7 +182,7 @@ class ReportGenerator
 			$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 			$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
 
-			fwrite($alphahndl, "<tr><td><a href=\"$arturl\">" . htmlentities($title, ENT_COMPAT | ENT_HTML401, 'UTF-8') . "</a></td><td data-sort-value='$impsort'>{$art[self::KEY_IMP]}</td>
+			fwrite($alphahndl, "<tr><td><a href=\"$arturl\">" . htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td data-sort-value='$impsort'>{$art[self::KEY_IMP]}</td>
 				<td data-sort-value='$clssort'>{$art[self::KEY_CLS]}</td><td align='right'>$icount</td>
 				<td data-sort-value='{$consolidated['earliestsort']}'>{$consolidated['earliest']}</td><td>$cats</td></tr>\n");
 
@@ -311,7 +311,7 @@ class ReportGenerator
 					$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 					$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
 					fwrite($bycathndl, "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT | ENT_HTML401, 'UTF-8') . "</a></td>
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
 						<td data-sort-value='{$impsort}'>{$art[self::KEY_IMP]}</td>
 						<td data-sort-value='{$clssort}'>{$art[self::KEY_CLS]}</td>
 						<td>{$artcats}</td></tr>\n");
@@ -329,7 +329,7 @@ class ReportGenerator
 
 				foreach ($resarts as $title => &$fields) {
 					fwrite($bycathndl, "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT | ENT_HTML401, 'UTF-8') . "</a></td>
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
 						<td>{$fields[0]}</td><td>{$fields[1]}</td><td>{$fields[4]}</td></tr>\n");
 				}
 				unset($fields);
@@ -362,7 +362,7 @@ class ReportGenerator
 						$artcats = implode(', ', $keycats);
 
 						fwrite($bycathndl, "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-							htmlentities($title, ENT_COMPAT | ENT_HTML401, 'UTF-8') . "</a></td>
+							htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
 							<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>
 							<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
 							<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n");
