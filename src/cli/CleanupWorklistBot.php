@@ -288,7 +288,7 @@ function checkWPCategory($wiki)
     		else $project = '?';
 
     		if (strpos($project, '&')) list($project, $params) = explode('&', $project, 2);
-    		$wikilink = $wiki->namespaces[(int)$row['page_namespace']] . ':' . $row['page_title'];
+    		$wikilink = MediaWiki::$namespaces[(int)$row['page_namespace']] . ':' . $row['page_title'];
 
     		if (! isset($projects[$project])) $projects[$project] = array();
     		$projects[$project][] = $wikilink;

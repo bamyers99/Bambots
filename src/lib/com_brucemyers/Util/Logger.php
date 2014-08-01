@@ -43,7 +43,7 @@ class Logger
         	$size = filesize($filepath);
         	if ($size > 1024000) {
         	    $backup = $filepath . '.bak';
-        	    unlink($backup);
+        	    @unlink($backup);
         	    rename($filepath, $backup);
         	}
     	}

@@ -35,7 +35,7 @@ class MediaWiki extends wikipedia
     const WIKICHANGESINCREMENT = 'wiki.recentchangesincrement';
     const MAX_PAGE_SIZE = 2000000;
 
-    public $namespaces = array(
+    static $namespaces = array(
                     0 => 'Article',
                     1 => 'Article talk',
                     2 => 'User',

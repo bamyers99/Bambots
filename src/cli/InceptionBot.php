@@ -78,6 +78,7 @@ try {
     $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
     $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
     $wiki->login($username, $password);
+    FileCache::purgeExpired();
 
     if ($ruletype == 'active') $rules = $activerules;
     elseif ($ruletype == 'custom') $rules = array(Config::get(InceptionBot::CUSTOMRULE) => '');

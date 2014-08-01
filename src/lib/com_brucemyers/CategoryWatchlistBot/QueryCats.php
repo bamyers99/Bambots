@@ -21,6 +21,12 @@ use PDO;
 
 class QueryCats
 {
+	const CATEGORY_COUNT_UNKNOWN = -1;
+	const CATEGORY_COUNT_UNAPPROVED = -2;
+	const CATEGORY_COUNT_DENIED = -3;
+	const CATEGORY_COUNT_RECALC = -4;
+	const MAX_UNAPPROVED_CATCOUNT = 50;
+
 	protected $dbh_wiki;
 	protected $dbh_tools;
 
@@ -31,13 +37,13 @@ class QueryCats
 	}
 
 	/**
-	 * Calculate categories and update querycats table.
+	 * Calculate categories
 	 *
-	 *@param int $queryid Query id
 	 * @param array $params keys = cn?{1-10} - cat names, sd?{1-10} - subcat depth
-	 * @return array keys = errors - array(), catcount - int
+	 * @param bool $recalc Is this a recalc, default = false
+	 * @return array keys = cats - array(), errors - array(), catcount - int
 	 */
-	public function calcCats($queryid, $params)
+	public function calcCats($params, $recalc = false)
 	{
 		$cats = array();
 		$errors = array();
@@ -68,23 +74,33 @@ class QueryCats
 			}
 
 			$catcount = count($foundcats);
-			$sth = $this->dbh_tools->prepare("INSERT INTO querycats (queryid,category) VALUES ($queryid,?)");
-			$this->dbh_tools->beginTransaction();
-			$inserted = 0;
-
-			foreach ($foundcats as $catname) {
-				if (++$inserted > 100) {
-					$errors[] = 'Greater than 100 categories';
-					break;
-				}
-				$sth->bindParam(1, $catname);
-				$sth->execute();
-			}
-
-			$this->dbh_tools->commit();
 		}
 
-		return array('errors' => $errors, 'catcount' => $catcount);
+		if ($catcount > self::MAX_UNAPPROVED_CATCOUNT && ! $recalc) {
+			$catcount = self::CATEGORY_COUNT_UNAPPROVED;
+		}
+
+		return array('cats' => $foundcats, 'errors' => $errors, 'catcount' => $catcount);
+	}
+
+	/**
+	 * Save query categories
+	 *
+	 * @param int $queryid Query id
+	 * @param array $cats Category names
+	 */
+	public function saveCats($queryid, &$cats)
+	{
+		$this->dbh_tools->exec("DELETE FROM querycats WHERE queryid = $queryid");
+		$sth = $this->dbh_tools->prepare("INSERT INTO querycats (queryid,category) VALUES ($queryid,?)");
+		$this->dbh_tools->beginTransaction();
+
+		foreach ($cats as $catname) {
+			$sth->bindParam(1, $catname);
+			$sth->execute();
+		}
+
+		$this->dbh_tools->commit();
 	}
 
 	/**

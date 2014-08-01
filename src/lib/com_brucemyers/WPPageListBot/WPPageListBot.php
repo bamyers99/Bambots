@@ -55,7 +55,7 @@ class WPPageListBot
         $this->resultWriter = $resultWriter;
 
         // Relabel some namespaces
-        foreach ($mediawiki->namespaces as $ns => $title) {
+        foreach (MediaWiki::$namespaces as $ns => $title) {
             if ($ns % 2 == 1) $title = str_replace('talk', '(non-talk)', $title);
             $this->namespaces[$ns] = $title;
         }

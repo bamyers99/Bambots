@@ -45,6 +45,7 @@ class CreateTables
 		  `cl_from` int(10) unsigned NOT NULL DEFAULT '0',
 		  `cl_to` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
 		  `cl_type` enum('page','subcat','file') NOT NULL DEFAULT 'page',
+    	  `cl_timestamp` timestamp,
 		  UNIQUE KEY `cl_from` (`cl_from`,`cl_to`),
 		  KEY `cl_sortkey` (`cl_to`,`cl_type`,`cl_from`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -63,6 +64,8 @@ class CreateTables
     	new \com_brucemyers\CategoryWatchlistBot\CreateTables($dbh_tools);
 
     	// load enwiki
+
+    	$ts = '1980-01-01 00:00:00';
 
    		$dbh_enwiki->exec('TRUNCATE category');
    		$dbh_enwiki->exec('TRUNCATE page');
@@ -99,20 +102,20 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO page VALUES (12, 14, 'Articles_needing_cleanup_from_May_2013')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (13, 14, 'Articles_needing_cleanup_from_March_2013')");
 
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (3, 'All_articles_needing_coordinates', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'B-Class_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'Top-importance_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_May_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_March_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'Unassessed_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'NA-importance_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'Unassessed_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'NA-importance_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (9, 'Articles_needing_cleanup_from_May_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'Unassessed_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'NA-importance_Michigan_articles', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (3, 'All_articles_needing_coordinates', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'B-Class_Michigan_articles', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'Top-importance_Michigan_articles', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_May_2013', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_March_2013', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'Unassessed_Michigan_articles', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'NA-importance_Michigan_articles', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'Unassessed_Michigan_articles', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'NA-importance_Michigan_articles', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (9, 'Articles_needing_cleanup_from_May_2013', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'Unassessed_Michigan_articles', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'NA-importance_Michigan_articles', 'page', '$ts')");
 
 
     	// category - x (article namespace)
@@ -125,11 +128,11 @@ class CreateTables
     	$dbh_enwiki->exec("INSERT INTO page VALUES (304, 1, 'Read\'s Cavern')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (305, 14, 'Pages_with_DOIs_inactive_since_2013')");
 
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured_articles', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages_with_DOIs_inactive_since_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Articles_needing_cleanup_from_May_2013', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Featured_articles', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Pages_with_DOIs_inactive_since_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Articles_needing_cleanup_from_May_2013', 'page')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured_articles', 'page', '$ts')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages_with_DOIs_inactive_since_2013', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Articles_needing_cleanup_from_May_2013', 'page', '$ts')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Featured_articles', 'page', '$ts')");
+    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Pages_with_DOIs_inactive_since_2013', 'page', '$ts')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Articles_needing_cleanup_from_May_2013', 'page', '$ts')");
     }
 }

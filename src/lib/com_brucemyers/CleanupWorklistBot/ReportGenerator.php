@@ -346,8 +346,7 @@ class ReportGenerator
 					$artcount = count($arts);
 					fwrite($bycathndl, "<a name='$cat'></a><h3>$cat ($artcount)</h3>\n");
 					fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
-						<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>\n
-						");
+						<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>\n");
 
 					foreach ($arts as $title => $dummy) {
 						//Strip the current cat prefix to make page smaller

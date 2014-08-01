@@ -34,6 +34,7 @@ class CreateTables
     	  `hash` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	  `params` varchar(2048) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	  `lastaccess` date NOT NULL,
+    	  `lastrecalc` date NOT NULL,
     	  `catcount` int NOT NULL DEFAULT -1,
 		  UNIQUE KEY `hash` (`hash`),
     	  KEY `wikiname` (`wikiname`)
@@ -49,13 +50,14 @@ class CreateTables
 
     	$sql = "CREATE TABLE IF NOT EXISTS `wikis` (
 		  `wikiname` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL PRIMARY KEY,
-		  `wikititle` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
-		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+		  `wikititle` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+		  `wikidomain` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
     	$sql = "CREATE TABLE IF NOT EXISTS `runs` (
 		  `wikiname` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-    	  `rundate` date NOT NULL,
+    	  `rundate` timestamp,
 		  UNIQUE KEY `wikiname_rundate` (`wikiname`, `rundate`)
 		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);

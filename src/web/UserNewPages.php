@@ -84,7 +84,7 @@ function display_pages($user, $days)
         </script>
     <?php
 
-    if (! empty($user) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
+    if (! empty($user) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
         display_articles($user, $days);
     }
 

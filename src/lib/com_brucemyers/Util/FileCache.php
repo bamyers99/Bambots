@@ -35,19 +35,6 @@ class FileCache
         $cacheDir = str_replace(self::CACHEBASEDIR, Config::get(Config::BASEDIR), $cacheDir);
         $cacheDir = preg_replace('!(/|\\\\)$!', '', $cacheDir); // Drop trailing slash
         $this->cacheDir = $cacheDir;
-
-        $expirydays = (int)Config::get(self::CACHEEXPIRYDAYS) + 1;
-        $rmbefore = strtotime("-$expirydays days");
-
-        // Expire the cache
-        $handle = opendir($cacheDir);
-    	while (($entry = readdir($handle)) !== false) {
-    		if ($entry == '.' || $entry == '..') continue;
-            $filepath = $cacheDir . DIRECTORY_SEPARATOR . $entry;
-            $lastupdate = filemtime($filepath);
-            if ($lastupdate < $rmbefore) unlink($filepath);
-    	}
-    	closedir($handle);
     }
 
     /**
@@ -118,10 +105,65 @@ class FileCache
     public static function purgeAll()
     {
         $inst = self::getInstance();
+
         $handle = opendir($inst->cacheDir);
-    	while (($entry = readdir($handle)) !== false) {
+        if (! $handle) {
+        	Logger::log("FileCache.purgeAll() opendir failed for {$inst->cacheDir}");
+        	return;
+        }
+
+        while (($entry = readdir($handle)) !== false) {
     		if ($entry == '.' || $entry == '..') continue;
     		unlink($inst->cacheDir . DIRECTORY_SEPARATOR . $entry);
+    	}
+    	closedir($handle);
+    }
+
+    /**
+     * Purge everything in the cache with a prefix
+     *
+     * @param string $prefix Prefix
+     */
+    public static function purgeAllPrefix($prefix)
+    {
+
+        $inst = self::getInstance();
+        $prefix = $inst->safeKey($prefix);
+
+        $handle = opendir($inst->cacheDir);
+        if (! $handle) {
+        	Logger::log("FileCache.purgeAllPrefix() opendir failed for {$inst->cacheDir}");
+        	return;
+        }
+
+        while (($entry = readdir($handle)) !== false) {
+    		if ($entry == '.' || $entry == '..') continue;
+    		if (strpos($entry, $prefix) !== 0) continue;
+    		unlink($inst->cacheDir . DIRECTORY_SEPARATOR . $entry);
+    	}
+    	closedir($handle);
+    }
+
+    /**
+     * Purge expired cache entries
+     */
+    public static function purgeExpired()
+    {
+    	$inst = self::getInstance();
+    	$expirydays = (int)Config::get(self::CACHEEXPIRYDAYS) + 1;
+    	$rmbefore = strtotime("-$expirydays days");
+
+    	$handle = opendir($inst->cacheDir);
+    	if (! $handle) {
+    		Logger::log("FileCache.purgeExpired() opendir failed for {$inst->cacheDir}");
+    		return;
+    	}
+
+    	while (($entry = readdir($handle)) !== false) {
+    		if ($entry == '.' || $entry == '..') continue;
+    		$filepath = $cacheDir . DIRECTORY_SEPARATOR . $entry;
+    		$lastupdate = filemtime($filepath);
+    		if ($lastupdate < $rmbefore) unlink($filepath);
     	}
     	closedir($handle);
     }

@@ -22,6 +22,7 @@ use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
+use com_brucemyers\Util\FileCache;
 
 $clidir = dirname(__FILE__);
 $GLOBALS['botname'] = 'WPMissingTmplBot';
@@ -72,6 +73,7 @@ try {
     $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
     $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
     $wiki->login($username, $password);
+    FileCache::purgeExpired();
 
     if ($ruletype == 'active') $rules = $activerules;
     elseif ($ruletype== 'custom') $rules = array('WikiProject Romania' => $activerules['WikiProject Romania']);
