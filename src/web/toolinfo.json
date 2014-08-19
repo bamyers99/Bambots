@@ -1,0 +1,21 @@
+[
+	{
+	    "name" : "InceptionBot",
+	    "title" : "InceptionBot",
+	    "description" : "English WikiProject new article reports.",
+	    "url" : "https://en.wikipedia.org/wiki/User:InceptionBot",
+	    "keywords" : "enwiki,report,wikiproject",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
+,
+	{
+	    "name" : "CleanupWorklistBot",
+	    "title" : "CleanupWorklistBot",
+	    "description" : "English WikiProject cleanup category reports.",
+	    "url" : "https://en.wikipedia.org/wiki/User:CleanupWorklistBot",
+	    "keywords" : "enwiki,report,wikiproject",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
+]
