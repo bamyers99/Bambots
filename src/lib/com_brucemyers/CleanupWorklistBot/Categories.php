@@ -56,6 +56,9 @@ class Categories {
 					'type' => 'from-monthly',
 					'group' => 'References'
 			),
+			'Articles needing additional categories' => array (
+					'type' => 'from-monthly'
+			),
 			'Articles needing additional references' => array (
 					'type' => 'from-monthly',
 					'group' => 'References'
@@ -210,9 +213,6 @@ class Categories {
 					'type' => 'from-monthly',
 					'group' => 'References'
 			),
-			'Category needed' => array (
-					'type' => 'from-monthly'
-			),
 			'Copied and pasted articles and sections' => array (
 					'type' => 'from-monthly'
 			),
@@ -257,6 +257,9 @@ class Categories {
 					'group' => 'Clarity'
 			),
 			'Suspected copyright infringements without a source' => array (
+					'type' => 'from-monthly'
+			),
+			'Uncategorized' => array (
 					'type' => 'from-monthly'
 			),
 			'Uncategorized stubs' => array (

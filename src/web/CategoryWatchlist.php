@@ -326,7 +326,7 @@ function display_admin()
 	$pass = isset($_REQUEST['pass']) ? $_REQUEST['pass'] : '';
 	if (empty($pass)) return;
 	if (! $uihelper->checkPassword($pass)) return;
-?>
+	/*
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
@@ -350,9 +350,10 @@ function display_admin()
 				"<td><a href='{$baseurl}action=approve&amp;query={$row['hash']}&amp;pass=$pass'>approve</a></td>" .
 				"<td><a href='{$baseurl}action=deny&amp;query={$row['hash']}&amp;pass=$pass'>deny</a></td></tr>";
 		}
-		?>
+
 	</table></body>
 		<?php
+		*/
 }
 
 /**
