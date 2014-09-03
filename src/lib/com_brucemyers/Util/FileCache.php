@@ -161,7 +161,7 @@ class FileCache
 
     	while (($entry = readdir($handle)) !== false) {
     		if ($entry == '.' || $entry == '..') continue;
-    		$filepath = $cacheDir . DIRECTORY_SEPARATOR . $entry;
+    		$filepath = $inst->cacheDir . DIRECTORY_SEPARATOR . $entry;
     		$lastupdate = filemtime($filepath);
     		if ($lastupdate < $rmbefore) unlink($filepath);
     	}

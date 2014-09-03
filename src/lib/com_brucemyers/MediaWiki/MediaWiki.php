@@ -329,6 +329,35 @@ class MediaWiki extends wikipedia
     }
 
     /**
+     * Cache multiple pages
+     *
+     * @param $pagenames array Page names
+     */
+    public function cachePages($pagenames)
+    {
+        $cached = array();
+
+    	// Check the cache
+    	foreach ($pagenames as $pagename) {
+    		$page = FileCache::getData($pagename);
+    		if ($page !== false) $cached[$pagename] = true;
+    	}
+
+    	$cachednames = array_keys($cached);
+    	$uncachednames = array_diff($pagenames, $cachednames);
+
+    	$pageChunks = array_chunk($uncachednames, Config::get(self::WIKIPAGEINCREMENT));
+
+    	foreach ($pageChunks as $pageChunk) {
+    		$uncached = $this->getPages($pageChunk);
+
+	    	foreach ($uncached as $pagename => $page) {
+	    		FileCache::putData($pagename, $page);
+	    	}
+	    }
+    }
+
+    /**
      * Get recent changes
      *
      * https://www.mediawiki.org/wiki/API:Recentchanges
@@ -419,5 +448,20 @@ class MediaWiki extends wikipedia
         }
 
         return $ret;
+    }
+
+    /**
+     * Get link safe namespace prefix.
+     *
+     * @param int $id Namespace id
+     * @return string Namespace prefix
+     */
+    public static function getLinkSafeNamespacePrefix($id)
+    {
+    	$id = (int)$id;
+    	if ($id == 0) return '';
+    	if ($id == 1) return 'Talk:';
+    	if ($id == 6 || $id == 14) return ':' . self::$namespaces[$id] . ':';
+    	return self::$namespaces[$id] . ':';
     }
 }

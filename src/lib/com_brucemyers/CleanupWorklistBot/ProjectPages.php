@@ -180,19 +180,28 @@ class ProjectPages
     		$sth->execute();
     		$count = 0;
 
-    		$this->dbh_tools->beginTransaction();
-    		$isth = $this->dbh_tools->prepare("UPDATE page SET importance = '$importance' WHERE talk_id = :cl_from");
+    		$cl_froms = array();
 
-    	    while($row = $sth->fetch()) {
-				++$count;
+    		while($row = $sth->fetch()) {
+    			$cl_froms[] = $row['cl_from'];
+    		}
+
+    		$sth->closeCursor();
+    		$chunks = array_chunk($cl_froms, 100);
+
+    		$this->dbh_tools->beginTransaction();
+
+    		foreach ($chunks as $chunk) {
+    			$count += count($chunk);
     			if ($count % 1000 == 0) {
     				$this->dbh_tools->commit();
     				$this->dbh_tools->beginTransaction();
     			}
-				$isth->execute($row);
+    			$ids = implode(',', $chunk);
+    			$sql = "UPDATE page SET importance = '$importance' WHERE talk_id IN ($ids)";
+    			$this->dbh_tools->exec($sql);
     		}
 
-    		$sth->closeCursor();
     		$this->dbh_tools->commit();
     	}
 
@@ -211,20 +220,28 @@ class ProjectPages
     		$sth->execute();
     		$count = 0;
 
-    		$this->dbh_tools->beginTransaction();
-
-    		$isth = $this->dbh_tools->prepare("UPDATE page SET class = '$class' WHERE talk_id = :cl_from");
+    	    $cl_froms = array();
 
     		while($row = $sth->fetch()) {
-    			++$count;
+    			$cl_froms[] = $row['cl_from'];
+    		}
+
+    		$sth->closeCursor();
+    		$chunks = array_chunk($cl_froms, 100);
+
+    		$this->dbh_tools->beginTransaction();
+
+    		foreach ($chunks as $chunk) {
+    			$count += count($chunk);
     			if ($count % 1000 == 0) {
     				$this->dbh_tools->commit();
     				$this->dbh_tools->beginTransaction();
     			}
-    			$isth->execute($row);
+    			$ids = implode(',', $chunk);
+    			$sql = "UPDATE page SET class = '$class' WHERE talk_id IN ($ids)";
+    			$this->dbh_tools->exec($sql);
     		}
 
-    		$sth->closeCursor();
     		$this->dbh_tools->commit();
     		$total_class += $count;
     	}
