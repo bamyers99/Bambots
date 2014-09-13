@@ -48,7 +48,6 @@ namespace ChrisG;
  **/
 class http {
     public $ch;
-    private $uid;
     public $cookie_jar;
     public $postfollowredirs;
     public $getfollowredirs;
@@ -76,15 +75,21 @@ class http {
 
     function __construct () {
         $this->ch = curl_init();
-        $this->uid = dechex(rand(0,99999999));
-        curl_setopt($this->ch,CURLOPT_COOKIEJAR,'/tmp/cluewikibot.cookies.'.$this->uid.'.dat');
-        curl_setopt($this->ch,CURLOPT_COOKIEFILE,'/tmp/cluewikibot.cookies.'.$this->uid.'.dat');
+        curl_setopt($this->ch,CURLOPT_COOKIEFILE,''); //Enable cookie handling
         curl_setopt($this->ch,CURLOPT_MAXCONNECTS,100);
         curl_setopt($this->ch,CURLOPT_CLOSEPOLICY,CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
         //curl_setopt($this->ch, CURLOPT_VERBOSE, true);
         $this->postfollowredirs = 0;
         $this->getfollowredirs = 1;
         $this->cookie_jar = array();
+    }
+
+    function reset() {
+    	curl_close($this->ch);
+    	$this->ch = curl_init();
+    	curl_setopt($this->ch,CURLOPT_COOKIEFILE,''); //Enable cookie handling
+    	curl_setopt($this->ch,CURLOPT_MAXCONNECTS,100);
+    	curl_setopt($this->ch,CURLOPT_CLOSEPOLICY,CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
     }
 
     function post ($url,$data) {
@@ -166,6 +171,5 @@ class http {
 
     function __destruct () {
         curl_close($this->ch);
-        @unlink('/tmp/cluewikibot.cookies.'.$this->uid.'.dat');
     }
 }

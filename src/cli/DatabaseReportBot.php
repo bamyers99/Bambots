@@ -31,9 +31,12 @@ $GLOBALS['botname'] = 'DatabaseReportBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
+DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
 
     $activereports = array(
-        'BrokenSectionAnchors'
+        'BrokenSectionAnchors',
+    	'DiacriticRedLinks',
+    	'SimilarRedLinks'
     );
 
 try {
@@ -41,7 +44,10 @@ try {
 		echo "Usage: DatabaseReportBot.php <reportname>\n";
 		echo "Available reports:\n";
 		foreach ($activereports as $reportname) {
-			echo "\t$reportname\n";
+	    	$classname = "com_brucemyers\\DatabaseReportBot\\Reports\\$reportname";
+	    	$report = new $classname();
+	    	$usage = $report->getUsage();
+			echo "\t$reportname$usage\n";
 		}
 		exit;
 	}
@@ -72,9 +78,12 @@ try {
     }
 
     $enwiki_host = Config::get(ENWIKI_HOST);
-    $bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p');
+    $tools_host = Config::get(TOOLS_HOST);
+    $bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host);
 
-    $bot->generateReport($reportname, 'Wikipedia:Database reports');
+    $params = array_slice($argv, 2);
+
+    $bot->generateReport($reportname, 'Wikipedia:Database reports', $params);
 
     $ts = $timer->stop();
 

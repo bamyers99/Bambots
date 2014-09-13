@@ -92,6 +92,7 @@ class MediaWiki extends wikipedia
     	if ($username == null && $password == null) {
     		$username = $saveusername;
     		$password = $savepassword;
+    		$this->http->reset(); // Clear stored cookies
     	} else {
     		$saveusername = $username;
     		$savepassword = $password;

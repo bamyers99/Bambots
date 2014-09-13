@@ -34,10 +34,12 @@ class DatabaseReportBot
 
     protected $resultWriter;
     protected $dbh_wiki;
+    protected $dbh_tools;
     protected $mediawiki;
     protected $renderedwiki;
 
-    public function __construct(ResultWriter $resultWriter, MediaWiki $mediawiki, RenderedWiki $renderedwiki, $wiki_host, $wiki_db)
+    public function __construct(ResultWriter $resultWriter, MediaWiki $mediawiki, RenderedWiki $renderedwiki, $wiki_host, $wiki_db,
+    		$tools_host)
     {
         $this->resultWriter = $resultWriter;
         $this->mediawiki = $mediawiki;
@@ -49,14 +51,20 @@ class DatabaseReportBot
     	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=$wiki_db", $user, $pass);
     	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      	$this->dbh_wiki = $dbh_wiki;
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot", $user, $pass);
+    	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+     	$this->dbh_tools = $dbh_tools;
     }
 
-    public function generateReport($reportname, $outputPage)
+    public function generateReport($reportname, $outputPage, $params)
     {
     	$classname = "com_brucemyers\\DatabaseReportBot\\Reports\\$reportname";
     	$report = new $classname();
+    	$continue = $report->init($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $params);
+    	if (! $continue) return;
+
     	$reportTitle = $report->getTitle();
-    	$rows = $report->getRows($this->dbh_wiki, $this->mediawiki, $this->renderedwiki);
+    	$rows = $report->getRows($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $this->renderedwiki);
 
     	$rowchunks = array_chunk($rows, self::MAX_ROWS_PER_PAGE);
     	$chunkcount = count($rowchunks);

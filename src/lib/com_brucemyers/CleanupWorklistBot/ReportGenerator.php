@@ -74,8 +74,8 @@ class ReportGenerator
 
 		$results = $this->dbh_tools->query('SELECT `page_title`, `importance`, `class`, cat.`cat_id`, `cat_title`, `month`, `year`
 				FROM `page` p, `categorylinks` cl, `category` cat
-				WHERE p.article_id = cl.cl_from AND cl.cat_id = cat.cat_id
-				ORDER BY `page_title`, `cat_title`');
+				WHERE p.article_id = cl.cl_from AND cl.cat_id = cat.cat_id');
+		//		ORDER BY `page_title`, `cat_title`'); Removed because was causing labsdb to hang with 'Copying to tmp table'.
 
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			++$issue_count;
@@ -91,6 +91,8 @@ class ReportGenerator
 			if (! isset($this->categories[$cat_id])) $this->categories[$cat_id] = array(self::KEY_TITLE => $row['cat_title'], self::KEY_MTH => $row['month'], self::KEY_YR => $row['year']);
 			$curclean[$title][self::KEY_ISSUES][] = $cat_id;
 		}
+
+		ksort($curclean);
 
 		$results->closeCursor();
 

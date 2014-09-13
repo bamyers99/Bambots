@@ -23,6 +23,31 @@ use PDO;
 
 abstract class DatabaseReport
 {
+
+	/**
+	 * Initialize report.
+	 *
+	 * @param PDO $dbh_wiki
+	 * @param PDF $dbh_tools
+	 * @param MediaWiki $mediawiki
+	 * @param array $params
+	 * @return bool continue - Should the report generation continue?
+	 */
+	public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params)
+	{
+		return true;
+	}
+
+	/**
+	 * Get usage info.
+	 *
+	 * @return string
+	 */
+	public function getUsage()
+	{
+		return '';
+	}
+
 	/**
 	 * Get the report title.
 	 *
@@ -48,8 +73,11 @@ abstract class DatabaseReport
 	 * Get the report rows.
 	 *
 	 * @param PDO $dbh_wiki
+	 * @param PDF $dbh_tools
 	 * @param MediaWiki $mediawiki
-	 * @return array Report row data
+	 * @param RenderedWiki $renderedwiki
+	 * @return array Report row data, the first column must only be a page name with optional namespace. {{dbr link}} will
+	 * 		be applied to the page name.
 	 */
-	public abstract function getRows(PDO $dbh_wiki, MediaWiki $mediawiki, RenderedWiki $renderedwiki);
+	public abstract function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki);
 }

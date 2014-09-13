@@ -43,7 +43,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		return array('Redirect', 'Incoming links' , 'Target');
 	}
 
-	public function getRows(PDO $dbh_wiki, MediaWiki $mediawiki, RenderedWiki $renderedwiki)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki)
 	{
 		// Retrieve the target page contents
 

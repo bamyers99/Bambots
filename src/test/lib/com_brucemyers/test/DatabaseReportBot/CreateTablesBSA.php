@@ -19,7 +19,7 @@ namespace com_brucemyers\test\DatabaseReportBot;
 
 use PDO;
 
-class CreateTables
+class CreateTablesBSA
 {
 	/**
 	 * Create test tables
@@ -90,5 +90,10 @@ class CreateTables
     	// Another bad section redirect
     	$dbh_enwiki->exec("INSERT INTO page VALUES (12,0,'Anesthesia_not_found')");
     	$dbh_enwiki->exec("INSERT INTO redirect VALUES (12,0,'Anesthesia','','Anesthetic not found')");
+
+    	// Good section redirect was failing
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (13,0,'Culture_of_Israel')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (14,0,'Theatre_of_Israel')");
+    	$dbh_enwiki->exec("INSERT INTO redirect VALUES (14,0,'Culture_of_Israel','','Theater')");
     }
 }
