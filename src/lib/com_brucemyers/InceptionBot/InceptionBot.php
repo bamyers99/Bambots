@@ -97,7 +97,7 @@ class InceptionBot
 
                 $oldtitle = $movedpage['oldtitle'];
 
-                if (isset($allpages[$oldtitle])) {
+                if (isset($allpages[$oldtitle]) && $movedpage['oldns'] != '118') { // Want moved drafts to appear as new pages.
                     $newtitle = $movedpage['newtitle'];
                     $temppage = $allpages[$oldtitle];
                     $temppage['title'] = $newtitle;
