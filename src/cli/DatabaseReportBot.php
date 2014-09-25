@@ -36,6 +36,7 @@ DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
     $activereports = array(
         'BrokenSectionAnchors',
     	'DiacriticRedLinks',
+    	'MisspelledRedLinks',
     	'SimilarRedLinks'
     );
 

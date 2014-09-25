@@ -25,6 +25,8 @@ use PDO;
 
 class SimilarRedLinks extends DatabaseReport
 {
+	var $lcase = false;
+
 	public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params)
 	{
 		if (empty($params)) return true;
@@ -33,8 +35,13 @@ class SimilarRedLinks extends DatabaseReport
 
 		switch ($option) {
 		    case 'loadpagenames':
+		    	if (isset($params[1]) && $params[1] == 'lcase') $this->lcase = true;
 		    	$this->loadpagenames($dbh_tools);
 		    	return false;
+		    	break;
+
+		    case 'lcase':
+		    	$this->lcase = true;
 		    	break;
 		}
 
@@ -47,7 +54,8 @@ class SimilarRedLinks extends DatabaseReport
 		$dumppath = self::getDumpPath();
 
 		return " - Check red links from $dumppath\n" .
-			"\t\tloadpagenames - load wiki page names from $loadpath";
+			"\t\tloadpagenames - load wiki page names from $loadpath\n" .
+			"\t\t\tlcase - lowercase check only";
 	}
 
 	public function getTitle()
@@ -82,12 +90,17 @@ class SimilarRedLinks extends DatabaseReport
 
 			list($title, $linkcnt, $templatecnt) = explode("\t", $buffer);
 			if (preg_match('!(_of_|_in_|_at_the_|\d{4})!', $title)) continue;
-			$phrase = $this->normalizePhrase($title);
-			if (empty($phrase)) continue;
 
-			$phrase = metaphone($phrase);
+			if ($this->lcase) {
+				$phrase = $this->lcasePhrase($title);
+			} else {
+				$phrase = $this->normalizePhrase($title);
+				if (empty($phrase)) continue;
 
-			if (strlen($phrase) < 7) continue;
+				$phrase = metaphone($phrase);
+
+				if (strlen($phrase) < 7) continue;
+			}
 
 			$sth->bindParam(1, $phrase);
 			$sth->execute();
@@ -168,9 +181,13 @@ class SimilarRedLinks extends DatabaseReport
 			$title = fgets($hndl);
 			$title = rtrim($title);
 
-			$phrase = $this->normalizePhrase($title);
+			if ($this->lcase) {
+				$phrase = $this->lcasePhrase($title);
+			} else {
+				$phrase = $this->normalizePhrase($title);
 
-			$phrase = metaphone($phrase);
+				$phrase = metaphone($phrase);
+			}
 
 			$sth->bindParam(1, $title);
 			$sth->bindParam(2, $phrase);
@@ -180,6 +197,20 @@ class SimilarRedLinks extends DatabaseReport
 		fclose($hndl);
 
     	$dbh_tools->commit();
+	}
+
+	function lcasePhrase($phrase)
+	{
+		$phrase = Convert::clearUTF($phrase);
+
+		$phrase = preg_replace('!\W+!', '', $phrase);
+		$phrase = strtolower($phrase);
+
+		// Split into words
+		$phrase = preg_split('!_+!', $phrase);
+		$phrase = implode(' ', $phrase);
+
+		return $phrase;
 	}
 
 	function normalizePhrase($phrase)
