@@ -24,9 +24,11 @@ class CSVString
      * " is escaped using \"
      *
      * @param $buffer string Buffer to parse
+     * @param $separator string Field separator (default: ,)
+     * @param $delimiter string String delimiter (default: ")
      * @return array Fields
      */
-	static function parse(&$buffer)
+	static function parse(&$buffer, $separator = ',', $delimiter = '"')
 	{
 		$fields = array();
 		$field = 0;
@@ -36,7 +38,7 @@ class CSVString
 		for ($x = 0; $x < $buflen; ++$x) {
 			$char = $buffer[$x];
 
-			if ($char == '"') {
+			if ($char == $delimiter) {
 				$string = '';
 
 				for (++$x; $x < $buflen; ++$x) {
@@ -44,8 +46,8 @@ class CSVString
 
 					if ($char == '\\') {
 						if ($x+1 < $buflen) $string .= $buffer[++$x];
-					} elseif ($char == '"') {
-						if ($x+1 < $buflen && $buffer[$x+1] != ',') { // Hack because svick didn't escape "s
+					} elseif ($char == $delimiter) {
+						if ($x+1 < $buflen && $buffer[$x+1] != $separator) { // Hack because svick didn't escape "s
 							$string .= $char;
 						} else {
 							break;
@@ -56,7 +58,7 @@ class CSVString
 				}
 
 				$fields[$field] = $string;
-			} elseif ($char == ',') {
+			} elseif ($char == $separator) {
 				++$field;
 				$fields[$field] = ''; // So that last field always has a value
 			} else {
@@ -73,15 +75,17 @@ class CSVString
      * " is escaped using \"
 	 *
 	 * @param array $fields
+     * @param $separator string Field separator (default: ,)
+     * @param $delimiter string String delimiter (default: ")
 	 * @return string csv data
 	 */
-	static function format($fields)
+	static function format($fields, $separator = ',', $delimiter = '"')
 	{
 		foreach ($fields as $key => $field) {
 			$field = str_replace('\\', "\\\\", $field);
-			$fields[$key] = str_replace('"', "\\\"", $field);
+			$fields[$key] = str_replace($delimiter, "\\$delimiter", $field);
 		}
 
-		return '"' . implode('","', $fields) . '"';
+		return $delimiter . implode("$delimiter$separator$delimiter", $fields) . $delimiter;
 	}
 }

@@ -56,6 +56,7 @@ class RenderedWiki
 
         foreach ($pagenames as $pagename) {
         	$pages[$pagename] = $this->http->get($this->url . $pagename);
+        	usleep(200000); // Sleep .2 seconds
         }
 
         return $pages;

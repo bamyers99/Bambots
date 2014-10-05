@@ -18,4 +18,14 @@
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
+,
+	{
+	    "name" : "CSV2Wikitable",
+	    "title" : "CSV to Wikitable",
+	    "description" : "Convert CSV records to a Wikitable.",
+	    "url" : "https://tools.wmflabs.org/bambots/csv2wikitable.php",
+	    "keywords" : "CSV,wikitable",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
 ]

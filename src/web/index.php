@@ -26,7 +26,7 @@
     <li><a href="cwb/index.html">CleanupWorklistBot - WikiProject cleanup list generator projects</a> (<a href="CleanupWorklistBot.php">Project test tool</a>)</li>
     <li><a href="InceptionBot.php">InceptionBot - WikiProject new page detector rule test tool</a></li>
     <li><a href="UserNewPages.php">User new page lister</a></li>
-    <!-- <li><a href="CategoryWatchlist.php">Category watchlist - category member additions</a></li> -->
+    <li><a href="csv2wikitable.php">Convert CSV data to a Wikitable</a></li>
 </ul>
 </body>
 </html>
