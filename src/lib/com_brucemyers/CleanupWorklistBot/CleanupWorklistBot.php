@@ -67,6 +67,7 @@ class CleanupWorklistBot
 
         $categories = new Categories($dbh_enwiki, $dbh_tools);
         $categories->load($skipCatLoad);
+        $categories = null;
 
         $asof_date = getdate();
     	$outputdir = Config::get(self::HTMLDIR);

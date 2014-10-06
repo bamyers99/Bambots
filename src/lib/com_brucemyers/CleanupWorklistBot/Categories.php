@@ -541,8 +541,11 @@ class Categories {
 				}
 
 				$sth->closeCursor ();
+				$sth = null;
 			}
 		}
+
+		$isth = null;
 
 		return $count;
 	}
@@ -577,6 +580,8 @@ class Categories {
 		}
 
 		$sth->closeCursor ();
+		$sth = null;
 		$this->dbh_tools->commit ();
+		$isth = null;
 	}
 }

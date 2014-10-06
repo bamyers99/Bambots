@@ -79,6 +79,7 @@ class ProjectPages
 			AND cat.page_namespace = 14';
 
     	$sth->closeCursor();
+    	$sth = null;
 
     	if (empty($sql)) {
     		// category - WikiProject x articles
@@ -97,6 +98,7 @@ class ProjectPages
 				AND talk.page_namespace = 1';
 
     		$sth->closeCursor();
+    		$sth = null;
     	}
 
     	if (empty($sql)) {
@@ -116,6 +118,7 @@ class ProjectPages
 				AND talk.page_namespace = 1';
 
     		$sth->closeCursor();
+    		$sth = null;
     	}
 
     	if (empty($sql)) {
@@ -135,6 +138,7 @@ class ProjectPages
 				AND talk.page_namespace = 1';
 
     		$sth->closeCursor();
+    		$sth = null;
     	}
 
     	if (empty($sql)) throw new CatTypeNotFoundException("Category type not found for '$category'");
@@ -161,7 +165,9 @@ class ProjectPages
     	}
 
     	$sth->closeCursor();
+    	$sth = null;
     	$this->dbh_tools->commit();
+    	$isth = null;
 
     	// Delete the pages with no issues
     	$sql = 'DELETE FROM page
@@ -187,6 +193,7 @@ class ProjectPages
     		}
 
     		$sth->closeCursor();
+    		$sth = null;
     		$chunks = array_chunk($cl_froms, 100);
 
     		$this->dbh_tools->beginTransaction();
@@ -227,6 +234,7 @@ class ProjectPages
     		}
 
     		$sth->closeCursor();
+    		$sth = null;
     		$chunks = array_chunk($cl_froms, 100);
 
     		$this->dbh_tools->beginTransaction();

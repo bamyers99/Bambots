@@ -22,11 +22,34 @@ use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\Util\FileCache;
 use MediaWiki\Sanitizer;
 use PDO;
+use Exception;
 
 class BrokenSectionAnchors extends DatabaseReport
 {
     const COMMENT_REGEX = '/<!--.*?-->/us';
     const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';
+
+    public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params)
+    {
+    	if (empty($params)) return true;
+
+    	$option = $params[0];
+
+    	switch ($option) {
+    		case 'createviewcounts':
+    			$this->createviewcounts($dbh_wiki);
+    			return false;
+    			break;
+    	}
+
+    	return true;
+    }
+
+    public function getUsage()
+    {
+    	return " - Check redirect to section anchor existance\n" .
+    	"\t\tcreateviewcounts - create view count initial file";
+    }
 
 	public function getTitle()
 	{
@@ -40,7 +63,7 @@ class BrokenSectionAnchors extends DatabaseReport
 
 	public function getHeadings()
 	{
-		return array('Redirect', 'Incoming links' , 'Target');
+		return array('Redirect', 'Target', 'Incoming<br />links', 'Views', 'Max<br />Views/Links');
 	}
 
 	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki)
@@ -79,6 +102,21 @@ class BrokenSectionAnchors extends DatabaseReport
 		$sth->closeCursor();
 		fclose($hndl);
 
+		// Load the view counts
+		$viewcounts = array();
+		$hndl = fopen(self::getWikiviewsPath(), 'r');
+		if ($hndl === false) throw new Exception('wikiviews not found');
+
+		while (! feof($hndl)) {
+			$buffer = fgets($hndl);
+			$buffer = rtrim($buffer);
+			if (empty($buffer)) continue;
+			list($pagename, $count, $pageid) = explode(' ', $buffer);
+			$viewcounts[$pagename] = (int)$count;
+		}
+
+		fclose($hndl);
+
 		$results = array();
 		$hndl = fopen($tempfile, 'r');
 
@@ -106,20 +144,24 @@ class BrokenSectionAnchors extends DatabaseReport
 				$sth->closeCursor();
 				if (! $row) continue; // Skip if 0 incoming links
 
+				$incomingcnt = (int)$row[0];
+				$viewcount = 0;
+				if (isset($viewcounts[$source])) $viewcount = $viewcounts[$source];
+
 				$fragment = str_replace('_', ' ', $fragment);
 				$source = str_replace('_', ' ', $source);
 				$target = str_replace('_', ' ', $target);
-				$results[] = array($source, (int)$row[0], "[[$target#$fragment]]");
+				$results[] = array($source, "[[$target#$fragment]]", $incomingcnt, $viewcount, max($viewcount, $incomingcnt));
 			}
 		}
 
 		fclose($hndl);
 
-		// Sort descending by incoming link count
+		// Sort descending by incoming link/view count
 		usort($results, function($a, $b) {
-			if ($a[1] < $b[1]) return 1; // Inverted because want descending sort
-			if ($a[1] > $b[1]) return -1;
-			return strcmp($a[2], $b[2]);
+			if ($a[4] < $b[4]) return 1; // Inverted because want descending sort
+			if ($a[4] > $b[4]) return -1;
+			return strcmp($a[1], $b[1]);
 		});
 
 		return $results;
@@ -161,4 +203,41 @@ class BrokenSectionAnchors extends DatabaseReport
 		return $fragment;
 	}
 
+	/**
+	 * Create view count initial file.
+	 *
+	 * LC_ALL=C sort -k 1,1 wikiviews.bak >wikiviews
+	 * ./importdata.sh getviews 201409
+	 */
+	function createviewcounts($dbh_wiki)
+	{
+		$sql = "SELECT page_title FROM redirect, page " .
+			" WHERE rd_fragment IS NOT NULL AND rd_fragment <> '' AND rd_namespace = 0 AND page_namespace = 0 AND rd_from = page_id " .
+			" ORDER BY page_title";
+
+		$tempfile = self::getWikiviewsPath();
+		$hndl = fopen($tempfile, 'w');
+
+		$sth = $dbh_wiki->query($sql);
+		$sth->setFetchMode(PDO::FETCH_NUM);
+
+		while ($row = $sth->fetch()) {
+			// pagename view_count pageid
+			// Main_Page 2 3
+			fwrite($hndl, "{$row[0]} 0 0\n"); // Not using pageid
+		}
+
+		$sth->closeCursor();
+		fclose($hndl);
+	}
+
+	/**
+	 * Get the wiki view count file path
+	 *
+	 * @return string
+	 */
+	static function getWikiviewsPath()
+	{
+		return FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'wikiviews';
+	}
 }

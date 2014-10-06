@@ -72,6 +72,7 @@ class ReportGenerator
 		$project_title = str_replace('_', ' ', $project);
 		$filesafe_project = str_replace('/', '_', $project);
 
+		$this->dbh_tools->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 		$results = $this->dbh_tools->query('SELECT `page_title`, `importance`, `class`, cat.`cat_id`, `cat_title`, `month`, `year`
 				FROM `page` p, `categorylinks` cl, `category` cat
 				WHERE p.article_id = cl.cl_from AND cl.cat_id = cat.cat_id');
@@ -95,6 +96,8 @@ class ReportGenerator
 		ksort($curclean);
 
 		$results->closeCursor();
+		$results = null;
+		$this->dbh_tools->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 
 		$artcleanpct = round(($cleanup_pages / $project_pages) * 100, 0);
 

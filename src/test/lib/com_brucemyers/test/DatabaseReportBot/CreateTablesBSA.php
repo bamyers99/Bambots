@@ -50,6 +50,7 @@ class CreateTablesBSA
 
     	$sql = "CREATE TABLE IF NOT EXISTS pagelinks (
     		`pl_from` int unsigned NOT NULL default 0,
+    		`pl_from_namespace` int NOT NULL default 0,
     		`pl_namespace` int NOT NULL default 0,
     		`pl_title` varchar(255) binary NOT NULL default ''
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -70,7 +71,7 @@ class CreateTablesBSA
     	$dbh_enwiki->exec("INSERT INTO page VALUES (3,0,'Anesthesia')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (4,0,'Anesthesia_record')");
     	$dbh_enwiki->exec("INSERT INTO redirect VALUES (4,0,'Anesthesia','','Anesthetic monitoring')");
-    	$dbh_enwiki->exec("INSERT INTO pagelinks VALUES (1,0,'Anesthesia_record')");
+    	$dbh_enwiki->exec("INSERT INTO pagelinks VALUES (1,0,0,'Anesthesia_record')");
 
     	// Good section redirect with template in section heading
     	$dbh_enwiki->exec("INSERT INTO page VALUES (5,0,'2nd_Regiment,_Royal_Horse_Artillery')");

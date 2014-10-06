@@ -56,16 +56,16 @@ class TestBrokenSectionAnchors extends UnitTestCase
     	$targets = array('[[Anesthesia#Anesthetic monitoring]]', '[[Anesthesia#Anesthetic not found]]');
 
 		$report = new BrokenSectionAnchors();
-		$rows = $report->getRows($dbh_enwiki, $tools_host, $wiki, $renderedwiki);
+		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki);
 
 		$this->assertEqual(count($rows), 1, 'Wrong number of broken section anchors');
 
 		$row = $rows[0];
 		$this->assertTrue(in_array($row[0], $redirects), 'Wrong redirect page title 1');
-		$this->assertTrue(in_array($row[2], $targets), 'Wrong target page 1');
+		$this->assertTrue(in_array($row[1], $targets), 'Wrong target page 1');
 
 		//$row = $rows[1];
 		//$this->assertTrue(in_array($row[0], $redirects), 'Wrong redirect page title 2');
-		//$this->assertTrue(in_array($row[2], $targets), 'Wrong target page 2');
+		//$this->assertTrue(in_array($row[1], $targets), 'Wrong target page 2');
     }
 }
