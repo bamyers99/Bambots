@@ -37,7 +37,8 @@ DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
         'BrokenSectionAnchors',
     	'DiacriticRedLinks',
     	'MisspelledRedLinks',
-    	'SimilarRedLinks'
+    	'SimilarRedLinks',
+    	'StubTypeSizes'
     );
 
 try {

@@ -77,7 +77,8 @@ abstract class DatabaseReport
 	 * @param MediaWiki $mediawiki
 	 * @param RenderedWiki $renderedwiki
 	 * @return array Report row data, the first column must only be a page name with optional namespace. {{dbr link}} will
-	 * 		be applied to the page name.
+	 * 		be applied to the page name. May optionally include a 'groups' key => array(Group name => group rows). May optionally
+	 * 		include 'linktempate' key to specify first column link (false = don't link).
 	 */
 	public abstract function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki);
 }

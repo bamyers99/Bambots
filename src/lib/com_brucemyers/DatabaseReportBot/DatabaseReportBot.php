@@ -66,13 +66,22 @@ class DatabaseReportBot
     	$reportTitle = $report->getTitle();
     	$rows = $report->getRows($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $this->renderedwiki);
 
-    	$rowchunks = array_chunk($rows, self::MAX_ROWS_PER_PAGE);
-    	$chunkcount = count($rowchunks);
+		$linktemplate = 'dbr link';
+
+    	if (isset($rows['groups'])) {
+    		$chunkcount = 1;
+			$groups = true;
+			if (isset($rows['linktemplate'])) $linktemplate =$rows['linktemplate'];
+    	} else {
+	    	$rowchunks = array_chunk($rows, self::MAX_ROWS_PER_PAGE);
+	    	$chunkcount = count($rowchunks);
+			$comment = 'Record count: ' . count($rows);
+			$groups = false;
+    	}
 
     	$intro = str_replace('%s', gmdate('H:i, d F Y') . ' (UTC)', $report->getIntro()) . "\n";
-    	$header = $intro;
 
-    	$header .= "{| class=\"wikitable sortable plainlinks\"\n";
+    	$header = "{| class=\"wikitable sortable plainlinks\"\n";
 		$header .= "|- style=\"white-space:nowrap;\"\n";
 		$header .= "! No.\n";
 		$headings = $report->getHeadings();
@@ -81,7 +90,6 @@ class DatabaseReportBot
 		}
 
 		$footer = "|}\n";
-		$comment = 'Record count: ' . count($rows);
 
 		// Write index
 		if ($chunkcount > 1) {
@@ -92,33 +100,66 @@ class DatabaseReportBot
 			$this->resultWriter->writeResults($outputPage . '/' . $reportTitle, $output, $comment);
 		}
 
-		$rowcnt = 1;
-		$pagecnt = 1;
+		if ($groups) {
+			$recordcnt = 0;
+			$output = $intro;
 
-		foreach ($rowchunks as $rowchunk) {
-			$output = $header;
+			foreach ($rows['groups'] as $groupname => &$group) {
+				$recordcnt += count($group);
+				$output .= "==$groupname==\n" . $header;
+				$rowcnt = 1;
 
-			foreach ($rowchunk as $row) {
-				$output .= "|-\n";
-				$output .= "| $rowcnt\n";
-				foreach ($row as $colnum => $column) {
-					$output .= "| ";
-					if ($column !== '') {
-						if ($colnum == 0) $output .= "{{dbr link|1=$column}}";
-						else $output .= $column;
+				foreach ($group as $row) {
+					$output .= "|-\n";
+					$output .= "| $rowcnt\n";
+					foreach ($row as $colnum => $column) {
+						$output .= "| ";
+						if ($column !== '') {
+							if ($colnum == 0 && $linktemplate !== false) $output .= "{{{$linktemplate}|1=$column}}";
+							else $output .= $column;
+						}
+						$output .= "\n";
 					}
-					$output .= "\n";
+					++$rowcnt;
 				}
-				++$rowcnt;
+
+				$output .= $footer;
 			}
 
-			$output .= $footer;
+			unset($group);
 
-			$pagetitle = $outputPage . '/' . $reportTitle;
-			if ($chunkcount > 1) $pagetitle .= '/' . $pagecnt;
+			$comment = 'Record count: ' . $recordcnt;
+		    $this->resultWriter->writeResults($outputPage . '/' . $reportTitle, $output, $comment);
+		} else {
 
-	    	$this->resultWriter->writeResults($pagetitle, $output, $comment);
-	    	++$pagecnt;
+			$rowcnt = 1;
+			$pagecnt = 1;
+
+			foreach ($rowchunks as $rowchunk) {
+				$output = $intro . $header;
+
+				foreach ($rowchunk as $row) {
+					$output .= "|-\n";
+					$output .= "| $rowcnt\n";
+					foreach ($row as $colnum => $column) {
+						$output .= "| ";
+						if ($column !== '') {
+							if ($colnum == 0 && $linktemplate !== false) $output .= "{{{$linktemplate}|1=$column}}";
+							else $output .= $column;
+						}
+						$output .= "\n";
+					}
+					++$rowcnt;
+				}
+
+				$output .= $footer;
+
+				$pagetitle = $outputPage . '/' . $reportTitle;
+				if ($chunkcount > 1) $pagetitle .= '/' . $pagecnt;
+
+		    	$this->resultWriter->writeResults($pagetitle, $output, $comment);
+		    	++$pagecnt;
+			}
 		}
     }
 }

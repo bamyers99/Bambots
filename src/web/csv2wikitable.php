@@ -158,7 +158,7 @@ function processCSV()
 	if (empty($params['file']) && empty($params['csv'])) return '';
 	if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) return '';
 
-	if (empty($params['csv'])) $data = file_get_contents("http://tools.wmflabs.org/{$params['file']}");
+	if (empty($params['csv'])) $data = curl_get_file_contents("http://tools.wmflabs.org/{$params['file']}");
 	else $data = $params['csv'];
 
 	if ($data === false) return "Problem reading {$params['file']}";
@@ -199,4 +199,18 @@ function processCSV()
 
 	$result .= "|}\n";
 }
+
+function curl_get_file_contents($URL)
+{
+	$c = curl_init();
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($c, CURLOPT_URL, $URL);
+	curl_setopt($c, CURLOPT_USERAGENT, 'csv2wikitable');
+	$contents = curl_exec($c);
+	curl_close($c);
+
+	if ($contents) return $contents;
+	return false;
+}
+
 ?>
