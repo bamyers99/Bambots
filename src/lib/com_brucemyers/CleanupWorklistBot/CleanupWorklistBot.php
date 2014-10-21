@@ -67,7 +67,6 @@ class CleanupWorklistBot
 
         $categories = new Categories($dbh_enwiki, $dbh_tools);
         $categories->load($skipCatLoad);
-        $categories = null;
 
         $asof_date = getdate();
     	$outputdir = Config::get(self::HTMLDIR);
@@ -75,7 +74,7 @@ class CleanupWorklistBot
 
         $project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
 
-        $repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultWriter);
+        $repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultWriter, $categories);
 
         // Generate each projects reports.
 

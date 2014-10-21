@@ -35,6 +35,7 @@ class ReportGenerator
 	var $asof_date;
 	var $resultWriter;
 	var $categories;
+	var $catobj;
 
 	// Key atoms to save memory
 	const KEY_IMP = 0;
@@ -50,13 +51,14 @@ class ReportGenerator
 	const KEY_CATS = 10;
 	const KEY_ICOUNT = 11;
 
-	function __construct(PDO $dbh_tools, $outputdir, $urlpath, $asof_date, ResultWriter $resultWriter)
+	function __construct(PDO $dbh_tools, $outputdir, $urlpath, $asof_date, ResultWriter $resultWriter, $catobj)
 	{
 		$this->dbh_tools = $dbh_tools;
 		$this->outputdir = $outputdir;
 		$this->urlpath = $urlpath;
 		$this->asof_date = $asof_date;
         $this->resultWriter = $resultWriter;
+        $this->catobj = $catobj;
 	}
 
 	function generateReports($project, $isWikiProject, $project_pages, $wiki_too_big = false, $max_page_size = MediaWiki::MAX_PAGE_SIZE,
@@ -71,33 +73,39 @@ class ReportGenerator
 		$titles = array();
 		$project_title = str_replace('_', ' ', $project);
 		$filesafe_project = str_replace('/', '_', $project);
+		$clquery = $this->dbh_tools->prepare('SELECT cat_id FROM categorylinks WHERE cl_from = ?');
 
-		$this->dbh_tools->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
-		$results = $this->dbh_tools->query('SELECT `page_title`, `importance`, `class`, cat.`cat_id`, `cat_title`, `month`, `year`
-				FROM `page` p, `categorylinks` cl, `category` cat
-				WHERE p.article_id = cl.cl_from AND cl.cat_id = cat.cat_id');
-		//		ORDER BY `page_title`, `cat_title`'); Removed because was causing labsdb to hang with 'Copying to tmp table'.
+		$results = $this->dbh_tools->query('SELECT `article_id`, `page_title`, `importance`, `class` FROM `page` p');
 
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
-			++$issue_count;
-			$cat_id = (int)$row['cat_id'];
-			$title = str_replace('_', ' ', $row['page_title']);
+			$pageid = (int)$row['article_id'];
 
-			if (! isset($curclean[$title])) {
-				if ($row['importance'] == null) $row['importance'] = '';
-				if ($row['class'] == null) $row['class'] = '';
-				$curclean[$title] = array(self::KEY_IMP => $row['importance'], self::KEY_CLS => $row['class'], self::KEY_ISSUES => array());
-				++$cleanup_pages;
+			$clquery->bindValue(1, $pageid);
+			$clquery->execute();
+
+			$title = str_replace('_', ' ', $row['page_title']);
+			if ($row['importance'] == null) $row['importance'] = '';
+			if ($row['class'] == null) $row['class'] = '';
+			$curclean[$title] = array(self::KEY_IMP => $row['importance'], self::KEY_CLS => $row['class'], self::KEY_ISSUES => array());
+			++$cleanup_pages;
+
+			while ($clrow = $clquery->fetch(PDO::FETCH_ASSOC)) {
+				$cat_id = (int)$clrow['cat_id'];
+				++$issue_count;
+				if (! isset($this->categories[$cat_id])) {
+					$cat = $this->catobj->categories[$cat_id];
+					$this->categories[$cat_id] = array(self::KEY_TITLE => $cat['t'], self::KEY_MTH => $cat['m'], self::KEY_YR => $cat['y']);
+				}
+				$curclean[$title][self::KEY_ISSUES][] = $cat_id;
 			}
-			if (! isset($this->categories[$cat_id])) $this->categories[$cat_id] = array(self::KEY_TITLE => $row['cat_title'], self::KEY_MTH => $row['month'], self::KEY_YR => $row['year']);
-			$curclean[$title][self::KEY_ISSUES][] = $cat_id;
+
+			$clquery->closeCursor();
 		}
 
 		ksort($curclean);
 
 		$results->closeCursor();
 		$results = null;
-		$this->dbh_tools->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 
 		$artcleanpct = round(($cleanup_pages / $project_pages) * 100, 0);
 

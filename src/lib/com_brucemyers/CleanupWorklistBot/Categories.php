@@ -432,6 +432,7 @@ class Categories {
 	static $parentCats = array ();
 	var $dbh_enwiki;
 	var $dbh_tools;
+	public $categories = array(); // Storing in memory because SQL join is hanging.
 
 	/**
 	 * Constructor
@@ -535,6 +536,8 @@ class Categories {
 					if (! $skipCatLoad) {
 						$isth->execute ( $row );
 						++ $count;
+						$catid = (int)$row['id'];
+						$this->categories[$catid] = array('t' => $row['title'], 'm' => $row['month'], 'y' => $row['year']);
 
 						$this->loadCategoryMembers ( $title );
 					}
@@ -546,6 +549,19 @@ class Categories {
 		}
 
 		$isth = null;
+
+		if ($skipCatLoad) {
+			$results = $this->dbh_tools->query('SELECT * FROM category');
+			$results->setFetchMode ( PDO::FETCH_ASSOC );
+
+			while ( $row = $results->fetch () ) {
+				$catid = (int)$row['cat_id'];
+				$this->categories[$catid] = array('t' => $row['cat_title'], 'm' => $row['month'], 'y' => $row['year']);
+			}
+
+			$results->closeCursor();
+			$results = null;
+		}
 
 		return $count;
 	}

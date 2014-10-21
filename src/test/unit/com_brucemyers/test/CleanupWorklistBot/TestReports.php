@@ -60,7 +60,7 @@ class TestReports extends UnitTestCase
     	$wikiDir .= DIRECTORY_SEPARATOR;
     	$resultwriter = new FileResultWriter($wikiDir);
 
-    	$repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultwriter);
+    	$repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultwriter, $categories);
 
     	$category = 'Good_article_nominees';
     	$page_count = $project_pages->load($category);
