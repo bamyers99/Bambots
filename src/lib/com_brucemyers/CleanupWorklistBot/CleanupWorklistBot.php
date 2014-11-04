@@ -65,6 +65,9 @@ class CleanupWorklistBot
 
         if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('TRUNCATE project');
 
+        $restarted = '';
+        if (! empty($startProject)) $restarted = ' (restarted)';
+
         $categories = new Categories($dbh_enwiki, $dbh_tools);
         $categories->load($skipCatLoad);
 
@@ -114,6 +117,7 @@ class CleanupWorklistBot
 
 		$ts = $totaltimer->stop();
 		$totaltime = sprintf("%d days %d:%02d:%02d", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']);
+		$totaltime .= $restarted;
 
         $this->_writeHtmlStatus(count($ruleconfigs), $totaltime, $errorrulsets, $asof_date, $outputdir);
         //$this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);

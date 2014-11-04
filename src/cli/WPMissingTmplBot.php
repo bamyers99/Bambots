@@ -76,9 +76,9 @@ try {
     FileCache::purgeExpired();
 
     if ($ruletype == 'active') $rules = $activerules;
-    elseif ($ruletype== 'custom') $rules = array('WikiProject Romania' => $activerules['WikiProject Romania']);
+    //elseif ($ruletype== 'custom') $rules = array('WikiProject Romania' => $activerules['WikiProject Romania']);
     //elseif ($ruletype== 'custom') $rules = array('WikiProject Protected areas' => $activerules['WikiProject Protected areas']);
-    //    elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $activerules['WikiProject Michigan']);
+        elseif ($ruletype== 'custom') $rules = array('WikiProject Michigan' => $activerules['WikiProject Michigan']);
     else {
         $data = $wiki->getpage('User:AlexNewArtBot/Master');
         $rules = $data; // TODO: Parse WPMissingTmplBot page for rules

@@ -71,8 +71,13 @@ class DatabaseReportBot
     	if (isset($rows['groups'])) {
     		$chunkcount = 1;
 			$groups = true;
-			if (isset($rows['linktemplate'])) $linktemplate =$rows['linktemplate'];
+			if (isset($rows['linktemplate'])) $linktemplate = $rows['linktemplate'];
     	} else {
+    		if (isset($rows['linktemplate'])) {
+    			$linktemplate = $rows['linktemplate'];
+    			unset ($rows['linktemplate']);
+    		}
+
 	    	$rowchunks = array_chunk($rows, self::MAX_ROWS_PER_PAGE);
 	    	$chunkcount = count($rowchunks);
 			$comment = 'Record count: ' . count($rows);
