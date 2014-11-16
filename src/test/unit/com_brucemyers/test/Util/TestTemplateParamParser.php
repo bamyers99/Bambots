@@ -79,6 +79,7 @@ class TestTemplateParamParser extends UnitTestCase
 		$this->_performMultipleTemplateTest($testname, $data, $expected_templates);
 
 		$data = <<<EOT
+
 EOT;
 		$expected_templates = array();
 		$this->_performMultipleTemplateTest('Infinite', $data, $expected_templates);

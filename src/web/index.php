@@ -27,6 +27,7 @@
     <li><a href="InceptionBot.php">InceptionBot - WikiProject new page detector rule test tool</a></li>
     <li><a href="UserNewPages.php">User new page lister</a></li>
     <li><a href="csv2wikitable.php">Convert CSV data to a Wikitable</a></li>
+    <li><a href="ReplicationLag.php">Database replication lag</a></li>
 </ul>
 </body>
 </html>

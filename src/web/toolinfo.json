@@ -28,4 +28,14 @@
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
+,
+	{
+	    "name" : "ReplicationLag",
+	    "title" : "Database replication lag",
+	    "description" : "Display the database replication lag for a wiki.",
+	    "url" : "https://tools.wmflabs.org/bambots/ReplicationLag.php",
+	    "keywords" : "database,lag,replication",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
 ]
