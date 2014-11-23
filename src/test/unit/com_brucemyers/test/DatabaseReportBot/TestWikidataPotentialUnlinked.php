@@ -17,22 +17,23 @@
 
 namespace com_brucemyers\test\DatabaseReportBot;
 
-use com_brucemyers\DatabaseReportBot\Reports\DiacriticRedLinks;
+use com_brucemyers\DatabaseReportBot\Reports\WikidataPotentialUnlinked;
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\Util\Config;
-use com_brucemyers\Util\FileCache;
-use com_brucemyers\test\DatabaseReportBot\CreateTablesBSA;
+use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\test\DatabaseReportBot\CreateTablesWPU;
 use UnitTestCase;
 use PDO;
+use com_brucemyers\RenderedWiki\RenderedWiki;
 
 DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
 DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
 DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 
-class TestDiacriticRedLinks extends UnitTestCase
+class TestWikidataPotentialUnlinked extends UnitTestCase
 {
 
-    public function testDumpredlinks()
+    public function testGenerate()
     {
     	$enwiki_host = Config::get(ENWIKI_HOST);
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
@@ -47,25 +48,32 @@ class TestDiacriticRedLinks extends UnitTestCase
     	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
     	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    	new CreateTablesDRL($dbh_enwiki);
+        $url = Config::get(MediaWiki::WIKIURLKEY);
+        $wiki = new MediaWiki($url);
+        $url = Config::get(RenderedWiki::WIKIRENDERURLKEY);
+        $renderedwiki = new RenderedWiki($url);
 
-		$report = new DiacriticRedLinks();
-		$params = array('dumpredlinks');
-		$report->init($dbh_enwiki, $dbh_tools, null, $params, $dbh_wikidata);
+    	new CreateTablesWPU($dbh_enwiki, $dbh_wikidata);
 
-		$dumppath = DiacriticRedLinks::getDumpPath();
-		$hndl = fopen($dumppath, 'r');
+    	$pages = array('[[Fred Smith]] (redirect)', '[[Ted Jones]]');
+    	$alreadys = array('', '[https://www.wikidata.org/wiki/Q410196 Q410196]');
 
-		$count = 0;
+		$report = new WikidataPotentialUnlinked();
+		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata);
+		unset ($rows['linktemplate']);
 
-		while (! feof($hndl)) {
-			$title = trim(fgets($hndl));
-			if (empty($title)) continue;
-			++$count;
-		}
+		$this->assertEqual(count($rows), 2, 'Wrong number of potential unlinkeds');
 
-		fclose($hndl);
+		$row = $rows[0];
+		$alreadyResult1 = $row[2];
+		$this->assertTrue(in_array($row[0], $pages), 'Wrong page title 1');
+		$this->assertTrue(in_array($row[2], $alreadys), 'Wrong already 1');
 
-		$this->assertEqual($count, 2, 'Wrong number of red links');
+		$row = $rows[1];
+		$alreadyResult2 = $row[2];
+		$this->assertTrue(in_array($row[0], $pages), 'Wrong page title 2');
+		$this->assertTrue(in_array($row[2], $alreadys), 'Wrong already 2');
+
+		$this->assertNotEqual($alreadyResult1, $alreadyResult2, 'Missing already link');
     }
 }

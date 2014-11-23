@@ -28,6 +28,7 @@ use com_brucemyers\RenderedWiki\RenderedWiki;
 
 DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
 DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
+DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 
 class TestStubTypeSizes extends UnitTestCase
 {
@@ -35,7 +36,6 @@ class TestStubTypeSizes extends UnitTestCase
     public function testGenerate()
     {
     	$enwiki_host = Config::get(ENWIKI_HOST);
-    	$tools_host =
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
     	$pass = Config::get(DatabaseReportBot::LABSDB_PASSWORD);
 
@@ -44,6 +44,9 @@ class TestStubTypeSizes extends UnitTestCase
     	$tools_host = Config::get(TOOLS_HOST);
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$wikidata_host = Config::get(WIKIDATA_HOST);
+    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
+    	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         $url = Config::get(MediaWiki::WIKIURLKEY);
         $wiki = new MediaWiki($url);
@@ -53,7 +56,7 @@ class TestStubTypeSizes extends UnitTestCase
     	new CreateTablesSTS($dbh_enwiki);
 
 		$report = new StubTypeSizes();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki);
+		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata);
 
 		$this->assertEqual(count($rows['groups']), 9, 'Wrong number of groups');
     }

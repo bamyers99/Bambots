@@ -29,7 +29,7 @@ class BrokenSectionAnchors extends DatabaseReport
     const COMMENT_REGEX = '/<!--.*?-->/us';
     const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';
 
-    public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params)
+    public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params, PDO $dbh_wikidata)
     {
     	if (empty($params)) return true;
 
@@ -66,7 +66,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		return array('Redirect', 'Target', 'Incoming<br />links', 'Views', 'Max<br />Views/Links');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
 	{
 		// Retrieve the target page contents
 

@@ -29,6 +29,7 @@ use PDO;
 
 DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
 DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
+DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 
 class TestDatabaseReportBot extends UnitTestCase
 {
@@ -37,6 +38,7 @@ class TestDatabaseReportBot extends UnitTestCase
     {
     	$enwiki_host = Config::get(ENWIKI_HOST);
     	$tools_host = Config::get(TOOLS_HOST);
+    	$wikidata_host = Config::get(WIKIDATA_HOST);
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
     	$pass = Config::get(DatabaseReportBot::LABSDB_PASSWORD);
 
@@ -56,7 +58,7 @@ class TestDatabaseReportBot extends UnitTestCase
     	$outputDir .= DIRECTORY_SEPARATOR;
     	$resultwriter = new FileResultWriter($outputDir);
 
-    	$bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host);
+    	$bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host, $wikidata_host);
 
     	$bot->generateReport('BrokenSectionAnchors', 'Wikipedia:Database reports', array());
     }

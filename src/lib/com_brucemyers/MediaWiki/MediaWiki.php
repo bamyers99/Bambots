@@ -58,6 +58,8 @@ class MediaWiki extends wikipedia
                     109 => 'Book talk',
                     118 => 'Draft',
                     119 => 'Draft talk',
+    				120 => 'Property',
+    				121 => 'Property talk',
                     446 => 'Education Program',
                     447 => 'Education Program talk',
                     710 => 'TimedText',

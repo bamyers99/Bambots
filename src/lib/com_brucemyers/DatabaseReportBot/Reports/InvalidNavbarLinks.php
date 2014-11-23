@@ -44,7 +44,7 @@ class InvalidNavbarLinks extends DatabaseReport
 		return array('Template', 'Invalid name');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
 	{
 		$template_types = array(
 			'Sidebar' => array(

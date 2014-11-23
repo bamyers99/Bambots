@@ -30,10 +30,11 @@ abstract class DatabaseReport
 	 * @param PDO $dbh_wiki
 	 * @param PDF $dbh_tools
 	 * @param MediaWiki $mediawiki
+	 * @param PDO $dbh_wikidata
 	 * @param array $params
 	 * @return bool continue - Should the report generation continue?
 	 */
-	public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params)
+	public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params, PDO $dbh_wikidata)
 	{
 		return true;
 	}
@@ -76,9 +77,10 @@ abstract class DatabaseReport
 	 * @param PDF $dbh_tools
 	 * @param MediaWiki $mediawiki
 	 * @param RenderedWiki $renderedwiki
+	 * @param PDO $dbh_wikidata
 	 * @return array Report row data, the first column must only be a page name with optional namespace. {{dbr link}} will
 	 * 		be applied to the page name. May optionally include a 'groups' key => array(Group name => group rows). May optionally
 	 * 		include 'linktempate' key to specify first column link (false = don't link).
 	 */
-	public abstract function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki);
+	public abstract function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata);
 }

@@ -17,11 +17,12 @@
 
 namespace com_brucemyers\test\DatabaseReportBot;
 
-use com_brucemyers\DatabaseReportBot\Reports\DiacriticRedLinks;
+use com_brucemyers\DatabaseReportBot\Reports\MiscReports;
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\Util\Config;
-use com_brucemyers\Util\FileCache;
-use com_brucemyers\test\DatabaseReportBot\CreateTablesBSA;
+use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\test\DatabaseReportBot\CreateTablesMR;
+use com_brucemyers\RenderedWiki\RenderedWiki;
 use UnitTestCase;
 use PDO;
 
@@ -29,10 +30,10 @@ DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
 DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
 DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 
-class TestDiacriticRedLinks extends UnitTestCase
+class TestMiscReports extends UnitTestCase
 {
 
-    public function testDumpredlinks()
+    public function testChemSpider()
     {
     	$enwiki_host = Config::get(ENWIKI_HOST);
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
@@ -46,26 +47,12 @@ class TestDiacriticRedLinks extends UnitTestCase
     	$wikidata_host = Config::get(WIKIDATA_HOST);
     	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
     	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$url = Config::get(MediaWiki::WIKIURLKEY);
+    	$wiki = new MediaWiki($url);
 
-    	new CreateTablesDRL($dbh_enwiki);
+    	new CreateTablesMR($dbh_enwiki, $dbh_wikidata);
 
-		$report = new DiacriticRedLinks();
-		$params = array('dumpredlinks');
-		$report->init($dbh_enwiki, $dbh_tools, null, $params, $dbh_wikidata);
-
-		$dumppath = DiacriticRedLinks::getDumpPath();
-		$hndl = fopen($dumppath, 'r');
-
-		$count = 0;
-
-		while (! feof($hndl)) {
-			$title = trim(fgets($hndl));
-			if (empty($title)) continue;
-			++$count;
-		}
-
-		fclose($hndl);
-
-		$this->assertEqual($count, 2, 'Wrong number of red links');
+		$report = new MiscReports();
+		$report->init($dbh_enwiki, $dbh_tools, $wiki, array('ChemSpider'), $dbh_wikidata);
     }
 }

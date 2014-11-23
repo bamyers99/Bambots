@@ -25,7 +25,7 @@ use PDO;
 
 class MisspelledRedLinks extends DatabaseReport
 {
-	public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params)
+	public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params, PDO $dbh_wikidata)
 	{
 		if (empty($params)) return true;
 
@@ -74,7 +74,7 @@ class MisspelledRedLinks extends DatabaseReport
 		return array('Red link', ' Bad words', 'What links here (template count)');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
 	{
 		$count = 0;
 		$results = array();

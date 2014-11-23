@@ -32,14 +32,17 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
 DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
+DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 
     $activereports = array(
         'BrokenSectionAnchors',
     	'DiacriticRedLinks',
     	'InvalidNavbarLinks',
+    	'MiscReports',
     	'MisspelledRedLinks',
     	'SimilarRedLinks',
-    	'StubTypeSizes'
+    	'StubTypeSizes',
+    	'WikidataPotentialUnlinked'
     );
 
 try {
@@ -82,7 +85,8 @@ try {
 
     $enwiki_host = Config::get(ENWIKI_HOST);
     $tools_host = Config::get(TOOLS_HOST);
-    $bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host);
+    $wikidata_host = Config::get(WIKIDATA_HOST);
+    $bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host, $wikidata_host);
 
     $params = array_slice($argv, 2);
 

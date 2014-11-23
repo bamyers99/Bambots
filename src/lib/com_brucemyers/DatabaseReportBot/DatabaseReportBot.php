@@ -35,11 +35,12 @@ class DatabaseReportBot
     protected $resultWriter;
     protected $dbh_wiki;
     protected $dbh_tools;
+    protected $dbh_wikidata;
     protected $mediawiki;
     protected $renderedwiki;
 
     public function __construct(ResultWriter $resultWriter, MediaWiki $mediawiki, RenderedWiki $renderedwiki, $wiki_host, $wiki_db,
-    		$tools_host)
+    		$tools_host, $wikidata_host)
     {
         $this->resultWriter = $resultWriter;
         $this->mediawiki = $mediawiki;
@@ -54,17 +55,20 @@ class DatabaseReportBot
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      	$this->dbh_tools = $dbh_tools;
+    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
+    	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+     	$this->dbh_wikidata = $dbh_wikidata;
     }
 
     public function generateReport($reportname, $outputPage, $params)
     {
     	$classname = "com_brucemyers\\DatabaseReportBot\\Reports\\$reportname";
     	$report = new $classname();
-    	$continue = $report->init($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $params);
+    	$continue = $report->init($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $params, $this->dbh_wikidata);
     	if (! $continue) return;
 
     	$reportTitle = $report->getTitle();
-    	$rows = $report->getRows($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $this->renderedwiki);
+    	$rows = $report->getRows($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $this->renderedwiki, $this->dbh_wikidata);
 
 		$linktemplate = 'dbr link';
 
