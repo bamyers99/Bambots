@@ -45,14 +45,14 @@ class TestReports extends UnitTestCase
 
     	new CreateTables($dbh_enwiki, $dbh_tools);
 
-    	$categories = new Categories($dbh_enwiki, $dbh_tools);
+    	$categories = new Categories($enwiki_host, $user, $pass, $dbh_tools);
     	$categories->load(false);
 
     	$asof_date = getdate();
     	$outputdir = Config::get(CleanupWorklistBot::HTMLDIR);
     	$urlpath = Config::get(CleanupWorklistBot::URLPATH);
 
-    	$project_pages = new ProjectPages($dbh_enwiki, $dbh_tools);
+    	$project_pages = new ProjectPages($enwiki_host, $user, $pass, $dbh_tools);
 
     	$wikiDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
     	$wikiDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $wikiDir);

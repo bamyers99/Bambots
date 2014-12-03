@@ -30,6 +30,8 @@ class CreateTables
     public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
     {
     	// enwiki
+   		$dbh_enwiki->exec('DROP TABLE page');
+
     	$sql = "CREATE TABLE IF NOT EXISTS `category` (
 		  `cat_id` int(10) unsigned NOT NULL,
 		  `cat_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,

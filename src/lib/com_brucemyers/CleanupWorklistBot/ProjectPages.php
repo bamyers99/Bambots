@@ -32,17 +32,24 @@ class ProjectPages
 	const SQL_Class = "SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'";
 
 	var $dbh_enwiki;
+	var $enwiki_host;
+	var $user;
+	var $pass;
 	var $dbh_tools;
 
     /**
      * Constructor
      *
-     * @param PDO $dbh_enwiki
+	 * @param string $enwiki_host
+	 * @param string $user
+	 * @param string $pass
      * @param PDO $dbh_tools
      */
-     public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
+     public function __construct($enwiki_host, $user, $pass, PDO $dbh_tools)
     {
-        $this->dbh_enwiki = $dbh_enwiki;
+		$this->enwiki_host = $enwiki_host;
+		$this->user = $user;
+		$this->pass = $pass;
         $this->dbh_tools = $dbh_tools;
     }
 
@@ -55,12 +62,14 @@ class ProjectPages
      */
     public function load($category)
     {
+    	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$category = str_replace(' ', '_', $category);
     	// Determine the category type
     	$sql = '';
 
     	// category - x articles by quality (subcats)
-    	$sth = $this->dbh_enwiki->prepare(self::SQL_Articles_by_quality);
+    	$sth = $dbh_enwiki->prepare(self::SQL_Articles_by_quality);
     	$ucfcategory = ucfirst($category);
     	$param = "{$ucfcategory}_articles_by_quality";
     	$sth->bindParam(1, $param);
@@ -83,7 +92,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - WikiProject x articles
-    		$sth = $this->dbh_enwiki->prepare(self::SQL_WikiProject_articles);
+    		$sth = $dbh_enwiki->prepare(self::SQL_WikiProject_articles);
     		$param = "WikiProject_{$category}_articles";
     		$sth->bindParam(1, $param);
     		$sth->execute();
@@ -103,7 +112,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - x (talk namespace)
-    		$sth = $this->dbh_enwiki->prepare(self::SQL_Category_talk);
+    		$sth = $dbh_enwiki->prepare(self::SQL_Category_talk);
     		$param = $category;
     		$sth->bindParam(1, $param);
     		$sth->execute();
@@ -123,7 +132,7 @@ class ProjectPages
 
     	if (empty($sql)) {
     		// category - x (article namespace)
-    		$sth = $this->dbh_enwiki->prepare(self::SQL_Category_article);
+    		$sth = $dbh_enwiki->prepare(self::SQL_Category_article);
     		$param = $category;
     		$sth->bindParam(1, $param);
     		$sth->execute();
@@ -145,8 +154,11 @@ class ProjectPages
 
     	// Load the pages
    		$this->dbh_tools->exec('TRUNCATE page');
+   		$dbh_enwiki = null;
+   		$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+   		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    	$sth = $this->dbh_enwiki->prepare($sql);
+    	$sth = $dbh_enwiki->prepare($sql);
     	$sth->bindParam(1, $param);
     	$sth->setFetchMode(PDO::FETCH_ASSOC);
     	$sth->execute();
@@ -177,10 +189,14 @@ class ProjectPages
 			)';
 
     	$this->dbh_tools->exec($sql);
+    	$dbh_enwiki = null;
 
     	// Set importance
     	foreach(array_keys(CreateTables::$IMPORTANCES) as $importance) {
-    		$sth = $this->dbh_enwiki->prepare(self::SQL_Importance);
+   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+   			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    		$sth = $dbh_enwiki->prepare(self::SQL_Importance);
     		$sth->bindValue(1, "{$importance}-importance_{$category}_articles");
     		$sth->setFetchMode(PDO::FETCH_ASSOC);
     		$sth->execute();
@@ -210,18 +226,23 @@ class ProjectPages
     		}
 
     		$this->dbh_tools->commit();
+   			$dbh_enwiki = null;
     	}
 
     	$total_class = 0;
 
+
     	// Set class
     	foreach(array_keys(CreateTables::$CLASSES) as $class) {
-	        if ($class == 'Unassessed')
+   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+   			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    		if ($class == 'Unassessed')
   		        $theclass = "{$class}_{$category}_articles";
        		else
           		$theclass = "{$class}-Class_{$category}_articles";
 
-    		$sth = $this->dbh_enwiki->prepare(self::SQL_Class);
+    		$sth = $dbh_enwiki->prepare(self::SQL_Class);
     		$sth->bindValue(1, $theclass);
     		$sth->setFetchMode(PDO::FETCH_ASSOC);
     		$sth->execute();
@@ -252,6 +273,7 @@ class ProjectPages
 
     		$this->dbh_tools->commit();
     		$total_class += $count;
+   			$dbh_enwiki = null;
     	}
 
     	if (! $total_class) Logger::log("$category (no classes found)");
