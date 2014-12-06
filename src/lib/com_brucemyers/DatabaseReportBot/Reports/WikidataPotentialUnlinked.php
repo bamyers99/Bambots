@@ -44,7 +44,8 @@ class WikidataPotentialUnlinked extends DatabaseReport
 		return array('Article', 'Potential wikidata item', 'Existing wikidata item to merge');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
+		$wiki_host, $user, $pass)
 	{
 		// Get the max epp_entity_id
 		$sql = "SELECT MAX(epp_entity_id) FROM wb_entity_per_page";

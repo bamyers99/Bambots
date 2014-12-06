@@ -82,5 +82,6 @@ abstract class DatabaseReport
 	 * 		be applied to the page name. May optionally include a 'groups' key => array(Group name => group rows). May optionally
 	 * 		include 'linktempate' key to specify first column link (false = don't link).
 	 */
-	public abstract function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata);
+	public abstract function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
+		$wiki_host, $user, $pass);
 }

@@ -66,7 +66,8 @@ class BrokenSectionAnchors extends DatabaseReport
 		return array('Redirect', 'Target', 'Incoming<br />links', 'Views', 'Max<br />Views/Links');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
+		$wiki_host, $user, $pass)
 	{
 		// Retrieve the target page contents
 
@@ -92,7 +93,9 @@ class BrokenSectionAnchors extends DatabaseReport
 		$tempfile = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'DatabaseReportBotBSA.tmp';
 		$hndl = fopen($tempfile, 'w');
 
-		$sth = $dbh_wiki->query($sql);
+    	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p", $user, $pass);
+    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$sth = $dbh_enwiki->query($sql);
 		$sth->setFetchMode(PDO::FETCH_NUM);
 
 		while ($row = $sth->fetch()) {
@@ -100,6 +103,8 @@ class BrokenSectionAnchors extends DatabaseReport
 		}
 
 		$sth->closeCursor();
+		$sth = null;
+		$dbh_enwiki = null;
 		fclose($hndl);
 
 		// Load the view counts
@@ -121,7 +126,9 @@ class BrokenSectionAnchors extends DatabaseReport
 		$hndl = fopen($tempfile, 'r');
 
 		$sql = 'SELECT COUNT(*) as linkcount FROM pagelinks WHERE pl_namespace = 0 AND pl_title = ? GROUP BY pl_namespace';
-		$sth = $dbh_wiki->prepare($sql);
+    	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p", $user, $pass);
+    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$sth = $dbh_enwiki->prepare($sql);
 
 		while (! feof($hndl)) {
 			$buffer = fgets($hndl);
@@ -155,6 +162,8 @@ class BrokenSectionAnchors extends DatabaseReport
 			}
 		}
 
+		$sth = null;
+		$dbh_enwiki = null;
 		fclose($hndl);
 
 		// Sort descending by incoming link/view count

@@ -56,7 +56,8 @@ class TestStubTypeSizes extends UnitTestCase
     	new CreateTablesSTS($dbh_enwiki);
 
 		$report = new StubTypeSizes();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata);
+		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata,
+        	$wikidata_host, $user, $pass);
 
 		$this->assertEqual(count($rows['groups']), 9, 'Wrong number of groups');
     }

@@ -44,7 +44,8 @@ class InvalidNavbarLinks extends DatabaseReport
 		return array('Template', 'Invalid name');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
+		$wiki_host, $user, $pass)
 	{
 		$template_types = array(
 			'Sidebar' => array(
@@ -112,7 +113,9 @@ class InvalidNavbarLinks extends DatabaseReport
 			$sql = "SELECT page_title FROM templatelinks, page " .
 				" WHERE tl_from_namespace = 10 AND tl_namespace = 10 AND tl_title = ? " .
 				" AND page_namespace = 10 AND page_id = tl_from";
-			$sth = $dbh_wiki->prepare($sql);
+    		$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p", $user, $pass);
+    		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$sth = $dbh_enwiki->prepare($sql);
 			$sth->bindValue(1, $type_name);
 			$sth->execute();
 			$sth->setFetchMode(PDO::FETCH_NUM);
@@ -123,6 +126,8 @@ class InvalidNavbarLinks extends DatabaseReport
 			}
 
 			$sth->closeCursor();
+			$sth = null;
+			$dbh_enwiki = null;
 
 			sort($titles);
 

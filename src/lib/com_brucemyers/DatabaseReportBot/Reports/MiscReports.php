@@ -63,7 +63,8 @@ class MiscReports extends DatabaseReport
 		return array();
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
+		$wiki_host, $user, $pass)
 	{
 		$results = array();
 

@@ -59,7 +59,8 @@ class TestWikidataPotentialUnlinked extends UnitTestCase
     	$alreadys = array('', '[https://www.wikidata.org/wiki/Q410196 Q410196]');
 
 		$report = new WikidataPotentialUnlinked();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata);
+		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata,
+        	$wikidata_host, $user, $pass);
 		unset ($rows['linktemplate']);
 
 		$this->assertEqual(count($rows), 2, 'Wrong number of potential unlinkeds');

@@ -30,7 +30,9 @@ class CreateTablesBSA
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
-		$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
+   		$dbh_enwiki->exec('DROP TABLE page');
+
+    	$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
  			`rd_from` int unsigned NOT NULL default 0 PRIMARY KEY,
  			`rd_namespace` int NOT NULL default 0,
  			`rd_title` varchar(255) binary NOT NULL default '',

@@ -38,6 +38,9 @@ class DatabaseReportBot
     protected $dbh_wikidata;
     protected $mediawiki;
     protected $renderedwiki;
+    protected $wiki_host;
+    protected $user;
+    protected $pass;
 
     public function __construct(ResultWriter $resultWriter, MediaWiki $mediawiki, RenderedWiki $renderedwiki, $wiki_host, $wiki_db,
     		$tools_host, $wikidata_host)
@@ -58,6 +61,9 @@ class DatabaseReportBot
     	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
     	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      	$this->dbh_wikidata = $dbh_wikidata;
+     	$this->wiki_host = $wiki_host;
+     	$this->user = $user;
+     	$this->pass = $pass;
     }
 
     public function generateReport($reportname, $outputPage, $params)
@@ -68,7 +74,8 @@ class DatabaseReportBot
     	if (! $continue) return;
 
     	$reportTitle = $report->getTitle();
-    	$rows = $report->getRows($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $this->renderedwiki, $this->dbh_wikidata);
+    	$rows = $report->getRows($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $this->renderedwiki, $this->dbh_wikidata,
+			$this->wiki_host, $this->user, $this->pass);
 
 		$linktemplate = 'dbr link';
 

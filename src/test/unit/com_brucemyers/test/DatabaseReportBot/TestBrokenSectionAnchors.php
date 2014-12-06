@@ -59,7 +59,8 @@ class TestBrokenSectionAnchors extends UnitTestCase
     	$targets = array('[[Anesthesia#Anesthetic monitoring]]', '[[Anesthesia#Anesthetic not found]]');
 
 		$report = new BrokenSectionAnchors();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata);
+		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata,
+        	$wikidata_host, $user, $pass);
 
 		$this->assertEqual(count($rows), 1, 'Wrong number of broken section anchors');
 

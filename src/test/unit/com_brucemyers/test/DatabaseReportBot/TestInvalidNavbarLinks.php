@@ -70,7 +70,8 @@ class TestInvalidNavbarLinks extends UnitTestCase
     	new CreateTablesINL($dbh_enwiki);
 
 		$report = new InvalidNavbarLinks();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata);
+		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata,
+        	$wikidata_host, $user, $pass);
 		$errors = $rows['groups']['{{tlxplain|Navbox|name&#61;}}'];
 
 		$this->assertEqual(count($errors), 1, 'Wrong number of invalid Navbox links');

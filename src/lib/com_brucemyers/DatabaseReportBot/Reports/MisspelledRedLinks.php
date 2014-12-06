@@ -74,7 +74,8 @@ class MisspelledRedLinks extends DatabaseReport
 		return array('Red link', ' Bad words', 'What links here (template count)');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata)
+	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
+		$wiki_host, $user, $pass)
 	{
 		$count = 0;
 		$results = array();

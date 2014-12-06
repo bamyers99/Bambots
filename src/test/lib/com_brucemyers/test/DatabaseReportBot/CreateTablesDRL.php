@@ -30,6 +30,8 @@ class CreateTablesDRL
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
+   		$dbh_enwiki->exec('DROP TABLE page');
+
     	$sql = "CREATE TABLE IF NOT EXISTS `page` (
 		  `page_id` int(10) unsigned NOT NULL,
 		  `page_namespace` int(11) NOT NULL,
