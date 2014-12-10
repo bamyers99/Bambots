@@ -19,6 +19,7 @@ namespace com_brucemyers\DatabaseReportBot\Reports;
 
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\RenderedWiki\RenderedWiki;
+use com_brucemyers\MediaWiki\WikidataItem;
 use PDO;
 
 class WikidataPotentialUnlinked extends DatabaseReport
@@ -44,9 +45,12 @@ class WikidataPotentialUnlinked extends DatabaseReport
 		return array('Article', 'Potential wikidata item', 'Existing wikidata item to merge');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
-		$wiki_host, $user, $pass)
+	public function getRows($apis)
 	{
+		$dbh_wikidata = $apis['dbh_wikidata'];
+		$dbh_wiki = $apis['dbh_wiki'];
+		$datawiki = $apis['datawiki'];
+
 		// Get the max epp_entity_id
 		$sql = "SELECT MAX(epp_entity_id) FROM wb_entity_per_page";
 		$sth = $dbh_wikidata->query($sql);
@@ -107,6 +111,7 @@ class WikidataPotentialUnlinked extends DatabaseReport
 
 				foreach ($enrows as $enrow) {
 					$title = str_replace('_', ' ', $enrow[0]);
+					if (strpos($title, ' ') === false) continue; // Skip single words
 					$is_redirect = (int)$enrow[1];
 
 					// See if this page already has a wikidata link
@@ -120,9 +125,12 @@ class WikidataPotentialUnlinked extends DatabaseReport
 					if (! empty($already_id)) {
 						if ($is_redirect) continue; // Skip if redirect
 						$already_url = "[https://www.wikidata.org/wiki/Q$already_id Q$already_id]";
-					} else {
-						if (strpos($title, ' ') === false) continue; // Skip single words
 					}
+
+					// See if this item is a dab page
+					$item = $datawiki->getItemWithCache("Q$id");
+					$instancesof = $item->getStatementsOfType(WikidataItem::TYPE_INSTANCE_OF);
+					if (in_array(WikidataItem::INSTANCE_OF_DISAMBIGUATION, $instancesof)) continue 2; // Doing here so above continues reduce calls
 
 					$firstcol = "[[$title]]";
 					if ($is_redirect) $firstcol .= ' (redirect)';

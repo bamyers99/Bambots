@@ -24,6 +24,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\RenderedWiki\RenderedWiki;
+use com_brucemyers\MediaWiki\WikidataWiki;
 
 $clidir = dirname(__FILE__);
 $GLOBALS['botname'] = 'DatabaseReportBot';
@@ -73,6 +74,7 @@ try {
     FileCache::purgeExpired();
     $url = Config::get(RenderedWiki::WIKIRENDERURLKEY);
     $renderedwiki = new RenderedWiki($url);
+    $datawiki = new WikidataWiki();
 
     if ($outputtype == 'wiki') $resultwriter = new WikiResultWriter($wiki);
     else {
@@ -86,7 +88,7 @@ try {
     $enwiki_host = Config::get(ENWIKI_HOST);
     $tools_host = Config::get(TOOLS_HOST);
     $wikidata_host = Config::get(WIKIDATA_HOST);
-    $bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host, $wikidata_host);
+    $bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host, $wikidata_host, $datawiki);
 
     $params = array_slice($argv, 2);
 

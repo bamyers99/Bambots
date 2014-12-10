@@ -27,7 +27,7 @@ class SimilarRedLinks extends DatabaseReport
 {
 	var $lcase = false;
 
-	public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params, PDO $dbh_wikidata)
+	public function init($apis, $params)
 	{
 		if (empty($params)) return true;
 
@@ -36,7 +36,7 @@ class SimilarRedLinks extends DatabaseReport
 		switch ($option) {
 		    case 'loadpagenames':
 		    	if (isset($params[1]) && $params[1] == 'lcase') $this->lcase = true;
-		    	$this->loadpagenames($dbh_tools);
+		    	$this->loadpagenames($apis['dbh_tools']);
 		    	return false;
 		    	break;
 
@@ -73,9 +73,9 @@ class SimilarRedLinks extends DatabaseReport
 		return array('Red link', 'Matches', 'What links here (template count)');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
-		$wiki_host, $user, $pass)
+	public function getRows($apis)
 	{
+		$dbh_tools = $apis['dbh_tools'];
 		$count = 0;
 		$results = array();
 		$dumppath = self::getDumpPath();

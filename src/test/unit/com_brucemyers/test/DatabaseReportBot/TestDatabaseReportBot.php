@@ -26,6 +26,7 @@ use com_brucemyers\test\DatabaseReportBot\CreateTables;
 use com_brucemyers\RenderedWiki\RenderedWiki;
 use UnitTestCase;
 use PDO;
+use com_brucemyers\MediaWiki\WikidataWiki;
 
 DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
 DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
@@ -49,6 +50,7 @@ class TestDatabaseReportBot extends UnitTestCase
         $wiki = new MediaWiki($url);
         $url = Config::get(RenderedWiki::WIKIRENDERURLKEY);
         $renderedwiki = new RenderedWiki($url);
+        $datawiki = new WikidataWiki();
 
     	new CreateTablesBSA($dbh_enwiki);
 
@@ -58,7 +60,7 @@ class TestDatabaseReportBot extends UnitTestCase
     	$outputDir .= DIRECTORY_SEPARATOR;
     	$resultwriter = new FileResultWriter($outputDir);
 
-    	$bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host, $wikidata_host);
+    	$bot = new DatabaseReportBot($resultwriter, $wiki, $renderedwiki, $enwiki_host, 'enwiki_p', $tools_host, $wikidata_host, $datawiki);
 
     	$bot->generateReport('BrokenSectionAnchors', 'Wikipedia:Database reports', array());
     }

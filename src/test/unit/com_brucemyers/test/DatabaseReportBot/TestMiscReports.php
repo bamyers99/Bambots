@@ -52,7 +52,21 @@ class TestMiscReports extends UnitTestCase
 
     	new CreateTablesMR($dbh_enwiki, $dbh_wikidata);
 
+    	$apis = array(
+    			'dbh_wiki' => $dbh_enwiki,
+    			'wiki_host' => $enwiki_host,
+    			'dbh_tools' => $dbh_tools,
+    			'tools_host' => $tools_host,
+    			'dbh_wikidata' => $dbh_wikidata,
+    			'data_host' => $wikidata_host,
+    			'mediawiki' => $wiki,
+    			'renderedwiki' => null,
+    			'datawiki' => null,
+    			'user' => $user,
+    			'pass' => $pass
+    	);
+
 		$report = new MiscReports();
-		$report->init($dbh_enwiki, $dbh_tools, $wiki, array('ChemSpider'), $dbh_wikidata);
+		$report->init($apis, array('ChemSpider'));
     }
 }

@@ -91,5 +91,10 @@ class CreateTablesWPU
     	$dbh_enwiki->exec("INSERT INTO page VALUES (5,0,'Toast',0)");
     	$dbh_wikidata->exec("INSERT INTO wb_items_per_site VALUES (7,410199,'dewiki','Toast')");
     	$dbh_wikidata->exec("INSERT INTO wb_entity_per_page VALUES (410199,'item',5,NULL)");
+
+    	// Dab page
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (6,0,'Disambiguation_page',0)");
+    	$dbh_wikidata->exec("INSERT INTO wb_items_per_site VALUES (8,3699773,'dewiki','Disambiguation page')");
+    	$dbh_wikidata->exec("INSERT INTO wb_entity_per_page VALUES (3699773,'item',6,NULL)");
     }
 }

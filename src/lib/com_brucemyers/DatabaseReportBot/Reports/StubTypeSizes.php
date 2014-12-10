@@ -46,9 +46,10 @@ class StubTypeSizes extends DatabaseReport
 		return array('Category', 'Members', 'Subcategories');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
-		$wiki_host, $user, $pass)
+	public function getRows($apis)
 	{
+		$dbh_wiki = $apis['dbh_wiki'];
+
 		// Retrieve the target page contents
 
 		$sql = "SELECT cat_title, cat_pages, cat_subcats FROM category, page " . // Making sure a page for the category exists to weed out bad categories.

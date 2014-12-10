@@ -49,9 +49,23 @@ class TestDiacriticRedLinks extends UnitTestCase
 
     	new CreateTablesDRL($dbh_enwiki);
 
+    	$apis = array(
+    			'dbh_wiki' => $dbh_enwiki,
+    			'wiki_host' => $enwiki_host,
+    			'dbh_tools' => $dbh_tools,
+    			'tools_host' => $tools_host,
+    			'dbh_wikidata' => $dbh_wikidata,
+    			'data_host' => $wikidata_host,
+    			'mediawiki' => null,
+    			'renderedwiki' => null,
+    			'datawiki' => null,
+    			'user' => $user,
+    			'pass' => $pass
+    	);
+
 		$report = new DiacriticRedLinks();
 		$params = array('dumpredlinks');
-		$report->init($dbh_enwiki, $dbh_tools, null, $params, $dbh_wikidata);
+		$report->init($apis, $params);
 
 		$dumppath = DiacriticRedLinks::getDumpPath();
 		$hndl = fopen($dumppath, 'r');

@@ -26,7 +26,7 @@ use PDO;
 class MiscReports extends DatabaseReport
 {
 
-    public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params, PDO $dbh_wikidata)
+    public function init($apis, $params)
     {
     	if (empty($params)) return false;
 
@@ -34,7 +34,7 @@ class MiscReports extends DatabaseReport
 
     	switch ($option) {
     		case 'ChemSpider':
-    			$this->ChemSpider($dbh_wiki, $mediawiki, $dbh_wikidata);
+    			$this->ChemSpider($apis['dbh_wiki'], $apis['mediawiki'], $apis['dbh_wikidata']);
     			return false;
     			break;
     	}
@@ -63,8 +63,7 @@ class MiscReports extends DatabaseReport
 		return array();
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
-		$wiki_host, $user, $pass)
+	public function getRows($apis)
 	{
 		$results = array();
 

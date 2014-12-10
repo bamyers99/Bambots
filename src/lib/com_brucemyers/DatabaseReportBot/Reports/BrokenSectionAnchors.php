@@ -29,7 +29,7 @@ class BrokenSectionAnchors extends DatabaseReport
     const COMMENT_REGEX = '/<!--.*?-->/us';
     const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';
 
-    public function init(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, $params, PDO $dbh_wikidata)
+    public function init($apis, $params)
     {
     	if (empty($params)) return true;
 
@@ -37,7 +37,7 @@ class BrokenSectionAnchors extends DatabaseReport
 
     	switch ($option) {
     		case 'createviewcounts':
-    			$this->createviewcounts($dbh_wiki);
+    			$this->createviewcounts($apis['dbh_wiki']);
     			return false;
     			break;
     	}
@@ -66,9 +66,14 @@ class BrokenSectionAnchors extends DatabaseReport
 		return array('Redirect', 'Target', 'Incoming<br />links', 'Views', 'Max<br />Views/Links');
 	}
 
-	public function getRows(PDO $dbh_wiki, PDO $dbh_tools, MediaWiki $mediawiki, RenderedWiki $renderedwiki, PDO $dbh_wikidata,
-		$wiki_host, $user, $pass)
+	public function getRows($apis)
 	{
+		$dbh_wiki = $apis['dbh_wiki'];
+		$renderedwiki = $apis['renderedwiki'];
+		$wiki_host = $apis['wiki_host'];
+		$user = $apis['user'];
+		$pass = $apis['pass'];
+
 		// Retrieve the target page contents
 
 		$sql = "SELECT DISTINCT rd_title FROM redirect WHERE rd_fragment IS NOT NULL AND rd_fragment <> '' AND rd_namespace = 0";

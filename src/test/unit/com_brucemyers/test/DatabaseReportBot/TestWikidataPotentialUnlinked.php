@@ -25,6 +25,7 @@ use com_brucemyers\test\DatabaseReportBot\CreateTablesWPU;
 use UnitTestCase;
 use PDO;
 use com_brucemyers\RenderedWiki\RenderedWiki;
+use com_brucemyers\MediaWiki\WikidataWiki;
 
 DEFINE('ENWIKI_HOST', 'DatabaseReportBot.enwiki_host');
 DEFINE('TOOLS_HOST', 'DatabaseReportBot.tools_host');
@@ -52,15 +53,29 @@ class TestWikidataPotentialUnlinked extends UnitTestCase
         $wiki = new MediaWiki($url);
         $url = Config::get(RenderedWiki::WIKIRENDERURLKEY);
         $renderedwiki = new RenderedWiki($url);
+        $datawiki = new WikidataWiki();
 
     	new CreateTablesWPU($dbh_enwiki, $dbh_wikidata);
 
     	$pages = array('[[Fred Smith]] (redirect)', '[[Ted Jones]]');
     	$alreadys = array('', '[https://www.wikidata.org/wiki/Q410196 Q410196]');
 
-		$report = new WikidataPotentialUnlinked();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata,
-        	$wikidata_host, $user, $pass);
+    	$apis = array(
+    	    'dbh_wiki' => $dbh_enwiki,
+    		'wiki_host' => $enwiki_host,
+    		'dbh_tools' => $dbh_tools,
+    		'tools_host' => $tools_host,
+    		'dbh_wikidata' => $dbh_wikidata,
+    		'data_host' => $wikidata_host,
+    		'mediawiki' => $wiki,
+    		'renderedwiki' => $renderedwiki,
+    		'datawiki' => $datawiki,
+    		'user' => $user,
+    		'pass' => $pass
+    	);
+
+    	$report = new WikidataPotentialUnlinked();
+		$rows = $report->getRows($apis);
 		unset ($rows['linktemplate']);
 
 		$this->assertEqual(count($rows), 2, 'Wrong number of potential unlinkeds');

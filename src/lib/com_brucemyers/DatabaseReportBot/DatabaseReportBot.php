@@ -20,6 +20,7 @@ namespace com_brucemyers\DatabaseReportBot;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\RenderedWiki\RenderedWiki;
+use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\Util\Config;
 use PDO;
 
@@ -38,16 +39,20 @@ class DatabaseReportBot
     protected $dbh_wikidata;
     protected $mediawiki;
     protected $renderedwiki;
+    protected $datawiki;
     protected $wiki_host;
+    protected $tools_host;
+    protected $wikidata_host;
     protected $user;
     protected $pass;
 
     public function __construct(ResultWriter $resultWriter, MediaWiki $mediawiki, RenderedWiki $renderedwiki, $wiki_host, $wiki_db,
-    		$tools_host, $wikidata_host)
+    		$tools_host, $wikidata_host, WikidataWiki $datawiki)
     {
         $this->resultWriter = $resultWriter;
         $this->mediawiki = $mediawiki;
         $this->renderedwiki = $renderedwiki;
+        $this->datawiki = $datawiki;
 
      	$user = Config::get(self::LABSDB_USERNAME);
     	$pass = Config::get(self::LABSDB_PASSWORD);
@@ -62,20 +67,35 @@ class DatabaseReportBot
     	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      	$this->dbh_wikidata = $dbh_wikidata;
      	$this->wiki_host = $wiki_host;
+     	$this->tools_host = $tools_host;
+     	$this->wikidata_host = $wikidata_host;
      	$this->user = $user;
      	$this->pass = $pass;
     }
 
     public function generateReport($reportname, $outputPage, $params)
     {
+    	$apis = array(
+    	    'dbh_wiki' => $this->dbh_wiki,
+    		'wiki_host' => $this->wiki_host,
+    		'dbh_tools' => $this->dbh_tools,
+    		'tools_host' => $this->tools_host,
+    		'dbh_wikidata' => $this->dbh_wikidata,
+    		'data_host' => $this->wikidata_host,
+    		'mediawiki' => $this->mediawiki,
+    		'renderedwiki' => $this->renderedwiki,
+    		'datawiki' => $this->datawiki,
+    		'user' => $this->user,
+    		'pass' => $this->pass
+    	);
+
     	$classname = "com_brucemyers\\DatabaseReportBot\\Reports\\$reportname";
     	$report = new $classname();
-    	$continue = $report->init($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $params, $this->dbh_wikidata);
+    	$continue = $report->init($apis, $params);
     	if (! $continue) return;
 
     	$reportTitle = $report->getTitle();
-    	$rows = $report->getRows($this->dbh_wiki, $this->dbh_tools, $this->mediawiki, $this->renderedwiki, $this->dbh_wikidata,
-			$this->wiki_host, $this->user, $this->pass);
+    	$rows = $report->getRows($apis);
 
 		$linktemplate = 'dbr link';
 

@@ -55,9 +55,22 @@ class TestStubTypeSizes extends UnitTestCase
 
     	new CreateTablesSTS($dbh_enwiki);
 
+    	$apis = array(
+    			'dbh_wiki' => $dbh_enwiki,
+    			'wiki_host' => $enwiki_host,
+    			'dbh_tools' => $dbh_tools,
+    			'tools_host' => $tools_host,
+    			'dbh_wikidata' => $dbh_wikidata,
+    			'data_host' => $wikidata_host,
+    			'mediawiki' => $wiki,
+    			'renderedwiki' => $renderedwiki,
+    			'datawiki' => null,
+    			'user' => $user,
+    			'pass' => $pass
+    	);
+
 		$report = new StubTypeSizes();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata,
-        	$wikidata_host, $user, $pass);
+		$rows = $report->getRows($apis);
 
 		$this->assertEqual(count($rows['groups']), 9, 'Wrong number of groups');
     }

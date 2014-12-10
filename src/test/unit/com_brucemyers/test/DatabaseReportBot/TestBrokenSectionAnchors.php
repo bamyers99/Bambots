@@ -21,6 +21,7 @@ use com_brucemyers\DatabaseReportBot\Reports\BrokenSectionAnchors;
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\MediaWiki\DataWiki;
 use com_brucemyers\test\DatabaseReportBot\CreateTablesBSA;
 use UnitTestCase;
 use PDO;
@@ -58,9 +59,22 @@ class TestBrokenSectionAnchors extends UnitTestCase
     	$redirects = array('Anesthesia record', 'Anesthesia not found');
     	$targets = array('[[Anesthesia#Anesthetic monitoring]]', '[[Anesthesia#Anesthetic not found]]');
 
+    	$apis = array(
+    	    'dbh_wiki' => $dbh_enwiki,
+    		'wiki_host' => $enwiki_host,
+    		'dbh_tools' => $dbh_tools,
+    		'tools_host' => $tools_host,
+    		'dbh_wikidata' => $dbh_wikidata,
+    		'data_host' => $wikidata_host,
+    		'mediawiki' => $wiki,
+    		'renderedwiki' => $renderedwiki,
+    		'datawiki' => null,
+    		'user' => $user,
+    		'pass' => $pass
+    	);
+
 		$report = new BrokenSectionAnchors();
-		$rows = $report->getRows($dbh_enwiki, $dbh_tools, $wiki, $renderedwiki, $dbh_wikidata,
-        	$wikidata_host, $user, $pass);
+		$rows = $report->getRows($apis);
 
 		$this->assertEqual(count($rows), 1, 'Wrong number of broken section anchors');
 
