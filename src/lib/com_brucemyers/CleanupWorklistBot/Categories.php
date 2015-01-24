@@ -399,6 +399,9 @@ class Categories {
 			'Missing taxobox' => array (
 					'type' => 'no-date'
 			),
+			'Pages using duplicate arguments in template calls' => array (
+					'type' => 'no-date'
+			),
 			'Persondata templates without short description parameter' => array (
 					'type' => 'no-date'
 			),

@@ -34,9 +34,15 @@ get_params();
 if (isset($_POST['file']) && empty($_POST['csv']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-	$extra = 'csv2wikitable.php?sep=' . urlencode($params['sep']) . '&delim=' . urlencode($params['delim']) .
-		'&firstrow=' . urlencode($params['firstrow']) . '&link1=' . urlencode($params['link1']) . '&link2=' . urlencode($params['link2']) .
-		'&file=' . urlencode($params['file']);
+
+	$extra = 'csv2wikitable.php?file=' . urlencode($params['file']);
+	if ($params['sep'] != ',') $extra .= '&sep=' . urlencode($params['sep']);
+	if ($params['delim'] != '"') $extra .= '&delim=' . urlencode($params['delim']);
+	if ($params['firstrow'] != '0') $extra .= '&firstrow=' . urlencode($params['firstrow']);
+	if ($params['link1'] != '') $extra .= '&link1=' . urlencode($params['link1']);
+	if ($params['link2'] != '') $extra .= '&link2=' . urlencode($params['link2']);
+	if ($params['subdmn'] != 'tools') $extra .= '&subdmn=' . urlencode($params['subdmn']);
+
 	$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
 	header("Location: $protocol://$host$uri/$extra", true, 302);
 	exit;
@@ -101,7 +107,7 @@ td.form {
         </td>
         <td>&nbsp;
         </td></tr>
-        <tr><td colspan='3'><b>Input file</b> (optional) http://tools.wmflabs.org/<input name="file" type="text" size="50" maxlength="1024" value="<?php echo htmlspecialchars($params['file']) ?>" /></td></tr>
+        <tr><td colspan='3'><b>Input file</b> (optional) http://<input name="subdmn" type="text" size="6" maxlength="32" value="<?php echo htmlspecialchars($params['subdmn']) ?>" />.wmflabs.org/<input name="file" type="text" size="50" maxlength="1024" value="<?php echo htmlspecialchars($params['file']) ?>" /></td></tr>
         <tr><td colspan='3'>
         <table>
         <tr><td><b>CSV rows</b> (optional)</td><td><b>Wikitable</b> <?php if (! empty($result)) echo 'Ctrl-C or Cmd-C to copy to clipboard'; else echo '(output only)'; ?></td></tr>
@@ -142,6 +148,7 @@ function get_params()
 	$params['link2'] = isset($_REQUEST['link2']) ? $_REQUEST['link2'] : '';
 	$params['file'] = isset($_REQUEST['file']) ? $_REQUEST['file'] : '';
 	$params['csv'] = isset($_REQUEST['csv']) ? $_REQUEST['csv'] : '';
+	$params['subdmn'] = isset($_REQUEST['subdmn']) ? $_REQUEST['subdmn'] : 'tools';
 }
 
 /**
@@ -158,10 +165,10 @@ function processCSV()
 	if (empty($params['file']) && empty($params['csv'])) return '';
 	if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) return '';
 
-	if (empty($params['csv'])) $data = curl_get_file_contents("http://tools.wmflabs.org/{$params['file']}");
+	if (empty($params['csv'])) $data = curl_get_file_contents("http://{$params['subdmn']}.wmflabs.org/{$params['file']}");
 	else $data = $params['csv'];
 
-	if ($data === false) return "Problem reading {$params['file']}";
+	if ($data === false) return "Problem reading http://{$params['subdmn']}.wmflabs.org/{$params['file']}";
 
 	$result .= "{| class=\"wikitable sortable\"\n";
 
