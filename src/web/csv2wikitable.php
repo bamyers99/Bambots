@@ -17,6 +17,8 @@
 
 use com_brucemyers\Util\HTMLForm;
 use com_brucemyers\Util\CSVString;
+use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\Util\Curl;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -165,10 +167,10 @@ function processCSV()
 	if (empty($params['file']) && empty($params['csv'])) return '';
 	if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) return '';
 
-	if (empty($params['csv'])) $data = curl_get_file_contents("http://{$params['subdmn']}.wmflabs.org/{$params['file']}");
+	if (empty($params['csv'])) $data = Curl::getUrlContents("http://{$params['subdmn']}.wmflabs.org/{$params['file']}");
 	else $data = $params['csv'];
 
-	if ($data === false) return "Problem reading http://{$params['subdmn']}.wmflabs.org/{$params['file']}";
+	if ($data === false) return "Problem reading http://{$params['subdmn']}.wmflabs.org/{$params['file']} (" . Curl::$lastError . ")";
 
 	$result .= "{| class=\"wikitable sortable\"\n";
 
@@ -186,9 +188,12 @@ function processCSV()
 	if ($sep == 'space') $sep = ' ';
 	elseif ($sep == 'tab') $sep = "\t";
 
+	$delim = $params['delim'];
+	if ($sep == "\t") $delim = '';
+
 	if ($params['firstrow'] == '1') {
 		$rowstart = 1;
-		$headings = implode('!!', CSVString::parse($rows[0], $sep, $params['delim']));
+		$headings = implode('!!', CSVString::parse($rows[0], $sep, $delim));
 		$result .= "|-\n!$headings\n";
 	}
 
@@ -197,27 +202,14 @@ function processCSV()
 	for ($x = $rowstart; $x < $rowcount; ++$x) {
 		$csvdata = CSVString::parse($rows[$x], $sep, $params['delim']);
 		$columncount = count($csvdata);
-		if ($link1 > 0 && $link1 <= $columncount) $csvdata[$link1 - 1] = '[[' . $csvdata[$link1 - 1] . ']]';
-		if ($link2 > 0 && $link2 <= $columncount && $link1 != $link2) $csvdata[$link2 - 1] = '[[' . $csvdata[$link2 - 1] . ']]';
+		if ($link1 > 0 && $link1 <= $columncount) $csvdata[$link1 - 1] = '[[' . MediaWiki::getLinkSafePagename($csvdata[$link1 - 1]) . ']]';
+		if ($link2 > 0 && $link2 <= $columncount && $link1 != $link2) $csvdata[$link2 - 1] = '[[' . MediaWiki::getLinkSafePagename($csvdata[$link2 - 1]) . ']]';
 
 		$csvdata = implode('||', $csvdata);
 		$result .= "|-\n|$csvdata\n";
 	}
 
 	$result .= "|}\n";
-}
-
-function curl_get_file_contents($URL)
-{
-	$c = curl_init();
-	curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($c, CURLOPT_URL, $URL);
-	curl_setopt($c, CURLOPT_USERAGENT, 'csv2wikitable');
-	$contents = curl_exec($c);
-	curl_close($c);
-
-	if ($contents) return $contents;
-	return false;
 }
 
 ?>

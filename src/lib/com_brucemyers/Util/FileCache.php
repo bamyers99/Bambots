@@ -57,7 +57,7 @@ class FileCache
     public static function getData($key)
     {
         $inst = self::getInstance();
-        $key = $inst->safeKey($key);
+        $key = self::safeKey($key);
         $filepath = $inst->cacheDir . DIRECTORY_SEPARATOR . $key;
 
         if (! file_exists($filepath)) return false;
@@ -74,7 +74,7 @@ class FileCache
     public static function putData($key, &$data)
     {
         $inst = self::getInstance();
-        $key = $inst->safeKey($key);
+        $key = self::safeKey($key);
         $filepath = $inst->cacheDir . DIRECTORY_SEPARATOR . $key;
 
         file_put_contents($filepath, $data);
@@ -86,7 +86,7 @@ class FileCache
      * @param $key string Cache key
      * @return string Cache key
      */
-    protected function safeKey($key)
+    public static function safeKey($key)
     {
         $key = str_replace(' ', '_', $key);
 
@@ -128,7 +128,7 @@ class FileCache
     {
 
         $inst = self::getInstance();
-        $prefix = $inst->safeKey($prefix);
+        $prefix = self::safeKey($prefix);
 
         $handle = opendir($inst->cacheDir);
         if (! $handle) {

@@ -17,6 +17,8 @@
 
 namespace com_brucemyers\MediaWiki;
 
+use com_brucemyers\Util\FileCache;
+
 class FileResultWriter implements ResultWriter
 {
     protected $filepath;
@@ -33,8 +35,8 @@ class FileResultWriter implements ResultWriter
 
     public function writeResults($resultpage, $output, $comment)
     {
-        $resultpage = str_replace(array(':','/'), '.', $resultpage);
-        $resultpage = str_replace('User.', '', $resultpage);
+        $resultpage = str_replace(array(':','/'), '_', $resultpage);
+        $resultpage = FileCache::safeKey($resultpage);
         $filepath = $this->filepath . $resultpage . '.txt';
         $output .= "$comment\n";
         file_put_contents($filepath, $output);

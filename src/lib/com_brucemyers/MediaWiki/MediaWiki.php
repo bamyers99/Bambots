@@ -35,7 +35,7 @@ class MediaWiki extends wikipedia
     const WIKICHANGESINCREMENT = 'wiki.recentchangesincrement';
     const MAX_PAGE_SIZE = 2000000;
 
-    static $namespaces = array(
+    static public $namespaces = array(
                     0 => 'Article',
                     1 => 'Article talk',
                     2 => 'User',
@@ -60,13 +60,35 @@ class MediaWiki extends wikipedia
                     119 => 'Draft talk',
     				120 => 'Property',
     				121 => 'Property talk',
-                    446 => 'Education Program',
+    				200 => 'Grants',
+    				201 => 'Grants talk',
+    				202 => 'Research',
+    				203 => 'Research talk',
+    				204 => 'Participation',
+    				205 => 'Participation talk',
+    				206 => 'Iberocoop',
+    				207 => 'Iberocoop talk',
+    				208 => 'Programs',
+    				209 => 'Programs talk',
+    				446 => 'Education Program',
                     447 => 'Education Program talk',
-                    710 => 'TimedText',
+    				470 => 'Schema',
+                    471 => 'Schema talk',
+    				484 => 'Graph',
+                    485 => 'Graph talk',
+    				486 => 'Data',
+                    487 => 'Data talk',
+    				710 => 'TimedText',
                     711 => 'TimedText talk',
                     828 => 'Module',
-                    829 => 'Module talk'
+                    829 => 'Module talk',
+                    866 => 'CNBanner',
+                    867 => 'CNBanner talk',
+                    1198 => 'Translations',
+                    1199 => 'Translations talk'
     );
+
+    static $flipped_namespaces = false;
 
     /**
      * Constructor
@@ -466,5 +488,74 @@ class MediaWiki extends wikipedia
     	if ($id == 1) return 'Talk:';
     	if ($id == 6 || $id == 14) return ':' . self::$namespaces[$id] . ':';
     	return self::$namespaces[$id] . ':';
+    }
+
+    /**
+     * Get a link safe page name. ie. :Category:Living people
+     *
+     * @param string $pagename Pagename
+     * @return string Link safe pagename
+     */
+    public static function getLinkSafePagename($pagename)
+    {
+    	if (strlen($pagename) == 0) return '';
+    	if ($pagename[0] == ':') return $pagename;
+
+		$parts = explode(':', $pagename, 2);
+		if (count($parts) == 1) return $pagename;
+
+		$namespace = str_replace('_', ' ', $parts[0]);
+
+		if (! self::$flipped_namespaces) self::$flipped_namespaces = array_flip(self::$namespaces);
+
+		if (! isset(self::$flipped_namespaces[$namespace])) return $pagename;
+		$ns = self::$flipped_namespaces[$namespace];
+
+		if ($ns == 6 || $ns == 14) return ':' . $pagename;
+		return $pagename;
+    }
+
+    /**
+     * Get the namespace name for a pagename.
+     *
+     * @param string $pagename
+     * @return string Namespace name with _ replaced with space
+     */
+    public static function getNamespaceName($pagename)
+    {
+    	if (strlen($pagename) == 0) return '';
+    	if ($pagename[0] == ':') $pagename = substr($pagename, 1);
+
+		$parts = explode(':', $pagename, 2);
+		if (count($parts) == 1) return '';
+
+		$namespace = str_replace('_', ' ', $parts[0]);
+
+		if ($namespace == 'Talk') return $namespace;
+
+		if (! self::$flipped_namespaces) self::$flipped_namespaces = array_flip(self::$namespaces);
+
+		if (! isset(self::$flipped_namespaces[$namespace])) return '';
+
+		return $namespace;
+    }
+
+    /**
+     * Get the namespace id.
+     *
+     * @param string $namespace Namespace name
+     * @return int Namespace id, -1 = not found
+     */
+    public static function getNamespaceId($namespace)
+    {
+		if ($namespace == '') return 0;
+		if ($namespace == 'Talk') return 1;
+		$namespace = str_replace('_', ' ', $namespace);
+
+		if (! self::$flipped_namespaces) self::$flipped_namespaces = array_flip(self::$namespaces);
+
+		if (! isset(self::$flipped_namespaces[$namespace])) return -1;
+
+		return self::$flipped_namespaces[$namespace];
     }
 }

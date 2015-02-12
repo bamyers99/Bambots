@@ -23,6 +23,7 @@ use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\Email;
 use PDO;
 
 class CleanupWorklistBot
@@ -250,5 +251,9 @@ EOT;
     	$backupFile = $outputDir . 'CleanupWorklistBot_History.bz2';
     	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CleanupWorklistBot history | bzip2 -9 > $backupFile";
     	system($command);
+
+    	$email = new Email();
+    	$attach = array($backupFile);
+    	$email->sendEmail('admin@brucemyers.com', Config::get(self::ERROREMAIL), 'CleanupWorklistBot backup', 'DB backup', $attach);
     }
 }

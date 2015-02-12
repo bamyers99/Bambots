@@ -90,7 +90,7 @@ class TestMediaWiki extends UnitTestCase
     	echo $result;
     }
 
-    public function testDoubleLogin()
+    public function notestDoubleLogin()
     {
         $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
         $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
@@ -98,5 +98,36 @@ class TestMediaWiki extends UnitTestCase
         $this->wiki->getedittoken();
         $this->wiki->login(null, null);
         $this->pass();
+    }
+
+    public function testGetLinkSafePagename()
+    {
+    	$origpagename = '';
+    	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
+    	$this->assertEqual($newpagename, $origpagename, 'Pagename must be empty');
+
+    	$origpagename = ':Category:Living people';
+    	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
+    	$this->assertEqual($newpagename, $origpagename, 'Pagename must not change');
+
+    	$origpagename = 'Category:Living people';
+    	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
+    	$this->assertEqual($newpagename, ':' . $origpagename, 'Pagename must have : prefix');
+
+    	$origpagename = 'File:Cat';
+    	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
+    	$this->assertEqual($newpagename, ':' . $origpagename, 'Pagename must have : prefix 2');
+
+    	$origpagename = 'Template:Convert';
+    	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
+    	$this->assertEqual($newpagename, $origpagename, 'Pagename must not change 2');
+
+    	$origpagename = 'Fruit:Apple';
+    	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
+    	$this->assertEqual($newpagename, $origpagename, 'Pagename must not change 3');
+
+    	$origpagename = 'Apple';
+    	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
+    	$this->assertEqual($newpagename, $origpagename, 'Pagename must not change 4');
     }
 }
