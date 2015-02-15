@@ -39,7 +39,7 @@ class TestRuleSetProcessor extends UnitTestCase
 EOT;
 
         $data = <<<'EOT2'
-        {{Infobox|title=Michigan}}
+        {{Infobox|population=50<ref name="gov"/>|title=Michigan}}
         '''Michigan''' is in the United States.<ref name="USAReference">{{Cite web
         	|url=http://usa.gov
         	|title=USA Reference}}</ref>

@@ -20,6 +20,7 @@ namespace com_brucemyers\InceptionBot;
 class RuleSet
 {
     const COMMENT_REGEX = '/<!--.*?-->/us';
+    const REFERENCESTUB_REGEX = '!<ref[^/>]*?/>!us';
     const REFERENCE_REGEX = '!<ref.*?</ref>!us';
     const CATEGORY_REGEX = '/\\[\\[Category:.+?\\]\\]/usi';
     const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';

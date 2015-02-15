@@ -170,7 +170,8 @@ class AddColumnFirstSentence extends AddColumn
 		$bracketed = '';
 
 		// Strip comments and refs
-		$data = preg_replace(array('/<!--.*?-->/us', '!<ref.*?</ref>!us'), '', $data);
+		$data = preg_replace(array('/<!--.*?-->/us', '!<ref[^/>]*?/>!us'), '', $data); // Must be before the next preg_replace
+		$data = preg_replace(array('!<ref.*?</ref>!us'), '', $data);
 
 		$len = mb_strlen($data, 'UTF-8');
 
