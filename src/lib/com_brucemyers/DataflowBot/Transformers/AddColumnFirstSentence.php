@@ -34,7 +34,7 @@ class AddColumnFirstSentence extends AddColumn
 	 */
 	public function getTitle()
 	{
-		return 'Add Column First Sentence';
+		return 'Add Column First Page Sentence';
 	}
 
 	/**

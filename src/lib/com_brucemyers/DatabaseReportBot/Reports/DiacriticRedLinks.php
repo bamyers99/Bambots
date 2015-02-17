@@ -44,7 +44,7 @@ class DiacriticRedLinks extends DatabaseReport
 		    	break;
 
 		    case 'mostwanted':
-		    	$this->mostwanted($apis['mediawiki']);
+		    	$this->mostwanted($apis['mediawiki'], $apis['dbh_wiki']);
 		    	return false;
 		    	break;
 		}
@@ -201,6 +201,23 @@ class DiacriticRedLinks extends DatabaseReport
 	/**
 	 * Dump article page red links to a file.
 	 *
+	 * Download https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-all-titles-in-ns0.gz
+	 * Download https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pagelinks.sql.gz
+	 *
+	 * flex -Cf -8 mysql.flex
+	 * gcc lex.yy.c -lfl -o mysqlparse
+	 *
+	 * gunzip -c *pagelinks.sql.gz | ./mysqlparse - - | awk -f redlink.awk - >targetlinks.tsv&
+	 * gunzip enwiki-latest-all-titles-in-ns0.gz
+	 *
+	 * php consolidatelinks.php targetlinks.tsv consolidatedlinks.tsv&
+	 *
+	 * LC_ALL=C sort consolidatedlinks.tsv > sconsolidatedlinks.tsv
+	 *
+	 * LC_ALL=C sort enwiki-latest-all-titles-in-ns0 > senwiki-latest-all-titles-in-ns0
+	 *
+	 * ./redlinkmerge sconsolidatedlinks.tsv senwiki-latest-all-titles-in-ns0 >DatabaseReportBotDRL.red
+	 *
 	 * @param PDO $dbh_wiki
 	 */
 	function dumpredlinks(PDO $dbh_wiki)
@@ -209,11 +226,12 @@ class DiacriticRedLinks extends DatabaseReport
 		$dumppath = self::getDumpPath();
 
 		// Get article and template (10) redlinks
-		$sql = 'SELECT pl_title, COUNT(*), SUM(TRUNCATE(pl_from_namespace / 10, 0)) FROM pagelinks
+		$sql = 'SELECT pl_title, COUNT(*) AS pagecnt, SUM(TRUNCATE(pl_from_namespace / 10, 0)) FROM pagelinks
 			LEFT JOIN page ON page_title=pl_title AND page_namespace=pl_namespace
 			WHERE pl_namespace = 0 AND pl_from_namespace IN (0,10)
-			AND page_id IS NULL
-			GROUP BY pl_title';
+			AND page_namespace IS NULL
+			GROUP BY pl_title
+			HAVING pagecnt > 9';
 
 		$hndl = fopen($dumppath, 'w');
 		$sth = $dbh_wiki->query($sql);
@@ -233,21 +251,58 @@ class DiacriticRedLinks extends DatabaseReport
 	 *
 	 * @param MediaWiki $mediawiki
 	 */
-	function mostwanted(MediaWiki $mediawiki)
+	function mostwanted(MediaWiki $mediawiki, PDO $dbh_wiki)
 	{
+		$sections = array(
+		    '== Most-wanted<!--Most-wanted articles, not most of the wanted articles--> articles ==' => array('type' => 'old'),
+			'==== <year> in sumo ====' => array('type' => 'oldsection'),
+			'=== October 2012 lists ===' => array('type' => 'old'),
+			'==Possibly unwanted articles==' => array('type' => 'unwanted'),
+			'== Creating ==' => array('type' => 'skip')
+		);
+
+		$curlinks = array('old' => array(), 'oldsection' => array());
+
 		$count = 0;
 		$mostwantedpath = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'DatabaseReportBotDRL.mwp';
 		$curmostwanted = $mediawiki->getpage('Wikipedia:Most-wanted_articles');
-		preg_match_all('!\[\[([^\]]+?)\]\]!', $curmostwanted, $matches, PREG_PATTERN_ORDER);
+		$lines = preg_split('/\\r?\\n/', $curmostwanted);
+		$oldlinks = array();
 
-		$curlinks = array();
-		foreach ($matches[1] as $match) {
-			$curlinks[] = str_replace(' ', '_', $match);
+		$type = 'skip';
+
+		foreach ($lines as $line) {
+			if (isset($sections[$line])) {
+				$type = $sections[$line]['type'];
+				if ($type == 'oldsection') $curlinks['oldsection'][] = $line;
+				continue;
+			}
+
+			if ($type == 'skip') continue;
+			$line .= "\n"; // Something for the .* to match
+
+			if (preg_match('!\[\[([^\]]+?)\]\]\\s*(?:\(\\d+ links\)|-\\s*\\d+|\(\\d+\))(.*)!s', $line, $matches)) {
+				$title = str_replace(' ', '_', $matches[1]);
+				$extra = trim($matches[2]);
+				if ($type == 'old') $curlinks['old'][$title] = $extra;
+				$oldlinks[] = $title;
+			}
+
+			if ($type == 'oldsection') $curlinks['oldsection'][] = $line;
 		}
 
 		$dumppath = self::getDumpPath();
 		$hndl = fopen($dumppath, 'r');
 		$results = array();
+		$oldresults = array();
+
+		$sql = 'SELECT pl_title, COUNT(*) AS pagecnt, SUM(TRUNCATE(pl_from_namespace / 10, 0)) FROM pagelinks
+			LEFT JOIN page ON page_title=pl_title AND page_namespace=pl_namespace
+			WHERE pl_namespace = 0 AND pl_from_namespace IN (0,10)
+			AND page_namespace IS NULL AND pl_title = ?
+			GROUP BY pl_title';
+
+		$sth = $dbh_wiki->prepare($sql);
 
 		while (! feof($hndl)) {
 			if (++$count % 1000000 == 0) echo "Processed $count\n";
@@ -259,10 +314,27 @@ class DiacriticRedLinks extends DatabaseReport
 			$linkcnt = (int)$linkcnt;
 			$templatecnt = (int)$templatecnt;
 
+			// Recompute counts with the current DB
+			$sth->bindValue(1, $title);
+			$sth->execute();
+
+			if ($row = $sth->fetch(PDO::FETCH_NUM)) {
+				$linkcnt = (int)$row[1];
+				$templatecnt = (int)$row[2];
+			} else {
+				$sth->closeCursor();
+				continue;
+			}
+
+			$sth->closeCursor();
+
 			if ($templatecnt) continue;
-			if ($linkcnt < 20) continue;
-			if (in_array($title, $curlinks)) continue;
+			if ($linkcnt < 30) continue;
 			if (preg_match('!(_of_|_in_|_at_the_|\d{4})!', $title)) continue;
+			if (in_array($title, $oldlinks)) {
+				if (isset($curlinks['old'][$title])) $oldresults[] = array($title, $linkcnt, $curlinks['old'][$title]);
+				continue;
+			}
 
 			$results[] = array($title, $linkcnt);
 		}
@@ -294,6 +366,41 @@ class DiacriticRedLinks extends DatabaseReport
 			$startnum += 100;
 			$endnum += 100;
 		}
+
+		// Write the previous results
+		fwrite($hndl, "===Previously listed===\n");
+
+		// Sort descending by incoming link count
+		usort($oldresults, function($a, $b) {
+			if ($a[1] < $b[1]) return 1; // Inverted because want descending sort
+			if ($a[1] > $b[1]) return -1;
+			return strcmp($a[0], $b[0]);
+		});
+
+		$chunks = array_chunk($oldresults, 100);
+		$startnum = 1;
+		$endnum = 100;
+
+		foreach ($chunks as $chunk) {
+			fwrite($hndl, "====$startnum-$endnum====\n");
+
+			foreach ($chunk as $row) {
+				$title = str_replace('_', ' ', $row[0]);
+				$extra = $row[2];
+				if (! empty($extra)) $extra = ' ' . $extra;
+				fwrite($hndl, "*[[$title]] - {$row[1]}$extra\n");
+			}
+
+			$startnum += 100;
+			$endnum += 100;
+		}
+
+		// Write the old sections
+		foreach ($curlinks['oldsection'] as $line) {
+			fwrite($hndl, "$line"); // \n is already in $line
+		}
+
+		fwrite($hndl, "''Older sets of results can be found at [[Wikipedia:MWA/old]]''\n");
 
 		fclose($hndl);
 	}

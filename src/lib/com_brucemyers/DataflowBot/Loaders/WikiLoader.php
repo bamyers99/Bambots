@@ -33,7 +33,7 @@ class WikiLoader extends Loader
 	 */
 	public function getTitle()
 	{
-		return 'Wiki Loader';
+		return 'MediaWiki';
 	}
 
 	/**

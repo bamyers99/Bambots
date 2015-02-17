@@ -32,7 +32,7 @@ class SQLQuery extends Extractor
 	 */
 	public function getTitle()
 	{
-		return 'SQL Query Extractor';
+		return 'SQL Query';
 	}
 
 	/**

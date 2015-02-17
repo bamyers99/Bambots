@@ -33,7 +33,7 @@ class UrlCsvExtractor extends Extractor
 	 */
 	public function getTitle()
 	{
-		return 'URL Delimited Text Extractor';
+		return 'URL Delimited Text';
 	}
 
 	/**
