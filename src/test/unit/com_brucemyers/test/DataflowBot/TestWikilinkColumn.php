@@ -27,7 +27,7 @@ class TestWikilinkColumn extends UnitTestCase
 	static $data = array(
 			array('Article', '2.5'),
 			array('Apple', '3.6'),
-			array("Helen D'Arcy Stewart", '4.7')
+			array("Helen_D'Arcy_Stewart", '4.7')
 	);
 
     public function testTransformer()
@@ -42,8 +42,8 @@ class TestWikilinkColumn extends UnitTestCase
     	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowWriter', 'MockFlowWriter');
     	$flowWriter = &new \MockFlowWriter();
         $rows = self::$data;
-        $rows[1][0] = "[[{$rows[1][0]}]]";
-        $rows[2][0] = "[[{$rows[2][0]}]]";
+        $rows[1][0] = '[[' . str_replace('_', ' ', $rows[1][0]) . ']]';
+        $rows[2][0] = '[[' . str_replace('_', ' ', $rows[2][0]) . ']]';
         $flowWriter->expectAt(0, 'writeRecords', array($rows));
         $flowWriter->expectCallCount('writeRecords', 1);
 

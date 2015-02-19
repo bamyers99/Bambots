@@ -37,6 +37,11 @@ class MiscReports extends DatabaseReport
     			$this->ChemSpider($apis['dbh_wiki'], $apis['mediawiki'], $apis['dbh_wikidata']);
     			return false;
     			break;
+
+    		case 'Journalisted':
+    			$this->Journalisted($apis['dbh_wiki'], $apis['mediawiki'], $apis['dbh_wikidata']);
+    			return false;
+    			break;
     	}
 
     	return true;
@@ -45,7 +50,8 @@ class MiscReports extends DatabaseReport
     public function getUsage()
     {
     	return " - Misc reports\n" .
-    	"\t\tChemSpider - ChemSpider wikidata links";
+    	"\t\tChemSpider - ChemSpider wikidata links\n";
+    	"\t\tJournalisted - Journalisted wikidata links";
     }
 
 	public function getTitle()
@@ -151,5 +157,73 @@ class MiscReports extends DatabaseReport
 
 		fclose($ChemSpiderID);
 		fclose($ChemSpiderIDs);
+	}
+
+	public function Journalisted(PDO $dbh_wiki, MediaWiki $mediawiki, PDO $dbh_wikidata)
+	{
+		$templates = array(
+		    'Journalisted' => '1',
+			'UK MP links' => 'journalisted',
+			'MPLinksUK' => 'journalisted',
+			'UK Peer links' => 'journalisted'
+		);
+
+		$sql = "SELECT DISTINCT page_title FROM templatelinks, page " .
+				" WHERE tl_from_namespace = 0 AND tl_namespace = 10 AND tl_title IN ('Journalisted', 'UK_MP_links', 'UK_Peer_links', 'MPLinksUK') " .
+				" AND page_namespace = 0 AND page_id = tl_from";
+		$sth = $dbh_wiki->prepare($sql);
+		$sth->execute();
+		$sth->setFetchMode(PDO::FETCH_NUM);
+		$titles = array();
+
+		while ($row = $sth->fetch()) {
+			$titles[] = $row[0];
+		}
+
+		$sth->closeCursor();
+
+		sort($titles);
+
+		$tempfile = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'JournalistedID.csv';
+		$hndl = fopen($tempfile, 'w');
+		fwrite($hndl, "JournalistedID,WikidataID,\"Title\"\n");
+
+		$mediawiki->cachePages($titles);
+
+		foreach ($titles as $page) {
+//			echo "$page\n";
+			$data = $mediawiki->getPageWithCache($page);
+
+			$parsed_templates = TemplateParamParser::getTemplates($data);
+
+			$page = str_replace('_', ' ', $page);
+			$page = ucfirst($page);
+
+			foreach ($parsed_templates as $parsed_template) {
+				if (! isset($templates[$parsed_template['name']])) continue;
+				$paramname = $templates[$parsed_template['name']];
+				$params = $parsed_template['params'];
+//				print_r($params);
+
+				if (! empty($params[$paramname])) {
+					$sql = "SELECT ips_item_id FROM wb_items_per_site WHERE ips_site_id = 'enwiki' AND ips_site_page = ?";
+					$sth = $dbh_wikidata->prepare($sql);
+					$sth->bindValue(1, $page);
+					$sth->execute();
+
+					$wikidata_id = 'None';
+					if ($row = $sth->fetch(PDO::FETCH_NUM)) {
+						$wikidata_id = "Q{$row[0]}";
+					}
+
+					$sth->closeCursor();
+
+					fwrite($hndl, "{$params[$paramname]},$wikidata_id,\"$page\"\n");
+					break;
+				}
+			}
+		}
+
+		fclose($hndl);
 	}
 }

@@ -109,7 +109,8 @@ class WikilinkColumn extends Transformer
 				}
 
 				if ($colnum >= count($row)) return "Invalid wikilink column #";
-				$row[$colnum] = "[[{$row[$colnum]}]]";
+				$title = str_replace('_', ' ', $row[$colnum]);
+				$row[$colnum] = "[[$title]]";
 			}
 
 			$writer->writeRecords($rows);
