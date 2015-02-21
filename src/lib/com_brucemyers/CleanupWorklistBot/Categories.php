@@ -151,6 +151,10 @@ class Categories {
 			'Articles with excessive see also sections' => array (
 					'type' => 'from-monthly'
 			),
+			'Articles with failed verification' => array (
+					'type' => 'from-monthly',
+					'group' => 'References'
+			),
 			'Articles with improper non-free content' => array (
 					'type' => 'from-monthly'
 			),
