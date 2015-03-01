@@ -158,7 +158,7 @@ class AddColumnFirstImage extends AddColumn
         		// Look for '[[file:' or '|...='; no [ in filename to prevent = [[File: from matching
         		$regex = '/(?:\\[\\[\\s*(?:file|image)\\s*:|\\|\\s*\w+\\s*=)\\s*([^{[|]+?\\.(?:jpg|jpeg|gif|svg|png))/iu';
         		if (preg_match($regex, $data, $matches) == 1) {
-        			$filename = $matches[1];
+        			$filename = preg_replace('/^file\\s*:\\s*/i', '', $matches[1]);
         			$imageok = true;
         			if ($includenonfree != 'yes') $imageok = $this->isImageFree($filename);
         			if ($imageok) $value = "[[File:$filename$fileoptions]]";

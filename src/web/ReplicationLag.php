@@ -17,7 +17,6 @@
 
 use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
-use PDO;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
