@@ -17,10 +17,12 @@
 
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
+use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\Config;
 use PDO;
 
 class MiscReports extends DatabaseReport
@@ -40,6 +42,11 @@ class MiscReports extends DatabaseReport
 
     		case 'Journalisted':
     			$this->Journalisted($apis['dbh_wiki'], $apis['mediawiki'], $apis['dbh_wikidata']);
+    			return false;
+    			break;
+
+    		case 'WikiProjectList':
+    			$this->WikiProjectList($apis['dbh_wiki']);
     			return false;
     			break;
     	}
@@ -76,6 +83,13 @@ class MiscReports extends DatabaseReport
 		return $results;
 	}
 
+	/**
+	 * Get a list of ChemSpider ids and corresponding wikidata item number
+	 *
+	 * @param PDO $dbh_wiki
+	 * @param MediaWiki $mediawiki
+	 * @param PDO $dbh_wikidata
+	 */
 	public function ChemSpider(PDO $dbh_wiki, MediaWiki $mediawiki, PDO $dbh_wikidata)
 	{
 		$paramnames = array('ChemSpiderID', 'ChemSpiderID1', 'ChemSpiderID2', 'ChemSpiderID3', 'ChemSpiderID4', 'ChemSpiderID5', 'ChemSpiderIDOther');
@@ -159,6 +173,13 @@ class MiscReports extends DatabaseReport
 		fclose($ChemSpiderIDs);
 	}
 
+	/**
+	 * Get a list of Journalisted ids and corresponding wikidata item number
+	 *
+	 * @param PDO $dbh_wiki
+	 * @param MediaWiki $mediawiki
+	 * @param PDO $dbh_wikidata
+	 */
 	public function Journalisted(PDO $dbh_wiki, MediaWiki $mediawiki, PDO $dbh_wikidata)
 	{
 		$templates = array(
@@ -225,5 +246,178 @@ class MiscReports extends DatabaseReport
 		}
 
 		fclose($hndl);
+	}
+
+	/**
+	 * Generate a list of WikiProjects with status and creation date
+	 *
+	 * @param PDO $dbh_wiki
+	 */
+	public function WikiProjectList(PDO $dbh_wiki)
+	{
+		$catstatuses = array(
+			'Active_WikiProjects' => 'Active',
+			'Defunct_WikiProjects' => 'Defunct',
+			'Inactive_WikiProjects' => 'Inactive',
+			'Inactive_anime_and_manga-related_WikiProjects' => 'Inactive',
+			'Inactive_education-related_WikiProjects' => 'Inactive',
+			'Inactive_game-related_WikiProjects' => 'Inactive',
+			'Inactive_geographical_WikiProjects' => 'Inactive',
+			'Inactive_music-related_WikiProjects' => 'Inactive',
+			'Inactive_sports-related_WikiProjects' => 'Inactive',
+			'Inactive_TV-related_WikiProjects' => 'Inactive',
+			'Semi-active_WikiProjects' => 'Semi-active'
+		);
+
+		$statustotals = array();
+		$projectcnt = 0;
+
+
+		// Retrieve with prefix WikiProject_
+
+		$sql = "SELECT page_id, page_title, GROUP_CONCAT(cl_to SEPARATOR '#') FROM page " .
+			" LEFT JOIN categorylinks ON cl_from = page_id " .
+			" WHERE page_namespace = 4 AND page_title LIKE 'WikiProject\_%' AND page_title NOT LIKE '%/%' " .
+			" AND page_is_redirect = 0 " .
+			" GROUP BY page_title " .
+			" ORDER BY page_title";
+
+		$creationsql = "SELECT rev_timestamp FROM revision WHERE rev_page = ? ORDER BY rev_timestamp LIMIT 1";
+		$createsth = $dbh_wiki->prepare($creationsql);
+
+		$sth = $dbh_wiki->prepare($sql);
+		$sth->execute();
+		$sth->setFetchMode(PDO::FETCH_NUM);
+		$projects = array();
+
+		while ($row = $sth->fetch()) {
+			$status = 'Uncategorized';
+			$pageid = $row[0];
+			$pagename = str_replace('_', ' ', $row[1]);
+
+			$cats = $row[2];
+			if (empty($cats)) $cats = ''; // Handles nulls
+			$cats = explode('#', $cats);
+
+			foreach ($cats as $cat) {
+				if (isset($catstatuses[$cat])) {
+					$status = $catstatuses[$cat];
+					break;
+				}
+			}
+
+			// Retrieve the creation date
+			$createsth->bindValue(1, $pageid);
+			$createsth->execute();
+			$creationdate = 'Unknown';
+			if ($creationrow = $createsth->fetch(PDO::FETCH_NUM)) {
+				$creationdate = $creationrow[0];
+				$creationdate = substr($creationdate, 0, 4) . '-' . substr($creationdate, 4, 2) . '-' . substr($creationdate, 6, 2);
+			}
+
+			$createsth->closeCursor();
+
+			$projects[$pagename] = array('status' => $status, 'created' => $creationdate);
+
+			if (! isset($statustotals[$status])) $statustotals[$status] = 0;
+			++$statustotals[$status];
+			++$projectcnt;
+		}
+
+		$sth->closeCursor();
+
+		// Retrieve by category
+
+		$sql = "SELECT page_id, page_title FROM page, categorylinks " .
+			" WHERE page_namespace = 4 AND page_title NOT LIKE '%/%' " .
+			" AND cl_from = page_id AND cl_to = ? " .
+			" AND page_is_redirect = 0 ";
+		$sth = $dbh_wiki->prepare($sql);
+
+		foreach ($catstatuses as $catname => $status) {
+			$sth->bindValue(1, $catname);
+			$sth->execute();
+			$sth->setFetchMode(PDO::FETCH_NUM);
+
+			while ($row = $sth->fetch()) {
+				$pageid = $row[0];
+				$pagename = str_replace('_', ' ', $row[1]);
+				if (isset($projects[$pagename])) continue;
+
+				// Retrieve the creation date
+				$createsth->bindValue(1, $pageid);
+				$createsth->execute();
+				$creationdate = 'Unknown';
+				if ($creationrow = $createsth->fetch(PDO::FETCH_NUM)) {
+					$creationdate = $creationrow[0];
+					$creationdate = substr($creationdate, 0, 4) . '-' . substr($creationdate, 4, 2) . '-' . substr($creationdate, 6, 2);
+				}
+
+				$createsth->closeCursor();
+
+				$projects[$pagename] = array('status' => $status, 'created' => $creationdate);
+
+				if (! isset($statustotals[$status])) $statustotals[$status] = 0;
+				++$statustotals[$status];
+				++$projectcnt;
+			}
+
+			$sth->closeCursor();
+		}
+
+		// Generate the report
+
+		$totalline = array();
+		ksort($statustotals);
+		ksort($projects);
+
+		foreach ($statustotals as $status => $total) {
+			$totalline[] = "$status: $total";
+		}
+
+		$totalline = implode(' ', $totalline);
+
+        $asof_date = getdate();
+        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikiProjectList.html';
+		$hndl = fopen($path, 'wb');
+
+		// Header
+		fwrite($hndl, "<!DOCTYPE html>
+		<html><head>
+		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+		<title>WikiProject List</title>
+		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+		<script type='text/javascript' src='../js/jquery-2.1.1.min.js'></script>
+		<script type='text/javascript' src='../js/jquery.tablesorter.min.js'></script>
+		</head><body>
+		<script type='text/javascript'>
+			$(document).ready(function()
+			    {
+			        $('#myTable').tablesorter({});
+			    }
+			);
+		</script>
+		<div style='display: table; margin: 0 auto;'>
+		<h2>WikiProject List as of $asof_date</h2>
+		<p>Project count: $projectcnt</p>
+		<p>Status counts - $totalline</p>
+		<table id='myTable' class='wikitable'><thead><tr><th>Project</th><th>Status</th><th>Created</th></tr></thead><tbody>
+		");
+
+		// Body
+		foreach ($projects as $title => $project) {
+			$status = $project['status'];
+			$created = $project['created'];
+			$projurl = 'https://en.wikipedia.org/wiki/Wikipedia:' . urlencode(str_replace(' ', '_', $title));
+
+			fwrite($hndl, "<tr><td><a href=\"$projurl\">" . htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td>$status</td>
+			<td>$created</td></tr>\n");
+		}
+
+		// Footer
+		fwrite($hndl, "</tbody></table></div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+		fclose($hndl);
+
 	}
 }

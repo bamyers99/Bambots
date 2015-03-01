@@ -26,7 +26,8 @@ use PDO;
 
 class DatabaseReportBot
 {
-    const OUTPUTDIR = 'DatabaseReportBot.outputdir';
+    const HTMLDIR = 'DatabaseReportBot.htmldir';
+	const OUTPUTDIR = 'DatabaseReportBot.outputdir';
     const OUTPUTTYPE = 'DatabaseReportBot.outputtype';
     const ERROREMAIL = 'DatabaseReportBot.erroremail';
     const LABSDB_USERNAME = 'DatabaseReportBot.labsdb_username';
