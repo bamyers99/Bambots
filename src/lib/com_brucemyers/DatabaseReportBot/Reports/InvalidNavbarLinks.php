@@ -108,7 +108,7 @@ class InvalidNavbarLinks extends DatabaseReport
 		$mediawiki = $apis['mediawiki'];
 
 		foreach ($template_types as $type_name => $template_type) {
-			$groupname = "{{tlxplain|$type_name|{$template_type['name_param']}&#61;}}";
+			$groupname = "{{tlp|$type_name|{$template_type['name_param']}&#61;}}";
 			echo "==$groupname==\n";
 
 			// Retrieve the target navbars
