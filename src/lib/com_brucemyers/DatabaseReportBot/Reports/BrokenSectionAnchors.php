@@ -220,8 +220,12 @@ class BrokenSectionAnchors extends DatabaseReport
 	/**
 	 * Create view count initial file.
 	 *
+	 * jsub -N DatabaseReportBot -cwd -mem 768m php DatabaseReportBot.php BrokenSectionAnchors createviewcounts
+	 * cp wikiviews to /var/www/projects/wikitools/data
+	 * mv wikiviews wikiviews.bak
 	 * LC_ALL=C sort -k 1,1 wikiviews.bak >wikiviews
-	 * ./importdata.sh getviews 201409
+	 * cd ../scripts
+	 * nohup ./importdata.sh getviews 201409 &
 	 */
 	function createviewcounts($dbh_wiki)
 	{
