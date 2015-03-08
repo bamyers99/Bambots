@@ -301,30 +301,45 @@ class InceptionBot
 
     	if (! empty($newresults)) $output .= "<ul>\n";
 
+    	// group by namespace
+    	$namespaces = array();
+
     	foreach ($newresults as $result) {
-        	$pageinfo = $result['pageinfo'];
-        	$displayuser = $pageinfo['user'];
-        	$ns = $pageinfo['ns'];
-            $user = str_replace(' ', '_', $displayuser);
-            $urlencodeduser = urlencode($displayuser);
-            if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
-            else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
-        	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
+    		$pageinfo = $result['pageinfo'];
+    		$ns = $pageinfo['ns'];
+    		if (! isset($namespaces[$ns])) $namespaces[$ns] = array();
+    		$namespaces[$ns][] = $result;
+    	}
 
-            $sanitized_title = str_replace('=', '&#61;', $pageinfo['title']);
+    	foreach ($namespaces as $ns => $nsresults) {
+    		if ($ns != 0) $output .= "{{User:AlexNewArtBot/MaintDisplay|\n";
 
-        	if ($ns != 0) $output .= '{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|' . $sanitized_title . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
-        	elseif ($linecnt > self::MAX_FULL_TEMPLATE_LINES) $output .= '<li>[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
-        	else $output .= '<li>{{la|' . $sanitized_title . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
+	    	foreach ($nsresults as $result) {
+	        	$pageinfo = $result['pageinfo'];
+	        	$displayuser = $pageinfo['user'];
+	            $user = str_replace(' ', '_', $displayuser);
+	            $urlencodeduser = urlencode($displayuser);
+	            if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
+	            else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
+	        	// for html htmlentities(title and user, ENT_COMPAT, 'UTF-8')
 
-        	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . '</li>';
-        	if ($ns != 0) {
-        	    $wikipediaNS = '1';
-        	    if (in_array($ns, $suppressedNS)) $wikipediaNS = '0';
-        	    $output .= "|$wikipediaNS}}";
-        	}
-        	$output .= "\n";
-        	++$linecnt;
+	            $sanitized_title = str_replace('=', '&#61;', $pageinfo['title']);
+
+	        	if ($ns != 0) $output .= '<li>{{pagelinks|' . $sanitized_title . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
+	        	elseif ($linecnt > self::MAX_FULL_TEMPLATE_LINES) $output .= '<li>[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
+	        	else $output .= '<li>{{la|' . $sanitized_title . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
+
+	        	$output .= ' started on ' . substr($pageinfo['timestamp'], 0, 10) . ', score: ' . $result['totalScore'] . '</li>';
+	        	$output .= "\n";
+	        	++$linecnt;
+	    	}
+
+	    	if ($ns != 0) {
+	    		$wikipediaNS = '1';
+	    		if (in_array($ns, $suppressedNS)) $wikipediaNS = '0';
+	    		$output .= "|$wikipediaNS}}\n";
+	    	}
+
     	}
 
     	if (! empty($newresults)) $output .= "</ul>\n";
@@ -336,30 +351,47 @@ class InceptionBot
     	    if ($sectioncnt++ > 0) $output .= "----\n";
     	    $output .= "<ul>\n";
 
+    	    // Group by line type and namespace suppress
+    	    $namespaces = array();
     	    foreach ($section as $line) {
-        	    ++$existingcnt;
-                $title = $line['title'];
-                $displayuser = $line['user'];
-                $user = str_replace(' ', '_', $displayuser);
-                $urlencodeduser = urlencode($displayuser);
-                $timestamp = $line['timestamp'];
-                $totalScore = $line['totalScore'];
+    	    	$linetype = $line['type'];
                 $wikipediaNS = $line['WikipediaNS'];
-                if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
-                else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
+                $akey = "$linetype|$wikipediaNS";
+    			if (! isset($namespaces[$akey])) $namespaces[$akey] = array();
+    			$namespaces[$akey][] = $line;
+    	    }
 
-                $sanitized_title = str_replace('=', '&#61;', $title);
+    	    foreach ($namespaces as $akey => $section) {
+    	    	list($linetype, $wikipediaNS) = explode('|', $akey);
 
-        	    if ($linecnt > self::MAX_FULL_TEMPLATE_LINES && $line['type'] != 'MD') {
-                    $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
-        	    } elseif ($linecnt > self::MAX_FULL_TEMPLATE_LINES && $line['type'] == 'MD') {
-                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>|$wikipediaNS}}\n";
-        	    } elseif ($line['type'] == 'MD') {
-                    $output .= "{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|$sanitized_title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>|$wikipediaNS}}\n";
-        	    } else {
-                    $output .= "<li>{{la|$sanitized_title}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
-                }
-            	++$linecnt;
+    	    	if ($linetype == 'MD') $output .= "{{User:AlexNewArtBot/MaintDisplay|\n";
+
+	    	    foreach ($section as $line) {
+	        	    ++$existingcnt;
+	                $title = $line['title'];
+	                $displayuser = $line['user'];
+	                $user = str_replace(' ', '_', $displayuser);
+	                $urlencodeduser = urlencode($displayuser);
+	                $timestamp = $line['timestamp'];
+	                $totalScore = $line['totalScore'];
+	                if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
+	                else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
+
+	                $sanitized_title = str_replace('=', '&#61;', $title);
+
+	        	    if ($linecnt > self::MAX_FULL_TEMPLATE_LINES && $linetype != 'MD') {
+	                    $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
+	        	    } elseif ($linecnt > self::MAX_FULL_TEMPLATE_LINES && $linetype == 'MD') {
+	                    $output .= "<li>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>\n";
+	        	    } elseif ($linetype == 'MD') {
+	                    $output .= "<li>{{pagelinks|$sanitized_title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
+	        	    } else {
+	                    $output .= "<li>{{la|$sanitized_title}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
+	                }
+	            	++$linecnt;
+	    	    }
+
+    	    	if ($linetype == 'MD') $output .= "|$wikipediaNS}}\n";
     	    }
 
     	    $output .= "</ul>\n";
