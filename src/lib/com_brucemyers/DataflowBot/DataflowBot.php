@@ -35,7 +35,7 @@ class DataflowBot
     	    array('class' => 'com_brucemyers\\DataflowBot\\Extractors\\SQLQuery',
     			'params' => array(
     	    		'wiki' => 'enwiki',
-    				'sql' => "SELECT REPLACE(rc_title, '_', ' ') AS Article, COUNT(*) AS Edits,
+    				'sql' => "SELECT rc_title AS Article, COUNT(*) AS Edits,
   						COUNT(DISTINCT rc_user_text) AS Editors, -- used to be rc_user which counted all IPs as same
   						ROUND(LN(COUNT(*)) * (LN(COUNT(DISTINCT rc_user_text))+1.4), 2) AS `Weighted rank`
 						FROM recentchanges
@@ -46,6 +46,9 @@ class DataflowBot
     		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\DeleteColumn',
     			'params' => array(
     				'deletecol' => '4')),
+    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\ResolveRedirectColumn',
+    			'params' => array(
+    				'linkcol' => '1')),
     		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\WikilinkColumn',
     			'params' => array(
     				'linkcol' => '1')),

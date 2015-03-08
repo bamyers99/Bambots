@@ -487,6 +487,7 @@ class MediaWiki extends wikipedia
     	if ($id == 0) return '';
     	if ($id == 1) return 'Talk:';
     	if ($id == 6 || $id == 14) return ':' . self::$namespaces[$id] . ':';
+    	if (! isset(self::$namespaces[$id])) return '';
     	return self::$namespaces[$id] . ':';
     }
 

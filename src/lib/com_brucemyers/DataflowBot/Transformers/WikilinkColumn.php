@@ -20,6 +20,7 @@ namespace com_brucemyers\DataflowBot\Transformers;
 use com_brucemyers\DataflowBot\io\FlowReader;
 use com_brucemyers\DataflowBot\io\FlowWriter;
 use com_brucemyers\DataflowBot\ComponentParameter;
+use com_brucemyers\MediaWiki\MediaWiki;
 
 class WikilinkColumn extends Transformer
 {
@@ -109,7 +110,7 @@ class WikilinkColumn extends Transformer
 				}
 
 				if ($colnum >= count($row)) return "Invalid wikilink column #";
-				$title = str_replace('_', ' ', $row[$colnum]);
+				$title = MediaWiki::getLinkSafePagename($row[$colnum]);
 				$row[$colnum] = "[[$title]]";
 			}
 

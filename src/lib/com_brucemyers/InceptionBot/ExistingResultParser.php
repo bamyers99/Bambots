@@ -67,14 +67,12 @@ class ExistingResultParser
             }
 
             if ($line == '{{User:AlexNewArtBot/MaintDisplay|') {
-            	echo "found maint header\n";
             	$inmaint = true;
             	$maintResults = array();
             	continue;
             }
 
             if (preg_match('/^\\|(\\d)}}$/', $line, $matches)) {
-            	echo "found maint footer\n";
             	$WikipediaNS = $matches[1];
 
             	foreach ($maintResults as $result) {
@@ -90,7 +88,6 @@ class ExistingResultParser
             if ($inmaint) {
                 foreach ($this->maintPatterns as $pattern) {
 	                if (preg_match($pattern, $line, $matches)) {
-	                	echo "maint matched $pattern $line\n";
 	                    $title = str_replace('&#61;', '=', $matches[1]);
 
 	                    $maintResults[] = array('title' => $title, 'user' => $matches[2], 'timestamp' => $matches[3],

@@ -143,7 +143,7 @@ class AddColumnFirstSentence extends AddColumn
 				if ($pagename[0] == ':') $pagename = substr($pagename, 1);
 				$data = $wiki->getPageWithCache($pagename);
 
-        		$value = $this->getFirstSentence($data);
+        		$value = $this->getFirstSentence($data, $pagename);
 
 				$retval = $this->insertColumn($rows[$key], $value);
 				if ($retval !== true) return $retval;
@@ -159,9 +159,10 @@ class AddColumnFirstSentence extends AddColumn
 	 * Get the first sentence.
 	 *
 	 * @param string $data Page data
+	 * @param string $pagename Page name
 	 * @return string First sentence
 	 */
-	protected function getFirstSentence($data)
+	protected function getFirstSentence($data, $pagename)
 	{
 		$sentence = '';
 		$bracedepth = 0;
@@ -206,14 +207,17 @@ class AddColumnFirstSentence extends AddColumn
 			elseif ($newlen == 0 && preg_match('/\s/u', $char)) { /* skip whitespace */ }
 
 			elseif ($bracedepth == 0) {
+				if ($char == '[') ++$bracketdepth;
+				else if($char == ']') --$bracketdepth;
+
 				if ($char == '.' || ($char == "\n" && $prevchar == "\n")) {
-					if ($newlen < 100) {
+					if (($newlen < 100 && $char == '.') || $bracketdepth) {
 						if ($char == '.') $sentence .= $char;
 						$prevchar = $char;
 						continue;
 					}
 
-					$sentence .= '.';
+					if ($char == '.') $sentence .= '.';
 					break;
 				}
 
@@ -223,6 +227,14 @@ class AddColumnFirstSentence extends AddColumn
 			$prevchar = $char;
 		}
 
-		return trim($sentence);
+		$sentence = trim($sentence);
+
+		// Add pagename if no bolded text.
+		if (strpos($sentence, "'''") === false) {
+			$pagename = str_replace('_', ' ', $pagename);
+			$sentence = "'''$pagename''' $sentence";
+		}
+
+		return $sentence;
 	}
 }
