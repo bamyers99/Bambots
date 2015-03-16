@@ -30,6 +30,9 @@ class CreateTables
     public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
     {
     	// enwiki
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS revision');
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS page');
+
     	$sql = "CREATE TABLE IF NOT EXISTS `category` (
 		  `cat_id` int(10) unsigned NOT NULL,
 		  `cat_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
@@ -55,9 +58,27 @@ class CreateTables
 		  `page_id` int(10) unsigned NOT NULL,
 		  `page_namespace` int(11) NOT NULL,
 		  `page_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-		  PRIMARY KEY (`page_id`),
+  		  `page_is_redirect` tinyint unsigned NOT NULL default 0,
+    	  PRIMARY KEY (`page_id`),
 		  UNIQUE KEY `name_title` (`page_namespace`,`page_title`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_enwiki->exec($sql);
+
+   		$sql = "CREATE TABLE IF NOT EXISTS `revision` (
+  			`rev_id` int unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  			`rev_page` int unsigned NOT NULL,
+  			`rev_timestamp` binary(14) NOT NULL default '',
+  			`rev_parent_id` int unsigned default NULL
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_enwiki->exec($sql);
+
+    	$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
+ 			`rd_from` int unsigned NOT NULL default 0 PRIMARY KEY,
+ 			`rd_namespace` int NOT NULL default 0,
+ 			`rd_title` varchar(255) binary NOT NULL default '',
+ 			`rd_interwiki` varchar(32) default NULL,
+ 			`rd_fragment` varchar(255) binary default NULL
+ 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_enwiki->exec($sql);
 
     	// tools
@@ -66,10 +87,13 @@ class CreateTables
     	// load enwiki
 
     	$ts = '1980-01-01 00:00:00';
+    	$wikiets = date('YmdH\\0\\0\\0\\0');
+    	$wikits = date('YmdHis');
 
    		$dbh_enwiki->exec('TRUNCATE category');
    		$dbh_enwiki->exec('TRUNCATE page');
    		$dbh_enwiki->exec('TRUNCATE categorylinks');
+    	$dbh_enwiki->exec('TRUNCATE revision');
    		$dbh_tools->exec('TRUNCATE wikis');
    		$dbh_tools->exec('TRUNCATE runs');
    		$dbh_tools->exec('TRUNCATE querys');
@@ -88,19 +112,20 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO category VALUES (7,'Articles_needing_cleanup_from_May_2013',3,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (8,'Articles_needing_cleanup_from_March_2013',1,0,0)");
 
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (1, 14, 'B-Class_Michigan_articles')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (2, 14, 'Unassessed_Michigan_articles')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (3, 0, 'Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (4, 1, 'Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (5, 0, 'Detroit,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (6, 1, 'Detroit,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (7, 0, 'Mackinac_Island')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (8, 1, 'Mackinac_Island')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (9, 0, 'Lansing,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (10, 1, 'Lansing,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (11, 14, 'All_articles_needing_coordinates')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (12, 14, 'Articles_needing_cleanup_from_May_2013')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (13, 14, 'Articles_needing_cleanup_from_March_2013')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (1, 14, 'B-Class_Michigan_articles', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (2, 14, 'Unassessed_Michigan_articles', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (3, 0, 'Michigan', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (4, 1, 'Michigan', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (5, 0, 'Detroit,_Michigan', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (6, 1, 'Detroit,_Michigan', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (7, 0, 'Mackinac_Island', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (8, 1, 'Mackinac_Island', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (9, 0, 'Lansing,_Michigan', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (10, 1, 'Lansing,_Michigan', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (11, 14, 'All_articles_needing_coordinates', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (12, 14, 'Articles_needing_cleanup_from_May_2013', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (13, 14, 'Articles_needing_cleanup_from_March_2013', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (14, 10, 'WikiProject_Michigan', 0)");
 
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat', '$ts')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat', '$ts')");
@@ -117,16 +142,22 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'Unassessed_Michigan_articles', 'page', '$ts')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'NA-importance_Michigan_articles', 'page', '$ts')");
 
+   		// New page
+   		$dbh_enwiki->exec("INSERT INTO revision VALUES (1, 8, '$wikiets', 0)"); // Dummy for earliest
+   		$dbh_enwiki->exec("INSERT INTO revision VALUES (2, 8, '$wikits', 0)");
+   		$dbh_enwiki->exec("INSERT INTO revision VALUES (3, 9, '$wikits', 0)");
+   		$dbh_enwiki->exec("INSERT INTO revision VALUES (4, 9, '$wikits', 3)");
+
 
     	// category - x (article namespace)
     	$dbh_enwiki->exec("INSERT INTO category VALUES (300,'Featured_articles',2,0,0)");
     	$dbh_enwiki->exec("INSERT INTO category VALUES (301,'Pages_with_DOIs_inactive_since_2013',2,0,0)");
 
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (301, 0, 'Earth')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (302, 1, 'Earth')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (303, 0, 'Read\'s Cavern')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (304, 1, 'Read\'s Cavern')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (305, 14, 'Pages_with_DOIs_inactive_since_2013')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (301, 0, 'Earth', 0)");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (302, 1, 'Earth', 0)");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (303, 0, 'Read\'s Cavern', 0)");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (304, 1, 'Read\'s Cavern', 0)");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (305, 14, 'Pages_with_DOIs_inactive_since_2013', 0)");
 
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured_articles', 'page', '$ts')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages_with_DOIs_inactive_since_2013', 'page', '$ts')");
@@ -134,5 +165,8 @@ class CreateTables
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Featured_articles', 'page', '$ts')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Pages_with_DOIs_inactive_since_2013', 'page', '$ts')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Articles_needing_cleanup_from_May_2013', 'page', '$ts')");
+
+   		$dbh_enwiki->exec("INSERT INTO revision VALUES (5, 301, '$wikits', 0)");
+   		$dbh_enwiki->exec("INSERT INTO revision VALUES (6, 301, '$wikits', 5)");
     }
 }

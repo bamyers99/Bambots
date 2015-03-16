@@ -22,6 +22,7 @@ use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
 use Exception;
+use DateTime;
 
 /**
  * Wrapper for ChrisG's bot classes.
@@ -266,6 +267,99 @@ class MediaWiki extends wikipedia
     }
 
     /**
+     * Get multiple revisions text
+     *
+     * @param $revids array Revision ids
+     * @return array pagetitle=>array(revid, revision text, revid, revision text) second revid is optional
+     */
+    public function getRevisionsText($revids)
+    {
+        if (empty($revids)) return array();
+        $revs = array();
+        $revChunks = array_chunk($revids, Config::get(self::WIKIPAGEINCREMENT));
+
+        foreach ($revChunks as $revChunk) {
+        	$revids = implode('|', $revChunk);
+        	$ret = $this->query('?action=query&format=php&prop=revisions&revids=' . $revids . '&rvprop=ids|content&continue=');
+
+        	if (isset($ret['error'])) {
+        		throw new Exception('Query Error ' . $ret['error']['info']);
+        	}
+
+        	foreach ($ret['query']['pages'] as $page) {
+       			$pagetitle = $page['title'];
+       			$pagetext = (isset($page['revisions'][0]['*'])) ? $page['revisions'][0]['*'] : '';
+         		$revs[$pagetitle] = array($page['revisions'][0]['revid'], $pagetext);
+
+       			if (isset($page['revisions'][1])) {
+         			$revs[$pagetitle][] = $page['revisions'][1]['revid'];
+       				$pagetext = (isset($page['revisions'][1]['*'])) ? $page['revisions'][1]['*'] : '';
+         			$revs[$pagetitle][] = $pagetext;
+        		}
+        	}
+        }
+
+        return $revs;
+    }
+
+    /**
+     * Get multiple revisions categories
+     *
+     * @param $revids array Revision ids
+     * @return array pagetitle=>array(categories)
+     */
+    public function getRevisionsCategories($revids)
+    {
+        if (empty($revids)) return array();
+        $revs = array();
+
+        foreach ($revids as $revid) {
+        	$ret = $this->query("?action=parse&format=php&oldid=$revid&prop=categories");
+
+        	if (isset($ret['error'])) {
+        		Logger::log('MediaWiki->getRevisionsCategories Error ' . $ret['error']['info']);
+        		continue;
+        	}
+
+        	$pagetitle = $ret['parse']['title'];
+        	$revs[$pagetitle] = array();
+
+        	foreach ($ret['parse']['categories'] as $category) {
+       			$revs[$pagetitle][] = str_replace('_', ' ', $category['*']);
+        	}
+        }
+
+        return $revs;
+    }
+
+    /**
+     * Parse categories from text.
+     *
+     * @param string $pagetitle
+     * @param string $text
+     * @return array Categories
+     */
+    public function parseCategoriesFromText($pagetitle, $text)
+    {
+   		$cats = array();
+
+    	$post = array('prop' => 'categories', 'title' => $pagetitle, 'text' => $text, 'contentformat' => 'text/x-wiki',
+    		'contentmodel' => 'wikitext');
+    	$ret = $this->query("?action=parse&format=php", $post);
+
+        if (isset($ret['error'])) {
+        	Logger::log('MediaWiki->parseCategoriesFromText Error ' . $ret['error']['info']);
+        	return $cats;
+        }
+
+    	foreach ($ret['parse']['categories'] as $category) {
+       		$cats[] = str_replace('_', ' ', $category['*']);
+        }
+
+        return $cats;
+    }
+
+    /**
      * Get multiple pages
      *
      * @param $pagenames array Page names
@@ -476,6 +570,21 @@ class MediaWiki extends wikipedia
     }
 
     /**
+     * Get namespace prefix.
+     *
+     * @param int $id Namespace id
+     * @return string Namespace prefix
+     */
+    public static function getNamespacePrefix($id)
+    {
+    	$id = (int)$id;
+    	if ($id == 0) return '';
+    	if ($id == 1) return 'Talk:';
+    	if (! isset(self::$namespaces[$id])) return '';
+    	return self::$namespaces[$id] . ':';
+    }
+
+    /**
      * Get link safe namespace prefix.
      *
      * @param int $id Namespace id
@@ -558,5 +667,28 @@ class MediaWiki extends wikipedia
 		if (! isset(self::$flipped_namespaces[$namespace])) return -1;
 
 		return self::$flipped_namespaces[$namespace];
+    }
+
+    /**
+     * Convert a wiki timestamp to a unix timestamp.
+     *
+     * @param string $timestamp Wiki timestamp
+     * @return int Unix timestamp
+     */
+    public static function wikiTimestampToUnixTimestamp($timestamp)
+    {
+    	$dt = DateTime::createFromFormat('YmdHis', $timestamp);
+    	return $dt->getTimestamp();
+    }
+
+    /**
+     * Convert a unix timestamp to a wiki timestamp.
+     *
+     * @param int $timestamp Unix timestamp
+     * @return string Wiki timestamp
+     */
+    public static function unixTimestampToWikiTimestamp($timestamp)
+    {
+    	return date('YmdHis', $timestamp);
     }
 }

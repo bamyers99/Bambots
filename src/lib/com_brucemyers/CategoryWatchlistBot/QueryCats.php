@@ -25,7 +25,7 @@ class QueryCats
 	const CATEGORY_COUNT_UNAPPROVED = -2;
 	const CATEGORY_COUNT_DENIED = -3;
 	const CATEGORY_COUNT_RECALC = -4;
-	const MAX_UNAPPROVED_CATCOUNT = 50;
+	const MAX_UNAPPROVED_CATCOUNT = 100;
 
 	protected $dbh_wiki;
 	protected $dbh_tools;
@@ -39,7 +39,7 @@ class QueryCats
 	/**
 	 * Calculate categories
 	 *
-	 * @param array $params keys = cn?{1-10} - cat names, sd?{1-10} - subcat depth
+	 * @param array $params keys = cn?{1-10} - cat names, sd?{1-10} - subcat depth, rt?{1-10} - report type
 	 * @param bool $recalc Is this a recalc, default = false
 	 * @return array keys = cats - array(), errors - array(), catcount - int
 	 */
@@ -48,10 +48,12 @@ class QueryCats
 		$cats = array();
 		$errors = array();
 		$sth = $this->dbh_wiki->prepare('SELECT cat_title FROM category WHERE cat_title = ?');
+		$reporttypes = array('B' => 'B', 'P' => '+', 'M' => '-');
 
 		for ($x=1; $x <= 10; ++$x) {
 			$catname = trim($params["cn$x"]);
 			$subdepth = (int)$params["sd$x"];
+			$reporttype = $reporttypes[$params["rt$x"]];
 
 			if (! empty($catname)) {
 				$wikicatname = str_replace(' ', '_', ucfirst($catname));
@@ -60,17 +62,19 @@ class QueryCats
 	    		$sth->bindParam(1, $wikicatname);
 	    		$sth->execute();
 
-	    		if ($row = $sth->fetch(PDO::FETCH_ASSOC)) $cats[] = array('cn' => $wikicatname, 'sd' => $subdepth);
+	    		if ($sth->fetch(PDO::FETCH_ASSOC)) $cats[] = array('cn' => $wikicatname, 'sd' => $subdepth, 'rt' => $reporttype);
 	    		else $errors[] = "Category not found - $catname";
+	    		$sth->closeCursor();
 			}
 		}
 
+		$foundcats = array();
+
 		if (empty($cats)) $catcount = 0;
 		else {
-			$foundcats = array();
 
 			foreach ($cats as $catdata) {
-				$this->traverseCats($foundcats, $catdata['cn'], $catdata['sd']);
+				$this->traverseCats($foundcats, $catdata['cn'], $catdata['sd'], $catdata['rt']);
 			}
 
 			$catcount = count($foundcats);
@@ -92,11 +96,13 @@ class QueryCats
 	public function saveCats($queryid, &$cats)
 	{
 		$this->dbh_tools->exec("DELETE FROM querycats WHERE queryid = $queryid");
-		$sth = $this->dbh_tools->prepare("INSERT INTO querycats (queryid,category) VALUES ($queryid,?)");
+		$sth = $this->dbh_tools->prepare("INSERT INTO querycats (queryid,category,plusminus) VALUES ($queryid,?,?)");
 		$this->dbh_tools->beginTransaction();
 
-		foreach ($cats as $catname) {
-			$sth->bindParam(1, $catname);
+		foreach ($cats as $catname => $reporttype) {
+			$catname = str_replace('_', ' ', $catname);
+			$sth->bindValue(1, $catname);
+			$sth->bindValue(2, $reporttype);
 			$sth->execute();
 		}
 
@@ -109,16 +115,17 @@ class QueryCats
 	 * @param array $foundcats in/out
 	 * @param mixed $searchcats
 	 * @param int $depth
+	 * @param string $reporttype
 	 */
-	protected function traverseCats(&$foundcats, $searchcats, $depth)
+	protected function traverseCats(&$foundcats, $searchcats, $depth, $reporttype)
 	{
 		if (! is_array($searchcats)) $searchcats = (array)$searchcats;
 
 		$nextcats = array();
 
 		foreach ($searchcats as $cat) {
-			if (in_array($cat, $foundcats)) continue;
-			$foundcats[] = $cat;
+			if (isset($foundcats[$cat])) continue;
+			$foundcats[$cat] = $reporttype;
 			if ($depth) $nextcats[] = $cat;
 		}
 
@@ -132,7 +139,7 @@ class QueryCats
 
 		while($row = $sth->fetch(PDO::FETCH_ASSOC)) {
 			$cat = $row['page_title'];
-			if (in_array($cat, $foundcats)) continue;
+			if (isset($foundcats[$cat])) continue;
 			$subcats[] = $cat;
 		}
 
@@ -140,6 +147,6 @@ class QueryCats
 
 		if (! count($subcats)) return;
 
-		$this->traverseCats($foundcats, $subcats, $depth - 1);
+		$this->traverseCats($foundcats, $subcats, $depth - 1, $reporttype);
 	}
 }

@@ -23,6 +23,7 @@ use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\MySQLDate;
+use com_brucemyers\Util\Email;
 use PDO;
 
 class CategoryWatchlistBot
@@ -36,15 +37,9 @@ class CategoryWatchlistBot
     const CURRENTWIKI = 'CategoryWatchlistBot.currentwiki';
     const HTMLDIR = 'CategoryWatchlistBot.htmldir';
     const URLPATH = 'CategoryWatchlistBot.urlpath';
-    const WIKI_HOST = 'CategoryWatchlistBot.wiki_host';
-    const TOOLS_HOST = 'CategoryWatchlistBot.tools_host';
-    const LABSDB_USERNAME = 'CategoryWatchlistBot.labsdb_username';
-    const LABSDB_PASSWORD = 'CategoryWatchlistBot.labsdb_password';
 
     const CACHE_PREFIX_RESULT = 'CatWBResult:';
     const CACHE_PREFIX_ATOM = 'CatWBAtom:';
-
-    protected $dbh_tools;
 
     public function __construct(&$ruleconfigs)
     {
@@ -52,38 +47,34 @@ class CategoryWatchlistBot
         $totaltimer->start();
         $startwiki = Config::get(self::CURRENTWIKI);
 
-    	$wiki_host = Config::get(self::WIKI_HOST);
-    	$tools_host = Config::get(self::TOOLS_HOST);
-    	$user = Config::get(self::LABSDB_USERNAME);
-    	$pass = Config::get(self::LABSDB_PASSWORD);
-
     	$outputdir = Config::get(self::OUTPUTDIR);
     	$outputdir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputdir);
     	$outputdir = preg_replace('!(/|\\\\)$!', '', $outputdir); // Drop trailing slash
     	$outputdir .= DIRECTORY_SEPARATOR;
 
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CategoryWatchlistBot", $user, $pass);
-    	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$this->dbh_tools = $dbh_tools;
+    	$serviceMgr = new ServiceManager();
+
+    	$dbh_tools = $serviceMgr->getDBConnection('tools');
 
         new CreateTables($dbh_tools);
+        $dbh_tools = null;
 
         $asof_date = time();
     	$htmldir = Config::get(self::HTMLDIR);
         $urlpath = Config::get(self::URLPATH);
 
         // Generate each wikis diffs.
-        $catcount = 0;
         $errorrulsets = array();
 
-        $catLinksDiff = new CategoryLinksDiff($wiki_host, $dbh_tools, $outputdir, $user, $pass, $asof_date, $tools_host);
+
+        $catLinksDiff = new CategoryLinksDiff($serviceMgr, $outputdir, $asof_date);
 
         foreach ($ruleconfigs as $wikiname => $wikidata) {
         	if (! empty($startwiki) && $wikiname != $startwiki) continue;
             $startwiki = '';
             Config::set(self::CURRENTWIKI, $wikiname, true);
 
-            $catcount += $catLinksDiff->processWiki($wikiname, $wikidata);
+            $catLinksDiff->processWiki($wikiname, $wikidata);
 
         	Config::set(self::CURRENTWIKI, '', true);
         }
@@ -91,23 +82,16 @@ class CategoryWatchlistBot
 		$ts = $totaltimer->stop();
 		$totaltime = sprintf("%d days %d:%02d:%02d", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']);
 
-        $this->_writeHtmlStatus($ruleconfigs, $totaltime, $errorrulsets, $asof_date, $htmldir, $catcount);
+        $this->_writeHtmlStatus($ruleconfigs, $totaltime, $errorrulsets, $asof_date, $htmldir);
 
-        $this->_backupHistory($tools_host, $user, $pass, $outputdir);
+        $this->_backupHistory($serviceMgr, $outputdir);
 
         // Clear the cache, order is important
         FileCache::purgeAllPrefix(self::CACHE_PREFIX_RESULT);
         FileCache::purgeAllPrefix(self::CACHE_PREFIX_ATOM);
 
-        // Email if approvals needed
-		$sth = $dbh_tools->query('SELECT id FROM querys WHERE catcount = ' . QueryCats::CATEGORY_COUNT_UNAPPROVED . ' LIMIT 1');
-		if ($sth->fetch(PDO::FETCH_ASSOC)) {
-			$headers  = 'MIME-Version: 1.0' . "\r\n";
-			$headers .= 'From: WMF Labs <admin@brucemyers.com>' . "\r\n";
-			mail(Config::get(CategoryWatchlistBot::ERROREMAIL), 'CategoryWatchlistBot Approvals Needed', 'Approvals needed', $headers);
-		}
-
         // Purge old queries
+    	$dbh_tools = $serviceMgr->getDBConnection('tools');
         $keepdays = Config::get(self::QUERY_SAVE_DAYS) + 1;
         $purgebefore = MySQLDate::toMySQLDatetime(strtotime("-$keepdays day"));
         $sth = $dbh_tools->prepare('SELECT id FROM querys WHERE lastaccess < ?');
@@ -119,6 +103,7 @@ class CategoryWatchlistBot
 
 		foreach ($results as $row) {
 			$id = $row['id'];
+			if ($id == 1) continue; // Save sample
 			$dbh_tools->exec("DELETE FROM querycats WHERE queryid = $id");
 			$dbh_tools->exec("DELETE FROM querys WHERE id = $id");
 		}
@@ -142,12 +127,11 @@ class CategoryWatchlistBot
     /**
      * Write the bot status page
      */
-    protected function _writeHtmlStatus($ruleconfigs, $totaltime, $errorrulsets, $asof_date, $outputdir, $catcount)
+    protected function _writeHtmlStatus($ruleconfigs, $totaltime, $errorrulsets, $asof_date, $outputdir)
     {
     	$rulesetcnt = count($ruleconfigs);
     	$errcnt = count($errorrulsets);
-    	$asof_date = getdate($asof_date);
-    	$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+    	$asof_date = date('F j, Y H:i:s', $asof_date);
 
 		$path = $outputdir . 'status.html';
 		$hndl = fopen($path, 'wb');
@@ -162,7 +146,6 @@ class CategoryWatchlistBot
 <b>Last run:</b> $asof_date<br />
 <b>Processing time:</b> $totaltime<br />
 <b>Wiki count:</b> $rulesetcnt<br />
-<b>Category count:</b> $catcount<br />
 <b>Errors:</b> $errcnt
 EOT;
 
@@ -196,10 +179,23 @@ EOT;
      * @param string $user
      * @param string $pass
      */
-    protected function _backupHistory($tools_host, $user, $pass, $outputdir)
+    protected function _backupHistory(ServiceManager $serviceMgr, $outputdir)
     {
+    	$tools_host = $serviceMgr->getToolsHost();
+    	$user = $serviceMgr->getUser();
+    	$pass = $serviceMgr->getPass();
+
     	$backupFile = $outputdir . 'CategoryWatchlistBot_History.bz2';
-    	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CategoryWatchlistBot | bzip2 -9 > $backupFile";
+    	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CategoryWatchlistBot querys wikis runs | bzip2 -9 > $backupFile";
     	system($command);
+
+    	$dw = date('w');
+    	if ($dw != 1) return; // Monday
+    	$hour = date('G');
+    	if ($hour != 0) return;
+
+    	$email = new Email();
+    	$attach = array($backupFile);
+    	$email->sendEmail('admin@brucemyers.com', Config::get(self::ERROREMAIL), 'CategoryWatchlistBot backup', 'DB backup', $attach);
     }
 }

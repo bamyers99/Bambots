@@ -75,7 +75,8 @@ class http {
 
     function __construct () {
         $this->ch = curl_init();
-        curl_setopt($this->ch,CURLOPT_COOKIEFILE,''); //Enable cookie handling
+        curl_setopt($this->ch,CURLOPT_COOKIEFILE,''); // Enable cookie handling
+        curl_setopt($this->ch,CURLOPT_COOKIEJAR,'/dev/null'); // Enable cookie handling again because sometimes CURLOPT_COOKIEFILE does not enable.
         curl_setopt($this->ch,CURLOPT_MAXCONNECTS,100);
         curl_setopt($this->ch,CURLOPT_CLOSEPOLICY,CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
         //curl_setopt($this->ch, CURLOPT_VERBOSE, true);
@@ -87,7 +88,8 @@ class http {
     function reset() {
     	curl_close($this->ch);
     	$this->ch = curl_init();
-    	curl_setopt($this->ch,CURLOPT_COOKIEFILE,''); //Enable cookie handling
+    	curl_setopt($this->ch,CURLOPT_COOKIEFILE,''); // Enable cookie handling
+        curl_setopt($this->ch,CURLOPT_COOKIEJAR,'/dev/null'); // Enable cookie handling again because sometimes CURLOPT_COOKIEFILE does not enable.
     	curl_setopt($this->ch,CURLOPT_MAXCONNECTS,100);
     	curl_setopt($this->ch,CURLOPT_CLOSEPOLICY,CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
     }

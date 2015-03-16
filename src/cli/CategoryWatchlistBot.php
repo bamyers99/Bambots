@@ -73,7 +73,8 @@ try {
 
     if ($ruletype == 'active') $rules = $activerules;
     elseif ($ruletype == 'custom') $rules = array(Config::get(CategoryWatchlistBot::CUSTOMRULE) =>
-    		array('title' => Config::get(CategoryWatchlistBot::CUSTOMRULE), 'domain' => Config::get(CategoryWatchlistBot::CUSTOMRULE)));
+    		array('title' => Config::get(CategoryWatchlistBot::CUSTOMRULE),
+    			'domain' => substr(Config::get(CategoryWatchlistBot::CUSTOMRULE), 0, 2) . '.wikipedia.org'));
     else {
     	echo 'Unknown ruletype = ' . $ruletype;
     	exit;

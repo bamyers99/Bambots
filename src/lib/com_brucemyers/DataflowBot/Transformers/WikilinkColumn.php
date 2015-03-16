@@ -110,7 +110,7 @@ class WikilinkColumn extends Transformer
 				}
 
 				if ($colnum >= count($row)) return "Invalid wikilink column #";
-				$title = MediaWiki::getLinkSafePagename($row[$colnum]);
+				$title = str_replace('_', ' ', MediaWiki::getLinkSafePagename($row[$colnum]));
 				$row[$colnum] = "[[$title]]";
 			}
 

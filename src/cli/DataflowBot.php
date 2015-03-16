@@ -21,6 +21,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\FileCache;
 
+
 $clidir = dirname(__FILE__);
 $GLOBALS['botname'] = 'DataflowBot';
 
@@ -52,5 +53,9 @@ try {
 
     Logger::log(sprintf("Elapsed Time: %d days %02d:%02d:%02d\n", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']));
 } catch (Exception $ex) {
-    Logger::log($ex->getMessage() . "\n" . $ex->getTraceAsString());
+    $msg = $ex->getMessage() . "\n" . $ex->getTraceAsString();
+    Logger::log($msg);
+    $headers  = 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'From: WMF Labs <admin@brucemyers.com>' . "\r\n";
+    mail(Config::get(DataflowBot::ERROREMAIL), 'DataflowBot failed', $msg, $headers);
 }

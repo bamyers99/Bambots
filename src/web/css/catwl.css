@@ -65,3 +65,17 @@ table.wikitable th.headerSortDown {
     background-image: url(../img/cwb/ts_asc.gif);
     background-color: #d2d2d2;
 }
+
+a:link {
+	color: #00e;
+	text-decoration: none
+}
+a:visited {
+ 	color: #70f;
+}
+a:hover, a:focus {
+ 	text-decoration: underline;
+}
+a:visited.novisited {
+	color: #00e;
+}

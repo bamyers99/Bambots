@@ -50,3 +50,17 @@ table.wikitable th.headerSortDown {
 	display: table;
 	padding-right: 5px;
 }
+
+a:link {
+	color: #00e;
+	text-decoration: none
+}
+a:visited {
+ 	color: #70f;
+}
+a:hover, a:focus {
+ 	text-decoration: underline;
+}
+a:visited.novisited {
+	color: #00e;
+}

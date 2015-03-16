@@ -48,7 +48,7 @@ class TemplateParamParser
 
 		while ($match_found) {
 			if (++$itercnt > self::MAX_ITERATIONS) {
-				Logger::log("Max iterations reached data=$origdata");
+				//Logger::log("Max iterations reached data=$origdata");
 				return array();
 			}
 			$match_found = false;

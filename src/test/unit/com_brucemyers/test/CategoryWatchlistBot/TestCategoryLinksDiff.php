@@ -19,32 +19,48 @@ namespace com_brucemyers\test\CategoryWatchlistBot;
 
 use com_brucemyers\CategoryWatchlistBot\CategoryLinksDiff;
 use com_brucemyers\CategoryWatchlistBot\CategoryWatchlistBot;
+use com_brucemyers\CategoryWatchlistBot\ServiceManager;
+use com_brucemyers\test\CategoryWatchlistBot\CreateTables;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\FileCache;
-use com_brucemyers\test\CategoryWatchlistBot\CreateTables;
 use com_brucemyers\Util\MySQLDate;
 use UnitTestCase;
 use PDO;
+use Mock;
 
 class TestCategoryLinksDiff extends UnitTestCase
 {
 
     public function testDiffLoad()
     {
-    	$wiki_host = Config::get(CategoryWatchlistBot::WIKI_HOST);
-    	$tools_host = Config::get(CategoryWatchlistBot::TOOLS_HOST);
-    	$user = Config::get(CategoryWatchlistBot::LABSDB_USERNAME);
-    	$pass = Config::get(CategoryWatchlistBot::LABSDB_PASSWORD);
-
     	$outputdir = Config::get(CategoryWatchlistBot::OUTPUTDIR);
     	$outputdir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputdir);
     	$outputdir = preg_replace('!(/|\\\\)$!', '', $outputdir); // Drop trailing slash
     	$outputdir .= DIRECTORY_SEPARATOR;
 
-    	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p", $user, $pass);
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CategoryWatchlistBot", $user, $pass);
-    	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
+        $mediaWiki = &new \MockMediaWiki();
+
+        $mediaWiki->returns('getRevisionsText', array(
+        	'Talk:Mackinac Island' => array(1, "<!-- [[Category:New pages]] -->
+        		[[Category:Unassessed Michigan articles]]
+        		[[category:NA-importance_Michigan_articles]]"),
+        	'Lansing, Michigan' => array(2, "{{WikiProject Michigan}}[[Category:Articles needing cleanup from May 2013]]",
+        		3, "[[Category:Articles needing cleanup from May 2013]]"),
+        	'Earth' => array(4, "[[Category:Featured_articles]][[Category:Pages_with_DOIs_inactive_since_2013]]",
+        		5, "[[Category:Featured articles]][[Category:Pages_with_DOIs_inactive_since_2013]][[Category:Articles_needing_cleanup_from_May_2013]]")
+        ));
+
+    	$serviceMgr = new ServiceManager();
+    	$dbh_wiki = $serviceMgr->getDBConnection('enwiki');
+    	$dbh_tools = $serviceMgr->getDBConnection('tools');
+
+    	Mock::generate('com_brucemyers\\CategoryWatchlistBot\\ServiceManager', 'MockServiceManager');
+    	$serviceMgr = &new \MockServiceManager();
+    	$serviceMgr->returns('getMediaWiki', $mediaWiki);
+    	$serviceMgr->returns('getDBConnection', $dbh_wiki, array('enwiki'));
+    	$serviceMgr->returns('getDBConnection', $dbh_tools, array('tools'));
+
     	$asof_date = time();
 
     	new CreateTables($dbh_wiki, $dbh_tools);
@@ -53,20 +69,10 @@ class TestCategoryLinksDiff extends UnitTestCase
     	$wikidata = array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org');
     	$ts = MySQLDate::toMySQLDatetime($asof_date);
 
-    	// Set up the new cat links
-    	$sth = $dbh_wiki->prepare("UPDATE categorylinks SET cl_timestamp = '$ts' WHERE cl_from = ? AND cl_to = ?");
-    	$sth->execute(array(4, 'B-Class_Michigan_articles'));
-    	$sth->execute(array(5, 'Articles_needing_cleanup_from_May_2013'));
-    	$sth->execute(array(303, 'Articles_needing_cleanup_from_May_2013'));
-
     	//Set up a query and querycats
-    	$dbh_tools->exec("INSERT INTO querys VALUES (1,'enwiki','A','','$ts',4)");
-    	$dbh_tools->exec("INSERT INTO querycats VALUES (1,'Michigan_articles_by_quality')");
-    	$dbh_tools->exec("INSERT INTO querycats VALUES (1,'B-Class_Michigan_articles')");
-    	$dbh_tools->exec("INSERT INTO querycats VALUES (1,'Unassessed_Michigan_articles')");
-    	$dbh_tools->exec("INSERT INTO querycats VALUES (1,'Articles_needing_cleanup_from_May_2013')");
+    	$dbh_tools->exec("INSERT INTO querys VALUES (1,'enwiki','A','','$ts','$ts')");
 
-    	$catLinksDiff = new CategoryLinksDiff($wiki_host, $dbh_tools, $outputdir, $user, $pass, $asof_date, $tools_host);
+    	$catLinksDiff = new CategoryLinksDiff($serviceMgr, $outputdir, $asof_date);
 
     	$catLinksDiff->processWiki($wikiname, $wikidata);
 
@@ -94,7 +100,7 @@ class TestCategoryLinksDiff extends UnitTestCase
     		else $this->fail('Invalid plusminus = ' . $row['plusminus']);
     	}
 
-    	//$this->assertEqual($minuscnt, 3, 'Bad minus count');
+    	$this->assertEqual($minuscnt, 1, 'Bad minus count');
     	$this->assertEqual($pluscnt, 3, 'Bad plus count');
     }
 }

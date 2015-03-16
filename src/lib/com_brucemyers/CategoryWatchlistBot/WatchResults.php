@@ -19,6 +19,7 @@ namespace com_brucemyers\CategoryWatchlistBot;
 
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\MySQLDate;
 use PDO;
 
 class WatchResults
@@ -37,43 +38,48 @@ class WatchResults
 	 *
 	 * @param int $queryid
 	 * @param array $params
+	 * @param int $page -1 = atom feed
+	 * @param int $max_rows
 	 * @return array, pageid => ('diffdate','plusminus','category','title','ns')
 	 */
-	public function getResults($queryid, $params)
+	public function getResults($queryid, $params, $page, $max_rows)
 	{
 		$wikiname = $params['wiki'];
-		$days = (int)$params['days'];
 		$queryid = (int)$queryid;
+		$origpage = $page = (int)$page;
+		$page = $page - 1;
+		if ($page < 0 || $page > 1000) $page = 0;
+		$offset = $page * $max_rows;
+
+		$cachesfx = $page;
+		if ($origpage == -1) $cachesfx = '-1';
+
+		$cachekey = CategoryWatchlistBot::CACHE_PREFIX_RESULT . $queryid . '_' . $cachesfx;
 
 		// Check the cache
-		$results = FileCache::getData(CategoryWatchlistBot::CACHE_PREFIX_RESULT . $queryid);
+		$results = FileCache::getData($cachekey);
 		if (! empty($results)) {
 			$results = unserialize($results);
 			return $results;
 		}
 
-		// Get the start date
-		$sth = $this->dbh_tools->prepare("SELECT rundate FROM runs WHERE wikiname = ? ORDER BY rundate DESC LIMIT $days");
-		$sth->bindParam(1, $wikiname);
-		$sth->execute();
-
-		while ($row = $sth->fetch(PDO::FETCH_ASSOC)) $startdate = $row['rundate'];
-
-		if (! isset($startdate)) return array();
+		$where = $this->buildSQLWhere($params);
+		if (empty($where)) return array();
 
 		// Get the updated pages
-		$sth = $this->dbh_tools->prepare("SELECT diffs.* FROM `{$wikiname}_diffs` diffs, querycats qc " .
-			" WHERE qc.queryid = $queryid AND qc.category = diffs.category AND diffs.diffdate >= ? ORDER BY diffdate DESC LIMIT 1000");
-		$sth->bindParam(1, $startdate);
+		$sth = $this->dbh_tools->prepare("SELECT * FROM `{$wikiname}_diffs` " .
+			" WHERE $where " .
+			" ORDER BY id DESC " .
+			" LIMIT $offset,$max_rows");
 		$sth->execute();
 		$sth->setFetchMode(PDO::FETCH_ASSOC);
 
 		$results = array();
-		$pageids = array();
 
 		while ($row = $sth->fetch()) {
-			$pageids[] = $row['pageid'];
-			$row['category'] = str_replace('_', ' ', $row['category']);
+			$row['ns'] = MediaWiki::getNamespaceId(MediaWiki::getNamespaceName($row['pagetitle']));
+			$row['title'] = $row['pagetitle'];
+			unset($row['pagetitle']);
 			$results[] = $row;
 		}
 
@@ -81,32 +87,46 @@ class WatchResults
 
 		if (! count($results)) return $results;
 
-		// Get the page titles
-		$sth = $this->dbh_wiki->query('SELECT page_id, page_namespace, page_title FROM page WHERE page_id IN (' .
-			implode(',', $pageids) . ')');
-
-		while ($row = $sth->fetch()) {
-			$pageid = $row['page_id'];
-			$namespace = (int)$row['page_namespace'];
-			$prefix = '';
-			if ($namespace == 1) $prefix = 'Talk:';
-			elseif ($namespace != 0) $prefix = MediaWiki::$namespaces[$namespace] . ':';
-
-			foreach ($results as &$page) {
-				if ($page['pageid'] == $pageid) {
-					$page['title'] = $prefix . str_replace('_', ' ', $row['page_title']);
-					$page['ns'] = $namespace;
-				}
-			}
-			unset($page);
-		}
-
-		$sth->closeCursor();
-
 		$serialized = serialize($results);
 
-		FileCache::putData(CategoryWatchlistBot::CACHE_PREFIX_RESULT . $queryid, $serialized);
+		FileCache::putData($cachekey, $serialized);
 
 		return $results;
+	}
+
+	/**
+	 * Build a SQL where clause with the paramaters.
+	 *
+	 * @param array $params Parameters
+	 * @return string Where clause
+	 */
+	public function buildSQLWhere($params)
+	{
+		static $reporttypes = array('B' => 'B', 'P' => '+', 'M' => '-');
+		$where = array();
+
+		for ($x=1; $x <= 10; ++$x) {
+			$catname = trim($params["cn$x"]);
+			if (empty($catname)) continue;
+
+			$reporttype = $reporttypes[$params["rt$x"]];
+			$pagetype = $params["pt$x"];
+			$matchtype = $params["mt$x"];
+
+			if ($matchtype == 'P') {
+				$catname = $this->dbh_tools->quote("%$catname%");
+				$catmatch = "category LIKE $catname ";
+			} else {
+				$catname = $this->dbh_tools->quote($catname);
+				$catmatch = "category = $catname";
+			}
+
+			$extra = '';
+			if ($reporttype != 'B') $extra = " AND plusminus = '$reporttype'";
+
+			$where[] = "($catmatch AND cat_template = '$pagetype'$extra)";
+		}
+
+		return implode(' OR ', $where);
 	}
 }

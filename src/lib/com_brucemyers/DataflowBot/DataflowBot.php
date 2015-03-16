@@ -28,6 +28,7 @@ use com_brucemyers\Util\Logger;
 
 class DataflowBot
 {
+	const ERROREMAIL = 'DataflowBot.erroremail';
 
     public function __construct()
     {

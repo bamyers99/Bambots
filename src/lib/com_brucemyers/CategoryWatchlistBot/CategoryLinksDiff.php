@@ -20,34 +20,29 @@ namespace com_brucemyers\CategoryWatchlistBot;
 use PDO;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\MySQLDate;
+use com_brucemyers\Util\CommonRegex;
+use com_brucemyers\Util\Config;
+use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\Util\TemplateParamParser;
 
 class CategoryLinksDiff
 {
-	var $dbh_tools;
-	var $dbh_tools2;
-	var $wiki_host;
 	var $outputdir;
 	var $asof;
-	protected $user;
-	protected $pass;
+	var $serviceMgr;
 
     /**
      * Constructor
      *
-     * @param string $wiki_host, empty = $wikiname.labsdb
-     * @param PDO $dbh_tools
+     * @param ServiceManager $serviceMgr
      * @param string $outputdir
+     * @param date $asof
      */
-     public function __construct($wiki_host, PDO $dbh_tools, $outputdir, $user, $pass, $asof, $tools_host)
+     public function __construct(ServiceManager $serviceMgr, $outputdir, $asof)
     {
-        $this->wiki_host = $wiki_host;
-        $this->dbh_tools = $dbh_tools;
-        $this->outputdir = $outputdir;
-    	$this->user = $user;
-    	$this->pass = $pass;
+    	$this->serviceMgr = $serviceMgr;
+    	$this->outputdir = $outputdir;
     	$this->asof = MySQLDate::toMySQLDatetime($asof);
-    	$this->dbh_tools2 = new PDO("mysql:host=$tools_host;dbname=s51454__CategoryWatchlistBot", $user, $pass);
-    	$this->dbh_tools2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
 	/**
@@ -59,136 +54,288 @@ class CategoryLinksDiff
      */
     function processWiki($wikiname, $wikidata)
     {
-    	$totalcats = 0;
-    	$wiki_host = $this->wiki_host;
-    	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
-    	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p", $this->user, $this->pass);
-    	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
 
-        $sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_diffs` (
-		       `diffdate` timestamp,
+    	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_diffs` (
+		  	   `id` int unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    		   `diffdate` timestamp,
 		       `plusminus` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-			   `pageid` int unsigned NOT NULL,
-			   `category` varchar(255) binary NOT NULL,
-			   UNIQUE KEY `categoryplus` (`category`, `diffdate`, `plusminus`, `pageid`)
-			   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-        $this->dbh_tools->exec($sql);
+			   `pagetitle` varchar(255) binary NOT NULL,
+		       `cat_template` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+			   `category` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+        $dbh_tools->exec($sql);
 
         // Add the wiki table entry if needed
-    	$sth = $this->dbh_tools->prepare("SELECT * FROM wikis WHERE wikiname = ?");
+    	$sth = $dbh_tools->prepare("SELECT * FROM wikis WHERE wikiname = ?");
     	$sth->bindParam(1, $wikiname);
     	$sth->execute();
 
     	if (! $sth->fetch(PDO::FETCH_ASSOC)) {
-    		$sth = $this->dbh_tools->prepare('INSERT INTO wikis (wikiname, wikititle, wikidomain) VALUES (?,?,?)');
+    		$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname, wikititle, wikidomain) VALUES (?,?,?)');
     		$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain']));
     	}
 
-    	// Recalc oldest 10 category trees if catcount >= 0
-    	$sth = $this->dbh_tools->prepare('SELECT id FROM querys WHERE wikiname = ? AND catcount >= 0 ORDER BY lastrecalc LIMIT 10');
-    	$sth->bindParam(1, $wikiname);
-    	$sth->execute();
+    	// Get the current rev_id
+    	$sth = $dbh_wiki->query('SELECT rev_id, rev_timestamp FROM revision ORDER BY rev_id DESC LIMIT 1');
+    	$row = $sth->fetch(PDO::FETCH_ASSOC);
+    	$cur_rev_id = (int)$row['rev_id'];
+    	$cur_timestamp = MediaWiki::wikiTimestampToUnixTimestamp($row['rev_timestamp']);
 
-    	$results = $sth->fetchAll(PDO::FETCH_ASSOC);
-    	$ids = array();
-    	foreach ($results as $row) {
-    		$ids[] = $row['id'];
-    	}
+    	// Limit to 2 hours max revisions
+    	$prev_timestamp = strtotime('-2 hours', $cur_timestamp);
+    	$prev_timestamp = MediaWiki::unixTimestampToWikiTimestamp($prev_timestamp);
 
-    	if (! empty($ids)) {
-    		$ids = implode(',', $ids);
+    	$sth = $dbh_wiki->query("SELECT rev_id FROM revision WHERE rev_timestamp > '$prev_timestamp' ORDER BY rev_timestamp LIMIT 1");
+    	$row = $sth->fetch(PDO::FETCH_ASSOC);
+    	$prev_rev_id = (int)$row['rev_id'];
+    	$sth = null;
 
-    		$sth = $this->dbh_tools->prepare("UPDATE querys SET catcount = ? WHERE id IN ($ids)");
-    		$sth->bindValue(1, QueryCats::CATEGORY_COUNT_RECALC);
-    		$sth->execute();
-    	}
-
-    	// Calc category tress for QueryCats::CATEGORY_COUNT_RECALC and QueryCats::CATEGORY_COUNT_UNKNOWN
-    	$querycats = new QueryCats($dbh_wiki, $this->dbh_tools2);
-
-    	$sth = $this->dbh_tools->prepare('SELECT id, params, catcount FROM querys WHERE wikiname = ? AND catcount IN (?,?)');
-    	$sth->bindParam(1, $wikiname);
-    	$sth->bindValue(2, QueryCats::CATEGORY_COUNT_RECALC);
-    	$sth->bindValue(3, QueryCats::CATEGORY_COUNT_UNKNOWN);
-    	$sth->execute();
-    	$sth->setFetchMode(PDO::FETCH_ASSOC);
-
-    	while ($row = $sth->fetch()) {
-    		$id = $row['id'];
-    		$params = unserialize($row['params']);
-    		$catcount = $row['catcount'];
-
-    		$cats = $querycats->calcCats($params, $catcount == QueryCats::CATEGORY_COUNT_RECALC);
-    		$catcount = $cats['catcount'];
-    		if ($catcount > 0) {
-    			$querycats->saveCats($id, $cats['cats']);
-    		}
-
-    		$isth = $this->dbh_tools2->prepare("UPDATE querys SET catcount = $catcount, lastrecalc = ? WHERE id = $id");
-    		$isth->bindParam(1, $this->asof);
-    		$isth->execute();
-    	}
-
-    	// Get the previous run date
-    	$sth = $this->dbh_tools->prepare('SELECT rundate FROM runs WHERE wikiname = ? ORDER BY rundate desc LIMIT 1');
+    	// Get the previous rev_id
+    	$sth = $dbh_tools->prepare('SELECT rev_id FROM runs WHERE wikiname = ? ORDER BY rundate DESC LIMIT 1');
     	$sth->bindParam(1, $wikiname);
     	$sth->execute();
 
     	if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-    		$prevrun = $row['rundate'];
-    	} else {
-    		$prevrun = MySQLDate::toMySQLDatetime(strtotime('-1 day', MySQLDate::toPHP($this->asof)));
+    		$run_rev_id = (int)$row['rev_id'];
+    		if ($run_rev_id > $prev_rev_id) $prev_rev_id = $run_rev_id;
     	}
 
-    	// Get the categories watched for this wiki
-    	$catsth = $this->dbh_tools->prepare('SELECT DISTINCT qc.category FROM querys q, querycats qc WHERE q.wikiname = ? AND q.id = qc.queryid');
-    	$catsth->bindParam(1, $wikiname);
-    	$catsth->execute();
-    	$catsth->setFetchMode(PDO::FETCH_ASSOC);
+    	$sth = null;
+    	$dbh_tools = null;
 
-		$this->dbh_tools2->beginTransaction();
-		$isth = $this->dbh_tools2->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pageid, category) VALUES (?,?,?,?)");
-		$insert_count = 0;
+    	// Get the changed pages since the last run
+    	$sth = $dbh_wiki->prepare("SELECT rev_page, rev_id, rev_parent_id FROM revision, page WHERE rev_id > ? AND rev_id <= ? AND rev_page = page_id");
+    	$sth->bindParam(1, $prev_rev_id);
+    	$sth->bindParam(2, $cur_rev_id);
+    	$sth->execute();
+    	$sth->setFetchMode(PDO::FETCH_NUM);
 
-		$sth = $dbh_wiki->prepare("SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_timestamp > ? AND cl_timestamp <= ?");
+        // Want the highest rev_id and the lowest rev_parent_id
 
-		while ($catrow = $catsth->fetch()) {
-			++$totalcats;
-			$category = $catrow['category'];
+    	$pages = array();
+		while ($row = $sth->fetch()) {
+			$pageid = $row[0];
+			$rev_id = (int)$row[1];
+			$parent_id = (int)$row[2];
 
-			// Load category additions
-			$sth->bindParam(1, $category);
-			$sth->bindParam(2, $prevrun);
-			$sth->bindParam(3, $this->asof);
-			$sth->execute();
-			$sth->setFetchMode(PDO::FETCH_ASSOC);
-
-			while ($row = $sth->fetch()) {
-				++$insert_count;
-				if ($insert_count % 1000 == 0) {
-					$this->dbh_tools2->commit();
-					$this->dbh_tools2->beginTransaction();
-				}
-
-	    		$isth->bindParam(1, $this->asof);
-	    		$isth->bindValue(2, '+');
-				$isth->bindParam(3, $row['cl_from']);
-	    		$isth->bindParam(4, $category);
-	    		$isth->execute();
+			if (! isset($pages[$pageid])) {
+				$pages[$pageid] = array('h' => $rev_id, 'l' => $parent_id);
+			} else {
+				$page = $pages[$pageid];
+				if ($rev_id > $page['h']) $pages[$pageid]['h'] = $rev_id;
+				if ($parent_id < $page['l']) $pages[$pageid]['l'] = $parent_id;
 			}
-
-			$sth->closeCursor();
 		}
 
-    	$this->dbh_tools2->commit();
-    	$catsth->closeCursor();
+		$sth->closeCursor();
+		$sth = null;
+		$dbh_wiki = null;
+
+		// Retrieve the revision text
+
+	    $wiki = $this->serviceMgr->getMediaWiki($wikidata['domain']);
+
+		$revids = array();
+		// Chunk so don't run out of memory, -2 so that a pages 2 revs don't get split across requests
+		$maxids = Config::get(MediaWiki::WIKIPAGEINCREMENT) - 2;
+		$idcnt = 0;
+
+		foreach ($pages as $page) {
+			$revids[] = $page['h'];
+			++$idcnt;
+
+			if ($page['l'] != 0) { // 0 = new page
+				$revids[] = $page['l'];
+				++$idcnt;
+			}
+
+			if ($idcnt > $maxids) {
+				$this->processRevisions($wiki, $revids, $wikiname);
+				$revids = array();
+				$idcnt = 0;
+			}
+		}
+
+		if ($idcnt) $this->processRevisions($wiki, $revids, $wikiname);;
 
 		// Update the runs table
-		$isth = $this->dbh_tools->prepare("INSERT INTO runs (wikiname, rundate) VALUES (?,?)");
+    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
+
+		$isth = $dbh_tools->prepare("INSERT INTO runs (wikiname, rundate, rev_id) VALUES (?,?,?)");
 		$isth->bindParam(1, $wikiname);
 		$isth->bindParam(2, $this->asof);
+		$isth->bindParam(3, $cur_rev_id);
 		$isth->execute();
+    }
 
-		return $totalcats;
+    /**
+     * Process a chunk of revisions.
+     *
+     * @param MediaWiki $wiki
+     * @param array $revids Revision ids
+     * @param string $wikiname Wikiname
+     */
+    protected function processRevisions($wiki, $revids, $wikiname)
+    {
+    	$revisions = $wiki->getRevisionsText($revids);
+
+    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
+    	$dbh_tools->beginTransaction();
+		$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category) VALUES (?,?,?,?,?)");
+		$insert_count = 0;
+
+		foreach ($revisions as $pagetitle => $rev) {
+			$revid1 = (int)$rev[0];
+			$revtext1 = $rev[1];
+			if (empty($revtext1)) continue;
+			$revid2 = 0;
+			$revtext2 = '';
+
+			if (count($rev) == 4) {
+				$revid2 = (int)$rev[2];
+				$revtext2 = $rev[3];
+				if (empty($revtext2)) continue;
+			}
+
+			// Want newest (highest) id first
+			if ($revid1 < $revid2) {
+				$temp = $revid1;
+				$revid1 = $revid2;
+				$revid2 = $temp;
+
+				$temp = $revtext1;
+				$revtext1 = $revtext2;
+				$revtext2 = $temp;
+			}
+
+			$currcats = array();
+			$prevcats = array();
+			$currtemplates = array();
+			$prevtemplates = array();
+
+			$this->parseCategoriesTemplates($revtext1, $currcats, $currtemplates);
+			$this->parseCategoriesTemplates($revtext2, $prevcats, $prevtemplates);
+			$this->followTemplateRedirects($wikiname, $prevtemplates, $currtemplates);
+			// Remove dups after redirect replacement
+			$prevtemplates = array_unique($prevtemplates);
+			$currtemplates = array_unique($currtemplates);
+
+			// Write diffs
+			$catchanges = array();
+			$catchanges['+|T'] = array_diff($currtemplates, $prevtemplates); // Want pluses first so that recent changes shows minuses first
+			$catchanges['+|C'] = array_diff($currcats, $prevcats);
+			$catchanges['-|T'] = array_diff($prevtemplates, $currtemplates);
+			$catchanges['-|C'] = array_diff($prevcats, $currcats);
+
+			foreach ($catchanges as $plusminus => $categories) {
+				list($plusminus, $watchtype) = explode('|', $plusminus);
+
+				foreach ($categories as $category) {
+					++$insert_count;
+					if ($insert_count % 1000 == 0) {
+						$dbh_tools->commit();
+						$dbh_tools->beginTransaction();
+					}
+
+		    		$isth->bindValue(1, $this->asof);
+		    		$isth->bindValue(2, $plusminus);
+					$isth->bindValue(3, $pagetitle);
+		    		$isth->bindValue(4, $watchtype);
+		    		$isth->bindValue(5, $category);
+		    		$isth->execute();
+				}
+			}
+		}
+
+    	$dbh_tools->commit();
+    	$dbh_tools = null;
+    }
+
+    /**
+     * Parse categories in text.
+     *
+     * @param string $text Text to parse
+     */
+    protected function parseCategoriesTemplates($text, &$cats, &$templates)
+    {
+    	// Strip comments, etc
+    	$cleandata = preg_replace(CommonRegex::REFERENCESTUB_REGEX, '', $text); // Must be first
+    	$cleandata = preg_replace(array(CommonRegex::COMMENT_REGEX, CommonRegex::REFERENCE_REGEX, CommonRegex::NOWIKI_REGEX), '', $cleandata);
+
+    	// Get the explicit categories
+
+		if (preg_match_all(CommonRegex::CATEGORY_REGEX, $cleandata, $matches)) {
+			foreach ($matches[1] as $cat) {
+				list($cat) = explode('|', $cat);
+				$cat = str_replace('_', ' ', ucfirst(trim($cat)));
+				$cats[$cat] = $cat; // Removes dups
+			}
+		}
+
+       	// Get the templates
+
+   		$templatedata = TemplateParamParser::getTemplates($cleandata);
+
+   		foreach ($templatedata as $template) {
+   			$templatename = $template['name'];
+   			$templates[$templatename] = $templatename; // Removes dups
+   		}
+    }
+
+    protected function followTemplateRedirects($wikiname, &$prevtemplates, &$currtemplates)
+    {
+    	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+
+    	$alltemplates = array();
+
+        foreach ($prevtemplates as $templatename) {
+    		$alltemplates[$templatename] = true; // Removes dups
+    	}
+
+        foreach ($currtemplates as $templatename) {
+    		$alltemplates[$templatename] = true; // Removes dups
+    	}
+
+    	if (empty($alltemplates)) return;
+
+    	$escapednames = array();
+
+		foreach ($alltemplates as $templatename => $dummy) {
+			$tempname = str_replace(' ', '_', $templatename);
+			$escapednames[] = $dbh_wiki->quote($tempname);
+		}
+
+		$escapednames = implode(',', $escapednames);
+
+		$sql = "SELECT page_title, rd_title FROM page " .
+			" LEFT JOIN redirect ON page_id = rd_from " .
+			" WHERE page_namespace = 10 AND page_title IN ($escapednames)";
+
+    	$results = $dbh_wiki->query($sql);
+    	$results->setFetchMode(PDO::FETCH_NUM);
+
+    	$existing = array();
+
+    	while ($row = $results->fetch()) {
+    		$oldname = str_replace('_', ' ', $row[0]);
+    		$existing[$oldname] = $row[1];
+    	}
+
+    	$results->closeCursor();
+    	$results = null;
+
+    	// Strip non-existant templates and replace redirects
+        foreach ($prevtemplates as $oldname => $dummy) {
+        	// Can't use isset because an array value of null considers the key unset.
+    		if (! array_key_exists($oldname, $existing)) unset($prevtemplates[$oldname]);
+    		elseif ($existing[$oldname] !== null) $prevtemplates[$oldname] = str_replace('_', ' ', $existing[$oldname]);
+    	}
+
+    	foreach ($currtemplates as $oldname => $dummy) {
+    		if (! array_key_exists($oldname, $existing)) unset($currtemplates[$oldname]);
+    		elseif ($existing[$oldname] !== null) $currtemplates[$oldname] = str_replace('_', ' ', $existing[$oldname]);
+    	}
     }
 }

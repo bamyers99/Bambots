@@ -35,8 +35,7 @@ class CreateTables
     	  `params` varchar(2048) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	  `lastaccess` date NOT NULL,
     	  `lastrecalc` date NOT NULL,
-    	  `catcount` int NOT NULL DEFAULT -1,
-		  UNIQUE KEY `hash` (`hash`),
+ 		  UNIQUE KEY `hash` (`hash`),
     	  KEY `wikiname` (`wikiname`)
 		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
@@ -44,7 +43,8 @@ class CreateTables
     	$sql = "CREATE TABLE IF NOT EXISTS `querycats` (
 		  `queryid` int unsigned NOT NULL,
 		  `category` varchar(255) binary NOT NULL,
-		  UNIQUE KEY `queryid_category` (`queryid`, `category`)
+		  `plusminus` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	  UNIQUE KEY `queryid_category` (`queryid`, `category`)
 		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
@@ -58,6 +58,7 @@ class CreateTables
     	$sql = "CREATE TABLE IF NOT EXISTS `runs` (
 		  `wikiname` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	  `rundate` timestamp,
+    	  `rev_id` int unsigned,
 		  UNIQUE KEY `wikiname_rundate` (`wikiname`, `rundate`)
 		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);

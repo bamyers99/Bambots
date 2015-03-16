@@ -17,9 +17,11 @@
 
 namespace com_brucemyers\InceptionBot;
 
+use com_brucemyers\Util\Logger;
+
 class ExistingResultParser
 {
-    protected $startTokens = array('<li>{{', '{{User:AlexNewArtBot/MaintDisplay|<li>', '*{{');
+    protected $startTokens = array('<li>{{', '{{User:AlexNewArtBot/MaintDisplay|', '*{{');
     protected $linePatterns = array(
         '!^(?:\\*|<li>)(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+\\s*started on\\s*([^,]+), score: (\\d+)!',
         '!^(?:\\*|<li>)(?:\\{\\{la\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+\\s*\\(.*started on\\s*([^,]+), score: (\\d+)!', // Can be ) in username
@@ -73,6 +75,10 @@ class ExistingResultParser
             }
 
             if (preg_match('/^\\|(\\d)}}$/', $line, $matches)) {
+            	if (! $inmaint) {
+            		Logger::log(substr($pagedata, 0, 500));
+            		continue;
+            	}
             	$WikipediaNS = $matches[1];
 
             	foreach ($maintResults as $result) {

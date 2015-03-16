@@ -20,26 +20,19 @@ namespace com_brucemyers\CategoryWatchlistBot;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\DateUtil;
 use PDO;
 
 class UIHelper
 {
 	public $max_watch_days;
+	protected $serviceMgr;
 	protected $dbh_tools;
-	protected $user;
-	protected $pass;
-	protected $wiki_host;
 
 	public function __construct()
 	{
-		$tools_host = Config::get(CategoryWatchlistBot::TOOLS_HOST);
-		$this->user = Config::get(CategoryWatchlistBot::LABSDB_USERNAME);
-		$this->pass = Config::get(CategoryWatchlistBot::LABSDB_PASSWORD);
-		$this->wiki_host = Config::get(CategoryWatchlistBot::WIKI_HOST);
-
-		$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CategoryWatchlistBot", $this->user, $this->pass);
-		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		$this->dbh_tools = $dbh_tools;
+		$this->serviceMgr = new ServiceManager();
+		$this->dbh_tools = $this->serviceMgr->getDBConnection('tools');
 
 		$this->max_watch_days = Config::get(CategoryWatchlistBot::MAX_WATCH_DAYS);
 	}
@@ -54,8 +47,9 @@ class UIHelper
 		$sql = 'SELECT * FROM wikis ORDER BY wikititle';
 		$sth = $this->dbh_tools->query($sql);
 
-		$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org'),
-			'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org')); // Want first
+		//$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org'),
+		//	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org')); // Want first
+		$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org')); // Want first
 
 		while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
 			$wikiname = $row['wikiname'];
@@ -118,10 +112,12 @@ class UIHelper
 	 * Get watch list results
 	 *
 	 * @param array $params
-	 * @return array Results, keys = errors - array(), results - array(), catcount - int
+	 * @param int $page
+	 * @param int $max_rows
+	 * @return array Results, keys = errors - array(), results - array()
 	 * @see WatchResults
 	 */
-	public function getResults(&$params)
+	public function getResults($params, $page, $max_rows)
 	{
 		$errors = array();
 		$serialized = serialize($params);
@@ -130,13 +126,12 @@ class UIHelper
 		$wikiname = $params['wiki'];
 
 		// See if we have a query record
-    	$sth = $this->dbh_tools->prepare("SELECT id, catcount FROM querys WHERE hash = ?");
+    	$sth = $this->dbh_tools->prepare("SELECT id FROM querys WHERE hash = ?");
     	$sth->bindParam(1, $hash);
     	$sth->execute();
 
     	if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
     		$queryid = $row['id'];
-    		$catcount = (int)$row['catcount'];
     		$sth = $this->dbh_tools->prepare("UPDATE querys SET lastaccess = ? WHERE id = $queryid");
     		$sth->bindParam(1, $accessdate);
     		$sth->execute();
@@ -144,38 +139,62 @@ class UIHelper
 			return array('errors' => array('Query not found'), 'results' => array());
 		}
 
-		$wiki_host = $this->wiki_host;
-		if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p", $this->user, $this->pass);
-		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
 
 		$results = array();
 
-		switch ($catcount) {
-		    case QueryCats::CATEGORY_COUNT_UNKNOWN:
-		    case QueryCats::CATEGORY_COUNT_RECALC:
-		    	$errors[] = 'Results will be ready within 24 hours';
-		    	break;
+    	$watchResults = new WatchResults($dbh_wiki, $this->dbh_tools);
+    	$results = $watchResults->getResults($queryid, $params, $page, $max_rows);
 
-		    case 0:
-				$errors[] = 'No categories found';
-				break;
+		return array('errors' => $errors, 'results' => $results);
+	}
 
-		    case QueryCats::CATEGORY_COUNT_UNAPPROVED:
-				$errors[] = 'Watchlist waiting for approval';
-				break;
+	/**
+	 * Get recent results.
+	 *
+	 * @param string $wikiname
+	 * @param int $page
+	 * @param int $max_rows
+	 * @return array
+	 */
+	public function getRecent($wikiname, $page, $max_rows)
+	{
+		$queryid = 0;
+		$page = (int)$page - 1;
+		if ($page < 0 || $page > 1000) $page = 0;
+		$offset = $page * $max_rows;
 
-		    case QueryCats::CATEGORY_COUNT_DENIED:
-				$errors[] = 'Watchlist denied - too many categories';
-				break;
+		$cachekey = CategoryWatchlistBot::CACHE_PREFIX_RESULT . $queryid . '_' . $page;
 
-    		default:
-    			$watchResults = new WatchResults($dbh_wiki, $this->dbh_tools);
-    			$results = $watchResults->getResults($queryid, $params);
-    			break;
+		// Check the cache
+		$results = FileCache::getData($cachekey);
+		if (! empty($results)) {
+			$results = unserialize($results);
+			return $results;
 		}
 
-		return array('errors' => $errors, 'results' => $results, 'catcount' => $catcount);
+		// Get the updated pages
+		$sth = $this->dbh_tools->prepare("SELECT * FROM `{$wikiname}_diffs` " .
+		" ORDER BY id DESC " .
+		" LIMIT $offset,$max_rows");
+		$sth->execute();
+		$sth->setFetchMode(PDO::FETCH_ASSOC);
+
+		$results = array();
+
+		while ($row = $sth->fetch()) {
+			$results[] = $row;
+		}
+
+		$sth->closeCursor();
+
+		if (! count($results)) return $results;
+
+		$serialized = serialize($results);
+
+		FileCache::putData($cachekey, $serialized);
+
+		return $results;
 	}
 
 	/**
@@ -196,7 +215,7 @@ class UIHelper
 		}
 
 		$params = $this->fetchParams($query);
-		$results = $this->getResults($params);
+		$results = $this->getResults($params, -1, 1000);
 
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
@@ -204,12 +223,19 @@ class UIHelper
 		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
 
 		$updated = gmdate("Y-m-d\TH:i:s\Z");
-		$catname2 = '';
-		if (! empty($params['cn2'])) $catname2 = ', ...';
+
+		if (empty($params['title'])) {
+			$title = $params['cn1'];
+			if (! empty($params['cn2'])) $title = ', ...';
+		} else {
+			$title = $params['title'];
+		}
+
+		$title = htmlentities($title, ENT_QUOTES, 'UTF-8');
 
 		$feed = "<?xml version=\"1.0\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xml:lang=\"en\">\n";
 		$feed .= "<id>//$host$uri/$extra</id>\n";
-		$feed .= "<title>Category Watchlist : {$params['cn1']}$catname2</title>\n";
+		$feed .= "<title>Category Watchlist : $title</title>\n";
 		$feed .= "<link rel=\"self\" type=\"application/atom+xml\" href=\"$protocol://$host$uri/$extra\" />\n";
 		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 		$feed .= "<updated>$updated</updated>\n";
@@ -225,15 +251,16 @@ class UIHelper
 
 		foreach ($dategroups as $date => &$dategroup) {
 			$date = MySQLDate::toPHP($date);
-			$humandate = date('F j, Y', $date);
+			$ord = DateUtil::ordinal(date('G', $date));
+			$humandate = date('F j, Y G', $date) . $ord;
 			$updated = gmdate("Y-m-d\TH:i:s\Z", $date);
 
 			$feed .= "<entry>\n";
 			$feed .= "<id>//$host$uri/$extra&amp;date=$humandate</id>\n";
-			$feed .= "<title>Results For $humandate</title>\n";
+			$feed .= "<title>Results For $humandate hour</title>\n";
 			$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 			$feed .= "<updated>$updated</updated>\n";
-			$feed .= "<summary type=\"html\">" . count($dategroup) . " category additions</summary>\n";
+			$feed .= "<summary type=\"html\">" . count($dategroup) . " category changes</summary>\n";
 			$feed .= "<author><name>CategoryWatchlistBot</name></author>\n";
 			$feed .= "</entry>\n";
 		}
@@ -291,5 +318,35 @@ class UIHelper
 		$sth->bindParam(1, $status);
 		$sth->bindParam(2, $hash);
 		$sth->execute();
+	}
+
+	/**
+	 * Process template redirect.
+	 *
+	 * @param string $wikiname
+	 * @param string $templatename
+	 * @return string Resolved template name
+	 */
+	public function processTemplateRedirect($wikiname, $templatename)
+	{
+		static $dbh_wiki = null;
+		if (empty($dbh_wiki)) $dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+
+		$escapedname = $dbh_wiki->quote($templatename);
+
+		$sql = "SELECT rd_title FROM page, redirect " .
+				" WHERE page_namespace = 10 AND page_is_redirect = 1 AND page_title = $escapedname AND page_id = rd_from";
+
+		$results = $dbh_wiki->query($sql);
+		$results->setFetchMode(PDO::FETCH_NUM);
+
+		if ($row = $results->fetch()) {
+			$templatename = str_replace('_', ' ', $row[0]);
+		}
+
+		$results->closeCursor();
+		$results = null;
+
+		return $templatename;
 	}
 }
