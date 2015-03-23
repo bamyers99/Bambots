@@ -1,6 +1,6 @@
 <?php
 /**
- Copyright 2014 Myers Enterprises II
+ Copyright 2015 Myers Enterprises II
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 use com_brucemyers\CategoryWatchlistBot\UIHelper;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\DateUtil;
+use com_brucemyers\Util\HttpUtil;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -68,7 +69,7 @@ if ($params['catcount'] && ! isset($options['query']) && isset($_SERVER['HTTP_US
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 	$extra = 'CategoryWatchlist.php?query=' . $hash;
 	setcookie(COOKIE_QUERYID, $hash, strtotime('+180 days'));
-	$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+	$protocol = HttpUtil::getProtocol();
 	header("Location: $protocol://$host$uri/$extra", true, 302);
 	exit;
 }
@@ -226,7 +227,7 @@ function display_diffs()
 	}
 
 	if (! empty($results['results'])) {
-		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+		$protocol = HttpUtil::getProtocol();
 		$domain = $wikis[$params['wiki']]['domain'];
 		$wikiprefix = "$protocol://$domain/wiki/";
 
@@ -279,7 +280,7 @@ function display_diffs()
 
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+		$protocol = HttpUtil::getProtocol();
 
 		if (count($results['results']) == 100) {
 			$extra = "CategoryWatchlist.php?query={$options['hash']}&amp;page=" . ($options['page'] + 1);
@@ -421,7 +422,7 @@ function display_admin()
 		<?php
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+		$protocol = HttpUtil::getProtocol();
 		$baseurl = "$protocol://$host$uri/CategoryWatchlist.php?";
 		$pass = urlencode($pass);
 
@@ -457,7 +458,7 @@ function query_approve_deny($status)
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 	$pass = urlencode($pass);
 	$extra = 'CategoryWatchlist.php?action=admin&pass=' . $pass;
-	$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+	$protocol = HttpUtil::getProtocol();
 
 	header("Location: $protocol://$host$uri/$extra", true, 302);
 }

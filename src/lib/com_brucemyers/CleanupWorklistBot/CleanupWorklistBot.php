@@ -137,7 +137,7 @@ class CleanupWorklistBot
         <html><head>
         <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
         <title>WikiProject Cleanup Listings</title>
-        <link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
+        <link rel='stylesheet' type='text/css' href='../css/cwb.css' />
         </head><body>
         <h2>WikiProject Cleanup Listings</h2>\n
         <ul>\n
@@ -156,7 +156,8 @@ class CleanupWorklistBot
         	}
     		$filesafe_project = str_replace('/', '_', $project);
 
-        	$wikiproject = ($isWikiProject) ? 'WikiProject_' : '';
+    		$project = str_replace('_', ' ', $project);
+        	$wikiproject = ($isWikiProject) ? 'WikiProject ' : '';
 			$projecturl = "https://en.wikipedia.org/wiki/Wikipedia:{$wikiproject}" . $project;
 			$histurl = $urlpath . 'history/' . $filesafe_project . '.html';
 			if ($wiki_too_big) $bycaturl = $urlpath . 'bycat/' . $filesafe_project . '.html';

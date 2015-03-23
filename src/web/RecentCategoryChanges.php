@@ -18,6 +18,7 @@
 use com_brucemyers\CategoryWatchlistBot\UIHelper;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\DateUtil;
+use com_brucemyers\Util\HttpUtil;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -52,7 +53,7 @@ function display_form()
     <head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	    <meta name="robots" content="noindex, nofollow" />
-	    <title>Category Membership / Template Links Recent Changes</title>
+	    <title>Category Membership / Template Usage Recent Changes</title>
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
 	    <style>
 	        .plusminus {
@@ -71,7 +72,7 @@ function display_form()
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2>Category Membership / Template Links Recent Changes</h2>
+		<h2>Category Membership / Template Usage Recent Changes</h2>
         <form action="RecentCategoryChanges.php" method="post"><b>Wiki</b> <select name="wiki"><?php
         foreach ($wikis as $wikiname => $wikidata) {
 			$wikititle = htmlentities($wikidata['title'], ENT_COMPAT, 'UTF-8');
@@ -111,7 +112,7 @@ function display_recent()
 	}
 
 	if (! empty($results)) {
-		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+		$protocol = HttpUtil::getProtocol();
 		$domain = $wikis[$params['wiki']]['domain'];
 		$wikiprefix = "$protocol://$domain/wiki/";
 
@@ -164,7 +165,7 @@ function display_recent()
 
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+		$protocol = HttpUtil::getProtocol();
 
 		$extra = "RecentCategoryChanges.php?wiki={$params['wiki']}&amp;page=" . ($params['page'] + 1);
 		echo "<div style='padding-bottom: 5px;'><a href='$protocol://$host$uri/$extra' class='novisited'>Next page</a></div>";

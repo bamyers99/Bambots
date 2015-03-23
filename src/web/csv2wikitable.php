@@ -19,6 +19,7 @@ use com_brucemyers\Util\HTMLForm;
 use com_brucemyers\Util\CSVString;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Curl;
+use com_brucemyers\Util\HttpUtil;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -45,7 +46,7 @@ if (isset($_POST['file']) && empty($_POST['csv']) && isset($_SERVER['HTTP_USER_A
 	if ($params['link2'] != '') $extra .= '&link2=' . urlencode($params['link2']);
 	if ($params['subdmn'] != 'tools') $extra .= '&subdmn=' . urlencode($params['subdmn']);
 
-	$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+	$protocol = HttpUtil::getProtocol();
 	header("Location: $protocol://$host$uri/$extra", true, 302);
 	exit;
 }

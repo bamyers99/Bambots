@@ -220,7 +220,7 @@ class UIHelper
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 		$extra = "CategoryWatchlist.php?action=atom&amp;query=$query";
-		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+		$protocol = HttpUtil::getProtocol();
 
 		$updated = gmdate("Y-m-d\TH:i:s\Z");
 
@@ -240,9 +240,12 @@ class UIHelper
 		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 		$feed .= "<updated>$updated</updated>\n";
 
+		$minus24hours = strtotime('-24 hours');
+
 		$dategroups = array();
 		foreach ($results['results'] as &$result) {
 			$date = $result['diffdate'];
+			if (MySQLDate::toPHP($date) < $minus24hours) continue;
 			unset($result['diffdate']);
 			if (! isset($dategroups[$date])) $dategroups[$date] = array();
 			$dategroups[$date][] = $result;
