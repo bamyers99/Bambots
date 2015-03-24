@@ -21,6 +21,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\DateUtil;
+use com_brucemyers\Util\HttpUtil;
 use PDO;
 
 class UIHelper

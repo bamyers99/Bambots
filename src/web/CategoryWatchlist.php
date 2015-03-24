@@ -27,10 +27,10 @@ $GLOBALS['botname'] = 'CategoryWatchlistBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
 define('COOKIE_QUERYID', 'catwl:queryid');
 
-require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
-
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ini_set("display_errors", 1);
+
+require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 $uihelper = new UIHelper();
 $wikis = $uihelper->getWikis();
@@ -136,7 +136,7 @@ function display_form()
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2>Category / Template Watchlist</h2>
+		<h2><a href="CategoryWatchlist.php<?php if (! empty($options['hash'])) echo "?query={$options['hash']}" ?>" class="novisited">Category / Template Watchlist</a></h2>
 		<?php
 		if ($params['catcount'] && isset($options['query'])) {
 			echo '<div>';

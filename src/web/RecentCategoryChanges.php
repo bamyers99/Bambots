@@ -27,10 +27,10 @@ $GLOBALS['botname'] = 'CategoryWatchlistBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
 define('COOKIE_QUERYID', 'catwl:queryid');
 
-require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
-
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ini_set("display_errors", 1);
+
+require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 $uihelper = new UIHelper();
 $wikis = $uihelper->getWikis();
@@ -72,7 +72,7 @@ function display_form()
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2>Category Membership / Template Usage Recent Changes</h2>
+		<h2><a href="RecentCategoryChanges.php?wiki=<?php echo $params['wiki'] ?>" class="novisited">Category Membership / Template Usage Recent Changes</a></h2>
         <form action="RecentCategoryChanges.php" method="post"><b>Wiki</b> <select name="wiki"><?php
         foreach ($wikis as $wikiname => $wikidata) {
 			$wikititle = htmlentities($wikidata['title'], ENT_COMPAT, 'UTF-8');

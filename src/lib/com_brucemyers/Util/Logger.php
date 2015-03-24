@@ -60,6 +60,13 @@ class Logger
     	$output = date('Y-m-d H:i:s') . " $msg\n";
     	fwrite($hndl, $output);
     	fclose($hndl);
+
+        // Set the other user read mode to the parent directories read mode.
+        $dirmode = fileperms(dirname(self::$filepath));
+        $readmode = '0';
+        if ($dirmode & 0x0004) $readmode = '4';
+        $mode = octdec("64$readmode");
+        chmod(self::$filepath, $mode);
     }
 
 }

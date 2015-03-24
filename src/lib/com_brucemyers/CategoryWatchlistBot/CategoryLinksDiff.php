@@ -106,7 +106,7 @@ class CategoryLinksDiff
     	$dbh_tools = null;
 
     	// Get the changed pages since the last run
-    	$sth = $dbh_wiki->prepare("SELECT rev_page, rev_id, rev_parent_id FROM revision, page WHERE rev_id > ? AND rev_id <= ? AND rev_page = page_id");
+    	$sth = $dbh_wiki->prepare('SELECT page_namespace, page_title, rev_id, rev_parent_id FROM revision, page WHERE rev_id > ? AND rev_id <= ? AND rev_page = page_id');
     	$sth->bindParam(1, $prev_rev_id);
     	$sth->bindParam(2, $cur_rev_id);
     	$sth->execute();
@@ -116,22 +116,24 @@ class CategoryLinksDiff
 
     	$pages = array();
 		while ($row = $sth->fetch()) {
-			$pageid = $row[0];
-			$rev_id = (int)$row[1];
-			$parent_id = (int)$row[2];
+			$pagekey = str_pad($row[0], 4, '0', STR_PAD_LEFT) . $row[1]; // Sort by namespace, title
+			$rev_id = (int)$row[2];
+			$parent_id = (int)$row[3];
 
-			if (! isset($pages[$pageid])) {
-				$pages[$pageid] = array('h' => $rev_id, 'l' => $parent_id);
+			if (! isset($pages[$pagekey])) {
+				$pages[$pagekey] = array('h' => $rev_id, 'l' => $parent_id);
 			} else {
-				$page = $pages[$pageid];
-				if ($rev_id > $page['h']) $pages[$pageid]['h'] = $rev_id;
-				if ($parent_id < $page['l']) $pages[$pageid]['l'] = $parent_id;
+				$page = $pages[$pagekey];
+				if ($rev_id > $page['h']) $pages[$pagekey]['h'] = $rev_id;
+				if ($parent_id < $page['l']) $pages[$pagekey]['l'] = $parent_id;
 			}
 		}
 
 		$sth->closeCursor();
 		$sth = null;
 		$dbh_wiki = null;
+
+		krsort($pages); // Reverse so that recent changes has articles first
 
 		// Retrieve the revision text
 
@@ -177,7 +179,7 @@ class CategoryLinksDiff
      * @param array $revids Revision ids
      * @param string $wikiname Wikiname
      */
-    protected function processRevisions($wiki, $revids, $wikiname)
+    protected function processRevisions(MediaWiki $wiki, $revids, $wikiname)
     {
     	$revisions = $wiki->getRevisionsText($revids);
 
@@ -186,14 +188,39 @@ class CategoryLinksDiff
 		$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category) VALUES (?,?,?,?,?)");
 		$insert_count = 0;
 
-		foreach ($revisions as $pagetitle => $rev) {
+		// Resort so in reverse namespace, title order
+
+		$sortedrevs = array();
+
+		foreach ($revisions as $pagename => $rev) {
+			$nsname = MediaWiki::getNamespaceName($pagename);
+			$ns = (string)MediaWiki::getNamespaceId($nsname);
+			$pagetitle = $pagename;
+
+			// Strip namespace
+			$nsnamelen = strlen($nsname);
+			if ($nsnamelen > 0) {
+				$pagetitle = substr($pagetitle, $nsnamelen + 1);
+			}
+
+			$pagekey = str_pad($ns, 4, '0', STR_PAD_LEFT) . $pagetitle; // Sort by namespace, title
+			$rev['t'] = $pagename;
+			$sortedrevs[$pagekey] = $rev;
+		}
+
+		unset($revisions);
+
+		krsort($sortedrevs); // Reverse so that recent changes has articles first
+
+		foreach ($sortedrevs as $rev) {
+			$pagetitle = $rev['t'];
 			$revid1 = (int)$rev[0];
 			$revtext1 = $rev[1];
 			if (empty($revtext1)) continue;
 			$revid2 = 0;
 			$revtext2 = '';
 
-			if (count($rev) == 4) {
+			if (count($rev) == 5) {
 				$revid2 = (int)$rev[2];
 				$revtext2 = $rev[3];
 				if (empty($revtext2)) continue;
@@ -254,9 +281,11 @@ class CategoryLinksDiff
     }
 
     /**
-     * Parse categories in text.
+     * Parse categories and templates in text.
      *
      * @param string $text Text to parse
+     * @param array $cats Add categories to
+     * @param array $templates Add templates to
      */
     protected function parseCategoriesTemplates($text, &$cats, &$templates)
     {

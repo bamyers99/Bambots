@@ -78,6 +78,13 @@ class FileCache
         $filepath = $inst->cacheDir . DIRECTORY_SEPARATOR . $key;
 
         file_put_contents($filepath, $data);
+
+        // Set the other user read mode to the parent directories read mode.
+        $dirmode = fileperms($inst->cacheDir);
+        $readmode = '0';
+        if ($dirmode & 0x0004) $readmode = '4';
+        $mode = octdec("64$readmode");
+        chmod($filepath, $mode);
     }
 
     /**
