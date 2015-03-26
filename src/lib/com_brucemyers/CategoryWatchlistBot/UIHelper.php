@@ -287,7 +287,6 @@ class UIHelper
 			}
 
 			if ($x > 0) $summary .= "</td></tr>\n";
-			if ($x == 10) break; // Only want 10 pages
 		}
 
 		$summary .= "</tbody></table>\n";
