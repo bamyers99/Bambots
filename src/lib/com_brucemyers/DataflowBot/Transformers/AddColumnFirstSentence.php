@@ -22,6 +22,7 @@ use com_brucemyers\DataflowBot\io\FlowReader;
 use com_brucemyers\DataflowBot\io\FlowWriter;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\DataflowBot\ComponentParameter;
+use com_brucemyers\Util\CommonRegex;
 
 class AddColumnFirstSentence extends AddColumn
 {
@@ -171,8 +172,8 @@ class AddColumnFirstSentence extends AddColumn
 		$bracketed = '';
 
 		// Strip comments and refs
-		$data = preg_replace(array('/<!--.*?-->/us', '!<ref[^/>]*?/>!us'), '', $data); // Must be before the next preg_replace
-		$data = preg_replace(array('!<ref.*?</ref>!us'), '', $data);
+    	$data = preg_replace(CommonRegex::REFERENCESTUB_REGEX, '', $data); // Must be first
+    	$data = preg_replace(array(CommonRegex::COMMENT_REGEX, CommonRegex::REFERENCE_REGEX), '', $data);
 
 		$len = mb_strlen($data, 'UTF-8');
 

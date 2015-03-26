@@ -17,6 +17,8 @@
 
 namespace com_brucemyers\Util;
 
+use com_brucemyers\Util\CommonRegex;
+
 /**
  * TemplateParamParser
  */
@@ -44,7 +46,7 @@ class TemplateParamParser
 		$match_found = true;
 		$markers = array();
 		$templates = array();
-		$data = preg_replace('/<!--.*?-->/us', '', $origdata); // Strip comments
+		$data = preg_replace(CommonRegex::COMMENT_REGEX, '', $origdata); // Strip comments
 
 		while ($match_found) {
 			if (++$itercnt > self::MAX_ITERATIONS) {

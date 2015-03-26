@@ -17,6 +17,7 @@
 
 namespace com_brucemyers\InceptionBot;
 
+use com_brucemyers\Util\CommonRegex;
 use Exception;
 
 class RuleSetProcessor
@@ -45,8 +46,8 @@ class RuleSetProcessor
     {
         $results = array();
         $this->ledeEnd = null;
-        $cleandata = preg_replace(RuleSet::REFERENCESTUB_REGEX, '', $data); // Must be first
-        $cleandata = preg_replace(array(RuleSet::COMMENT_REGEX, RuleSet::REFERENCE_REGEX), '', $cleandata);
+        $cleandata = preg_replace(CommonRegex::REFERENCESTUB_REGEX, '', $data); // Must be first
+        $cleandata = preg_replace(array(CommonRegex::COMMENT_REGEX, CommonRegex::REFERENCE_REGEX), '', $cleandata);
 
         foreach ($this->ruleSet->rules as &$rule) {
             $score = $this->processRule($cleandata, $rule, $title);

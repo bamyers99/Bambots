@@ -17,12 +17,10 @@
 
 namespace com_brucemyers\InceptionBot;
 
+use com_brucemyers\Util\CommonRegex;
+
 class RuleSet
 {
-    const COMMENT_REGEX = '/<!--.*?-->/us';
-    const REFERENCESTUB_REGEX = '!<ref[^/>]*?/>!us';
-    const REFERENCE_REGEX = '!<ref.*?</ref>!us';
-    const CATEGORY_REGEX = '/\\[\\[Category:.+?\\]\\]/usi';
     const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';
     const RULE_REGEX = '!^(-?\\d*)\\s*(/.*?/)((?:\\s*,\\s*/.*?/)*)$!u';
     const SCORE_REGEX = '/^@@\\s*(\\d+)\\s*@@$/u';
@@ -52,9 +50,9 @@ class RuleSet
     {
         $this->name = $name;
         // Strip comments/templates/categories
-        $data = preg_replace(self::COMMENT_REGEX, '', $data);
+        $data = preg_replace(CommonRegex::COMMENT_REGEX, '', $data);
         $data = preg_replace(self::WIKI_TEMPLATE_REGEX, '', $data);
-        $data = preg_replace(self::CATEGORY_REGEX, '', $data);
+        $data = preg_replace(CommonRegex::CATEGORY_REGEX, '', $data);
         $lines = preg_split('/\\r?\\n/u', $data);
 
         foreach ($lines as $line) {

@@ -22,6 +22,7 @@ use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
+use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\MediaWiki\EmbeddedInLister;
 
 $clidir = dirname(__FILE__);
@@ -188,7 +189,7 @@ function getTemplateParamValues($data, $template, $param)
 {
 	$values = array();
 	$param = strtolower($param);
-	$data = preg_replace('/<!--.*?-->/us', '', $data); // Strip comments
+	$data = preg_replace(CommonRegex::COMMENT_REGEX, '', $data); // Strip comments
 	$data = preg_replace('/\{\{\{.*?\}\}\}/us', '', $data); // Strip variables
 //	echo $data . "\n\n";
 

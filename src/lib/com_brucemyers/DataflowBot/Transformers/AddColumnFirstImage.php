@@ -22,6 +22,7 @@ use com_brucemyers\DataflowBot\io\FlowReader;
 use com_brucemyers\DataflowBot\io\FlowWriter;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\DataflowBot\ComponentParameter;
+use com_brucemyers\Util\CommonRegex;
 
 class AddColumnFirstImage extends AddColumn
 {
@@ -151,7 +152,7 @@ class AddColumnFirstImage extends AddColumn
 				$data = $wiki->getPageWithCache($pagename);
 
 				// Strip comments
-        		$data = preg_replace('/<!--.*?-->/us', '', $data);
+        		$data = preg_replace(CommonRegex::COMMENT_REGEX, '', $data);
 
         		$value = '';
 

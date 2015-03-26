@@ -26,9 +26,6 @@ use Exception;
 
 class BrokenSectionAnchors extends DatabaseReport
 {
-    const COMMENT_REGEX = '/<!--.*?-->/us';
-    const WIKI_TEMPLATE_REGEX = '/\\{\\{.+?\\}\\}/us';
-
     public function init($apis, $params)
     {
     	if (empty($params)) return true;

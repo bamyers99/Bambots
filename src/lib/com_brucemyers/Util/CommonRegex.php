@@ -20,7 +20,7 @@ namespace com_brucemyers\Util;
 class CommonRegex
 {
     const COMMENT_REGEX = '/<!--.*?-->/us';
-    const REFERENCESTUB_REGEX = '!<ref[^/>]*?/>!usi';
+    const REFERENCESTUB_REGEX = '!<ref((\s+\w+(\s*=\s*(?:".*?"|\'.*?\'|[^\'">\s]+))?)+\s*|\s*)/>!usi';
     const REFERENCE_REGEX = '!<ref.*?</ref>!usi';
     const NOWIKI_REGEX = '!<nowiki>.*?</nowiki>!usi';
     const CATEGORY_REGEX = '/\\[\\[\\s*Category\\s*:(.+?)\\]\\]/usi';
