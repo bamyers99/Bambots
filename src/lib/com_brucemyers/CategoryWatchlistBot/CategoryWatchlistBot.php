@@ -38,8 +38,8 @@ class CategoryWatchlistBot
     const HTMLDIR = 'CategoryWatchlistBot.htmldir';
     const URLPATH = 'CategoryWatchlistBot.urlpath';
 
-    const CACHE_PREFIX_RESULT = 'CatWBResult:';
-    const CACHE_PREFIX_ATOM = 'CatWBAtom:';
+    const CACHE_PREFIX_RESULT = 'Result:';
+    const CACHE_PREFIX_ATOM = 'Atom:';
 
     public function __construct(&$ruleconfigs)
     {
@@ -181,6 +181,9 @@ EOT;
      */
     protected function _backupHistory(ServiceManager $serviceMgr, $outputdir)
     {
+    	$hour = date('G');
+    	if ($hour != 0) return;
+
     	$tools_host = $serviceMgr->getToolsHost();
     	$user = $serviceMgr->getUser();
     	$pass = $serviceMgr->getPass();
@@ -191,8 +194,6 @@ EOT;
 
     	$dw = date('w');
     	if ($dw != 1) return; // Monday
-    	$hour = date('G');
-    	if ($hour != 0) return;
 
     	$email = new Email();
     	$attach = array($backupFile);

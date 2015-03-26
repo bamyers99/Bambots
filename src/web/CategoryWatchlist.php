@@ -247,7 +247,7 @@ function display_diffs()
 			usort($dategroup, 'resultgroupsort');
 			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
 			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
-			echo "<tr><td data-sort-value='~'><i>$displaydate$ord hour</i></td><td data-sort-value='~'>&nbsp;</td><td data-sort-value='~'>&nbsp;</td>\n";
+			echo "<tr><td data-sort-value='~'><i>$displaydate$ord hour</i></td><td data-sort-value='~'>&nbsp;</td><td data-sort-value='~'>&nbsp;</td></tr>\n";
 			$x = 0;
 			$prevtitle = '';
 			$prevaction = '';
@@ -257,11 +257,14 @@ function display_diffs()
 				$action = $result['plusminus'];
 				$category = htmlentities($result['category'], ENT_COMPAT, 'UTF-8');
 				if ($result['cat_template'] == 'T') $category = '{{' . $category . '}}';
+				$displayaction = ($action == '-') ? '&ndash;' : $action;
 
 				if ($title == $prevtitle && $action == $prevaction) {
 					echo "; $category";
+				} elseif ($title == $prevtitle) {
+					echo "</td></tr>\n";
+					echo "<tr><td>&nbsp;</td><td class='plusminus' data-sort-value='$action'>$displayaction</td><td>$category";
 				} else {
-					$displayaction = ($action == '-') ? '&ndash;' : $action;
 					if ($x++ > 0) echo "</td></tr>\n";
 					echo "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
 						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td class='plusminus' data-sort-value='$action'>$displayaction</td><td>$category";
@@ -271,7 +274,6 @@ function display_diffs()
 			}
 
 			if ($x > 0) echo "</td></tr>\n";
-
 		}
 
 		echo "</tbody></table>\n";

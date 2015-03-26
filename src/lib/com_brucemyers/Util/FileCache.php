@@ -34,7 +34,13 @@ class FileCache
         $cacheDir = Config::get(self::CACHEDIR);
         $cacheDir = str_replace(self::CACHEBASEDIR, Config::get(Config::BASEDIR), $cacheDir);
         $cacheDir = preg_replace('!(/|\\\\)$!', '', $cacheDir); // Drop trailing slash
-        $this->cacheDir = $cacheDir;
+        $subdir = $cacheDir . DIRECTORY_SEPARATOR . $GLOBALS['botname'];
+
+        if (! is_dir($subdir)) {
+        	mkdir($subdir, fileperms($cacheDir) & 0777);
+        }
+
+        $this->cacheDir = $subdir;
     }
 
     /**

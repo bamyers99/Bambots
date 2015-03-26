@@ -216,12 +216,15 @@ class UIHelper
 		}
 
 		$params = $this->fetchParams($query);
-		$results = $this->getResults($params, -1, 1000);
+		$results = $this->getResults($params, 1, 100);
 
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 		$extra = "CategoryWatchlist.php?action=atom&amp;query=$query";
 		$protocol = HttpUtil::getProtocol();
+		$wikis = $this->getWikis();
+		$domain = $wikis[$params['wiki']]['domain'];
+		$wikiprefix = "$protocol://$domain/wiki/";
 
 		$updated = gmdate("Y-m-d\TH:i:s\Z");
 
@@ -241,16 +244,55 @@ class UIHelper
 		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 		$feed .= "<updated>$updated</updated>\n";
 
-		$minus24hours = strtotime('-24 hours');
-
+		// Sort by date, namespace, title
 		$dategroups = array();
 		foreach ($results['results'] as &$result) {
 			$date = $result['diffdate'];
-			if (MySQLDate::toPHP($date) < $minus24hours) continue;
 			unset($result['diffdate']);
 			if (! isset($dategroups[$date])) $dategroups[$date] = array();
 			$dategroups[$date][] = $result;
 		}
+		unset($result);
+
+		$summary = "Most recent results<table><thead><tr><th>Page</th><th>+/&ndash;</th><th>Category / Template</th></tr></thead><tbody>\n";
+
+		foreach ($dategroups as $date => &$dategroup) {
+			usort($dategroup, array($this, 'resultgroupsort'));
+			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
+			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
+			$summary .= "<tr><td><i>$displaydate$ord hour</i></td><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
+			$x = 0;
+			$prevtitle = '';
+			$prevaction = '';
+
+			foreach ($dategroup as &$result) {
+				$title = $result['title'];
+				$action = $result['plusminus'];
+				$category = htmlentities($result['category'], ENT_COMPAT, 'UTF-8');
+				if ($result['cat_template'] == 'T') $category = '{{' . $category . '}}';
+				$displayaction = ($action == '-') ? '&ndash;' : $action;
+
+				if ($title == $prevtitle && $action == $prevaction) {
+					$summary .= "; $category";
+				} elseif ($title == $prevtitle) {
+					$summary .= "</td></tr>\n";
+					$summary .= "<tr><td>&nbsp;</td><td>$displayaction</td><td>$category";
+				} else {
+					if ($x++ > 0) $summary .= "</td></tr>\n";
+					$summary .= "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td>$displayaction</td><td>$category";
+				}
+				$prevtitle = $title;
+				$prevaction = $action;
+			}
+
+			if ($x > 0) $summary .= "</td></tr>\n";
+			if ($x == 10) break; // Only want 10 pages
+		}
+
+		$summary .= "</tbody></table>\n";
+		$summary = htmlentities($summary, ENT_COMPAT, 'UTF-8');
+		unset($dategroup);
 		unset($result);
 
 		foreach ($dategroups as $date => &$dategroup) {
@@ -264,9 +306,10 @@ class UIHelper
 			$feed .= "<title>Results For $humandate hour</title>\n";
 			$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 			$feed .= "<updated>$updated</updated>\n";
-			$feed .= "<summary type=\"html\">" . count($dategroup) . " category changes</summary>\n";
+			$feed .= "<summary type=\"html\">$summary</summary>\n";
 			$feed .= "<author><name>CategoryWatchlistBot</name></author>\n";
 			$feed .= "</entry>\n";
+			break; // Only want one entry
 		}
 		unset($dategroup);
 
@@ -277,6 +320,23 @@ class UIHelper
 		echo $feed;
 
 		return true;
+	}
+
+	/**
+	 * Sort a result group by namespace, title
+	 *
+	 * @param unknown $a
+	 * @param unknown $b
+	 * @return number
+	 */
+	function resultgroupsort($a, $b)
+	{
+		$ans = $a['ns'];
+		$bns = $b['ns'];
+
+		if ($ans > $bns) return 1;
+		if ($ans < $bns) return -1;
+		return strcmp($a['title'], $b['title']);
 	}
 
 	/**

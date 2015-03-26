@@ -1,4 +1,4 @@
-cd /data/project/bambots/Bambots/cache
+cd /data/project/bambots/Bambots/cache/DatabaseReportBot
 rm Template~3aA*
 rm Template~3aB*
 rm Template~3aC*
