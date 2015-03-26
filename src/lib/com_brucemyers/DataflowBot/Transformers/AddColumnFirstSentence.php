@@ -126,9 +126,7 @@ class AddColumnFirstSentence extends AddColumn
 				$pagenames[] = $pagename;
 			}
 
-			// Cache the pages
 			$wiki = $this->serviceMgr->getMediaWiki('enwiki');
-			$wiki->cachePages($pagenames);
 
 			// Process each page
 
@@ -142,9 +140,9 @@ class AddColumnFirstSentence extends AddColumn
 
 				$pagename = preg_replace('/\\[|\\]/u', '', $row[$column]);
 				if ($pagename[0] == ':') $pagename = substr($pagename, 1);
-				$data = $wiki->getPageWithCache($pagename);
 
-        		$value = $this->getFirstSentence($data, $pagename);
+				$value = $wiki->getPageLead($pagename);
+				if (empty($value)) $value = str_replace('_', ' ', $pagename);
 
 				$retval = $this->insertColumn($rows[$key], $value);
 				if ($retval !== true) return $retval;

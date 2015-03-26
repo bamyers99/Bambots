@@ -157,7 +157,7 @@ class AddColumnFirstImage extends AddColumn
         		$value = '';
 
         		// Look for '[[file:' or '|...='; no [ in filename to prevent = [[File: from matching
-        		$regex = '/(?:\\[\\[\\s*(?:file|image)\\s*:|\\|\\s*\w+\\s*=)\\s*([^{[|]+?\\.(?:jpg|jpeg|gif|svg|png))/iu';
+        		$regex = '/(?:\\[\\[\\s*(?:file|image)\\s*:|\\|\\s*\w+\\s*=)\\s*([^{[|}\\]]+?\\.(?:jpg|jpeg|gif|svg|png))/iu';
         		if (preg_match($regex, $data, $matches) == 1) {
         			$filename = preg_replace('/^file\\s*:\\s*/i', '', $matches[1]);
         			$imageok = true;

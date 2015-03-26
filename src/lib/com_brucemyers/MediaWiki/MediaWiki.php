@@ -360,6 +360,41 @@ class MediaWiki extends wikipedia
     }
 
     /**
+     * Get a pages lead.
+     *
+     * @param string $pagetitle
+     * @param int $sentences (optional) Number of sentences to retrieve, only one of this or $characters can be > 0, default = 1
+     * @param int $characters (optional) Number of characters to retrieve, default = 0
+     * @param bool $plaintext (optional) Retrieve plaintext vs limited html, default = false
+     */
+    public function getPageLead($pagetitle, $sentences = 1, $characters = 0, $plaintext = false)
+    {
+    	$query = '?action=query&format=php&prop=extracts&exintro=&titles='  . urlencode($pagetitle);
+
+    	if ($characters > 0) $query .= "&exchars=$characters";
+    	else {
+    		if ($sentences < 1) $sentences = 1;
+    		$query .= "&exsentences=$sentences";
+    	}
+
+    	if ($plaintext) $query .= '&explaintext=';
+
+    	$ret = $this->query($query);
+
+    	if (isset($ret['error'])) {
+    		Logger::log('MediaWiki->getPageLead Error ' . $ret['error']['info']);
+    		return '';
+    	}
+
+    	$lead = '';
+    	if (! empty($ret['query']['pages'])) {
+    		$lead = $ret['query']['pages'][0]['extract'];
+    	}
+
+    	return $lead;
+    }
+
+    /**
      * Get multiple pages
      *
      * @param $pagenames array Page names
