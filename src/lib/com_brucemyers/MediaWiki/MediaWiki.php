@@ -386,12 +386,13 @@ class MediaWiki extends wikipedia
     		return '';
     	}
 
-    	$lead = '';
     	if (! empty($ret['query']['pages'])) {
-    		$lead = $ret['query']['pages'][0]['extract'];
+        	foreach ($ret['query']['pages'] as $page) {
+    			return $page['extract'];
+        	}
     	}
 
-    	return $lead;
+    	return '';
     }
 
     /**
