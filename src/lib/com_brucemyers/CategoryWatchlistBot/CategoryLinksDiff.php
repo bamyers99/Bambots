@@ -291,7 +291,8 @@ class CategoryLinksDiff
     {
     	// Strip comments, etc
     	$cleandata = preg_replace(CommonRegex::REFERENCESTUB_REGEX, '', $text); // Must be first
-    	$cleandata = preg_replace(array(CommonRegex::COMMENT_REGEX, CommonRegex::REFERENCE_REGEX, CommonRegex::NOWIKI_REGEX), '', $cleandata);
+    	if ($cleandata !== null) $cleandata = preg_replace(CommonRegex::REFERENCE_REGEX, '', $cleandata);
+    	$cleandata = preg_replace(array(CommonRegex::COMMENT_REGEX, CommonRegex::NOWIKI_REGEX), '', $cleandata);
 
     	// Get the explicit categories
 
