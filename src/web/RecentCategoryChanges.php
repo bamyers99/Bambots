@@ -168,7 +168,7 @@ function display_recent()
 		$protocol = HttpUtil::getProtocol();
 
 		$extra = "RecentCategoryChanges.php?wiki={$params['wiki']}&amp;page=" . ($params['page'] + 1);
-		echo "<div style='padding-bottom: 5px;'><a href='$protocol://$host$uri/$extra' class='novisited'>Next page</a></div>";
+		echo "<div style='padding-bottom: 10px;'><a href='$protocol://$host$uri/$extra' class='novisited'>Next page</a></div>";
 
 		echo '<div>+ = Added<br />&ndash; = Removed</div>';
 	}

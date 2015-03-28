@@ -140,7 +140,7 @@ function display_form()
 		<?php
 		if ($params['catcount'] && isset($options['query'])) {
 			echo '<div>';
-			echo '<span id="expandericon1" class="expandericon"><a href="#" onclick="toggleExpander(\'1\'); return false">+</a></span><a class="expandertitle" href="#" onclick="toggleExpander(\'1\'); return false"> Show categories / templates</a>';
+			echo '<span id="expandericon1" class="expandericon"><a href="#" onclick="toggleExpander(\'1\'); return false">+</a></span><a class="expandertitle" href="#" onclick="toggleExpander(\'1\'); return false"> Click to show categories / templates</a>';
  			echo '</div>';
  			echo '<div id="expanderbody1" style="display: none">';
 		}
@@ -286,10 +286,10 @@ function display_diffs()
 
 		if (count($results['results']) == 100) {
 			$extra = "CategoryWatchlist.php?query={$options['hash']}&amp;page=" . ($options['page'] + 1);
-			echo "<div style='padding-bottom: 5px;' class='novisited'><a href='$protocol://$host$uri/$extra'>Next page</a></div>";
+			echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>Next page</a></div>";
 		}
 
-		echo '<div style="padding-bottom: 5px;">+ = Added<br />&ndash; = Removed</div>';
+		echo '<div style="padding-bottom: 10px;">+ = Added<br />&ndash; = Removed</div>';
 
 		$extra = "CategoryWatchlist.php?action=atom&amp;query={$options['hash']}";
 		echo "<div><a href='$protocol://$host$uri/$extra'><img src='img/icon-atom.gif' title='Subscribe to updates' /></a></div>";
