@@ -66,7 +66,6 @@ class CategoryWatchlistBot
         // Generate each wikis diffs.
         $errorrulsets = array();
 
-
         $catLinksDiff = new CategoryLinksDiff($serviceMgr, $outputdir, $asof_date);
 
         foreach ($ruleconfigs as $wikiname => $wikidata) {
