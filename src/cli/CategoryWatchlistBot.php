@@ -26,23 +26,23 @@ $GLOBALS['botname'] = 'CategoryWatchlistBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
-    	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org'),
-    	'enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org'),
-    	'svwiki' => array('title' => 'Svenska Wikipedia', 'domain' => 'sv.wikipedia.org'),
-        'nlwiki' => array('title' => 'Nederlands Wikipedia', 'domain' => 'nl.wikipedia.org'),
-        'dewiki' => array('title' => 'Deutsch Wikipedia', 'domain' => 'de.wikipedia.org'),
-        'frwiki' => array('title' => 'Français Wikipedia', 'domain' => 'fr.wikipedia.org'),
-        'ruwiki' => array('title' => 'Ру́сский Wikipedia', 'domain' => 'ru.wikipedia.org'),
-        'itwiki' => array('title' => 'Italiano Wikipedia', 'domain' => 'it.wikipedia.org'),
-        'eswiki' => array('title' => 'Español Wikipedia', 'domain' => 'es.wikipedia.org'),
-        'viwiki' => array('title' => 'Tiếng Việt Wikipedia', 'domain' => 'vi.wikipedia.org'),
-        'warwiki' => array('title' => 'Winaray Wikipedia', 'domain' => 'war.wikipedia.org'),
-        'cebwiki' => array('title' => 'Sinugboanong Binisaya Wikipedia', 'domain' => 'ceb.wikipedia.org'),
-        'plwiki' => array('title' => 'Polski Wikipedia', 'domain' => 'pl.wikipedia.org'),
-        'jawiki' => array('title' => '日本語 Wikipedia', 'domain' => 'ja.wikipedia.org'),
-        'ptwiki' => array('title' => 'Português Wikipedia', 'domain' => 'pt.wikipedia.org'),
-        'zhwiki' => array('title' => '中文 Wikipedia', 'domain' => 'zh.wikipedia.org'),
-        'ukwiki' => array('title' => 'Українська Wikipedia', 'domain' => 'uk.wikipedia.org')
+//    	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org'),
+    	'enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'catNS' => 'Category', 'lang' => 'en'),
+//    	'svwiki' => array('title' => 'Svenska Wikipedia', 'domain' => 'sv.wikipedia.org'),
+//        'nlwiki' => array('title' => 'Nederlands Wikipedia', 'domain' => 'nl.wikipedia.org'),
+//        'dewiki' => array('title' => 'Deutsch Wikipedia', 'domain' => 'de.wikipedia.org'),
+//        'frwiki' => array('title' => 'Français Wikipedia', 'domain' => 'fr.wikipedia.org'),
+//        'ruwiki' => array('title' => 'Ру́сский Wikipedia', 'domain' => 'ru.wikipedia.org'),
+//        'itwiki' => array('title' => 'Italiano Wikipedia', 'domain' => 'it.wikipedia.org'),
+//        'eswiki' => array('title' => 'Español Wikipedia', 'domain' => 'es.wikipedia.org'),
+//        'viwiki' => array('title' => 'Tiếng Việt Wikipedia', 'domain' => 'vi.wikipedia.org'),
+//        'warwiki' => array('title' => 'Winaray Wikipedia', 'domain' => 'war.wikipedia.org'),
+//        'cebwiki' => array('title' => 'Sinugboanong Binisaya Wikipedia', 'domain' => 'ceb.wikipedia.org'),
+//        'plwiki' => array('title' => 'Polski Wikipedia', 'domain' => 'pl.wikipedia.org'),
+//        'jawiki' => array('title' => '日本語 Wikipedia', 'domain' => 'ja.wikipedia.org'),
+        'ptwiki' => array('title' => 'Português Wikipedia', 'domain' => 'pt.wikipedia.org', 'catNS' => 'Categoria', 'lang' => 'pt')
+//        'zhwiki' => array('title' => '中文 Wikipedia', 'domain' => 'zh.wikipedia.org'),
+//        'ukwiki' => array('title' => 'Українська Wikipedia', 'domain' => 'uk.wikipedia.org')
     );
 
 try {
@@ -72,10 +72,10 @@ try {
     $timer->start();
 
     if ($ruletype == 'active') $rules = $activerules;
-    elseif ($ruletype == 'custom') $rules = array(Config::get(CategoryWatchlistBot::CUSTOMRULE) =>
-    		array('title' => Config::get(CategoryWatchlistBot::CUSTOMRULE),
-    			'domain' => substr(Config::get(CategoryWatchlistBot::CUSTOMRULE), 0, 2) . '.wikipedia.org'));
-    else {
+    elseif ($ruletype == 'custom') {
+    	$rulename = Config::get(CategoryWatchlistBot::CUSTOMRULE);
+    	$rules = array($rulename => $activerules[$rulename]);
+	} else {
     	echo 'Unknown ruletype = ' . $ruletype;
     	exit;
     }

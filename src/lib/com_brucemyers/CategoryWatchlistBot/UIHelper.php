@@ -22,6 +22,7 @@ use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\DateUtil;
 use com_brucemyers\Util\HttpUtil;
+use com_brucemyers\Util\L10N;
 use PDO;
 
 class UIHelper
@@ -48,13 +49,15 @@ class UIHelper
 		$sql = 'SELECT * FROM wikis ORDER BY wikititle';
 		$sth = $this->dbh_tools->query($sql);
 
-		//$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org'),
-		//	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org')); // Want first
-		$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org')); // Want first
+		//$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'lang' => 'en'),
+		//	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'lang' => 'en')); // Want first
+		$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'lang' => 'en')); // Want first
 
 		while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
 			$wikiname = $row['wikiname'];
-			if (! isset($wikis[$wikiname])) $wikis[$wikiname] = array('title' => $row['wikititle'], 'domain' => $row['wikidomain']);
+			if (! isset($wikis[$wikiname])) {
+				$wikis[$wikiname] = array('title' => $row['wikititle'], 'domain' => $row['wikidomain'], 'lang' => $row['lang']);
+			}
 		}
 
 		return $wikis;
@@ -165,7 +168,7 @@ class UIHelper
 		if ($page < 0 || $page > 1000) $page = 0;
 		$offset = $page * $max_rows;
 
-		$cachekey = CategoryWatchlistBot::CACHE_PREFIX_RESULT . $queryid . '_' . $page;
+		$cachekey = CategoryWatchlistBot::CACHE_PREFIX_RESULT . $queryid . '_'. $wikiname . '_' . $page;
 
 		// Check the cache
 		$results = FileCache::getData($cachekey);
@@ -225,6 +228,7 @@ class UIHelper
 		$wikis = $this->getWikis();
 		$domain = $wikis[$params['wiki']]['domain'];
 		$wikiprefix = "$protocol://$domain/wiki/";
+		$l10n = new L10N($wikis[$params['wiki']]['lang']);
 
 		$updated = gmdate("Y-m-d\TH:i:s\Z");
 
@@ -236,10 +240,11 @@ class UIHelper
 		}
 
 		$title = htmlentities($title, ENT_QUOTES, 'UTF-8');
+		$title2 = htmlentities(htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') . " : $title", ENT_COMPAT, 'UTF-8');
 
 		$feed = "<?xml version=\"1.0\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xml:lang=\"en\">\n";
 		$feed .= "<id>//$host$uri/$extra</id>\n";
-		$feed .= "<title>Category Watchlist : $title</title>\n";
+		$feed .= "<title>$title2</title>\n";
 		$feed .= "<link rel=\"self\" type=\"application/atom+xml\" href=\"$protocol://$host$uri/$extra\" />\n";
 		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 		$feed .= "<updated>$updated</updated>\n";
@@ -254,13 +259,17 @@ class UIHelper
 		}
 		unset($result);
 
-		$summary = "Most recent results<table><thead><tr><th>Page</th><th>+/&ndash;</th><th>Category / Template</th></tr></thead><tbody>\n";
+		$hour = htmlentities($l10n->get('hour'), ENT_COMPAT, 'UTF-8');
+		$summary = htmlentities($l10n->get('mostrecentresults'), ENT_COMPAT, 'UTF-8') . "<table><thead><tr><th>" .
+			htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
+			htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
+			htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
 
 		foreach ($dategroups as $date => &$dategroup) {
 			usort($dategroup, array($this, 'resultgroupsort'));
 			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
 			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
-			$summary .= "<tr><td><i>$displaydate$ord hour</i></td><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
+			$summary .= "<tr><td><i>$displaydate$ord $hour</i></td><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
 			$x = 0;
 			$prevtitle = '';
 			$prevaction = '';
@@ -299,10 +308,11 @@ class UIHelper
 			$ord = DateUtil::ordinal(date('G', $date));
 			$humandate = date('F j, Y G', $date) . $ord;
 			$updated = gmdate("Y-m-d\TH:i:s\Z", $date);
+			$title = htmlentities(htmlentities($l10n->get('resultsfor'), ENT_COMPAT, 'UTF-8') . " $humandate $hour", ENT_COMPAT, 'UTF-8');
 
 			$feed .= "<entry>\n";
 			$feed .= "<id>//$host$uri/$extra&amp;date=$humandate</id>\n";
-			$feed .= "<title>Results For $humandate hour</title>\n";
+			$feed .= "<title>$title</title>\n";
 			$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 			$feed .= "<updated>$updated</updated>\n";
 			$feed .= "<summary type=\"html\">$summary</summary>\n";

@@ -30,6 +30,7 @@ class CategoryLinksDiff
 	var $outputdir;
 	var $asof;
 	var $serviceMgr;
+	var $categoryNS;
 
     /**
      * Constructor
@@ -54,6 +55,7 @@ class CategoryLinksDiff
      */
     function processWiki($wikiname, $wikidata)
     {
+    	$this->categoryNS = $wikidata['catNS'];
     	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
     	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
 
@@ -73,8 +75,8 @@ class CategoryLinksDiff
     	$sth->execute();
 
     	if (! $sth->fetch(PDO::FETCH_ASSOC)) {
-    		$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname, wikititle, wikidomain) VALUES (?,?,?)');
-    		$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain']));
+    		$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname, wikititle, wikidomain, lang) VALUES (?,?,?,?)');
+    		$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain'], $wikidata['lang']));
     	}
 
     	// Get the current rev_id
@@ -242,8 +244,8 @@ class CategoryLinksDiff
 			$currtemplates = array();
 			$prevtemplates = array();
 
-			$this->parseCategoriesTemplates($revtext1, $currcats, $currtemplates);
-			$this->parseCategoriesTemplates($revtext2, $prevcats, $prevtemplates);
+			$this->parseCategoriesTemplates($revtext1, $currcats, $currtemplates, $this->categoryNS);
+			$this->parseCategoriesTemplates($revtext2, $prevcats, $prevtemplates, $this->categoryNS);
 			$this->followTemplateRedirects($wikiname, $prevtemplates, $currtemplates);
 			// Remove dups after redirect replacement
 			$prevtemplates = array_unique($prevtemplates);
@@ -286,8 +288,9 @@ class CategoryLinksDiff
      * @param string $text Text to parse
      * @param array $cats Add categories to
      * @param array $templates Add templates to
+     * @param string $categoryNS Localized categery namespace
      */
-    protected function parseCategoriesTemplates($text, &$cats, &$templates)
+    protected function parseCategoriesTemplates($text, &$cats, &$templates, $categoryNS)
     {
     	// Strip comments, etc
     	$cleandata = preg_replace(CommonRegex::REFERENCESTUB_REGEX, '', $text); // Must be first
@@ -302,6 +305,19 @@ class CategoryLinksDiff
 				list($cat) = explode('|', $cat);
 				$cat = str_replace('_', ' ', ucfirst(trim($cat)));
 				$cats[$cat] = $cat; // Removes dups
+			}
+		}
+
+		// Localized categories
+		if ($categoryNS != 'Category') {
+			$catregex = str_replace('Category', $categoryNS, CommonRegex::CATEGORY_REGEX);
+
+			if (preg_match_all($catregex, $cleandata, $matches)) {
+				foreach ($matches[1] as $cat) {
+					list($cat) = explode('|', $cat);
+					$cat = str_replace('_', ' ', ucfirst(trim($cat)));
+					$cats[$cat] = $cat; // Removes dups
+				}
 			}
 		}
 

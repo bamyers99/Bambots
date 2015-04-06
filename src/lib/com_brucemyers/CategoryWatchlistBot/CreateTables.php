@@ -51,8 +51,9 @@ class CreateTables
     	$sql = "CREATE TABLE IF NOT EXISTS `wikis` (
 		  `wikiname` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL PRIMARY KEY,
 		  `wikititle` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-		  `wikidomain` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+		  `wikidomain` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+		  `lang` varchar(5) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
+		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
     	$sql = "CREATE TABLE IF NOT EXISTS `runs` (

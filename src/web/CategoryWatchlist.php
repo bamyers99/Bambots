@@ -19,6 +19,7 @@ use com_brucemyers\CategoryWatchlistBot\UIHelper;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\DateUtil;
 use com_brucemyers\Util\HttpUtil;
+use com_brucemyers\Util\L10N;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -74,6 +75,8 @@ if ($params['catcount'] && ! isset($options['query']) && isset($_SERVER['HTTP_US
 	exit;
 }
 
+$l10n = new L10N($wikis[$params['wiki']]['lang']);
+
 display_form();
 
 /**
@@ -82,7 +85,7 @@ display_form();
  */
 function display_form()
 {
-	global $uihelper, $params, $wikis, $options;
+	global $uihelper, $params, $wikis, $options, $l10n;
 	$title = '';
 	if (! empty($params['title'])) $title = ' : ' . $params['title'];
 	else if (!empty($params['cn1'])) $title = ' : ' . $params['cn1'];
@@ -93,7 +96,7 @@ function display_form()
     <head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	    <meta name="robots" content="noindex, nofollow" />
-	    <title>Category / Template Watchlist<?php echo $title?></title>
+	    <title><?php echo htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') . $title ?></title>
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
 	    <style>
 	        .plusminus {
@@ -136,19 +139,19 @@ function display_form()
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2><a href="CategoryWatchlist.php<?php if (! empty($options['hash'])) echo "?query={$options['hash']}" ?>" class="novisited">Category / Template Watchlist</a></h2>
+		<h2><a href="CategoryWatchlist.php<?php if (! empty($options['hash'])) echo "?query={$options['hash']}" ?>" class="novisited"><?php echo htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') ?></a></h2>
 		<?php
 		if ($params['catcount'] && isset($options['query'])) {
 			echo '<div>';
-			echo '<span id="expandericon1" class="expandericon"><a href="#" onclick="toggleExpander(\'1\'); return false">+</a></span><a class="expandertitle" href="#" onclick="toggleExpander(\'1\'); return false"> Click to show categories / templates</a>';
+			echo '<span id="expandericon1" class="expandericon"><a href="#" onclick="toggleExpander(\'1\'); return false">+</a></span><a class="expandertitle" href="#" onclick="toggleExpander(\'1\'); return false"> ' . htmlentities($l10n->get('clicktoshow'), ENT_COMPAT, 'UTF-8') . '</a>';
  			echo '</div>';
  			echo '<div id="expanderbody1" style="display: none">';
 		}
 		?>
-		<div>Categories that are included by templates are not watched. Watch the template instead.</div>
+		<div><?php echo htmlentities($l10n->get('notempcat1'), ENT_COMPAT, 'UTF-8') ?></div>
         <form action="CategoryWatchlist.php" method="post"><table class="form">
-        <tr><td colspan='3'><b>Title</b> <input name="title" id="testfield1" type="text" size="40" value="<?php echo $params['title'] ?>" /></td></tr>
-        <tr><td colspan='3'><b>Wiki</b> <select name="wiki"><?php
+        <tr><td colspan='3'><b><?php echo htmlentities($l10n->get('title', true), ENT_COMPAT, 'UTF-8') ?></b> <input name="title" id="testfield1" type="text" size="40" value="<?php echo $params['title'] ?>" /></td></tr>
+        <tr><td colspan='3'><b><?php echo htmlentities($l10n->get('wiki', true), ENT_COMPAT, 'UTF-8') ?></b> <select name="wiki" onchange="this.form.submit()"><?php
         foreach ($wikis as $wikiname => $wikidata) {
 			$wikititle = htmlentities($wikidata['title'], ENT_COMPAT, 'UTF-8');
 			$selected = '';
@@ -156,8 +159,8 @@ function display_form()
 			echo "<option value='$wikiname'$selected>$wikititle</option>";
 		}
         ?></select></td></tr>
-        <tr><td>&nbsp;</td><td><b>Categories / Templates</b> (enclose in {{ }})</td>
-        	<td style="text-align:center;"><b>Match type</b></td><td style="text-align:center;"><b>Report changes</b></td></tr>
+        <tr><td>&nbsp;</td><td><b><?php echo htmlentities($l10n->get('categories', true), ENT_COMPAT, 'UTF-8') ?> / <?php echo htmlentities($l10n->get('templates', true), ENT_COMPAT, 'UTF-8') ?></b> (<?php echo htmlentities($l10n->get('enclosein'), ENT_COMPAT, 'UTF-8') ?> {{ }})</td>
+        	<td style="text-align:center;"><b><?php echo htmlentities($l10n->get('matchtype', true), ENT_COMPAT, 'UTF-8') ?></b></td><td style="text-align:center;"><b><?php echo htmlentities($l10n->get('reportchanges', true), ENT_COMPAT, 'UTF-8') ?></b></td></tr>
         <?php
         	for ($x=1; $x <= 10; ++$x) {
 				$checkedRTB = '';
@@ -177,11 +180,11 @@ function display_form()
 
 				echo "<tr><td><b>$x</b></td><td><input name='cn$x' type='text' size='30' value='" .
 					htmlentities($catname, ENT_COMPAT, 'UTF-8') . "' /></td>" .
-	       			"<td class='tabborderr'>Exact <input type='radio' name='mt$x' value='E'$checkedMTE> Partial <input type='radio' name='mt$x' value='P'$checkedMTP</td>" .
-        			"<td>Both <input type='radio' name='rt$x' value='B'$checkedRTB> Add <input type='radio' name='rt$x' value='P'$checkedRTP> Remove <input type='radio' name='rt$x' value='M'$checkedRTM></td></tr>";
+	       			"<td class='tabborderr'>". htmlentities($l10n->get('exact', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='mt$x' value='E'$checkedMTE> ". htmlentities($l10n->get('partial', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='mt$x' value='P'$checkedMTP</td>" .
+        			"<td>" . htmlentities($l10n->get('both', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='B'$checkedRTB> ". htmlentities($l10n->get('add', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='P'$checkedRTP> ". htmlentities($l10n->get('remove', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='M'$checkedRTM></td></tr>";
 			}
         	?>
-        <tr><td colspan='3'><input type="submit" value="Save" />&nbsp;&nbsp;&nbsp;<input type="submit" value="New" onclick="clearForm(this.form);return false;"/></td></tr>
+        <tr><td colspan='3'><input type="submit" value="<?php echo htmlentities($l10n->get('save', true), ENT_COMPAT, 'UTF-8') ?>" />&nbsp;&nbsp;&nbsp;<input type="submit" value="<?php echo htmlentities($l10n->get('new', true), ENT_COMPAT, 'UTF-8') ?>" onclick="clearForm(this.form);return false;"/></td></tr>
         </table></form>
 
         <script type="text/javascript">
@@ -190,11 +193,21 @@ function display_form()
             }
         </script>
     <?php
+	echo '<div>' . htmlentities($l10n->get('paramchange'), ENT_COMPAT, 'UTF-8') . '</div>';
+	echo '<dl><dt><b>' . htmlentities($l10n->get('categories', true), ENT_COMPAT, 'UTF-8') . ' / ' .
+		htmlentities($l10n->get('templates', true), ENT_COMPAT, 'UTF-8') . '</b></dt><dd>' .
+		htmlentities($l10n->get('enclosetemplatesin', true), ENT_COMPAT, 'UTF-8') . ' {{ }}</dd><dd>' .
+		htmlentities($l10n->get('notempcat2'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' . htmlentities($l10n->get('tempredirectfollow'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
+	echo '<dl><dt><b>' . htmlentities($l10n->get('matchtype', true), ENT_COMPAT, 'UTF-8') . '</b></dt><dd>' .
+		htmlentities($l10n->get('exact', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypeexact'), ENT_COMPAT, 'UTF-8') .
+		'</dd><dd>' . htmlentities($l10n->get('partial', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypepartial'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
+	echo '<dl><dt><b>' . htmlentities($l10n->get('reportchanges', true), ENT_COMPAT, 'UTF-8') . '</b></dt><dd>' .
+		htmlentities($l10n->get('both', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('reportchangesboth'), ENT_COMPAT, 'UTF-8') .
+		'</dd><dd>' . htmlentities($l10n->get('add', true), ENT_COMPAT, 'UTF-8') . ' = ' .
+		htmlentities($l10n->get('reportchangesadd'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' .
+		htmlentities($l10n->get('remove', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('reportchangesremove'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
+
     if ($params['catcount'] && isset($options['query'])) {
-		echo '<div>If any parameters above are changed, the query id in the url and atom feed will change.</div>';
-		echo '<dl><dt><b>Categories / Templates</b></dt><dd>Enclose templates in {{ }}</dd><dd>Categories that are included by templates are not watched (ie. stubs, cleanup, WikiProject). Watch the template instead.</dd><dd>Template redirects are followed.</dd></dl>';
-		echo '<dl><dt><b>Match type</b></dt><dd>Exact = Specified category/template must match exactly.</dd><dd>Partial = Specified category/template can match any part.</dd></dl>';
-		echo '<dl><dt><b>Report changes</b></dt><dd>Both = Report additions and removals.</dd><dd>Add = Report only additions.</dd><dd>Remove = Report only removals.</dd></dl>';
 		echo '</div>';
 	}
 
@@ -203,9 +216,9 @@ function display_form()
     }
 
     ?></div><br /><div style="display: table; margin: 0 auto;">
-    <a href="RecentCategoryChanges.php" class='novisited'>Recent Category Changes</a> <b>&bull;</b>
+    <a href="RecentCategoryChanges.php?wiki=<?php echo $params['wiki'] ?>" class='novisited'><?php echo htmlentities($l10n->get('recentcategorychanges'), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
     <a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class='novisited'>Documentation</a> <b>&bull;</b>
-    Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
+    <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
 
 /**
@@ -213,7 +226,7 @@ function display_form()
  */
 function display_diffs()
 {
-	global $uihelper, $params, $wikis, $options;
+	global $uihelper, $params, $wikis, $options, $l10n;
 
 	$results = $uihelper->getResults($params, $options['page'], 100);
 	if (empty($results['results'])) $results['errors'][] = 'No more results';
@@ -241,13 +254,18 @@ function display_diffs()
 		}
 		unset($result);
 
-		echo "<table class='wikitable tablesorter'><thead><tr><th>Page</th><th>+/&ndash;</th><th>Category / Template</th></tr></thead><tbody>\n";
+		echo "<table class='wikitable tablesorter'><thead><tr><th>" .
+				htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
+				htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
+				htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
+
+		$hour = htmlentities($l10n->get('hour'), ENT_COMPAT, 'UTF-8');
 
 		foreach ($dategroups as $date => &$dategroup) {
 			usort($dategroup, 'resultgroupsort');
 			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
 			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
-			echo "<tr><td data-sort-value='~'><i>$displaydate$ord hour</i></td><td data-sort-value='~'>&nbsp;</td><td data-sort-value='~'>&nbsp;</td></tr>\n";
+			echo "<tr><td data-sort-value='~'><i>$displaydate$ord $hour</i></td><td data-sort-value='~'>&nbsp;</td><td data-sort-value='~'>&nbsp;</td></tr>\n";
 			$x = 0;
 			$prevtitle = '';
 			$prevaction = '';
@@ -286,13 +304,16 @@ function display_diffs()
 
 		if (count($results['results']) == 100) {
 			$extra = "CategoryWatchlist.php?query={$options['hash']}&amp;page=" . ($options['page'] + 1);
-			echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>Next page</a></div>";
+			echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
+				htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
 		}
 
-		echo '<div style="padding-bottom: 10px;">+ = Added<br />&ndash; = Removed</div>';
+		echo '<div style="padding-bottom: 10px;">+ = ' . htmlentities($l10n->get('added', true), ENT_COMPAT, 'UTF-8').
+			'<br />&ndash; = ' . htmlentities($l10n->get('removed', true), ENT_COMPAT, 'UTF-8'). '</div>';
 
 		$extra = "CategoryWatchlist.php?action=atom&amp;query={$options['hash']}";
-		echo "<div><a href='$protocol://$host$uri/$extra'><img src='img/icon-atom.gif' title='Subscribe to updates' /></a></div>";
+		echo "<div><a href='$protocol://$host$uri/$extra'><img src='img/icon-atom.gif' title='" .
+				htmlentities($l10n->get('subscribe', true), ENT_COMPAT, 'UTF-8') . "' /></a></div>";
 	}
 }
 

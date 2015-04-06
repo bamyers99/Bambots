@@ -33,7 +33,7 @@ use Mock;
 class TestCategoryLinksDiff extends UnitTestCase
 {
 
-    public function notestDiffLoad()
+    public function testDiffLoad()
     {
     	$outputdir = Config::get(CategoryWatchlistBot::OUTPUTDIR);
     	$outputdir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputdir);
@@ -68,11 +68,12 @@ class TestCategoryLinksDiff extends UnitTestCase
     	new CreateTables($dbh_wiki, $dbh_tools);
 
     	$wikiname = 'enwiki';
-    	$wikidata = array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org');
+    	$wikidata = array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'catNS' => 'Category', 'lang' => 'en');
     	$ts = MySQLDate::toMySQLDatetime($asof_date);
 
     	//Set up a query and querycats
     	$dbh_tools->exec("INSERT INTO querys VALUES (1,'enwiki','A','','$ts','$ts')");
+    	$dbh_tools->exec("INSERT IGNORE INTO wikis VALUES ('ptwiki','Português Wikipedia','pt.wikipedia.org','pt')");
 
     	$catLinksDiff = new CategoryLinksDiff($serviceMgr, $outputdir, $asof_date);
 
@@ -85,6 +86,7 @@ class TestCategoryLinksDiff extends UnitTestCase
     		$this->assertEqual($row['wikiname'], $wikiname, 'Bad wikiname');
     		$this->assertEqual($row['wikititle'], $wikidata['title'], 'Bad wikititle');
     		$this->assertEqual($row['wikidomain'], $wikidata['domain'], 'Bad wikidomain');
+    		$this->assertEqual($row['lang'], $wikidata['lang'], 'Bad lang');
     	} else {
     		$this->fail('wikis table empty');
     	}
@@ -106,7 +108,7 @@ class TestCategoryLinksDiff extends UnitTestCase
     	$this->assertEqual($pluscnt, 3, 'Bad plus count');
     }
 
-    public function testParseCategoriesTemplates()
+    public function notestParseCategoriesTemplates()
     {
 		$cats = array();
 		$templates = array();

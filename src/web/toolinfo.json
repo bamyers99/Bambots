@@ -43,7 +43,7 @@
 	    "name" : "CategoryWatchlistBot",
 	    "title" : "Category membership watchlist",
 	    "description" : "Watch category membership changes (page adds/removals).",
-	    "url" : "https://tools.wmflabs.org/bambots/CategoryWatchlist.php?query=303a6a8f5aacd4f2b3a3906509903680",
+	    "url" : "https://tools.wmflabs.org/bambots/CategoryWatchlist.php",
 	    "keywords" : "category,watchlist",
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"

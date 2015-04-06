@@ -19,6 +19,7 @@ use com_brucemyers\CategoryWatchlistBot\UIHelper;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\DateUtil;
 use com_brucemyers\Util\HttpUtil;
+use com_brucemyers\Util\L10N;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -38,6 +39,8 @@ $params = array();
 
 get_params();
 
+$l10n = new L10N($wikis[$params['wiki']]['lang']);
+
 display_form();
 
 /**
@@ -46,14 +49,14 @@ display_form();
  */
 function display_form()
 {
-	global $uihelper, $params, $wikis;
+	global $uihelper, $params, $wikis, $l10n;
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	    <meta name="robots" content="noindex, nofollow" />
-	    <title>Category Membership / Template Usage Recent Changes</title>
+	    <title><?php echo htmlentities($l10n->get('recentchangestitle'), ENT_COMPAT, 'UTF-8') ?></title>
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
 	    <style>
 	        .plusminus {
@@ -72,7 +75,7 @@ function display_form()
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2><a href="RecentCategoryChanges.php?wiki=<?php echo $params['wiki'] ?>" class="novisited">Category Membership / Template Usage Recent Changes</a></h2>
+		<h2><a href="RecentCategoryChanges.php?wiki=<?php echo $params['wiki'] ?>" class="novisited"><?php echo htmlentities($l10n->get('recentchangestitle'), ENT_COMPAT, 'UTF-8') ?></a></h2>
         <form action="RecentCategoryChanges.php" method="post"><b>Wiki</b> <select name="wiki"><?php
         foreach ($wikis as $wikiname => $wikidata) {
 			$wikititle = htmlentities($wikidata['title'], ENT_COMPAT, 'UTF-8');
@@ -87,9 +90,9 @@ function display_form()
     display_recent();
 
     ?></div><br /><div style="display: table; margin: 0 auto;">
-    <a href="CategoryWatchlist.php" class='novisited'>Category Watchlist</a> <b>&bull;</b>
+    <a href="CategoryWatchlist.php" class='novisited'><?php echo htmlentities($l10n->get('watchlisttitle', true), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
     <a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class='novisited'>Documentation</a> <b>&bull;</b>
-    Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
+    <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
 
 /**
@@ -97,7 +100,7 @@ function display_form()
  */
 function display_recent()
 {
-	global $uihelper, $params, $wikis;
+	global $uihelper, $params, $wikis, $l10n;
 	$errors = array();
 
 	$results = $uihelper->getRecent($params['wiki'], $params['page'], 100);
@@ -126,11 +129,16 @@ function display_recent()
 		}
 		unset($result);
 
+		$hour = htmlentities($l10n->get('hour'), ENT_COMPAT, 'UTF-8');
+
 		foreach ($dategroups as $date => &$dategroup) {
 			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
 			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
-			echo "<h3>$displaydate$ord hour</h3>";
-			echo "<table class='wikitable tablesorter'><thead><tr><th>Page</th><th>+/&ndash;</th><th>Category / Template</th></tr></thead><tbody>\n";
+			echo "<h3>$displaydate$ord $hour</h3>";
+			echo "<table class='wikitable tablesorter'><thead><tr><th>" .
+				htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
+				htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
+				htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
 			$x = 0;
 			$prevtitle = '';
 			$prevaction = '';
@@ -168,10 +176,12 @@ function display_recent()
 		$protocol = HttpUtil::getProtocol();
 
 		$extra = "RecentCategoryChanges.php?wiki={$params['wiki']}&amp;page=" . ($params['page'] + 1);
-		echo "<div style='padding-bottom: 10px;'><a href='$protocol://$host$uri/$extra' class='novisited'>Next page</a></div>";
+		echo "<div style='padding-bottom: 10px;'><a href='$protocol://$host$uri/$extra' class='novisited'>" .
+				htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
 
-		echo '<div>+ = Added<br />&ndash; = Removed</div>';
-	}
+		echo '<div style="padding-bottom: 10px;">+ = ' . htmlentities($l10n->get('added', true), ENT_COMPAT, 'UTF-8').
+			'<br />&ndash; = ' . htmlentities($l10n->get('removed', true), ENT_COMPAT, 'UTF-8'). '</div>';
+		}
 }
 
 /**
