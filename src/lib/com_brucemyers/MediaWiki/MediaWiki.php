@@ -270,7 +270,7 @@ class MediaWiki extends wikipedia
      * Get multiple revisions text
      *
      * @param $revids array Revision ids
-     * @return array pagetitle=>array(revid, revision text, revid, revision text) second revid is optional
+     * @return array pagetitle=>array(namespace, revid, revision text, revid, revision text) second revid is optional
      */
     public function getRevisionsText($revids)
     {
@@ -288,8 +288,9 @@ class MediaWiki extends wikipedia
 
         	foreach ($ret['query']['pages'] as $page) {
        			$pagetitle = $page['title'];
+       			$ns = $page['ns'];
        			$pagetext = (isset($page['revisions'][0]['*'])) ? $page['revisions'][0]['*'] : '';
-         		$revs[$pagetitle] = array($page['revisions'][0]['revid'], $pagetext);
+         		$revs[$pagetitle] = array($ns, $page['revisions'][0]['revid'], $pagetext);
 
        			if (isset($page['revisions'][1])) {
          			$revs[$pagetitle][] = $page['revisions'][1]['revid'];

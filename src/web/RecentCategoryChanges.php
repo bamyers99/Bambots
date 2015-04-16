@@ -129,12 +129,11 @@ function display_recent()
 		}
 		unset($result);
 
-		$hour = htmlentities($l10n->get('hour'), ENT_COMPAT, 'UTF-8');
+		$redirectmsg = htmlentities(' (' . $l10n->get('redirect') . ')', ENT_COMPAT, 'UTF-8');
 
 		foreach ($dategroups as $date => &$dategroup) {
-			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
-			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
-			echo "<h3>$displaydate$ord $hour</h3>";
+			$displaydate = $l10n->formatDate(MySQLDate::toPHP($date), 'datetimefmt');
+			echo "<h3>$displaydate</h3>";
 			echo "<table class='wikitable tablesorter'><thead><tr><th>" .
 				htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
 				htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
@@ -149,6 +148,7 @@ function display_recent()
 				$category = htmlentities($result['category'], ENT_COMPAT, 'UTF-8');
 				if ($result['cat_template'] == 'T') $category = '{{' . $category . '}}';
 				$displayaction = ($action == '-') ? '&ndash;' : $action;
+				$flags = $result['flags'];
 
 				if ($title == $prevtitle && $action == $prevaction) {
 					echo "; $category";
@@ -157,8 +157,11 @@ function display_recent()
 					echo "<tr><td>&nbsp;</td><td class='plusminus'>$displayaction</td><td>$category";
 				} else {
 					if ($x++ > 0) echo "</td></tr>\n";
+					$redirectadd = '';
+					if ($flags & 1) $redirectadd = $redirectmsg;
+
 					echo "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td class='plusminus'>$displayaction</td><td>$category";
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$redirectadd</td><td class='plusminus'>$displayaction</td><td>$category";
 				}
 				$prevtitle = $title;
 				$prevaction = $action;

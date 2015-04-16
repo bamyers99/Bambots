@@ -65,7 +65,8 @@ class CategoryLinksDiff
 		       `plusminus` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 			   `pagetitle` varchar(255) binary NOT NULL,
 		       `cat_template` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-			   `category` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
+			   `category` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+			   `flags` tinyint NOT NULL DEFAULT 0
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
         $dbh_tools->exec($sql);
 
@@ -187,7 +188,7 @@ class CategoryLinksDiff
 
     	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
     	$dbh_tools->beginTransaction();
-		$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category) VALUES (?,?,?,?,?)");
+		$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category, flags) VALUES (?,?,?,?,?,?)");
 		$insert_count = 0;
 
 		// Resort so in reverse namespace, title order
@@ -196,7 +197,8 @@ class CategoryLinksDiff
 
 		foreach ($revisions as $pagename => $rev) {
 			$nsname = MediaWiki::getNamespaceName($pagename);
-			$ns = (string)MediaWiki::getNamespaceId($nsname);
+			$ns = (string)$rev[0];
+			array_shift($rev);
 			$pagetitle = $pagename;
 
 			// Strip namespace
@@ -258,6 +260,15 @@ class CategoryLinksDiff
 			$catchanges['-|T'] = array_diff($prevtemplates, $currtemplates);
 			$catchanges['-|C'] = array_diff($prevcats, $currcats);
 
+			// Write pseudo category if all categories were removed
+			if (count($currcats) == 0 && count($prevcats) != 0) {
+				$catchanges['-|C'][] = '<allcategoriesremoved>';
+			}
+
+			// Detect if currently a redirect
+			$flags = 0;
+			if (preg_match(CommonRegex::REDIRECT_REGEX, $revtext1)) $flags |= 1;
+
 			foreach ($catchanges as $plusminus => $categories) {
 				list($plusminus, $watchtype) = explode('|', $plusminus);
 
@@ -273,6 +284,7 @@ class CategoryLinksDiff
 					$isth->bindValue(3, $pagetitle);
 		    		$isth->bindValue(4, $watchtype);
 		    		$isth->bindValue(5, $category);
+		    		$isth->bindValue(6, $flags);
 		    		$isth->execute();
 				}
 			}

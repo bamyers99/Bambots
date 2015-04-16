@@ -197,7 +197,9 @@ function display_form()
 	echo '<dl><dt><b>' . htmlentities($l10n->get('categories', true), ENT_COMPAT, 'UTF-8') . ' / ' .
 		htmlentities($l10n->get('templates', true), ENT_COMPAT, 'UTF-8') . '</b></dt><dd>' .
 		htmlentities($l10n->get('enclosetemplatesin', true), ENT_COMPAT, 'UTF-8') . ' {{ }}</dd><dd>' .
-		htmlentities($l10n->get('notempcat2'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' . htmlentities($l10n->get('tempredirectfollow'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
+		htmlentities($l10n->get('notempcat2'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' .
+		htmlentities($l10n->get('tempredirectfollow'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' .
+		htmlentities('<allcategoriesremoved> - ', ENT_COMPAT, 'UTF-8') . htmlentities($l10n->get('allcategoriesremoved'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
 	echo '<dl><dt><b>' . htmlentities($l10n->get('matchtype', true), ENT_COMPAT, 'UTF-8') . '</b></dt><dd>' .
 		htmlentities($l10n->get('exact', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypeexact'), ENT_COMPAT, 'UTF-8') .
 		'</dd><dd>' . htmlentities($l10n->get('partial', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypepartial'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
@@ -254,18 +256,17 @@ function display_diffs()
 		}
 		unset($result);
 
+		$redirectmsg = htmlentities(' (' . $l10n->get('redirect') . ')', ENT_COMPAT, 'UTF-8');
+
 		echo "<table class='wikitable tablesorter'><thead><tr><th>" .
 				htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
 				htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
 				htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
 
-		$hour = htmlentities($l10n->get('hour'), ENT_COMPAT, 'UTF-8');
-
 		foreach ($dategroups as $date => &$dategroup) {
 			usort($dategroup, 'resultgroupsort');
-			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
-			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
-			echo "<tr><td data-sort-value='~'><i>$displaydate$ord $hour</i></td><td data-sort-value='~'>&nbsp;</td><td data-sort-value='~'>&nbsp;</td></tr>\n";
+			$displaydate = $l10n->formatDate(MySQLDate::toPHP($date), 'datetimefmt');
+			echo "<tr><td data-sort-value='~'><i>$displaydate</i></td><td data-sort-value='~'>&nbsp;</td><td data-sort-value='~'>&nbsp;</td></tr>\n";
 			$x = 0;
 			$prevtitle = '';
 			$prevaction = '';
@@ -276,6 +277,7 @@ function display_diffs()
 				$category = htmlentities($result['category'], ENT_COMPAT, 'UTF-8');
 				if ($result['cat_template'] == 'T') $category = '{{' . $category . '}}';
 				$displayaction = ($action == '-') ? '&ndash;' : $action;
+				$flags = $result['flags'];
 
 				if ($title == $prevtitle && $action == $prevaction) {
 					echo "; $category";
@@ -284,8 +286,11 @@ function display_diffs()
 					echo "<tr><td>&nbsp;</td><td class='plusminus' data-sort-value='$action'>$displayaction</td><td>$category";
 				} else {
 					if ($x++ > 0) echo "</td></tr>\n";
+					$redirectadd = '';
+					if ($flags & 1) $redirectadd = $redirectmsg;
+
 					echo "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td class='plusminus' data-sort-value='$action'>$displayaction</td><td>$category";
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$redirectadd</td><td class='plusminus' data-sort-value='$action'>$displayaction</td><td>$category";
 				}
 				$prevtitle = $title;
 				$prevaction = $action;

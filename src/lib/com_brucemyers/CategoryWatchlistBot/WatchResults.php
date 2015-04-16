@@ -77,7 +77,9 @@ class WatchResults
 		$results = array();
 
 		while ($row = $sth->fetch()) {
-			$row['ns'] = MediaWiki::getNamespaceId(MediaWiki::getNamespaceName($row['pagetitle']));
+			$ns = MediaWiki::getNamespaceId(MediaWiki::getNamespaceName($row['pagetitle']));
+			if ($ns == -1) $ns = 9999; // Hack for non english ns
+			$row['ns'] = $ns;
 			$row['title'] = $row['pagetitle'];
 			unset($row['pagetitle']);
 			$results[] = $row;

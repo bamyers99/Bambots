@@ -259,7 +259,8 @@ class UIHelper
 		}
 		unset($result);
 
-		$hour = htmlentities($l10n->get('hour'), ENT_COMPAT, 'UTF-8');
+		$redirectmsg = htmlentities(' (' . $l10n->get('redirect') . ')', ENT_COMPAT, 'UTF-8');
+
 		$summary = htmlentities($l10n->get('mostrecentresults'), ENT_COMPAT, 'UTF-8') . "<table><thead><tr><th>" .
 			htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
 			htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
@@ -267,9 +268,8 @@ class UIHelper
 
 		foreach ($dategroups as $date => &$dategroup) {
 			usort($dategroup, array($this, 'resultgroupsort'));
-			$displaydate = date('F j, Y G', MySQLDate::toPHP($date));
-			$ord = DateUtil::ordinal(date('G', MySQLDate::toPHP($date)));
-			$summary .= "<tr><td><i>$displaydate$ord $hour</i></td><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
+			$displaydate = htmlentities($l10n->formatDate(MySQLDate::toPHP($date), 'datetimefmt'), ENT_COMPAT, 'UTF-8');
+			$summary .= "<tr><td><i>$displaydate</i></td><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
 			$x = 0;
 			$prevtitle = '';
 			$prevaction = '';
@@ -280,6 +280,7 @@ class UIHelper
 				$category = htmlentities($result['category'], ENT_COMPAT, 'UTF-8');
 				if ($result['cat_template'] == 'T') $category = '{{' . $category . '}}';
 				$displayaction = ($action == '-') ? '&ndash;' : $action;
+				$flags = $result['flags'];
 
 				if ($title == $prevtitle && $action == $prevaction) {
 					$summary .= "; $category";
@@ -288,8 +289,11 @@ class UIHelper
 					$summary .= "<tr><td>&nbsp;</td><td>$displayaction</td><td>$category";
 				} else {
 					if ($x++ > 0) $summary .= "</td></tr>\n";
+					$redirectadd = '';
+					if ($flags & 1) $redirectadd = $redirectmsg;
+
 					$summary .= "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td>$displayaction</td><td>$category";
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$redirectadd</td><td>$displayaction</td><td>$category";
 				}
 				$prevtitle = $title;
 				$prevaction = $action;
@@ -305,10 +309,9 @@ class UIHelper
 
 		foreach ($dategroups as $date => &$dategroup) {
 			$date = MySQLDate::toPHP($date);
-			$ord = DateUtil::ordinal(date('G', $date));
-			$humandate = date('F j, Y G', $date) . $ord;
+			$humandate = htmlentities(htmlentities($l10n->formatDate($date, 'datetimefmt'), ENT_COMPAT, 'UTF-8'), ENT_COMPAT, 'UTF-8');
 			$updated = gmdate("Y-m-d\TH:i:s\Z", $date);
-			$title = htmlentities(htmlentities($l10n->get('resultsfor'), ENT_COMPAT, 'UTF-8') . " $humandate $hour", ENT_COMPAT, 'UTF-8');
+			$title = htmlentities(htmlentities($l10n->get('resultsfor'), ENT_COMPAT, 'UTF-8'), ENT_COMPAT, 'UTF-8') . " $humandate";
 
 			$feed .= "<entry>\n";
 			$feed .= "<id>//$host$uri/$extra&amp;date=$humandate</id>\n";

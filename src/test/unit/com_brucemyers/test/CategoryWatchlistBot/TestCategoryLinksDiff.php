@@ -44,12 +44,12 @@ class TestCategoryLinksDiff extends UnitTestCase
         $mediaWiki = &new \MockMediaWiki();
 
         $mediaWiki->returns('getRevisionsText', array(
-        	'Talk:Mackinac Island' => array(1, "<!-- [[Category:New pages]] -->
+        	'Talk:Mackinac Island' => array(1, 1, "<!-- [[Category:New pages]] -->
         		[[Category:Unassessed Michigan articles]]
         		[[category:NA-importance_Michigan_articles]]"),
-        	'Lansing, Michigan' => array(2, "{{WikiProject Michigan}}[[Category:Articles needing cleanup from May 2013]]",
+        	'Lansing, Michigan' => array(0, 2, "{{WikiProject Michigan}}[[Category:Articles needing cleanup from May 2013]]",
         		3, "[[Category:Articles needing cleanup from May 2013]]"),
-        	'Earth' => array(4, "[[Category:Featured_articles]][[Category:Pages_with_DOIs_inactive_since_2013]]",
+        	'Earth' => array(0, 4, "[[Category:Featured_articles]][[Category:Pages_with_DOIs_inactive_since_2013]]",
         		5, "[[Category:Featured articles]][[Category:Pages_with_DOIs_inactive_since_2013]][[Category:Articles_needing_cleanup_from_May_2013]]")
         ));
 

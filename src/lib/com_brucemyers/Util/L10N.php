@@ -16,6 +16,7 @@
 */
 
 namespace com_brucemyers\Util;
+use IntlDateFormatter;
 
 /**
  * Localization
@@ -23,12 +24,14 @@ namespace com_brucemyers\Util;
 class L10N
 {
     protected $properties;
+    protected $lang;
 
     /**
      * Constructor
      */
     public function __construct($lang)
     {
+    	$this->lang = $lang;
     	$locdir = Config::get(Config::BASEDIR) . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'l10n' . DIRECTORY_SEPARATOR .
     		$GLOBALS['botname'] . DIRECTORY_SEPARATOR;
     	$filepath = $locdir . $lang . '.properties';
@@ -48,5 +51,20 @@ class L10N
         $value =  $this->properties->get($key);
         if ($capFirst) $value = mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, mb_strlen($value) - 1, 'UTF-8');
         return $value;
+    }
+
+    /**
+     * Format a date with localization
+     *
+     * @param int $timestamp Timestamp
+     * @param string $key Property name with date format
+     * @param string $timezone (optional) Time zone; default = GMT
+     * @return string Formatted date
+     */
+    public function formatDate($timestamp, $key, $timezone = 'GMT')
+    {
+    	$dateformat = $this->get($key);
+    	$formatter = new IntlDateFormatter($this->lang, NULL, NULL, $timezone, NULL , $dateformat);
+    	return $formatter->format($timestamp);
     }
 }

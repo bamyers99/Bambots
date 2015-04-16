@@ -1,10 +1,12 @@
 Bambots
 =======
 
-Bambots are a collection of [Wikipedia](https://en.wikipedia.org/) bots.
+Bambots are a collection of [Wikipedia](https://en.wikipedia.org/) bots/tools.
 
+* CategoryWatchlistBot is a category/template addition/removal watchlist generator.
 * CleanupWorklistBot is a [WikiProject](https://en.wikipedia.org/wiki/Wikipedia:WikiProject) cleanup list generator.
 * InceptionBot is a WikiProject new article locator.
+* ReplicationLag is a tool for displaying database replication lag.
 * WPMissingTmplBot is a WikiProject talk page missing banner locator.
 * WPPageListBot is a WikiProject associated page locator.
 
