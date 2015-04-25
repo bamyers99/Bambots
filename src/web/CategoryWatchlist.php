@@ -50,7 +50,7 @@ switch ($action) {
     case 'subcats':
 		$query = isset($_REQUEST['query']) ? $_REQUEST['query'] : '';
     	if (empty($query)) break;
-    	display_subcats($query);
+    	if (! display_subcats($query)) break;
     	exit;
 
     case 'admin':
@@ -162,6 +162,7 @@ function display_form()
 			$wikititle = htmlentities($wikidata['title'], ENT_COMPAT, 'UTF-8');
 			$selected = '';
 			if ($wikiname == $params['wiki']) $selected = ' selected="1"';
+			$wikiname = htmlentities($wikiname, ENT_COMPAT, 'UTF-8');
 			echo "<option value='$wikiname'$selected>$wikititle</option>";
 		}
         ?></select></td></tr>
@@ -227,7 +228,7 @@ function display_form()
     }
 
     ?></div><br /><div style="display: table; margin: 0 auto;">
-    <a href="RecentCategoryChanges.php?wiki=<?php echo $params['wiki'] ?>" class='novisited'><?php echo htmlentities($l10n->get('recentcategorychanges'), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
+    <a href="RecentCategoryChanges.php?wiki=<?php echo urlencode($params['wiki']) ?>" class='novisited'><?php echo htmlentities($l10n->get('recentcategorychanges'), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
     <a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class='novisited'>Documentation</a> <b>&bull;</b>
     <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
@@ -437,13 +438,14 @@ function get_params()
  * Display subcategories
  *
  * @param string $query Query hash
+ * @return bool Subcats displayed?
  */
 function display_subcats($query)
 {
 	global $uihelper, $wikis, $options;
 
 	$params = $uihelper->fetchParams($query);
-	if (empty($params)) return;
+	if (empty($params)) return false;
 
 	$l10n = new L10N($wikis[$params['wiki']]['lang']);
 	$subcats = $uihelper->getSubcats($query);
@@ -475,8 +477,11 @@ function display_subcats($query)
 	echo '</table>';
 
     echo '</div><br /><div style="display: table; margin: 0 auto;">';
+    echo '<a href="CategoryWatchlist.php" class="novisited">' . htmlentities($l10n->get('watchlisttitle', true), ENT_COMPAT, 'UTF-8') . '</a> <b>&bull;</b> ';
     echo '<a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class="novisited">Documentation</a> <b>&bull;</b> ';
     echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') . ': <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class="novisited">Bamyers99</a></div></body></html>';
+
+    return true;
 }
 
 /**

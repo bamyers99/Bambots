@@ -37,6 +37,16 @@ $uihelper = new UIHelper();
 $wikis = $uihelper->getWikis();
 $params = array();
 
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
+switch ($action) {
+    case 'statistics':
+		$wiki = isset($_REQUEST['wiki']) ? $_REQUEST['wiki'] : 'enwiki';
+		if (! isset($wikis[$wiki])) $wiki = 'enwiki';
+		display_stats($wiki);
+    	exit;
+}
+
 get_params();
 
 $l10n = new L10N($wikis[$params['wiki']]['lang']);
@@ -81,6 +91,7 @@ function display_form()
 			$wikititle = htmlentities($wikidata['title'], ENT_COMPAT, 'UTF-8');
 			$selected = '';
 			if ($wikiname == $params['wiki']) $selected = ' selected="1"';
+			$wikiname = htmlentities($wikiname, ENT_COMPAT, 'UTF-8');
 			echo "<option value='$wikiname'$selected>$wikititle</option>";
 		}
         ?></select><input type="submit" value="Submit" />
@@ -90,6 +101,7 @@ function display_form()
     display_recent();
 
     ?></div><br /><div style="display: table; margin: 0 auto;">
+    <a href="RecentCategoryChanges.php?wiki=<?php echo urlencode($params['wiki']) ?>&amp;action=statistics" class='novisited'><?php echo htmlentities($l10n->get('statistics', true), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
     <a href="CategoryWatchlist.php" class='novisited'><?php echo htmlentities($l10n->get('watchlisttitle', true), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
     <a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class='novisited'>Documentation</a> <b>&bull;</b>
     <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
@@ -185,6 +197,84 @@ function display_recent()
 		echo '<div style="padding-bottom: 10px;">+ = ' . htmlentities($l10n->get('added', true), ENT_COMPAT, 'UTF-8').
 			'<br />&ndash; = ' . htmlentities($l10n->get('removed', true), ENT_COMPAT, 'UTF-8'). '</div>';
 		}
+}
+
+/**
+ * Display statistics
+ *
+ * @param string $wiki Wiki
+ */
+function display_stats($wiki)
+{
+	global $uihelper, $wikis;
+
+	$l10n = new L10N($wikis[$wiki]['lang']);
+	$stats = $uihelper->getStatistics($wiki);
+
+	$title = htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') . ' : ' . htmlentities($l10n->get('statistics', true), ENT_COMPAT, 'UTF-8');
+    echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+    echo '<html xmlns="http://www.w3.org/1999/xhtml">';
+    echo '<head>';
+	echo '   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
+	echo '   <meta name="robots" content="noindex, nofollow" />';
+	echo "   <title>$title</title>";
+    echo "	 <link rel='stylesheet' type='text/css' href='css/catwl.css' />";
+    echo "   <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>";
+	echo "   <script type='text/javascript' src='js/jquery.tablesorter.min.js'></script>";
+    echo '</head>';
+	echo "<body>\n";
+	echo "<script type='text/javascript'>\n";
+	echo "$(document).ready(function()\n";
+	echo "{\n";
+	echo "	$('.tablesorter').tablesorter({ headers: { 1: {sorter:\"text\"} } });\n";
+	echo "}\n";
+	echo ");\n";
+	echo "</script>\n";
+
+	echo "<center><h3>$title</h3></center>";
+    echo '<div style="display: table; margin: 0 auto;"><form action="RecentCategoryChanges.php" method="post"><b>Wiki</b> <select name="wiki">';
+        foreach ($wikis as $wikiname => $wikidata) {
+			$wikititle = htmlentities($wikidata['title'], ENT_COMPAT, 'UTF-8');
+			$selected = '';
+			if ($wikiname == $wiki) $selected = ' selected="1"';
+			$wikiname = htmlentities($wikiname, ENT_COMPAT, 'UTF-8');
+			echo "<option value='$wikiname'$selected>$wikititle</option>";
+		}
+    echo '</select><input type="hidden" name="action" value="statistics" /><input type="submit" value="Submit" />';
+    echo '</form></div>';
+
+	echo "<br /><div style='display: table; margin: 0 auto;'>";
+	echo htmlentities($l10n->get('eventspastweek'), ENT_COMPAT, 'UTF-8') . ": " . $stats['totalEvents'];
+
+	$counthead = htmlentities($l10n->get('count', true), ENT_COMPAT, 'UTF-8');
+
+	$category = htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8');
+	$template = htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8');
+	$added = htmlentities($l10n->get('added'), ENT_COMPAT, 'UTF-8');
+	$removed = htmlentities($l10n->get('removed'), ENT_COMPAT, 'UTF-8');
+
+	$top10s = array('C+' => "$category $added", 'C-' => "$category $removed",
+		'T+'=> "$template $added", 'T-'=> "$template $removed");
+
+	foreach ($top10s as $key => $label) {
+		echo "<h3>$label</h3>";
+		$colhead = ($key[0] == 'C') ? $category : $template;
+		echo "<table class='wikitable'><tr><th>&nbsp;</th><th>$colhead</th><th>$counthead</th></tr>";
+		$count = 1;
+
+		foreach ($stats[$key] as $total) {
+			$cat = htmlentities($total['category'], ENT_COMPAT, 'UTF-8');
+			echo "<tr><td>$count</td><td>$cat</td><td style='text-align:right'>{$total['catcount']}</td></tr>";
+			++$count;
+		}
+
+		echo '</table>';
+	}
+
+    echo '</div><br /><div style="display: table; margin: 0 auto;">';
+    echo '<a href="RecentCategoryChanges.php?wiki=' . urlencode($wiki) . '" class="novisited">' . htmlentities($l10n->get('recentcategorychanges'), ENT_COMPAT, 'UTF-8') . '</a> <b>&bull;</b> ';
+    echo '<a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class="novisited">Documentation</a> <b>&bull;</b> ';
+    echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') . ': <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class="novisited">Bamyers99</a></div></body></html>';
 }
 
 /**

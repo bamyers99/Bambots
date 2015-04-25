@@ -244,6 +244,59 @@ class UIHelper
 	}
 
 	/**
+	 * Get statistics.
+	 * Total events
+	 * Top 10 of each event type
+	 *
+	 * @param string $wiki Wiki
+	 * @return array Statistics, keys = totalEvents => (int), C+, C-, T+, T- => array('category', 'catcount')
+	 */
+	public function getStatistics($wiki)
+	{
+		$cachekey = CategoryWatchlistBot::CACHE_PREFIX_RESULT . 'stats_'. $wiki;
+
+		// Check the cache
+		$results = FileCache::getData($cachekey);
+		if (! empty($results)) {
+			$results = unserialize($results);
+			return $results;
+		}
+
+		$stats = array();
+
+		// totalEvents
+		$sql = "SELECT COUNT(*) FROM {$wiki}_diffs";
+		$sth = $this->dbh_tools->prepare($sql);
+		$sth->execute();
+		$row = $sth->fetch(PDO::FETCH_NUM);
+		$sth->closeCursor();
+		$stats['totalEvents'] = $row[0];
+
+		$top10s = array('C+', 'C-', 'T+', 'T-');
+		foreach ($top10s as $top10) {
+			$CT = $top10[0];
+			$PM = $top10[1];
+
+			$sql = "SELECT category, count(*) AS catcount FROM {$wiki}_diffs " .
+				" WHERE cat_template = '$CT' AND plusminus = '$PM' " .
+				" GROUP BY category " .
+				" ORDER BY catcount DESC " .
+				" LIMIT 10";
+
+			$sth = $this->dbh_tools->prepare($sql);
+			$sth->execute();
+
+			$stats[$top10] = $sth->fetchAll(PDO::FETCH_ASSOC);
+		}
+
+		$serialized = serialize($stats);
+
+		FileCache::putData($cachekey, $serialized);
+
+		return $stats;
+	}
+
+	/**
 	 * Generate an atom feed
 	 *
 	 * @param string $query Query id
