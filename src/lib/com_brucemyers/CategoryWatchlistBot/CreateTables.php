@@ -35,7 +35,8 @@ class CreateTables
     	  `params` varchar(2048) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	  `lastaccess` date NOT NULL,
     	  `lastrecalc` date NOT NULL,
- 		  UNIQUE KEY `hash` (`hash`),
+    	  `catcount` smallint NOT NULL DEFAULT 0,
+    	  UNIQUE KEY `hash` (`hash`),
     	  KEY `wikiname` (`wikiname`)
 		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);

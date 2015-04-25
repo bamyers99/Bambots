@@ -47,6 +47,12 @@ switch ($action) {
     	if (! $uihelper->generateAtom($query)) break;
     	exit;
 
+    case 'subcats':
+		$query = isset($_REQUEST['query']) ? $_REQUEST['query'] : '';
+    	if (empty($query)) break;
+    	display_subcats($query);
+    	exit;
+
     case 'admin':
     	display_admin();
     	exit;
@@ -88,7 +94,7 @@ function display_form()
 	global $uihelper, $params, $wikis, $options, $l10n;
 	$title = '';
 	if (! empty($params['title'])) $title = ' : ' . $params['title'];
-	else if (!empty($params['cn1'])) $title = ' : ' . $params['cn1'];
+	else if (! empty($params['cn1'])) $title = ' : ' . $params['cn1'];
 	$title = htmlentities($title, ENT_COMPAT, 'UTF-8');
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -172,16 +178,18 @@ function display_form()
 
 				$checkedMTE = '';
 				$checkedMTP = '';
+				$checkedMTS = '';
 				if ($params["mt$x"] == 'E') $checkedMTE = " checked='1'";
-				else $checkedMTP = " checked='1'";
+				elseif ($params["mt$x"] == 'P') $checkedMTP = " checked='1'";
+				else $checkedMTS = " checked='1'";
 
 				$catname = $params["cn$x"];
 				if ($params["pt$x"] == 'T') $catname = '{{' . $catname . '}}';
 
 				echo "<tr><td><b>$x</b></td><td><input name='cn$x' type='text' size='30' value='" .
 					htmlentities($catname, ENT_COMPAT, 'UTF-8') . "' /></td>" .
-	       			"<td class='tabborderr'>". htmlentities($l10n->get('exact', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='mt$x' value='E'$checkedMTE> ". htmlentities($l10n->get('partial', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='mt$x' value='P'$checkedMTP</td>" .
-        			"<td>" . htmlentities($l10n->get('both', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='B'$checkedRTB> ". htmlentities($l10n->get('add', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='P'$checkedRTP> ". htmlentities($l10n->get('remove', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='M'$checkedRTM></td></tr>";
+	       			"<td class='tabborderr'>". htmlentities($l10n->get('exact', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='mt$x' value='E'$checkedMTE /> " . htmlentities($l10n->get('partial', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='mt$x' value='P'$checkedMTP /> " . htmlentities($l10n->get('subcats', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='mt$x' value='S'$checkedMTS /></td>" .
+        			"<td>" . htmlentities($l10n->get('both', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='B'$checkedRTB /> ". htmlentities($l10n->get('add', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='P'$checkedRTP /> ". htmlentities($l10n->get('remove', true), ENT_COMPAT, 'UTF-8') . " <input type='radio' name='rt$x' value='M'$checkedRTM /></td></tr>";
 			}
         	?>
         <tr><td colspan='3'><input type="submit" value="<?php echo htmlentities($l10n->get('save', true), ENT_COMPAT, 'UTF-8') ?>" />&nbsp;&nbsp;&nbsp;<input type="submit" value="<?php echo htmlentities($l10n->get('new', true), ENT_COMPAT, 'UTF-8') ?>" onclick="clearForm(this.form);return false;"/></td></tr>
@@ -201,8 +209,9 @@ function display_form()
 		htmlentities($l10n->get('tempredirectfollow'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' .
 		htmlentities('<allcategoriesremoved> - ', ENT_COMPAT, 'UTF-8') . htmlentities($l10n->get('allcategoriesremoved'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
 	echo '<dl><dt><b>' . htmlentities($l10n->get('matchtype', true), ENT_COMPAT, 'UTF-8') . '</b></dt><dd>' .
-		htmlentities($l10n->get('exact', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypeexact'), ENT_COMPAT, 'UTF-8') .
-		'</dd><dd>' . htmlentities($l10n->get('partial', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypepartial'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
+		htmlentities($l10n->get('exact', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypeexact'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' .
+		htmlentities($l10n->get('partial', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypepartial'), ENT_COMPAT, 'UTF-8') . '</dd><dd>' .
+		htmlentities($l10n->get('subcats', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('matchtypesubcat'), ENT_COMPAT, 'UTF-8') . '</dd></dl>';
 	echo '<dl><dt><b>' . htmlentities($l10n->get('reportchanges', true), ENT_COMPAT, 'UTF-8') . '</b></dt><dd>' .
 		htmlentities($l10n->get('both', true), ENT_COMPAT, 'UTF-8') . ' = ' . htmlentities($l10n->get('reportchangesboth'), ENT_COMPAT, 'UTF-8') .
 		'</dd><dd>' . htmlentities($l10n->get('add', true), ENT_COMPAT, 'UTF-8') . ' = ' .
@@ -316,6 +325,17 @@ function display_diffs()
 		echo '<div style="padding-bottom: 10px;">+ = ' . htmlentities($l10n->get('added', true), ENT_COMPAT, 'UTF-8').
 			'<br />&ndash; = ' . htmlentities($l10n->get('removed', true), ENT_COMPAT, 'UTF-8'). '</div>';
 
+		for ($x=1; $x <= 10; ++$x) {
+			$fieldname = "mt$x";
+
+			if ($params[$fieldname] == 'S') {
+				$extra = "CategoryWatchlist.php?action=subcats&amp;query={$options['hash']}";
+				echo "<div style='padding-bottom: 10px;'><a href='$protocol://$host$uri/$extra' class='novisited'>" .
+					htmlentities($l10n->get('subcats', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
+				break;
+			}
+		}
+
 		$extra = "CategoryWatchlist.php?action=atom&amp;query={$options['hash']}";
 		echo "<div><a href='$protocol://$host$uri/$extra'><img src='img/icon-atom.gif' title='" .
 				htmlentities($l10n->get('subscribe', true), ENT_COMPAT, 'UTF-8') . "' /></a></div>";
@@ -353,7 +373,7 @@ function get_params()
 	$catcount = 0;
 	$cats = array();
 	$pagetypes = array('C','T');
-	$matchtypes = array('E','P');
+	$matchtypes = array('E','P','S');
 	$reporttypes = array('B','P','M');
 
 	for ($x=1; $x <= 10; ++$x) {
@@ -383,6 +403,8 @@ function get_params()
 		$matchtype = isset($_REQUEST[$fieldname]) ? $_REQUEST[$fieldname] : 'E';
 		if (! in_array($matchtype, $matchtypes)) $matchtype = 'E';
 
+		if ($matchtype == 'S') $pagetype = 'C';
+
 		$fieldname = "rt$x";
 		$reporttype = isset($_REQUEST[$fieldname]) ? $_REQUEST[$fieldname] : 'B';
 		if (! in_array($reporttype, $reporttypes)) $reporttype = 'B';
@@ -409,6 +431,52 @@ function get_params()
 	$params['catcount'] = $catcount;
 
 	if ($catcount) $uihelper->saveQuery($params);
+}
+
+/**
+ * Display subcategories
+ *
+ * @param string $query Query hash
+ */
+function display_subcats($query)
+{
+	global $uihelper, $wikis, $options;
+
+	$params = $uihelper->fetchParams($query);
+	if (empty($params)) return;
+
+	$l10n = new L10N($wikis[$params['wiki']]['lang']);
+	$subcats = $uihelper->getSubcats($query);
+
+	$title = htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') . ' : ' . htmlentities($l10n->get('subcats', true), ENT_COMPAT, 'UTF-8');
+    echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+    echo '<html xmlns="http://www.w3.org/1999/xhtml">';
+    echo '<head>';
+	echo '   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
+	echo '   <meta name="robots" content="noindex, nofollow" />';
+	echo "   <title>$title</title>";
+    echo "	 <link rel='stylesheet' type='text/css' href='css/catwl.css' />";
+	echo '</head>';
+	echo '<body>';
+
+	echo "<center><h3>$title</h3></center>";
+	$colhead = htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8');
+	echo "<div style='display: table; margin: 0 auto;'><table><tr><th>$colhead</th></tr>";
+
+	$subcount = 0;
+	foreach ($subcats as $subcat) {
+		$subcat = htmlentities($subcat, ENT_COMPAT, 'UTF-8');
+		echo "<tr><td>$subcat</td></tr>";
+		++$subcount;
+	}
+
+	echo '<tr><td><hr /></td></tr><tr><td>' . htmlentities($l10n->get('categories', true), ENT_COMPAT, 'UTF-8') . " = $subcount</td></tr>";
+
+	echo '</table>';
+
+    echo '</div><br /><div style="display: table; margin: 0 auto;">';
+    echo '<a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class="novisited">Documentation</a> <b>&bull;</b> ';
+    echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') . ': <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class="novisited">Bamyers99</a></div></body></html>';
 }
 
 /**

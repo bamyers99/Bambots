@@ -24,6 +24,7 @@ use PDO;
 
 class WatchResults
 {
+	static $reporttypes = array('B' => 'B', 'P' => '+', 'M' => '-');
 	protected $dbh_wiki;
 	protected $dbh_tools;
 
@@ -63,14 +64,32 @@ class WatchResults
 			return $results;
 		}
 
-		$where = $this->buildSQLWhere($params);
-		if (empty($where)) return array();
+		$subcatfound = false;
+		$where = $this->buildSQLWhere($params, $subcatfound);
+		if (empty($where) && ! $subcatfound) return array();
+
+		$nosubcats = '';
+		$subcats = '';
+
+		if (! empty($where)) $nosubcats = "SELECT * FROM `{$wikiname}_diffs` WHERE $where";
+
+		if ($subcatfound) $subcats = "SELECT diffs.* FROM `{$wikiname}_diffs` AS diffs, querycats AS qc" .
+			" WHERE diffs.cat_template = 'C' AND diffs.category = qc.category AND qc.queryid = $queryid AND " .
+			" (qc.plusminus = 'B' OR qc.plusminus = diffs.plusminus)";
+
+		if (! empty($nosubcats) && ! empty($subcats)) {
+			$sql = "($nosubcats) UNION ($subcats)";
+		} elseif (! empty($nosubcats)) {
+			$sql = $nosubcats;
+		} else {
+			$sql = $subcats;
+		}
+
+		$sql .= " ORDER BY id DESC " .
+			" LIMIT $offset,$max_rows";
 
 		// Get the updated pages
-		$sth = $this->dbh_tools->prepare("SELECT * FROM `{$wikiname}_diffs` " .
-			" WHERE $where " .
-			" ORDER BY id DESC " .
-			" LIMIT $offset,$max_rows");
+		$sth = $this->dbh_tools->prepare($sql);
 		$sth->execute();
 		$sth->setFetchMode(PDO::FETCH_ASSOC);
 
@@ -100,27 +119,31 @@ class WatchResults
 	 * Build a SQL where clause with the paramaters.
 	 *
 	 * @param array $params Parameters
-	 * @return string Where clause
+	 * @param bool $subcatfound (out) Was a subcat found?
+	 * @return string Where clause or empty
 	 */
-	public function buildSQLWhere($params)
+	public function buildSQLWhere($params, &$subcatfound)
 	{
-		static $reporttypes = array('B' => 'B', 'P' => '+', 'M' => '-');
 		$where = array();
+		$subcatfound = false;
 
 		for ($x=1; $x <= 10; ++$x) {
 			$catname = trim($params["cn$x"]);
 			if (empty($catname)) continue;
 
-			$reporttype = $reporttypes[$params["rt$x"]];
+			$reporttype = self::$reporttypes[$params["rt$x"]];
 			$pagetype = $params["pt$x"];
 			$matchtype = $params["mt$x"];
 
 			if ($matchtype == 'P') {
 				$catname = $this->dbh_tools->quote("%$catname%");
 				$catmatch = "category LIKE $catname ";
-			} else {
+			} elseif ($matchtype == 'E') {
 				$catname = $this->dbh_tools->quote($catname);
 				$catmatch = "category = $catname";
+			} else {
+				$subcatfound = true;
+				continue;
 			}
 
 			$extra = '';

@@ -72,7 +72,7 @@ class TestCategoryLinksDiff extends UnitTestCase
     	$ts = MySQLDate::toMySQLDatetime($asof_date);
 
     	//Set up a query and querycats
-    	$dbh_tools->exec("INSERT INTO querys VALUES (1,'enwiki','A','','$ts','$ts')");
+    	$dbh_tools->exec("INSERT INTO querys VALUES (1,'enwiki','A','','$ts','$ts',0)");
     	$dbh_tools->exec("INSERT IGNORE INTO wikis VALUES ('ptwiki','Português Wikipedia','pt.wikipedia.org','pt')");
 
     	$catLinksDiff = new CategoryLinksDiff($serviceMgr, $outputdir, $asof_date);

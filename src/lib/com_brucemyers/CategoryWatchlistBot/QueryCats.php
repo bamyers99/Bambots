@@ -51,8 +51,9 @@ class QueryCats
 		$reporttypes = array('B' => 'B', 'P' => '+', 'M' => '-');
 
 		for ($x=1; $x <= 10; ++$x) {
+			if ($params["mt$x"] != 'S') continue; // matchtype subcats only
 			$catname = trim($params["cn$x"]);
-			$subdepth = (int)$params["sd$x"];
+			$subdepth = 10;
 			$reporttype = $reporttypes[$params["rt$x"]];
 
 			if (! empty($catname)) {
@@ -125,6 +126,7 @@ class QueryCats
 
 		foreach ($searchcats as $cat) {
 			if (isset($foundcats[$cat])) continue;
+			if (count($foundcats) >= self::MAX_UNAPPROVED_CATCOUNT) return;
 			$foundcats[$cat] = $reporttype;
 			if ($depth) $nextcats[] = $cat;
 		}

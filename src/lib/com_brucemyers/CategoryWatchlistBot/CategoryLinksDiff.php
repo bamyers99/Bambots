@@ -78,7 +78,61 @@ class CategoryLinksDiff
     	if (! $sth->fetch(PDO::FETCH_ASSOC)) {
     		$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname, wikititle, wikidomain, lang) VALUES (?,?,?,?)');
     		$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain'], $wikidata['lang']));
+    		$sth = null;
     	}
+
+    	// Recalc oldest 5 category trees if catcount >= 0 and lastrecalc < 7 days ago
+    	$sth = $dbh_tools->prepare('SELECT id FROM querys WHERE wikiname = ? AND catcount >= 0 AND lastrecalc < DATE_SUB(?, INTERVAL 1 WEEK) ORDER BY lastrecalc LIMIT 5');
+   		$sth->bindParam(1, $wikiname);
+   		$sth->bindParam(2, $this->asof);
+
+    	$sth->execute();
+
+    	$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+    	$ids = array();
+    	foreach ($results as $row) {
+    		$ids[] = $row['id'];
+    	}
+    	$sth = null;
+
+    	if (! empty($ids)) {
+    		$ids = implode(',', $ids);
+
+    		$sth = $dbh_tools->prepare("UPDATE querys SET catcount = ? WHERE id IN ($ids)");
+    		$sth->bindValue(1, QueryCats::CATEGORY_COUNT_RECALC);
+    		$sth->execute();
+    		$sth = null;
+    	}
+
+    	// Calc category tress for QueryCats::CATEGORY_COUNT_RECALC and QueryCats::CATEGORY_COUNT_UNKNOWN
+    	$dbh_tools2 = $this->serviceMgr->getDBConnection('tools');
+    	$querycats = new QueryCats($dbh_wiki, $dbh_tools2);
+
+    	$sth = $dbh_tools->prepare('SELECT id, params, catcount FROM querys WHERE wikiname = ? AND catcount IN (?,?)');
+    	$sth->bindParam(1, $wikiname);
+    	$sth->bindValue(2, QueryCats::CATEGORY_COUNT_RECALC);
+    	$sth->bindValue(3, QueryCats::CATEGORY_COUNT_UNKNOWN);
+    	$sth->execute();
+    	$sth->setFetchMode(PDO::FETCH_ASSOC);
+
+    	while ($row = $sth->fetch()) {
+    		$id = $row['id'];
+    		$params = unserialize($row['params']);
+    		$catcount = $row['catcount'];
+
+    		$cats = $querycats->calcCats($params, $catcount == QueryCats::CATEGORY_COUNT_RECALC);
+    		$catcount = $cats['catcount'];
+    		$querycats->saveCats($id, $cats['cats']);
+
+    		$isth = $dbh_tools2->prepare("UPDATE querys SET catcount = $catcount, lastrecalc = ? WHERE id = $id");
+    		$isth->bindParam(1, $this->asof);
+    		$isth->execute();
+    		$isth = null;
+    	}
+
+    	$sth->closeCursor();
+    	$sth = null;
+    	$dbh_tools2 = null;
 
     	// Get the current rev_id
     	$sth = $dbh_wiki->query('SELECT rev_id, rev_timestamp FROM revision ORDER BY rev_id DESC LIMIT 1');

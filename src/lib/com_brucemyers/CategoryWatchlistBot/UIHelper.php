@@ -102,14 +102,23 @@ class UIHelper
     		$sth->bindParam(1, $accessdate);
     		$sth->execute();
     	} else {
-    		$sth = $this->dbh_tools->prepare("INSERT INTO querys (wikiname,hash,params,lastaccess,lastrecalc) VALUES (?,?,?,?,?)");
+    		$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+    		$querycats = new QueryCats($dbh_wiki, $this->dbh_tools);
+    		$cats = $querycats->calcCats($params, true);
+    		$catcount = $cats['catcount'];
+
+    		$sth = $this->dbh_tools->prepare("INSERT INTO querys (wikiname,hash,params,lastaccess,lastrecalc,catcount) VALUES (?,?,?,?,?,?)");
     		$sth->bindParam(1, $wikiname);
     		$sth->bindParam(2, $hash);
     		$sth->bindParam(3, $serialized);
     		$sth->bindParam(4, $accessdate);
     		$sth->bindParam(5, $accessdate);
+    		$sth->bindParam(6, $catcount);
     		$sth->execute();
-		}
+
+    		$id = $this->dbh_tools->lastInsertId();
+    		$querycats->saveCats($id, $cats['cats']);
+    	}
 	}
 
 	/**
@@ -197,6 +206,39 @@ class UIHelper
 		$serialized = serialize($results);
 
 		FileCache::putData($cachekey, $serialized);
+
+		return $results;
+	}
+	/**
+	 * Get query subcategories
+	 *
+	 * @param string $query Query hash
+	 * @return array Subcategories
+	 */
+	public function getSubcats($query)
+	{
+		// See if we have a query record
+    	$sth = $this->dbh_tools->prepare("SELECT id FROM querys WHERE hash = ?");
+    	$sth->bindParam(1, $query);
+    	$sth->execute();
+
+    	if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+    		$queryid = $row['id'];
+		} else {
+			return array();
+		}
+
+    	$sth = $this->dbh_tools->prepare("SELECT category FROM querycats WHERE queryid = $queryid ORDER BY category");
+    	$sth->execute();
+		$sth->setFetchMode(PDO::FETCH_NUM);
+
+		$results = array();
+
+		while ($row = $sth->fetch()) {
+			$results[] = $row[0];
+		}
+
+		$sth->closeCursor();
 
 		return $results;
 	}
