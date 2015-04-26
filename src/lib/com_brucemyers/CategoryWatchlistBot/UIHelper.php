@@ -338,8 +338,8 @@ class UIHelper
 		$title2 = htmlentities(htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') . " : $title", ENT_COMPAT, 'UTF-8');
 
 		$feed = "<?xml version=\"1.0\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xml:lang=\"en\">\n";
-		$feed .= "<id>//$host$uri/$extra</id>\n";
-		$feed .= "<title>$title2</title>\n";
+		$feed .= "<id>$protocol://$host$uri/$extra</id>\n";
+		$feed .= "<title type=\"html\">$title2</title>\n";
 		$feed .= "<link rel=\"self\" type=\"application/atom+xml\" href=\"$protocol://$host$uri/$extra\" />\n";
 		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 		$feed .= "<updated>$updated</updated>\n";
@@ -409,8 +409,8 @@ class UIHelper
 			$title = htmlentities(htmlentities($l10n->get('resultsfor'), ENT_COMPAT, 'UTF-8'), ENT_COMPAT, 'UTF-8') . " $humandate";
 
 			$feed .= "<entry>\n";
-			$feed .= "<id>//$host$uri/$extra&amp;date=$humandate</id>\n";
-			$feed .= "<title>$title</title>\n";
+			$feed .= "<id>$protocol://$host$uri/$extra&amp;date=$date</id>\n";
+			$feed .= "<title type=\"html\">$title</title>\n";
 			$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
 			$feed .= "<updated>$updated</updated>\n";
 			$feed .= "<summary type=\"html\">$summary</summary>\n";
