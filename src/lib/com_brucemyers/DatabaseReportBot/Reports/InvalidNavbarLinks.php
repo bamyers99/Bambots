@@ -82,13 +82,22 @@ class InvalidNavbarLinks extends DatabaseReport
 			),
 
 			'BS-header' => array(
-		    	'children' => array('BS-header'),
-		    	'name_param' => 2,
+				'children' => array('BS-header'),
+				'name_param' => 2,
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'Election table' => array(
+		    	'children' => array('Election table', 'Election Table', 'Electiontable'),
+		    	'name_param' => 1,
 		    	'exclude_empty' => array(),
 		    	'exclude_values' => array(),
 				'exclude_templates' => array()
 			),
-		    'Navbox' => array( // Must be last because 'MySQL server has gone away' happens after this is run
+
+			'Navbox' => array( // Must be last because 'MySQL server has gone away' happens after this is run
 		    	'children' => array('Navbox', 'Navbox with collapsible groups', 'Navbox with columns', 'Navbox with collapsible sections'),
 		    	'name_param' => 'name',
 		    	'exclude_empty' => array('title'),
