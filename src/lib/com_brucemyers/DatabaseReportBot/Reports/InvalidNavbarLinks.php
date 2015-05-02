@@ -129,7 +129,7 @@ class InvalidNavbarLinks extends DatabaseReport
     		$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p", $user, $pass);
     		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$sth = $dbh_enwiki->prepare($sql);
-			$sth->bindValue(1, $type_name);
+			$sth->bindValue(1, str_replace(' ', '_', $type_name));
 			$sth->execute();
 			$sth->setFetchMode(PDO::FETCH_NUM);
 			$titles = array();
