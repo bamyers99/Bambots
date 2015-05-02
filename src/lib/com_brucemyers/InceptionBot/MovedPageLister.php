@@ -67,13 +67,14 @@ class MovedPageLister
         foreach ($ret['query']['logevents'] as $event) {
         	if (isset($event['actionhidden'])) continue;
         	if (! isset($event['action']) || $event['action'] != 'move') continue;
-        	if (isset($event['move'])) {
-        		$newns = $event['move']['new_ns'];
-        		$newtitle = $event['move']['new_title'];
-        	} elseif (isset($event['params'])) {
+
+        	if (isset($event['params'])) {
         		$newns = $event['params']['target_ns'];
         		$newtitle = $event['params']['target_title'];
-           	} else {
+        	} elseif (isset($event['move'])) {
+        		$newns = $event['move']['new_ns'];
+        		$newtitle = $event['move']['new_title'];
+        	} else {
            		throw new Exception('MovedPageLister.getNextBatch() no move data');
            	}
 

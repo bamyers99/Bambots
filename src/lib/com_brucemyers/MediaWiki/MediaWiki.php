@@ -289,6 +289,8 @@ class MediaWiki extends wikipedia
         	foreach ($ret['query']['pages'] as $page) {
        			$pagetitle = $page['title'];
        			$ns = $page['ns'];
+       			if (! isset($page['revisions'])) continue;
+
        			$pagetext = (isset($page['revisions'][0]['*'])) ? $page['revisions'][0]['*'] : '';
          		$revs[$pagetitle] = array($ns, $page['revisions'][0]['revid'], $pagetext);
 
