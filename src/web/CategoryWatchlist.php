@@ -410,12 +410,12 @@ function get_params()
 		$reporttype = isset($_REQUEST[$fieldname]) ? $_REQUEST[$fieldname] : 'B';
 		if (! in_array($reporttype, $reporttypes)) $reporttype = 'B';
 
-		if (! empty($catname)) $cats[$catname] = array('pt' => $pagetype, 'mt' => $matchtype, 'rt' => $reporttype);
+		if (! empty($catname)) $cats["$catname\t$pagetype"] = array('pt' => $pagetype, 'mt' => $matchtype, 'rt' => $reporttype, 'ctn' => $catname);
 	}
 
-	foreach ($cats as $catname => $sdrt) {
+	foreach ($cats as $sdrt) {
 		++$catcount;
-		$params["cn$catcount"] = $catname;
+		$params["cn$catcount"] = $sdrt['ctn'];
 		$params["pt$catcount"] = $sdrt['pt'];
 		$params["mt$catcount"] = $sdrt['mt'];
 		$params["rt$catcount"] = $sdrt['rt'];
