@@ -158,7 +158,7 @@ class AddColumnPageClass extends AddColumn
 			foreach ($pagenames as $pagedata) {
 				$nsid = $pagedata[0];
 				if (! isset($namespaces[$nsid])) $namespaces[$nsid] = array();
-				$namespaces[$nsid][$pagedata[1]] = $pagedata;
+				$namespaces[$nsid][$pagedata[2]] = $pagedata; // Using key instead of pagename because could be duplicate pagenames do to page moves.
 			}
 
 			// Retrieve the categories
@@ -204,7 +204,12 @@ class AddColumnPageClass extends AddColumn
 		while($row = $results->fetch()) {
 			$pagename = $row[0];
 			$catname = $row[1];
-			$pages[$pagename][3][] = $catname;
+
+			foreach ($pages as $key => $page) { // Could be duplicate pagenames.
+				if ($page[1] == $pagename) {
+					$pages[$key][3][] = $catname;
+				}
+			}
 		}
 
 		$results->closeCursor();

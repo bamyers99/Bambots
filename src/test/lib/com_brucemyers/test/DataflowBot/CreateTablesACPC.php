@@ -30,6 +30,7 @@ class CreateTablesACPC
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
+   		$dbh_enwiki->exec('DROP TABLE categorylinks');
    		$dbh_enwiki->exec('DROP TABLE page');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `categorylinks` (
