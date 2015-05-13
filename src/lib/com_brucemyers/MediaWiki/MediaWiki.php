@@ -221,6 +221,13 @@ class MediaWiki extends wikipedia
 			} else {
 				throw new Exception('Edit Error Invalid token');
 			}
+     	} elseif (isset($ret['error'])) {
+     		if ($repeat < 5) {
+     			Logger::log("*** edit retry #$repeat $page errortext:{$ret['error']['info']}");
+     			sleep($repeat * 60);
+
+     			return $this->edit($page, $data, $summary, $minor, $bot, $section, $detectEC, $maxlag, ++$repeat);
+     		}
      	}
 
     	return $ret;
