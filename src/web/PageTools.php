@@ -77,8 +77,7 @@ function display_form()
 		<h2>Page Tools<?php echo $title ?></h2>
         <form action="PageTools.php" method="post">
         <b>Wiki</b> <input name="wiki" type="text" size="6" value="<?php echo $params['wiki'] ?>" />
-        <b>Page</b> <input name="page" id="testfield1" type="text" size="30" value="<?php echo $params['page'] ?>" /><br />
-
+        <b>Page</b> <input name="page" id="testfield1" type="text" size="25" value="<?php echo $params['page'] ?>" />
         <input type="submit" value="Submit" />
         </form>
 
@@ -122,7 +121,7 @@ function display_data()
 
 		$pagename = str_replace('_', ' ', ucfirst(trim($params['page'])));
 
-		echo "<br /><div><b>Page:</b> <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $pagename)) . "\">" .
+		echo "<br /><div><b>Page:</b> <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $pagename)) . "\" target=\"_new\">" .
 						htmlentities($pagename, ENT_COMPAT, 'UTF-8') . "</a><div>";
 
 		// display abstract
@@ -148,30 +147,33 @@ function display_data()
 
 		// display wikidata
 		if ($results['wikidata_exact_match']) {
-			$itemid = $results['wikidata'][0].getId();
-			echo "<div><b>Wikidata item:</b> <a href=\"$protocol://www.wikidata.org/wiki/$itemid\">$itemid</a><div>";
+			$itemid = $results['wikidata'][0]->getId();
+			echo "<div><b>Wikidata item:</b> <a href=\"$protocol://www.wikidata.org/wiki/$itemid\" target=\"_new\">$itemid</a><div>";
 		} else {
 			echo '<h3>Possible Wikidata matches</h3>';
 
-			if (empty($results['wikidata'])) echo 'None';
+			if (empty($results['wikidata'])) echo '<div>None</div>';
 			else {
 				echo '<table class="wikitable"><tr><th>Item</th><th>Label</th><th>Description</th><th>Birth date(s)</th><th>Death date(s)</th></tr>';
 
 				foreach ($results['wikidata'] as $wikidata) {
-					$itemid = $wikidata.getId();
-					$label = htmlentities($wikidata.getLabelDescription('label', $lang), ENT_COMPAT, 'UTF-8');
-					$description = htmlentities($wikidata.getLabelDescription('description', $lang), ENT_COMPAT, 'UTF-8');
-					$birthdates = implode('<br />', $wikidata.getStatementsOfType(WikidataItem::TYPE_BIRTHDATE));
-					$deathdates = implode('<br />', $wikidata.getStatementsOfType(WikidataItem::TYPE_DEATHDATE));
+					$itemid = $wikidata->getId();
+					$label = htmlentities($wikidata->getLabelDescription('label', $lang), ENT_COMPAT, 'UTF-8');
+					$description = htmlentities($wikidata->getLabelDescription('description', $lang), ENT_COMPAT, 'UTF-8');
+					$birthdates = implode('<br />', $wikidata->getStatementsOfType(WikidataItem::TYPE_BIRTHDATE));
+					$deathdates = implode('<br />', $wikidata->getStatementsOfType(WikidataItem::TYPE_DEATHDATE));
 
 					$url = "$protocol://www.wikidata.org/wiki/" . $itemid;
 
 					echo "<tr><td><a href=\"$url\"></a></td><td>$label</td><td>$description</td><td>$birthdates</td><td>$deathdates</td></tr>";
 				}
 
-				echo '<tr><td colspan="5"><a href="">Create new item</a></td></tr>';
 				echo '</table>';
 			}
+
+			$urllabel = urlencode($pagename);
+
+			echo "<div><a href='https://www.wikidata.org/w/index.php?title=Special:NewItem&label=$urllabel' target='_new'>Create new Wikidata item</a></div>";
 		}
 
 		// display authority control
@@ -196,12 +198,12 @@ function display_data()
 
 		if ($results['wikidata_exact_match']) {
 			foreach ($auth_types as $auth_type => $prop) {
-				$wikidata_auths[$auth_type] = $results['wikidata'][0].getStatementsOfType($prop);
+				$wikidata_auths[$auth_type] = $results['wikidata'][0]->getStatementsOfType($prop);
 			}
 		}
 
 		echo '<h3>Authority control</h3>';
-		echo '<table class="wikitable"><tr><th>Authority</th><th>Page template</th>';
+		echo '<table class="wikitable"><tr><th>Authority</th><th>On page</th>';
 		if ($results['wikidata_exact_match']) echo '<th>Wikidata</th>';
 		echo '</tr>';
 
@@ -227,14 +229,14 @@ function display_data()
 				$authid = str_replace(' ', '', $page_auths[$auth_type]);
 				$displayid = htmlentities($authid, ENT_COMPAT, 'UTF-8');
 				$url = str_replace('$1', urlencode($authid), $idurl);
-				$coldata = "<a href='$url'>$displayid</a>";
+				$coldata = "<a href='$url' target='_new'>$displayid</a>";
 			} else {
 				$url = str_replace('$1', urlencode($pagename), $searchurl);
-				if (empty($wikidata_auths[$auth_type])) $coldata = "<a href='$url'>Search</a>";
+				if (empty($wikidata_auths[$auth_type])) $coldata = "<a href='$url' target='_new'>Search</a>";
 				else $coldata = '';
 			}
 
-			echo "<tr><td>$auth_type</td><td>$coldata</td>";
+			echo "<tr><td>$auth_type ($prop)</td><td>$coldata</td>";
 
 			if ($results['wikidata_exact_match']) {
 				if (! empty($wikidata_auths[$auth_type])) {
@@ -244,7 +246,7 @@ function display_data()
 						$authid = str_replace(' ', '', $wikidata_auth);
 						$displayid = htmlentities($authid, ENT_COMPAT, 'UTF-8');
 						$url = str_replace('$1', urlencode($authid), $idurl);
-						$coldata[] = "<a href='$url'>$displayid</a>";
+						$coldata[] = "<a href='$url' target='_new'>$displayid</a>";
 					}
 
 					$coldata = implode('<br />', $coldata);
