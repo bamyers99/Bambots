@@ -205,9 +205,10 @@ function display_data()
 		}
 
 		echo '<h3>Authority control</h3>';
-		echo '<table class="wikitable"><tr><th>Authority</th><th>On page</th>';
+		echo '<table class="wikitable"><tr><th>Authority</th>';
+		if (! empty($page_auths)) echo '<th>On page</th>';
 		if ($results['wikidata_exact_match']) echo '<th>Wikidata</th>';
-		echo '</tr>';
+		echo '<th>Search</th></tr>';
 
 		foreach ($auth_types as $auth_type => $prop) {
 			switch ($auth_type) {
@@ -227,18 +228,20 @@ function display_data()
 					break;
 			}
 
-			if (isset($page_auths[$auth_type])) {
-				$authid = str_replace(' ', '', $page_auths[$auth_type]);
-				$displayid = htmlentities($authid, ENT_COMPAT, 'UTF-8');
-				$url = str_replace('$1', urlencode($authid), $idurl);
-				$coldata = "<a href='$url' target='_new'>$displayid</a>";
-			} else {
-				$url = str_replace('$1', urlencode($unqualifiedpage), $searchurl);
-				if (empty($wikidata_auths[$auth_type])) $coldata = "<a href='$url' target='_new'>Search</a>";
-				else $coldata = '';
-			}
+			echo "<tr><td>$auth_type ($prop)</td>";
 
-			echo "<tr><td>$auth_type ($prop)</td><td>$coldata</td>";
+			if (! empty($page_auths)) {
+				$coldata = '';
+
+				if (isset($page_auths[$auth_type])) {
+					$authid = str_replace(' ', '', $page_auths[$auth_type]);
+					$displayid = htmlentities($authid, ENT_COMPAT, 'UTF-8');
+					$url = str_replace('$1', urlencode($authid), $idurl);
+					$coldata = "<a href='$url' target='_new'>$displayid</a>";
+				}
+
+				echo "<td>$coldata</td>";
+			}
 
 			if ($results['wikidata_exact_match']) {
 				if (! empty($wikidata_auths[$auth_type])) {
@@ -259,7 +262,9 @@ function display_data()
 				echo "<td>$coldata</td>";
 			}
 
-			echo '</tr>';
+			$url = str_replace('$1', urlencode($unqualifiedpage), $searchurl);
+			$coldata = "<a href='$url' target='_new'>Search</a>";
+			echo "<td>$coldata</td></tr>";
 		}
 
 		echo '</table>';
