@@ -40,7 +40,7 @@ class TestMediaWiki extends UnitTestCase
         $this->pass();
     }
 
-    public function notestPageGet()
+    public function testPageGet()
     {
         $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
         $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
@@ -100,7 +100,7 @@ class TestMediaWiki extends UnitTestCase
         $this->pass();
     }
 
-    public function testGetLinkSafePagename()
+    public function notestGetLinkSafePagename()
     {
     	$origpagename = '';
     	$newpagename = MediaWiki::getLinkSafePagename($origpagename);

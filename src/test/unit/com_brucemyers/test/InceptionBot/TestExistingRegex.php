@@ -33,15 +33,11 @@ class TestExistingRegex extends UnitTestCase
 ----
 <ul>
 <li>{{la|Basketball uniform}} by [[User:Accedie|Accedie]] (<span class="plainlinks">[[User_talk:Accedie|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Accedie|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=Accedie&days=14 new pages &#40;1&#41;]</span>) started on 2013-12-25, score: 24</li>
-{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|Draft:DJ Many}} by [[User:Ocaasi{{!}}Ocaasi]] (<span class{{=}}"plainlinks">[[User_talk:Ocaasi{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Ocaasi{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Ocaasi&days{{=}}14 new pages &#40;1&#41;]</span>) started on 2013-12-23, score: 25</li>|0}}
-{{User:AlexNewArtBot/MaintDisplay|<li>[[Template:PitchforkSong]] ([[Template talk:PitchforkSong{{!}}talk]]) by [[User:Lu0490{{!}}Lu0490]] (<span class{{=}}"plainlinks">[[User_talk:Lu0490{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Lu0490{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Lu0490&days{{=}}14 new pages &#40;6&#41;]</span>) started on 2013-12-27, score: 21</li>|1}}
-{{User:AlexNewArtBot/MaintDisplay|<li>[[:Category:Municipal coats of arms in Romania]] by [[User:Arms_Jones{{!}}Arms Jones]] started on 2014-01-02, score: 50</li>}}
 <li>[[Madhuca malvina]] ([[Talk:Madhuca malvina|talk]]) by [[User:Declangi|Declangi]] started on 2013-11-16, score: 40</li>
-{{User:AlexNewArtBot/MaintDisplay|<li>{{pagelinks|Draft:M-54 and M-83 (Michigan highway)}} by [[User:Highway_231{{!}}Highway 231]] (<span class{{=}}"plainlinks">[[User_talk:Highway_231{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Highway_231{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Highway+231&days{{=}}14 new pages &#40;4&#41;]</span>) started on 2014-01-21, score: 34</li>}}
 </ul>
 ----
 <ul>
-<li>{{la|Basketball uniform}} by [[User:Accedie|Accedie]] (<span class="plainlinks">[[User_talk:Accedie|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Accedie|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=Accedie&days=14 new pages &#40;1&#41;]</span>) started on 2013-12-25, score: 24</li>
+<li>{{User:AlexNewArtBot/La|Basketball uniform}} by [[User:Accedie|Accedie]] (<span class="plainlinks">[[User_talk:Accedie|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Accedie|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=Accedie&days=14 new pages &#40;1&#41;]</span>) started on 2013-12-25, score: 24</li>
 {{User:AlexNewArtBot/MaintDisplay|
 <li>{{pagelinks|Draft:DJ Many}} by [[User:Ocaasi{{!}}Ocaasi]] (<span class{{=}}"plainlinks">[[User_talk:Ocaasi{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Ocaasi{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Ocaasi&days{{=}}14 new pages &#40;1&#41;]</span>) started on 2013-12-23, score: 25</li>
 <li>[[:Category:Municipal coats of arms in Romania]] by [[User:Arms_Jones{{!}}Arms Jones]] started on 2014-01-02, score: 50</li>
@@ -54,27 +50,27 @@ class TestExistingRegex extends UnitTestCase
 EOT;
 
         $articles = array('Shoichiro Sakai', '0 = 1', 'Madhuca markleeana',
-        		'Basketball uniform', 'Draft:DJ Many', 'Template:PitchforkSong', 'Category:Municipal coats of arms in Romania', 'Madhuca malvina', 'Draft:M-54 and M-83 (Michigan highway)',
+        		'Basketball uniform', 'Madhuca malvina',
         		'Basketball uniform', 'Draft:DJ Many', 'Category:Municipal coats of arms in Romania', 'Template:PitchforkSong'
         );
         $users = array('TakuyaMurata', 'Darkslug', 'Declangi',
-        		'Accedie', 'Ocaasi', 'Lu0490', 'Arms Jones', 'Declangi', 'Highway 231',
+        		'Accedie', 'Declangi',
         		'Accedie', 'Ocaasi', 'Arms Jones', 'Lu0490'
         );
         $timestamps = array('2013-11-23', '2013-11-21', '2013-11-16',
-        		'2013-12-25', '2013-12-23', '2013-12-27', '2014-01-02', '2013-11-16', '2014-01-21',
+        		'2013-12-25', '2013-11-16',
         		'2013-12-25', '2013-12-23', '2014-01-02', '2013-12-27'
         );
         $totalScores = array('100', '180', '40',
-        		'24', '25', '21', '50', '40', '34',
+        		'24', '40',
         		'24', '25', '50', '21'
         );
         $wikipediaNSs = array('1', '1', '1',
-        		'1', '0', '1', '1', '1', '1',
+        		'1', '1',
         		'1', '0', '0', '1'
         );
         $types = array('N', 'N', 'N',
-        		'N', 'MD', 'MD', 'MD', 'N', 'MD',
+        		'N', 'N',
         		'N', 'MD', 'MD', 'MD'
         );
 
@@ -84,7 +80,7 @@ EOT;
 
         $this->assertEqual(count($results), 3, 'Wrong section count');
         $this->assertEqual(count($results[0]), 3, 'Wrong section 1 count');
-        $this->assertEqual(count($results[1]), 6, 'Wrong section 2 count');
+        $this->assertEqual(count($results[1]), 2, 'Wrong section 2 count');
         $this->assertEqual(count($results[2]), 4, 'Wrong section 3 count');
 
         $results = array_merge($results[0], $results[1]);
