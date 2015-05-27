@@ -108,19 +108,36 @@ class UIHelper
         $wikidata_ids = array();
 
         if ($row = $sth->fetch(PDO::FETCH_NUM)) {
-        	$wikidata_ids[] = "Q{$row[0]}";
+        	$id = "Q{$row[0]}";
+        	$wikidata_ids[$id] = array();
         	$results['wikidata_exact_match'] = true;
         } else {
         	$results['wikidata_exact_match'] = false;
         	$temppage = str_replace('_', ' ', $pagename);
+        	// Strip qualifier
+        	$temppage = preg_replace('! \([^\)]+\)!', '', $temppage);
 			$temppage = $dbh_wikidata->quote("$temppage %"); // allow qualifier
-        	$sql = "SELECT DISTINCT ips_item_id FROM wb_items_per_site WHERE ips_site_page LIKE $temppage LIMIT 10";
+
+        	$sql = "SELECT ips_item_id, ips_site_id FROM wb_items_per_site WHERE ips_site_page LIKE $temppage LIMIT 10";
         	$sth = $dbh_wikidata->prepare($sql);
         	$sth->execute();
         	$sth->setFetchMode(PDO::FETCH_NUM);
 
         	while ($row = $sth->fetch()) {
-        		$wikidata_ids[] = "Q{$row[0]}";
+        		$id = "Q{$row[0]}";
+        		$site = $row[1];
+        		if (! isset($wikidata_ids[$id])) $wikidata_ids[$id] = array();
+        		$wikidata_ids[$id][] = $site;
+        	}
+
+        	// Strip items that already have a link to our site.
+        	foreach ($wikidata_ids as $id => $sites) {
+        		foreach ($sites as $site) {
+	        		if ($site == $params['wiki']) {
+	        			unset($wikidata_ids[$id]);
+	        			break;
+	        		}
+        		}
         	}
         }
 
@@ -129,7 +146,7 @@ class UIHelper
 
         // Retrieve the current wikidata revisions
         $wikidatawiki = $this->serviceMgr->getWikidataWiki();
-        $results['wikidata'] = $wikidatawiki->getItemsNoCache($wikidata_ids);
+        $results['wikidata'] = $wikidatawiki->getItemsNoCache(array_keys($wikidata_ids));
 
 		return $results;
 	}

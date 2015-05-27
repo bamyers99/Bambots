@@ -120,6 +120,8 @@ function display_data()
 		$wikiprefix = "$protocol://$domain/wiki/";
 
 		$pagename = str_replace('_', ' ', ucfirst(trim($params['page'])));
+		// Strip qualifier
+		$unqualifiedpage = preg_replace('! \([^\)]+\)!', '', $pagename);
 
 		echo "<br /><div><b>Page:</b> <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $pagename)) . "\" target=\"_new\">" .
 						htmlentities($pagename, ENT_COMPAT, 'UTF-8') . "</a><div>";
@@ -154,7 +156,7 @@ function display_data()
 
 			if (empty($results['wikidata'])) echo '<div>None</div>';
 			else {
-				echo '<table class="wikitable"><tr><th>Item</th><th>Label</th><th>Description</th><th>Birth date(s)</th><th>Death date(s)</th></tr>';
+				echo '<table class="wikitable"><tr><th>Item</th><th>Label</th><th>Description</th><th>Birth date</th><th>Death date</th></tr>';
 
 				foreach ($results['wikidata'] as $wikidata) {
 					$itemid = $wikidata->getId();
@@ -165,13 +167,13 @@ function display_data()
 
 					$url = "$protocol://www.wikidata.org/wiki/" . $itemid;
 
-					echo "<tr><td><a href=\"$url\"></a></td><td>$label</td><td>$description</td><td>$birthdates</td><td>$deathdates</td></tr>";
+					echo "<tr><td><a href=\"$url\"  target=\"_new\">$itemid</a></td><td>$label</td><td>$description</td><td>$birthdates</td><td>$deathdates</td></tr>";
 				}
 
 				echo '</table>';
 			}
 
-			$urllabel = urlencode($pagename);
+			$urllabel = urlencode($unqualifiedpage);
 
 			echo "<div><a href='https://www.wikidata.org/w/index.php?title=Special:NewItem&label=$urllabel' target='_new'>Create new Wikidata item</a></div>";
 		}
@@ -231,7 +233,7 @@ function display_data()
 				$url = str_replace('$1', urlencode($authid), $idurl);
 				$coldata = "<a href='$url' target='_new'>$displayid</a>";
 			} else {
-				$url = str_replace('$1', urlencode($pagename), $searchurl);
+				$url = str_replace('$1', urlencode($unqualifiedpage), $searchurl);
 				if (empty($wikidata_auths[$auth_type])) $coldata = "<a href='$url' target='_new'>Search</a>";
 				else $coldata = '';
 			}
