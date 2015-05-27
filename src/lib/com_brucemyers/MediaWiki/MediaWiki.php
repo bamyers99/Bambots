@@ -616,6 +616,39 @@ class MediaWiki extends wikipedia
     }
 
     /**
+     * Get property list
+     *
+     * @param string $proptype Prop type - categories, etc.
+     * @param array Query parameters xx...
+     * @throws Exception
+     * @return ..., ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getProp($proptype, $params)
+    {
+    	if (! isset($params['continue'])) {
+    		$params['continue'] = '';
+    	} elseif (is_array($params['continue'])){
+    		$continue = $params['continue'];
+    		unset($params['continue']);
+    		$params = array_merge($params, $continue);
+    	}
+
+    	$addparams ='';
+
+    	foreach ($params as $key => $value) {
+    		$addparams .= "&$key=" . urlencode($value);
+    	}
+
+    	$ret = $this->query("?action=query&format=php&prop=$proptype" . $addparams);
+
+    	if (isset($ret['error'])) {
+    		throw new Exception("$listtype Error " . $ret['error']['info']);
+    	}
+
+    	return $ret;
+    }
+
+    /**
      * Get namespace prefix.
      *
      * @param int $id Namespace id

@@ -50,6 +50,9 @@ class InceptionBot
         $creators =  array();
         $startProject = Config::get(self::CURRENTPROJECT);
 
+        $restarted = '';
+        if (! empty($startProject)) $restarted = ' (restarted)';
+
         // Retrieve the rulesets
         $rulesets = array();
         foreach ($ruleconfigs as $rulename => $portal) {
@@ -203,6 +206,7 @@ class InceptionBot
 
         $ts = $totaltimer->stop();
         $totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
+        $totaltime .= $restarted;
 
         $this->_writeStatus(count($rulesets), $errorrulsets, $totaltime, count($allpages), count($newestpages), count($updatedpages),
                         count($creators));

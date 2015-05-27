@@ -26,6 +26,11 @@ use com_brucemyers\Util\Logger;
 class WikidataItem
 {
 	const TYPE_INSTANCE_OF = 'P31';
+	const TYPE_BIRTHDATE = 'P569';
+	const TYPE_DEATHDATE = 'P570';
+	const TYPE_AUTHCTRL_VIAF = 'P214';
+	const TYPE_AUTHCTRL_ISNI = 'P213';
+	const TYPE_AUTHCTRL_ORCID = 'P496';
 
 	const INSTANCE_OF_DISAMBIGUATION = 'Q4167410';
 
@@ -44,6 +49,17 @@ class WikidataItem
 	public function __construct($data)
 	{
 		$this->data = $data;
+	}
+
+	/**
+	 * Get the item id.
+	 *
+	 * @return string blank if no item
+	 */
+	public function getId()
+	{
+		if (isset($this->data['id'])) return $this->data['id'];
+		return '';
 	}
 
 	/**
@@ -74,6 +90,46 @@ class WikidataItem
 				    	$statements[] = $value;
 				    	break;
 
+				    case 'time':
+				    	$time = '';
+				    	$datetime = explode('T', $value['time']);
+				    	$date = $datetime[0];
+				    	if (isset($datetime[1])) $time = $datetime[1];
+
+				    	$bce = '';
+				    	if ($date[0] == '+') $date = substr($date, 1);
+				    	elseif ($date[0] == '-') {
+				    		$date = substr($date, 1);
+				    		$bce = ' BCE';
+				    	}
+
+				    	$precision = $value['precision'];
+				    	switch ($precision) {
+				    	    case '14': // second
+				    	    	$value = $date . ' ' . $time . $bce;
+				    	    	break;
+				    	    case '13': // minute
+				    	    	$value = $date . ' ' . substr($time, 0, 5) . $bce;
+				    	    	break;
+				    		case '12': // hour
+				    	    	$value = $date . ' ' . substr($time, 0, 2) . ':00' . $bce;
+				    	    	break;
+				    		case '11': // day
+				    	    	$value = $date . $bce;
+				    	    	break;
+				    		case '10': // month
+				    			$parts = explode('-', $date);
+				    	    	$value = $parts[0] . '-' . $parts[1] . $bce;
+				    	    	break;
+				    		default:
+				    			$parts = explode('-', $date);
+				    	    	$value = $parts[0] . $bce;
+				    	    	break;
+				    	}
+
+				    	$statements[] = $value;
+				    	break;
+
 				    default:
 				    	Logger::log("WikidataItem::getStatementsOfType($property_id) unknown value type='$type' value=$value");
 				    	break;
@@ -82,5 +138,27 @@ class WikidataItem
 		}
 
 		return $statements;
+	}
+
+	/**
+	 * Get an items label or description in a specific language. If language not found, return first language.
+	 *
+	 * @param string $type label or description
+	 * @param string $lang preferred language code
+	 * @return string label or description
+	 */
+	public function getLabelDescription($type, $lang)
+	{
+		if ($type == 'label') $type = 'labels';
+		else $type = 'descriptions';
+
+		if (empty($this->data[$type])) return '';
+
+		foreach ($this->data[$type] as $text) {
+			if ($text['language'] == $lang) return $text['value'];
+			if (! isset($ret)) $ret = $text['value'];
+		}
+
+		return $ret;
 	}
 }

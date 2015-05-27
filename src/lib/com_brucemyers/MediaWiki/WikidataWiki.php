@@ -47,4 +47,22 @@ class WikidataWiki extends MediaWiki
         }
         return new WikidataItem(array());
     }
+
+    /**
+     * Get items without caching
+     *
+     * @param array $itemnames Item name Q...
+     * @return array WikidataItem Item data
+     */
+    public function getItemsNoCache($itemnames)
+    {
+    	$ret = array();
+        $pages = $this->getPages((array)$itemnames);
+
+        foreach ($pages as $page) {
+        	$ret[] = new WikidataItem(json_decode($page, true));
+        }
+
+        return $ret;
+    }
 }
