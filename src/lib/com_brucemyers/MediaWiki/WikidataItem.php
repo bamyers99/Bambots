@@ -31,6 +31,10 @@ class WikidataItem
 	const TYPE_AUTHCTRL_VIAF = 'P214';
 	const TYPE_AUTHCTRL_ISNI = 'P213';
 	const TYPE_AUTHCTRL_ORCID = 'P496';
+	const TYPE_AUTHCTRL_LCAuth = 'P244';
+	const TYPE_AUTHCTRL_ULAN = 'P245';
+	const TYPE_AUTHCTRL_IMDb = 'P345';
+	const TYPE_AUTHCTRL_MusicBrainz = 'P434';
 
 	const INSTANCE_OF_DISAMBIGUATION = 'Q4167410';
 

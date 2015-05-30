@@ -36,6 +36,7 @@ class TemplateParamParser
 
 	/**
 	 * Get template names and parameters in a string.
+	 * Numbered params are relative to 1
 	 *
 	 * @param string $origdata
 	 * @return array Templates array('name' => string, 'params' = array('name' => 'value')

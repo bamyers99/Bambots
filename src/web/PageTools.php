@@ -123,7 +123,7 @@ function display_data()
 		// Strip qualifier
 		$unqualifiedpage = preg_replace('! \([^\)]+\)!', '', $pagename);
 
-		echo "<br /><div><b>Page:</b> <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $pagename)) . "\" target=\"_new\">" .
+		echo "<br /><div><b>Page:</b> <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $pagename)) . "\">" .
 						htmlentities($pagename, ENT_COMPAT, 'UTF-8') . "</a><div>";
 
 		// display abstract
@@ -150,7 +150,7 @@ function display_data()
 		// display wikidata
 		if ($results['wikidata_exact_match']) {
 			$itemid = $results['wikidata'][0]->getId();
-			echo "<div><b>Wikidata item:</b> <a href=\"$protocol://www.wikidata.org/wiki/$itemid\" target=\"_new\">$itemid</a><div>";
+			echo "<div><b>Wikidata item:</b> <a href=\"$protocol://www.wikidata.org/wiki/$itemid\">$itemid</a> Reasonator: <a href=\"$protocol://tools.wmflabs.org/reasonator/?q=$itemid&lang=$lang\">$itemid</a><div>";
 		} else {
 			echo '<h3>Possible Wikidata matches</h3>';
 
@@ -167,7 +167,7 @@ function display_data()
 
 					$url = "$protocol://www.wikidata.org/wiki/" . $itemid;
 
-					echo "<tr><td><a href=\"$url\"  target=\"_new\">$itemid</a></td><td>$label</td><td>$description</td><td>$birthdates</td><td>$deathdates</td></tr>";
+					echo "<tr><td><a href=\"$url\">$itemid</a></td><td>$label</td><td>$description</td><td>$birthdates</td><td>$deathdates</td></tr>";
 				}
 
 				echo '</table>';
@@ -175,11 +175,13 @@ function display_data()
 
 			$urllabel = urlencode($unqualifiedpage);
 
-			echo "<div><a href='https://www.wikidata.org/w/index.php?title=Special:NewItem&label=$urllabel' target='_new'>Create new Wikidata item</a></div>";
+			echo "<div><a href='https://www.wikidata.org/w/index.php?title=Special:NewItem&label=$urllabel&site={$params['wiki']}&page=$urllabel'>Create new Wikidata item</a></div>";
 		}
 
 		// display authority control
 		$auth_templates = array('Authority control', 'Authority Control', 'Normdaten');
+		$imdb_templates = array('IMDb name','IMDB name','IMDB person','IMDb Name','IMDb person','IMdb name','Imdb name','Imdb-name','Imdbname');
+		$musicbrainz_templates = array('MusicBrainz artist','Musicbrainz artist','Musicbrainz.org artist');
 		$page_auths = array();
 
 		$templates = TemplateParamParser::getTemplates($results['pagetext']);
@@ -189,13 +191,28 @@ function display_data()
 				if (isset($template['params']['VIAF'])) $page_auths['VIAF'] = $template['params']['VIAF'];
 				if (isset($template['params']['ISNI'])) $page_auths['ISNI'] = $template['params']['ISNI'];
 				if (isset($template['params']['ORCID'])) $page_auths['ORCID'] = $template['params']['ORCID'];
-				break;
+				if (isset($template['params']['LCCN'])) $page_auths['LCCN'] = $template['params']['LCCN'];
+				if (isset($template['params']['ULAN'])) $page_auths['ULAN'] = $template['params']['ULAN'];
+			}
+
+			if (in_array($template['name'], $imdb_templates)) {
+				if (isset($template['params']['1'])) $page_auths['IMDb'] = $template['params']['1'];
+				if (isset($template['params']['id'])) $page_auths['IMDb'] = $template['params']['id'];
+			}
+
+			if (in_array($template['name'], $musicbrainz_templates)) {
+				if (isset($template['params']['mbid'])) $page_auths['MusicBrainz'] = $template['params']['mbid'];
 			}
 		}
 
 		$auth_types = array('VIAF' => WikidataItem::TYPE_AUTHCTRL_VIAF,
 			'ISNI' => WikidataItem::TYPE_AUTHCTRL_ISNI,
-			'ORCID' => WikidataItem::TYPE_AUTHCTRL_ORCID);
+			'ORCID' => WikidataItem::TYPE_AUTHCTRL_ORCID,
+			'LCCN' => WikidataItem::TYPE_AUTHCTRL_LCAuth,
+			'ULAN' => WikidataItem::TYPE_AUTHCTRL_ULAN,
+			'IMDb' => WikidataItem::TYPE_AUTHCTRL_IMDb,
+			'MusicBrainz' => WikidataItem::TYPE_AUTHCTRL_MusicBrainz
+		);
 		$wikidata_auths = array();
 
 		if ($results['wikidata_exact_match']) {
@@ -226,6 +243,26 @@ function display_data()
 					$idurl = 'http://orcid.org/$1';
 					$searchurl= 'https://orcid.org/orcid-search/quick-search/?searchQuery=$1';
 					break;
+
+				case 'LCCN':
+					$idurl = 'http://id.loc.gov/authorities/$1';
+					$searchurl= 'http://id.loc.gov/search/?q=$1';
+					break;
+
+				case 'ULAN':
+					$idurl = 'http://vocab.getty.edu/page/ulan/$1';
+					$searchurl= 'http://www.getty.edu/vow/ULANServlet?english=Y&find=$1&role=&page=1&nation=';
+					break;
+
+				case 'IMDb':
+					$idurl = 'http://www.imdb.com/Name?$1';
+					$searchurl= 'http://www.imdb.com/find?ref_=nv_sr_fn&q=$1&s=all';
+					break;
+
+				case 'MusicBrainz':
+					$idurl = 'https://musicbrainz.org/artist/$1';
+					$searchurl= 'https://musicbrainz.org/search?query=$1&type=artist&method=indexed';
+					break;
 			}
 
 			echo "<tr><td>$auth_type ($prop)</td>";
@@ -237,7 +274,7 @@ function display_data()
 					$authid = str_replace(' ', '', $page_auths[$auth_type]);
 					$displayid = htmlentities($authid, ENT_COMPAT, 'UTF-8');
 					$url = str_replace('$1', urlencode($authid), $idurl);
-					$coldata = "<a href='$url' target='_new'>$displayid</a>";
+					$coldata = "<a href='$url'>$displayid</a>";
 				}
 
 				echo "<td>$coldata</td>";
@@ -251,7 +288,7 @@ function display_data()
 						$authid = str_replace(' ', '', $wikidata_auth);
 						$displayid = htmlentities($authid, ENT_COMPAT, 'UTF-8');
 						$url = str_replace('$1', urlencode($authid), $idurl);
-						$coldata[] = "<a href='$url' target='_new'>$displayid</a>";
+						$coldata[] = "<a href='$url'>$displayid</a>";
 					}
 
 					$coldata = implode('<br />', $coldata);
@@ -263,11 +300,24 @@ function display_data()
 			}
 
 			$url = str_replace('$1', urlencode($unqualifiedpage), $searchurl);
-			$coldata = "<a href='$url' target='_new'>Search</a>";
+			$coldata = "<a href='$url'>Search</a>";
 			echo "<td>$coldata</td></tr>";
 		}
 
 		echo '</table>';
+
+		// Find sources
+		echo '<h3>Find sources</h3>';
+
+		$searchtext = urlencode($unqualifiedpage);
+		echo '<ul>';
+		echo "<li><a href='https://www.google.com/search?as_eq=wikipedia&q=%22$searchtext%22&num=50'>Google</a></li>";
+		echo "<li><a href='https://www.google.com/search?q=%22$searchtext%22&tbm=nws'>news</a></li>";
+		echo "<li><a href='https://www.google.com/search?&q=%22$searchtext%22+site:news.google.com/newspapers&source=newspapers'>newspapers</a></li>";
+		echo "<li><a href='https://www.google.com/search?tbs=bks:1&q=%22$searchtext%22'>books</a></li>";
+		echo "<li><a href='https://scholar.google.com/scholar?q=%22$searchtext%22'>scholar</a></li>";
+		echo "<li><a href='http://www.jstor.org/action/doBasicSearch?Query=%22$searchtext%22&acc=on&wc=on'>JSTOR</a></li>";
+		echo '</ul>';
 	}
 }
 

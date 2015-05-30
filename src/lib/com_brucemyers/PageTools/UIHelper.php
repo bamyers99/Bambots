@@ -45,7 +45,17 @@ class UIHelper
 	{
 		$results = array();
 
-		$domain = substr($params['wiki'], 0, 2) . '.wikipedia.org';
+		if (preg_match('!([a-z]{2,3})wiki!', $params['wiki'], $matches)) {
+			$domain = $matches[1] . '.wikipedia.org';
+		} elseif ($params['wiki'] == 'wikidata') {
+			$domain = 'www.wikidata.org';
+		} elseif ($params['wiki'] == 'commons') {
+			$domain = 'commons.wikimedia.org';
+		} else {
+			$results['errors'][] = 'Wiki not supported - contact author';
+			return;
+		}
+
 		$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 		$pagename = str_replace(' ', '_', ucfirst(trim($params['page'])));
 
