@@ -40,20 +40,62 @@ class UIHelper
 	 * 	wikidata (array of WikidataItem),
 	 *  wikidata_exact_match (bool),
 	 *  pagetext (string)
+	 *  lang (string)
+	 *  domain (string)
+	 *  pagename (string)
 	 */
 	public function getResults($params)
 	{
 		$results = array();
 
 		if (preg_match('!([a-z]{2,3})wiki!', $params['wiki'], $matches)) {
-			$domain = $matches[1] . '.wikipedia.org';
+			$lang = $matches[1];
+			$domain = $lang . '.wikipedia.org';
 		} elseif ($params['wiki'] == 'wikidata') {
+			$lang = 'en';
+			if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) && preg_match('!([a-zA-Z]+)!', $_SERVER['HTTP_ACCEPT_LANGUAGE'], $matches)) {
+				$lang = strtolower($matches[1]);
+			}
 			$domain = 'www.wikidata.org';
-		} elseif ($params['wiki'] == 'commons') {
-			$domain = 'commons.wikimedia.org';
+//		} elseif ($params['wiki'] == 'commons') {
+//			$domain = 'commons.wikimedia.org';
 		} else {
 			$results['errors'][] = 'Wiki not supported - contact author';
-			return;
+			return $results;
+		}
+
+		$results['lang'] = $lang;
+		$results['domain'] = $domain;
+
+		if ($params['wiki'] == 'wikidata') {
+        	$wikidatawiki = $this->serviceMgr->getWikidataWiki();
+        	$results['wikidata'] = $wikidatawiki->getItemsNoCache(ucfirst(trim($params['page'])));
+
+        	if (empty($results['wikidata'])) {
+        		$results['errors'][] = 'Page not found';
+        		return $results;
+        	}
+
+        	$results['wikidata_exact_match'] = true;
+        	$results['categories'] = array();
+        	$results['pagetext'] = '';
+        	$label = $results['wikidata'][0]->getLabelDescription('label', $lang);
+        	$description = $results['wikidata'][0]->getLabelDescription('description', $lang);
+
+        	if ($label != '' && $description != '') $results['abstract'] = "$label - $description";
+        	else if ($label != '') $results['abstract'] = $label;
+        	else if ($description != '') $results['abstract'] = $description;
+        	if (empty($results['abstract'])) $results['abstract'] = $params['page'];
+
+        	$site = $results['wikidata'][0]->getSiteLink("{$lang}wiki");
+
+        	if (! empty($site)) {
+        		$results['pagename'] = $site['title'];
+        		preg_match('!([a-z]{2,3})wiki!', $site['site'], $matches);
+        		$results['domain'] = $matches[1] . '.wikipedia.org';
+        	}
+
+        	return $results;
 		}
 
 		$mediawiki = $this->serviceMgr->getMediaWiki($domain);
@@ -63,7 +105,7 @@ class UIHelper
 		$pagetext = $mediawiki->getpage($pagename);
 		if (! $pagetext) {
 			$results['errors'][] = 'Page not found';
-			return;
+			return $results;
 		}
 
 		$results['pagetext'] = $pagetext;

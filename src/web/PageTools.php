@@ -76,7 +76,7 @@ function display_form()
 		<div style="display: table; margin: 0 auto;">
 		<h2>Page Tools<?php echo $title ?></h2>
         <form action="PageTools.php" method="post">
-        <b>Wiki</b> <input name="wiki" type="text" size="6" value="<?php echo $params['wiki'] ?>" />
+        <b><acronym title="&lt;language&gt;wiki, wikidata">Wiki</acronym></b> <input name="wiki" type="text" size="6" value="<?php echo $params['wiki'] ?>" />
         <b>Page</b> <input name="page" id="testfield1" type="text" size="25" value="<?php echo $params['page'] ?>" />
         <input type="submit" value="Submit" />
         </form>
@@ -115,12 +115,15 @@ function display_data()
 
 	if (! empty($results['abstract'])) {
 		$protocol = HttpUtil::getProtocol();
-		$lang = substr($params['wiki'], 0, 2);
-		$domain = $lang . '.wikipedia.org';
+		$lang = $results['lang'];
+		$domain = $results['domain'];
 		$wikiprefix = "$protocol://$domain/wiki/";
 		$templates = TemplateParamParser::getTemplates($results['pagetext']);
+		$is_person = 'U'; // Unknown
 
-		$pagename = str_replace('_', ' ', ucfirst(trim($params['page'])));
+		$pagename = $params['page'];
+		if (isset($results['pagename'])) $pagename = $results['pagename'];
+		$pagename = str_replace('_', ' ', ucfirst(trim($pagename)));
 		// Strip qualifier
 		$unqualifiedpage = preg_replace('! \([^\)]+\)!', '', $pagename);
 
@@ -132,12 +135,16 @@ function display_data()
 
 		// display birth/death year
 		if ($params['wiki'] == 'enwiki') {
+			$is_person = 'N';
 			$birthyear = '?';
 			$deathyear = '?';
 
 			foreach ($results['categories'] as $cat => $hidden) {
 				if ($cat == 'Living people') $deathyear = 'Living';
 				elseif ($cat == 'Possibly living people') $deathyear = 'Possibly living';
+				elseif ($cat == 'Year of birth missing (living people)') $is_person = 'Y';
+				elseif ($cat == 'Year of birth missing') $is_person = 'Y';
+				elseif ($cat == 'Year of death missing') $is_person = 'Y';
 				elseif (preg_match('!(\d{4}s?) births!', $cat, $matches)) {
 					$birthyear = $matches[1];
 				} elseif (preg_match('!(\d{4}s?) deaths!', $cat, $matches)) {
@@ -145,7 +152,9 @@ function display_data()
 				}
 			}
 
-			echo "<div><b>Born:</b> $birthyear <b>Died:</b> $deathyear</div>";
+			if ($birthyear != '?' || $deathyear != '?') $is_person = 'Y';
+
+			echo "<div><b>On page - Born:</b> $birthyear <b>Died:</b> $deathyear</div>";
 		}
 
 		// display official website
@@ -173,6 +182,10 @@ function display_data()
 		}
 
 		if (! empty($official_site)) {
+			$temp = TemplateParamParser::getTemplates($official_site);
+			if (! empty($temp) && strtoupper($temp[0]['name']) == 'URL' && isset($temp[0]['params']['1'])) {
+				$official_site = $temp[0]['params']['1'];
+			}
 			$temp = htmlentities($official_site, ENT_COMPAT, 'UTF-8');
 			echo "<div><b>Official website:</b> <a href='$official_site'>$temp</a><div>";
 		}
@@ -181,6 +194,15 @@ function display_data()
 		if ($results['wikidata_exact_match']) {
 			$itemid = $results['wikidata'][0]->getId();
 			echo "<div><b>Wikidata item:</b> <a href=\"$protocol://www.wikidata.org/wiki/$itemid\">$itemid</a> <b>Reasonator:</b> <a href=\"$protocol://tools.wmflabs.org/reasonator/?q=$itemid&lang=$lang\">$itemid</a><div>";
+
+			$birthdates = $results['wikidata'][0]->getStatementsOfType(WikidataItem::TYPE_BIRTHDATE);
+			$deathdates = $results['wikidata'][0]->getStatementsOfType(WikidataItem::TYPE_DEATHDATE);
+
+			if (! empty($birthdates) || ! empty($deathdates)) {
+				$birthdates = implode(', ', $birthdates);
+				$deathdates = implode(', ', $deathdates);
+				echo "<div><b>Wikidata - Born:</b> $birthdates <b>Died:</b> $deathdates</div>";
+			}
 		} else {
 			echo '<h3>Possible Wikidata matches</h3>';
 
@@ -259,7 +281,9 @@ function display_data()
 			switch ($auth_type) {
 				case 'VIAF':
 					$idurl = 'https://viaf.org/viaf/$1/';
-					$searchurl= 'https://viaf.org/viaf/search?query=local.names+all+%22$1%22&sortKeys=holdingscount&recordSchema=BriefVIAF';
+					$searchtype = 'names';
+					if ($is_person == 'Y') $searchtype = 'personalNames';
+					$searchurl= "https://viaf.org/viaf/search?query=local.$searchtype+all+%22$1%22&sortKeys=holdingscount&recordSchema=BriefVIAF";
 					break;
 
 				case 'ISNI':
@@ -268,6 +292,7 @@ function display_data()
 					break;
 
 				case 'ORCID':
+					if ($is_person == 'N') continue 2;
 					$idurl = 'http://orcid.org/$1';
 					$searchurl= 'https://orcid.org/orcid-search/quick-search/?searchQuery=$1';
 					break;

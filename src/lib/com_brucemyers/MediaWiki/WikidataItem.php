@@ -146,7 +146,7 @@ class WikidataItem
 	}
 
 	/**
-	 * Get an items label or description in a specific language. If language not found, return first language.
+	 * Get an items label or description in a specific language. If language not found, return en or first language.
 	 *
 	 * @param string $type label or description
 	 * @param string $lang preferred language code
@@ -154,6 +154,7 @@ class WikidataItem
 	 */
 	public function getLabelDescription($type, $lang)
 	{
+		$reten = '';
 		if ($type == 'label') $type = 'labels';
 		else $type = 'descriptions';
 
@@ -161,9 +162,34 @@ class WikidataItem
 
 		foreach ($this->data[$type] as $text) {
 			if ($text['language'] == $lang) return $text['value'];
-			if (! isset($ret)) $ret = $text['value'];
+			if ($text['language'] == 'en') $reten = $text['value'];
+			elseif (! isset($ret)) $ret = $text['value'];
 		}
 
+		if (! empty($reten)) return $reten;
+		return $ret;
+	}
+
+	/**
+	 * Get a site link
+	 *
+	 * @param string $site preferred site/wiki, If site not found, return enwiki or first site
+	 * @return array keys = site, title
+	 */
+	public function getSiteLink($site)
+	{
+		$reten = array();
+
+		if (empty($this->data['sitelinks'])) return array();
+
+		foreach ($this->data['sitelinks'] as $sitelink) {
+			if (! preg_match('![a-z]{2,3}wiki!', $sitelink['site'])) continue;
+			if ($sitelink['site'] == $site) return array('site' => $site, 'title' => $sitelink['title']);
+			if ($sitelink['site'] == 'enwiki') $reten = array('site' => 'enwiki', 'title' => $sitelink['title']);
+			elseif (! isset($ret)) $ret = array('site' => $sitelink['site'], 'title' => $sitelink['title']);
+		}
+
+		if (! empty($reten)) return $reten;
 		return $ret;
 	}
 }
