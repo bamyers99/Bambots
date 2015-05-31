@@ -47,6 +47,8 @@ class UIHelper
 	public function getResults($params)
 	{
 		$results = array();
+		$pagename = str_replace(' ', '_', ucfirst(trim($params['page'])));
+		$wiki = $params['wiki'];
 
 		if (preg_match('!([a-z]{2,3})wiki!', $params['wiki'], $matches)) {
 			$lang = $matches[1];
@@ -91,15 +93,19 @@ class UIHelper
 
         	if (! empty($site)) {
         		$results['pagename'] = $site['title'];
+        		$pagename = str_replace(' ', '_', $results['pagename']);
         		preg_match('!([a-z]{2,3})wiki!', $site['site'], $matches);
-        		$results['domain'] = $matches[1] . '.wikipedia.org';
+        		$sitelang = $matches[1];
+        		$results['domain'] = $sitelang . '.wikipedia.org';
+        		$wiki = "{$sitelang}wiki";
         	}
 
-        	return $results;
+        	if (empty($site) || $sitelang != $lang) return $results;
 		}
 
+		$domain = $results['domain'];
+
 		$mediawiki = $this->serviceMgr->getMediaWiki($domain);
-		$pagename = str_replace(' ', '_', ucfirst(trim($params['page'])));
 
 		// Get the page text
 		$pagetext = $mediawiki->getpage($pagename);
@@ -112,6 +118,9 @@ class UIHelper
 
 		// Get the abstract
 		$value = $mediawiki->getPageLead($pagename);
+		if (strlen($value) < 50) $value = $mediawiki->getPageLead($pagename, 2);
+		if (strlen($value) < 50) $value = $mediawiki->getPageLead($pagename, 3);
+		if (strlen($value) < 50) $value = $mediawiki->getPageLead($pagename, 4);
 		if (empty($value)) $value = str_replace('_', ' ', $pagename);
 
 		$results['abstract'] = $value;
@@ -153,7 +162,7 @@ class UIHelper
 		$pagename = str_replace('_', ' ', $pagename);
         $sql = "SELECT ips_item_id FROM wb_items_per_site WHERE ips_site_id = ? AND ips_site_page = ?";
         $sth = $dbh_wikidata->prepare($sql);
-        $sth->bindValue(1, $params['wiki']);
+        $sth->bindValue(1, $wiki);
         $sth->bindValue(2, str_replace('_', ' ', $pagename));
         $sth->execute();
 

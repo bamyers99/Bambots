@@ -134,7 +134,7 @@ function display_data()
 		echo "<div><b>Abstract:</b> " . str_replace(array('<p>','</p>'), '', $results['abstract']) . "<div>";
 
 		// display birth/death year
-		if ($params['wiki'] == 'enwiki') {
+		if ($domain == 'en.wikipedia.org') {
 			$is_person = 'N';
 			$birthyear = '?';
 			$deathyear = '?';
@@ -154,7 +154,7 @@ function display_data()
 
 			if ($birthyear != '?' || $deathyear != '?') $is_person = 'Y';
 
-			echo "<div><b>On page - Born:</b> $birthyear <b>Died:</b> $deathyear</div>";
+			echo "<div><b>Wikipedia - Born:</b> $birthyear <b>Died:</b> $deathyear</div>";
 		}
 
 		// display official website
@@ -273,7 +273,7 @@ function display_data()
 
 		echo '<h3>Authority control</h3>';
 		echo '<table class="wikitable"><tr><th>Authority</th>';
-		if (! empty($page_auths)) echo '<th>On page</th>';
+		if (! empty($page_auths)) echo '<th>Wikipedia</th>';
 		if ($results['wikidata_exact_match']) echo '<th>Wikidata</th>';
 		echo '<th>Search</th></tr>';
 
