@@ -118,6 +118,7 @@ function display_data()
 		$lang = substr($params['wiki'], 0, 2);
 		$domain = $lang . '.wikipedia.org';
 		$wikiprefix = "$protocol://$domain/wiki/";
+		$templates = TemplateParamParser::getTemplates($results['pagetext']);
 
 		$pagename = str_replace('_', ' ', ucfirst(trim($params['page'])));
 		// Strip qualifier
@@ -147,10 +148,39 @@ function display_data()
 			echo "<div><b>Born:</b> $birthyear <b>Died:</b> $deathyear</div>";
 		}
 
+		// display official website
+		$official_templates = array('Official website','Company Website','Home page','Homepage','Main website','Offficial website',
+			'Official','Official Website','Official homepage','Official site','Official web site','OfficialSite','Officialsite','Officialwebsite');
+		$official_site = '';
+
+		foreach ($templates as $template) {
+			if (preg_match('!infobox!i', $template['name'])) {
+				if (isset($template['params']['url'])) $official_site = $template['params']['url'];
+				if (isset($template['params']['website'])) $official_site = $template['params']['website'];
+			}
+
+			if (in_array($template['name'], $official_templates)) {
+				$official_site = $template['params']['1'];
+				if (! empty($official_site) && $official_site[0] == '/') $official_site = "$protocol:$official_site";
+				if (strpos($official_site, 'http') !== 0) $official_site = "$protocol://$official_site";
+				if (! empty($official_site)) break;
+			}
+		}
+
+		if ($results['wikidata_exact_match']) {
+			$propvalue = $results['wikidata'][0]->getStatementsOfType(WikidataItem::TYPE_OFFICIAL_WEBSITE);
+			if (! empty($propvalue)) $official_site = $propvalue[0];
+		}
+
+		if (! empty($official_site)) {
+			$temp = htmlentities($official_site, ENT_COMPAT, 'UTF-8');
+			echo "<div><b>Official website:</b> <a href='$official_site'>$temp</a><div>";
+		}
+
 		// display wikidata
 		if ($results['wikidata_exact_match']) {
 			$itemid = $results['wikidata'][0]->getId();
-			echo "<div><b>Wikidata item:</b> <a href=\"$protocol://www.wikidata.org/wiki/$itemid\">$itemid</a> Reasonator: <a href=\"$protocol://tools.wmflabs.org/reasonator/?q=$itemid&lang=$lang\">$itemid</a><div>";
+			echo "<div><b>Wikidata item:</b> <a href=\"$protocol://www.wikidata.org/wiki/$itemid\">$itemid</a> <b>Reasonator:</b> <a href=\"$protocol://tools.wmflabs.org/reasonator/?q=$itemid&lang=$lang\">$itemid</a><div>";
 		} else {
 			echo '<h3>Possible Wikidata matches</h3>';
 
@@ -183,8 +213,6 @@ function display_data()
 		$imdb_templates = array('IMDb name','IMDB name','IMDB person','IMDb Name','IMDb person','IMdb name','Imdb name','Imdb-name','Imdbname');
 		$musicbrainz_templates = array('MusicBrainz artist','Musicbrainz artist','Musicbrainz.org artist');
 		$page_auths = array();
-
-		$templates = TemplateParamParser::getTemplates($results['pagetext']);
 
 		foreach ($templates as $template) {
 			if (in_array($template['name'], $auth_templates)) {

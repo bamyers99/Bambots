@@ -35,6 +35,7 @@ class WikidataItem
 	const TYPE_AUTHCTRL_ULAN = 'P245';
 	const TYPE_AUTHCTRL_IMDb = 'P345';
 	const TYPE_AUTHCTRL_MusicBrainz = 'P434';
+	const TYPE_OFFICIAL_WEBSITE = 'P856';
 
 	const INSTANCE_OF_DISAMBIGUATION = 'Q4167410';
 
