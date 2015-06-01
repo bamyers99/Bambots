@@ -168,10 +168,9 @@ function display_data()
 				if (isset($template['params']['website'])) $official_site = $template['params']['website'];
 			}
 
-			if (in_array($template['name'], $official_templates)) {
+			if (in_array($template['name'], $official_templates) && isset($template['params']['1'])) { // can be empty to use wikidata
 				$official_site = $template['params']['1'];
 				if (! empty($official_site) && $official_site[0] == '/') $official_site = "$protocol:$official_site";
-				if (strpos($official_site, 'http') !== 0) $official_site = "$protocol://$official_site";
 				if (! empty($official_site)) break;
 			}
 		}
@@ -186,7 +185,17 @@ function display_data()
 			if (! empty($temp) && strtoupper($temp[0]['name']) == 'URL' && isset($temp[0]['params']['1'])) {
 				$official_site = $temp[0]['params']['1'];
 			}
-			$temp = htmlentities($official_site, ENT_COMPAT, 'UTF-8');
+
+			if (strpos($official_site, 'http') !== 0) $official_site = "$protocol://$official_site";
+
+			if (preg_match('!https?://(.*)!', $official_site, $matches)) {
+				$temp = $matches[1];
+				if (substr($temp, -1) == '/') $temp = substr($temp, 0, -1);
+			} else {
+				$temp = $official_site;
+			}
+
+			$temp = htmlentities($temp, ENT_COMPAT, 'UTF-8');
 			echo "<div><b>Official website:</b> <a href='$official_site'>$temp</a><div>";
 		}
 
