@@ -235,8 +235,9 @@ function display_data()
 			}
 
 			$urllabel = urlencode($unqualifiedpage);
+			$wikipage = urlencode(str_replace('_', ' ', $pagename));
 
-			echo "<div><a href='https://www.wikidata.org/w/index.php?title=Special:NewItem&label=$urllabel&site={$params['wiki']}&page=$urllabel'>Create new Wikidata item</a></div>";
+			echo "<div><a href='https://www.wikidata.org/w/index.php?title=Special:NewItem&label=$urllabel&site={$params['wiki']}&page=$wikipage'>Create new Wikidata item</a></div>";
 		}
 
 		// display authority control
