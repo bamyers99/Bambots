@@ -227,6 +227,13 @@ function display_data()
 
 					$url = "$protocol://www.wikidata.org/wiki/" . $itemid;
 
+					// See if already has link to our wiki
+					$oursite = $wikidata->getSiteLink($params['wiki']);
+					if (! empty($oursite) && $oursite['site'] == $params['wiki']) {
+						$tempurl = $wikiprefix . urlencode(str_replace(' ', '_', $oursite['title']));
+						$label = "<a href='$tempurl'>$label</a> ({$params['wiki']})";
+					}
+
 					echo "<tr><td><a href=\"$url\">$itemid</a></td><td>$label</td><td>$description</td><td>$birthdates</td><td>$deathdates</td></tr>";
 				}
 

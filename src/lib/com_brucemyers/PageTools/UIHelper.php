@@ -199,14 +199,14 @@ class UIHelper
         	}
 
         	// Strip items that already have a link to our site.
-        	foreach ($wikidata_ids as $id => $sites) {
-        		foreach ($sites as $site) {
-	        		if ($site == $params['wiki']) {
-	        			unset($wikidata_ids[$id]);
-	        			break;
-	        		}
-        		}
-        	}
+//         	foreach ($wikidata_ids as $id => $sites) {
+//         		foreach ($sites as $site) {
+// 	        		if ($site == $params['wiki']) {
+// 	        			unset($wikidata_ids[$id]);
+// 	        			break;
+// 	        		}
+//         		}
+//         	}
         }
 
         $sth->closeCursor();
