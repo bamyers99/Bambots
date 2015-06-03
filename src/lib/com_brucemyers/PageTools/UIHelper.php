@@ -177,7 +177,7 @@ class UIHelper
         	$temppage = str_replace('_', ' ', $pagename);
         	// Strip qualifier
         	$temppage = preg_replace('! \([^\)]+\)!', '', $temppage);
-			$temppage = $dbh_wikidata->quote("$temppage %"); // allow qualifier
+			$temppage = $dbh_wikidata->quote("$temppage%"); // allow qualifier
 
         	$sql = "SELECT ips_item_id, ips_site_id FROM wb_items_per_site WHERE ips_site_page LIKE $temppage LIMIT 10";
         	$sth = $dbh_wikidata->prepare($sql);
