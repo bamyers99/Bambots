@@ -118,9 +118,9 @@ class UIHelper
 
 		// Get the abstract
 		$value = $mediawiki->getPageLead($pagename);
-		if (strlen($value) < 50) $value = $mediawiki->getPageLead($pagename, 2);
-		if (strlen($value) < 50) $value = $mediawiki->getPageLead($pagename, 3);
-		if (strlen($value) < 50) $value = $mediawiki->getPageLead($pagename, 4);
+		if (strlen($value) < 100) $value = $mediawiki->getPageLead($pagename, 2);
+		if (strlen($value) < 100) $value = $mediawiki->getPageLead($pagename, 3);
+		if (strlen($value) < 100) $value = $mediawiki->getPageLead($pagename, 4);
 		if (empty($value)) $value = str_replace('_', ' ', $pagename);
 
 		$results['abstract'] = $value;

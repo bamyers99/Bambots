@@ -265,10 +265,11 @@ function display_data()
 			}
 		}
 
-		$auth_types = array('VIAF' => WikidataItem::TYPE_AUTHCTRL_VIAF,
+		$auth_types = array(
 			'ISNI' => WikidataItem::TYPE_AUTHCTRL_ISNI,
-			'ORCID' => WikidataItem::TYPE_AUTHCTRL_ORCID,
+			'VIAF' => WikidataItem::TYPE_AUTHCTRL_VIAF,
 			'LCCN' => WikidataItem::TYPE_AUTHCTRL_LCAuth,
+			'ORCID' => WikidataItem::TYPE_AUTHCTRL_ORCID,
 			'ULAN' => WikidataItem::TYPE_AUTHCTRL_ULAN,
 			'IMDb' => WikidataItem::TYPE_AUTHCTRL_IMDb,
 			'MusicBrainz' => WikidataItem::TYPE_AUTHCTRL_MusicBrainz
@@ -290,6 +291,7 @@ function display_data()
 		foreach ($auth_types as $auth_type => $prop) {
 			switch ($auth_type) {
 				case 'VIAF':
+					$definition = 'Virtual International Authority File';
 					$idurl = 'https://viaf.org/viaf/$1/';
 					$searchtype = 'names';
 					if ($is_person == 'Y') $searchtype = 'personalNames';
@@ -297,38 +299,45 @@ function display_data()
 					break;
 
 				case 'ISNI':
+					$definition = 'International Standard Name Identifier';
 					$idurl = 'http://isni.org/isni/$1';
 					$searchurl= 'http://isni.oclc.nl/DB=1.2/CMD?ACT=SRCHA&IKT=8006&SRT=&TRM=$1';
 					break;
 
 				case 'ORCID':
 					if ($is_person == 'N') continue 2;
+					$definition = 'Open Researcher and Contributor ID';
 					$idurl = 'http://orcid.org/$1';
 					$searchurl= 'https://orcid.org/orcid-search/quick-search/?searchQuery=$1';
 					break;
 
 				case 'LCCN':
+					$definition = 'Library of Congress Control Number';
 					$idurl = 'http://id.loc.gov/authorities/$1';
 					$searchurl= 'http://id.loc.gov/search/?q=$1';
 					break;
 
 				case 'ULAN':
+					$definition = 'Union List of Artist Names';
 					$idurl = 'http://vocab.getty.edu/page/ulan/$1';
 					$searchurl= 'http://www.getty.edu/vow/ULANServlet?english=Y&find=$1&role=&page=1&nation=';
 					break;
 
 				case 'IMDb':
+					$definition = 'Internet Movie Database';
 					$idurl = 'http://www.imdb.com/Name?$1';
 					$searchurl= 'http://www.imdb.com/find?ref_=nv_sr_fn&q=$1&s=all';
 					break;
 
 				case 'MusicBrainz':
+					$definition = '';
 					$idurl = 'https://musicbrainz.org/artist/$1';
 					$searchurl= 'https://musicbrainz.org/search?query=$1&type=artist&method=indexed';
 					break;
 			}
 
-			echo "<tr><td>$auth_type ($prop)</td>";
+			$definition = htmlentities($definition, ENT_COMPAT, 'UTF-8');
+			echo "<tr><td><acronym title='$definition'>$auth_type</acronym> ($prop)</td>";
 
 			if (! empty($page_auths)) {
 				$coldata = '';
