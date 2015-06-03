@@ -37,6 +37,8 @@ class WikidataItem
 	const TYPE_AUTHCTRL_MusicBrainz = 'P434';
 	const TYPE_OFFICIAL_WEBSITE = 'P856';
 
+	static public $preferred_langs = array('en','de','es','fr','it');
+
 	const INSTANCE_OF_DISAMBIGUATION = 'Q4167410';
 
 	static $entity_types = array(
@@ -154,7 +156,7 @@ class WikidataItem
 	 */
 	public function getLabelDescription($type, $lang)
 	{
-		$reten = '';
+		$retprefs = array();
 		if ($type == 'label') $type = 'labels';
 		else $type = 'descriptions';
 
@@ -162,11 +164,16 @@ class WikidataItem
 
 		foreach ($this->data[$type] as $text) {
 			if ($text['language'] == $lang) return $text['value'];
-			if ($text['language'] == 'en') $reten = $text['value'];
+			if (in_array($text['language'], self::$preferred_langs)) $retprefs[$text['language']] = $text['value'];
 			elseif (! isset($ret)) $ret = $text['value'];
 		}
 
-		if (! empty($reten)) return $reten;
+		if (! empty($retprefs)) {
+			foreach (self::$preferred_langs as $preflang) {
+				if (isset($retprefs[$preflang])) return $retprefs[$preflang];
+			}
+		}
+
 		return $ret;
 	}
 

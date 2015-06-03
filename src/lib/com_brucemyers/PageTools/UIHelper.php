@@ -177,6 +177,13 @@ class UIHelper
         	$temppage = str_replace('_', ' ', $pagename);
         	// Strip qualifier
         	$temppage = preg_replace('! \([^\)]+\)!', '', $temppage);
+
+        	// Only use first and last words
+        	$pageparts = explode(' ', $temppage);
+        	if (count($pageparts) > 1) {
+        		$temppage = $pageparts[0] . ' %' . $pageparts[count($pageparts) - 1];
+        	}
+
 			$temppage = $dbh_wikidata->quote("$temppage%"); // allow qualifier
 
         	$sql = "SELECT ips_item_id, ips_site_id FROM wb_items_per_site WHERE ips_site_page LIKE $temppage LIMIT 10";

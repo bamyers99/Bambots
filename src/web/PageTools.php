@@ -103,7 +103,6 @@ function display_data()
 	global $uihelper, $params;
 
 	$results = $uihelper->getResults($params);
-	if (empty($results['abstract'])) $results['errors'][] = 'Page not found';
 
 	if (! empty($results['errors'])) {
 		echo '<h3>Messages</h3><ul>';
