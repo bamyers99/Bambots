@@ -122,6 +122,7 @@ class UIHelper
 		while (++$x <= 10 and strlen($value) < 100) {
 			$value = $mediawiki->getPageLead($pagename, $x);
 		}
+		if (strlen($value) < 100) $value = $mediawiki->getPageLead($pagename, 0, 100);
 		if (empty($value)) $value = str_replace('_', ' ', $pagename);
 
 		$results['abstract'] = $value;
