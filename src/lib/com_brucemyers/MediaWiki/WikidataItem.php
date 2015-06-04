@@ -128,7 +128,23 @@ class WikidataItem
 				    			$parts = explode('-', $date);
 				    	    	$value = $parts[0] . '-' . $parts[1] . $bce;
 				    	    	break;
-				    		default:
+				    		case '9': // year
+				    			$parts = explode('-', $date);
+				    	    	$value = $parts[0] . $bce;
+				    	    	break;
+				    		case '8': // decade
+				    			$parts = explode('-', $date);
+				    	    	$value = $parts[0] . 's' . $bce;
+				    	    	break;
+				    		case '7': // century
+				    			$parts = explode('-', $date);
+				    	    	$value = substr($parts[0], 0, 2) . ' century' . $bce;
+				    	    	break;
+				    		case '6': // millennium
+				    			$parts = explode('-', $date);
+				    	    	$value = substr($parts[0], 0, 1) . ' millenium' . $bce;
+				    	    	break;
+				    	    default:
 				    			$parts = explode('-', $date);
 				    	    	$value = $parts[0] . $bce;
 				    	    	break;

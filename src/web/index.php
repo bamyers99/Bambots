@@ -29,6 +29,7 @@
     <li><a href="csv2wikitable.php">Convert CSV data to a Wikitable</a></li>
     <li><a href="ReplicationLag.php">Database replication lag</a></li>
     <li><a href="CategoryWatchlist.php">Category membership watchlist</a></li>
+    <li><a href="PageTools.php">Page tools - searches for Wikidata item in other languages; provides Authority control searches</a></li>
     </ul>
 </body>
 </html>

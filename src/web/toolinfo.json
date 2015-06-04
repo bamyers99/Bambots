@@ -48,4 +48,14 @@
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
+,
+	{
+	    "name" : "PageTools",
+	    "title" : "Page tools",
+	    "description" : "Searches for Wikidata item in other languages; provides Authority control searches",
+	    "url" : "https://tools.wmflabs.org/bambots/PageTools.php",
+	    "keywords" : "wikidata,authority control",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
 ]

@@ -142,9 +142,10 @@ class AddColumnFirstSentence extends AddColumn
 				if ($pagename[0] == ':') $pagename = substr($pagename, 1);
 
 				$value = $wiki->getPageLead($pagename);
-				if (strlen($value) < 100) $value = $wiki->getPageLead($pagename, 2);
-				if (strlen($value) < 100) $value = $wiki->getPageLead($pagename, 3);
-				if (strlen($value) < 100) $value = $wiki->getPageLead($pagename, 4);
+				$x = 1;
+				while (++$x <= 10 and strlen($value) < 100) {
+					$value = $wiki->getPageLead($pagename, $x);
+				}
 				if (empty($value)) $value = str_replace('_', ' ', $pagename);
 
 				$retval = $this->insertColumn($rows[$key], $value);
