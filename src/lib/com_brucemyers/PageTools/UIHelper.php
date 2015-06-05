@@ -18,6 +18,7 @@
 namespace com_brucemyers\PageTools;
 
 use PDO;
+use PDOException;
 use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
 
@@ -119,7 +120,7 @@ class UIHelper
 		// Get the abstract
 		$value = $mediawiki->getPageLead($pagename);
 		$x = 1;
-		while (++$x <= 10 and strlen($value) < 100) {
+		while (++$x <= 5 and strlen($value) < 100) {
 			$value = $mediawiki->getPageLead($pagename, $x);
 		}
 		if (strlen($value) < 100) $value = $mediawiki->getPageLead($pagename, 0, 100);
@@ -219,5 +220,62 @@ class UIHelper
         $results['wikidata'] = $wikidatawiki->getItemsNoCache(array_keys($wikidata_ids));
 
 		return $results;
+	}
+
+	/**
+	 * Get replication lag.
+	 *
+	 * @param unknown $wikiname
+	 * @return array keys = replag, lastupdate
+	 */
+	public function getReplicationLag($wikiname)
+	{
+		$return = array('replag' => 'Error retrieving lag', 'lastupdate' => '');
+
+		try {
+      		$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+
+			$sth = $dbh_wiki->query('SELECT MAX(rc_timestamp), UNIX_TIMESTAMP() - UNIX_TIMESTAMP(MAX(rc_timestamp)) FROM recentchanges');
+
+			if ($row = $sth->fetch(PDO::FETCH_NUM)) {
+				$lastupdate = date($row[0]);
+				$seconds = (int)$row[1];
+
+				$days = floor($seconds / 86400);
+				$seconds -= $days * 86400;
+				$hours = floor($seconds / 3600);
+				$seconds -= $hours * 3600;
+				$minutes = floor($seconds / 60);
+				$seconds -= $minutes * 60;
+
+				$replag = '';
+				if ($days > 0) {
+					$replag .= " $days ";
+					$replag .= ($days == 1) ? 'day' : 'days';
+				}
+
+				if ($days > 0 || $hours > 0) {
+					$replag .= " $hours ";
+					$replag .= ($hours == 1) ? 'hour' : 'hours';
+				}
+
+				if ($days > 0 || $hours > 0 || $minutes > 0) {
+					$replag .= " $minutes ";
+					$replag .= ($minutes == 1) ? 'minute' : 'minutes';
+				}
+
+				$replag .= " $seconds ";
+				$replag .= ($seconds == 1) ? 'second' : 'seconds';
+
+				$replag = trim($replag);
+
+				$return = array('replag' => $replag, 'lastupdate' => substr($lastupdate, 0, 4) . '-' . substr($lastupdate, 4 , 2) .
+						'-' . substr($lastupdate, 6, 2) . ' ' . substr($lastupdate, 8, 2) . ':' . substr($lastupdate, 10, 2) . ':' .
+						substr($lastupdate, 12, 2));
+			}
+		} catch (PDOException $ex) {
+		}
+
+		return $return;
 	}
 }

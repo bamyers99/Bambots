@@ -143,7 +143,7 @@ class AddColumnFirstSentence extends AddColumn
 
 				$value = $wiki->getPageLead($pagename);
 				$x = 1;
-				while (++$x <= 10 and strlen($value) < 100) {
+				while (++$x <= 5 and strlen($value) < 100) {
 					$value = $wiki->getPageLead($pagename, $x);
 				}
 				if (strlen($value) < 100) $value = $wiki->getPageLead($pagename, 0, 100);
