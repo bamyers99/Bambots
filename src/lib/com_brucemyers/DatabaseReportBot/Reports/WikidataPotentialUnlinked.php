@@ -20,14 +20,31 @@ namespace com_brucemyers\DatabaseReportBot\Reports;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\MediaWiki\WikidataItem;
+use com_brucemyers\Util\FileCache;
 use PDO;
 
 class WikidataPotentialUnlinked extends DatabaseReport
 {
+	public function init($apis, $params)
+	{
+		if (empty($params)) return true;
+
+		$option = $params[0];
+
+		switch ($option) {
+			case 'dumpmissingenwiki':
+				$this->dumpmissingenwiki($apis['dbh_wikidata']);
+				return false;
+				break;
+		}
+
+		return true;
+	}
 
     public function getUsage()
     {
-    	return " - Look for potential unlinked enwiki -> wikidata items";
+    	return " - Look for potential unlinked enwiki -> wikidata items" .
+    	"\t\tdumpmissingenwiki - dump wikidata items missing enwiki link";
     }
 
 	public function getTitle()
@@ -153,5 +170,56 @@ class WikidataPotentialUnlinked extends DatabaseReport
 		$results['linktemplate'] = false;
 
 		return $results;
+	}
+
+	function dumpmissingenwiki($dbh_wikidata)
+	{
+		// Retrieve 10,000 ids at a time
+		$startid = 0;
+		$endid = 10000;
+		$tempfile = self::getMissingEnwikiPath();
+		$hndl = fopen($tempfile, 'w');
+
+		// Get the max epp_entity_id
+		$sql = "SELECT MAX(epp_entity_id) FROM wb_entity_per_page";
+		$sth = $dbh_wikidata->query($sql);
+		$row = $sth->fetch(PDO::FETCH_NUM);
+		$maxid = (int)$row[0];
+		$sth->closeCursor();
+
+		while ($startid < $maxid) {
+			// Retrieve the wikidata items without enwiki links
+
+			$sql = "SELECT DISTINCT epp.epp_entity_id, neips.ips_site_page as site_page FROM wb_entity_per_page epp
+					LEFT JOIN wb_items_per_site ips ON ips.ips_item_id = epp.epp_entity_id AND ips.ips_site_id = 'enwiki'
+					LEFT JOIN wb_items_per_site neips ON epp.epp_entity_id = neips.ips_item_id
+					WHERE epp.epp_entity_id > $startid AND epp.epp_entity_id <= $endid AND
+						epp.epp_entity_type = 'item' AND ips.ips_row_id IS NULL
+						AND LOCATE(' ', neips.ips_site_page) > 0 AND LOCATE(':', neips.ips_site_page) = 0";
+			$sth = $dbh_wikidata->query($sql);
+			$sth->setFetchMode(PDO::FETCH_NUM);
+			$ids = array();
+
+			while ($row = $sth->fetch()) {
+				fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
+			}
+
+			$sth->closeCursor();
+			$startid = $endid;
+			$endid += 10000;
+		}
+
+		$sth->closeCursor();
+		fclose($hndl);
+	}
+
+	/**
+	 * Get the missing enwiki file path
+	 *
+	 * @return string
+	 */
+	static function getMissingEnwikiPath()
+	{
+		return FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'missingenwiki';
 	}
 }
