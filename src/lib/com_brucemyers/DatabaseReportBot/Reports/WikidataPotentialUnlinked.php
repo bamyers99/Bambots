@@ -36,6 +36,11 @@ class WikidataPotentialUnlinked extends DatabaseReport
 				$this->dumpmissingenwiki($apis['dbh_wikidata']);
 				return false;
 				break;
+
+			case 'dumphasenwiki':
+				$this->dumphasenwiki($apis['dbh_wikidata']);
+				return false;
+				break;
 		}
 
 		return true;
@@ -44,7 +49,8 @@ class WikidataPotentialUnlinked extends DatabaseReport
     public function getUsage()
     {
     	return " - Look for potential unlinked enwiki -> wikidata items" .
-    	"\t\tdumpmissingenwiki - dump wikidata items missing enwiki link";
+    	"\t\tdumpmissingenwiki - dump wikidata items missing enwiki link" .
+    	"\t\tdumphasenwiki - dump wikidata items having enwiki link";
     }
 
 	public function getTitle()
@@ -172,6 +178,11 @@ class WikidataPotentialUnlinked extends DatabaseReport
 		return $results;
 	}
 
+	/**
+	 * Dump items missing enwiki link.
+	 *
+	 * @param unknown $dbh_wikidata
+	 */
 	function dumpmissingenwiki($dbh_wikidata)
 	{
 		// Retrieve 10,000 ids at a time
@@ -191,22 +202,44 @@ class WikidataPotentialUnlinked extends DatabaseReport
 			// Retrieve the wikidata items without enwiki links
 
 			$sql = "SELECT DISTINCT epp.epp_entity_id, neips.ips_site_page as site_page FROM wb_entity_per_page epp
-					LEFT JOIN wb_items_per_site ips ON ips.ips_item_id = epp.epp_entity_id AND ips.ips_site_id = 'enwiki'
-					LEFT JOIN wb_items_per_site neips ON epp.epp_entity_id = neips.ips_item_id
-					WHERE epp.epp_entity_id > $startid AND epp.epp_entity_id <= $endid AND
-						epp.epp_entity_type = 'item' AND ips.ips_row_id IS NULL
-						AND LOCATE(' ', neips.ips_site_page) > 0 AND LOCATE(':', neips.ips_site_page) = 0";
+			LEFT JOIN wb_items_per_site ips ON ips.ips_item_id = epp.epp_entity_id AND ips.ips_site_id = 'enwiki'
+			LEFT JOIN wb_items_per_site neips ON epp.epp_entity_id = neips.ips_item_id
+			WHERE epp.epp_entity_id > $startid AND epp.epp_entity_id <= $endid AND
+			epp.epp_entity_type = 'item' AND ips.ips_row_id IS NULL
+			AND LOCATE(' ', neips.ips_site_page) > 0 AND LOCATE(':', neips.ips_site_page) = 0";
 			$sth = $dbh_wikidata->query($sql);
 			$sth->setFetchMode(PDO::FETCH_NUM);
 			$ids = array();
 
 			while ($row = $sth->fetch()) {
-				fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
+			fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
 			}
 
 			$sth->closeCursor();
 			$startid = $endid;
 			$endid += 10000;
+		}
+
+		$sth->closeCursor();
+		fclose($hndl);
+	}
+
+	/**
+	 * Dump items with enwiki link.
+	 *
+	 * @param unknown $dbh_wikidata
+	 */
+	function dumphasenwiki($dbh_wikidata)
+	{
+		$tempfile = self::getHasEnwikiPath();
+		$hndl = fopen($tempfile, 'w');
+
+		$sql = "SELECT ips_item_id, ips_site_page FROM wb_items_per_site ips WHERE ips.ips_site_id = 'enwiki'";
+		$sth = $dbh_wikidata->query($sql);
+		$sth->setFetchMode(PDO::FETCH_NUM);
+
+		while ($row = $sth->fetch()) {
+		fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
 		}
 
 		$sth->closeCursor();
@@ -221,5 +254,15 @@ class WikidataPotentialUnlinked extends DatabaseReport
 	static function getMissingEnwikiPath()
 	{
 		return FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'missingenwiki';
+	}
+
+	/**
+	 * Get the has enwiki file path
+	 *
+	 * @return string
+	 */
+	static function getHasEnwikiPath()
+	{
+		return FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'hasenwiki';
 	}
 }
