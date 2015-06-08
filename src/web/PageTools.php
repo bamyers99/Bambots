@@ -139,8 +139,8 @@ function display_data()
 			$deathyear = '?';
 
 			foreach ($results['categories'] as $cat => $hidden) {
-				if ($cat == 'Living people') $deathyear = 'Living';
-				elseif ($cat == 'Possibly living people') $deathyear = 'Possibly living';
+				if ($cat == 'Living people') $deathyear = 'living';
+				elseif ($cat == 'Possibly living people') $deathyear = 'possibly living';
 				elseif ($cat == 'Year of birth missing (living people)') $is_person = 'Y';
 				elseif ($cat == 'Year of birth missing') $is_person = 'Y';
 				elseif ($cat == 'Year of death missing') $is_person = 'Y';
@@ -270,8 +270,8 @@ function display_data()
 			}
 
 			if (in_array($template['name'], $imdb_templates)) {
-				if (isset($template['params']['1'])) $page_auths['IMDb'] = $template['params']['1'];
-				if (isset($template['params']['id'])) $page_auths['IMDb'] = $template['params']['id'];
+				if (isset($template['params']['1'])) $page_auths['IMDb'] = 'nm' . $template['params']['1'];
+				if (isset($template['params']['id'])) $page_auths['IMDb'] = 'nm' . $template['params']['id'];
 			}
 
 			if (in_array($template['name'], $musicbrainz_templates)) {

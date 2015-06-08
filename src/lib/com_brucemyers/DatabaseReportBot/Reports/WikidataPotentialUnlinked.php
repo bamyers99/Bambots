@@ -21,6 +21,7 @@ use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\MediaWiki\WikidataItem;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\Config;
 use PDO;
 
 class WikidataPotentialUnlinked extends DatabaseReport
@@ -41,6 +42,16 @@ class WikidataPotentialUnlinked extends DatabaseReport
 				$this->dumphasenwiki($apis['dbh_wikidata']);
 				return false;
 				break;
+
+			case 'loadMissingEnwiki':
+				$this->loadMissingEnwiki();
+				return false;
+				break;
+
+			case 'analyzeMissingEnwiki':
+				$this->analyzeMissingEnwiki();
+				return false;
+				break;
 		}
 
 		return true;
@@ -50,7 +61,9 @@ class WikidataPotentialUnlinked extends DatabaseReport
     {
     	return " - Look for potential unlinked enwiki -> wikidata items" .
     	"\t\tdumpmissingenwiki - dump wikidata items missing enwiki link" .
-    	"\t\tdumphasenwiki - dump wikidata items having enwiki link";
+    	"\t\tdumphasenwiki - dump wikidata items having enwiki link" .
+    	"\t\tloadMissingEnwiki - load missing enwiki tables" .
+    	"\t\tanalyzeMissingEnwiki - analyse missing enwiki for page matches";
     }
 
 	public function getTitle()
@@ -212,7 +225,7 @@ class WikidataPotentialUnlinked extends DatabaseReport
 			$ids = array();
 
 			while ($row = $sth->fetch()) {
-			fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
+				fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
 			}
 
 			$sth->closeCursor();
@@ -239,11 +252,200 @@ class WikidataPotentialUnlinked extends DatabaseReport
 		$sth->setFetchMode(PDO::FETCH_NUM);
 
 		while ($row = $sth->fetch()) {
-		fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
+			fwrite($hndl, "{$row[0]}\t{$row[1]}\n");
 		}
 
 		$sth->closeCursor();
 		fclose($hndl);
+	}
+
+	/**
+	 * Load missing enwiki tables.
+	 *
+	 * @throws Exception
+	 */
+	function loadMissingEnwiki()
+	{
+     	$user = Config::get('DatabaseReportBot.labsdb_username');
+    	$pass = Config::get('DatabaseReportBot.labsdb_password');
+    	$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
+
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki", $user, $pass);
+    	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    	// Load enwiki pagenames
+
+// 		$sql = "CREATE TABLE IF NOT EXISTS `pagename` (
+// 		  `title` varchar(255) CHARACTER SET utf8 NOT NULL,
+// 		  PRIMARY KEY (`title`)
+// 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+// 		$dbh_wiki->exec($sql);
+// 		$dbh_wiki->exec('TRUNCATE pagename');
+
+// 		$hndl = fopen(FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'enwiki-all-titles-in-ns0', 'r');
+// 		if ($hndl === false) throw new Exception('enwiki-all-titles-in-ns0 not found');
+
+//     	$dbh_wiki->beginTransaction();
+// 		$sth = $dbh_wiki->prepare('INSERT IGNORE INTO pagename VALUES (?)');
+// 		$page_count = 0;
+
+// 		while (! feof($hndl)) {
+// 			$buffer = fgets($hndl);
+// 			$buffer = rtrim($buffer);
+// 			if (empty($buffer)) continue;
+// 			$buffer = str_replace('_', ' ', $buffer);
+
+// 			++$page_count;
+//     		if ($page_count % 10000 == 0) {
+//     			$dbh_wiki->commit();
+//     			$dbh_wiki->beginTransaction();
+//     		}
+
+// 			$sth->bindValue(1, $buffer);
+// 			$sth->execute();
+// 		}
+
+//     	$dbh_wiki->commit();
+// 		fclose($hndl);
+
+		// Load missing enwiki wikidata link
+
+// 		$sql = "CREATE TABLE IF NOT EXISTS `missingenwiki` (
+// 		  `wikidata_id` INT unsigned NOT NULL,
+// 		  `title` varchar(255) CHARACTER SET utf8 NOT NULL,
+// 		  UNIQUE `title_id` (`title`,`wikidata_id`)
+// 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+// 		$dbh_wiki->exec($sql);
+// 		$dbh_wiki->exec('TRUNCATE missingenwiki');
+
+// 		$hndl = fopen(self::getMissingEnwikiPath(), 'r');
+// 		if ($hndl === false) throw new Exception('missing enwiki file not found');
+
+//     	$dbh_wiki->beginTransaction();
+// 		$sth = $dbh_wiki->prepare('INSERT IGNORE INTO missingenwiki VALUES (?,?)');
+// 		$page_count = 0;
+
+// 		while (! feof($hndl)) {
+// 			$buffer = fgets($hndl);
+// 			$buffer = rtrim($buffer);
+// 			if (empty($buffer)) continue;
+// 			list($pageid, $pagename) = explode("\t", $buffer);
+
+// 			++$page_count;
+//     		if ($page_count % 10000 == 0) {
+//     			$dbh_wiki->commit();
+//     			$dbh_wiki->beginTransaction();
+//     		}
+
+// 			$sth->bindValue(1, $pageid);
+// 			$sth->bindValue(2, $pagename);
+// 			$sth->execute();
+// 		}
+
+//     	$dbh_wiki->commit();
+// 		fclose($hndl);
+
+		// Load has enwiki wikidata link
+
+		$sql = "CREATE TABLE IF NOT EXISTS `hasenwiki` (
+		  `wikidata_id` INT unsigned NOT NULL,
+		  `title` varchar(255) CHARACTER SET utf8 NOT NULL,
+		  PRIMARY KEY (`title`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+		$dbh_wiki->exec($sql);
+		$dbh_wiki->exec('TRUNCATE hasenwiki');
+
+		$hndl = fopen(self::getHasEnwikiPath(), 'r');
+		if ($hndl === false) throw new Exception('has enwiki file not found');
+
+    	$dbh_wiki->beginTransaction();
+		$sth = $dbh_wiki->prepare('INSERT IGNORE INTO hasenwiki VALUES (?,?)');
+		$page_count = 0;
+
+		while (! feof($hndl)) {
+			$buffer = fgets($hndl);
+			$buffer = rtrim($buffer);
+			if (empty($buffer)) continue;
+			list($pageid, $pagename) = explode("\t", $buffer);
+
+			++$page_count;
+    		if ($page_count % 10000 == 0) {
+    			$dbh_wiki->commit();
+    			$dbh_wiki->beginTransaction();
+    		}
+
+			$sth->bindValue(1, $pageid);
+			$sth->bindValue(2, $pagename);
+			$sth->execute();
+		}
+
+    	$dbh_wiki->commit();
+		fclose($hndl);
+
+/*
+		CREATE TABLE `missingenwiki`.`newpagename` (
+		`title` varchar(255) NOT NULL,
+		PRIMARY KEY (`title`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+		INSERT INTO `missingenwiki`.`newpagename`
+		SELECT pn.title FROM `missingenwiki`.`pagename` pn LEFT JOIN `missingenwiki`.`hasenwiki` hew ON pn.title = hew.title
+		WHERE hew.title IS NULL
+*/
+	}
+
+	/**
+	 * Analyze wikidata items missing enwiki links.
+	 *
+CREATE TABLE `hitlist` (
+  `title` varchar(255) NOT NULL,
+  PRIMARY KEY (`title`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT IGNORE INTO hitlist SELECT me.title FROM missingenwiki me, newpagename np
+				WHERE me.title = np.title
+
+UPDATE s51454__wikidata.hitlist SET title = REPLACE(title, ' ', '_')
+
+INSERT IGNORE INTO newhitlist SELECT hitlist.title FROM hitlist, enwiki_p.page ep
+WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_redirect = 0
+
+	 */
+	function analyzeMissingEnwiki()
+	{
+		$user = Config::get('DatabaseReportBot.labsdb_username');
+		$pass = Config::get('DatabaseReportBot.labsdb_password');
+		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
+
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki", $user, $pass);
+		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+		$sql = 'SELECT title FROM hitlist ORDER by title';
+
+		$hndl = fopen(FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'potentialenwiki.html', 'w');
+		fwrite($hndl, '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		');
+
+		$sth = $dbh_wiki->query($sql);
+		$sth->setFetchMode(PDO::FETCH_NUM);
+
+		while ($row = $sth->fetch()) {
+			$pagename = urlencode($row[0]);
+			$encodedpage = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+			fwrite($hndl, "<a href='https://tools.wmflabs.org/bambots/PageTools.php?wiki=enwiki&page=$pagename'>$encodedpage</a><br />\n");
+		}
+
+		fwrite($hndl, '</body>');
+		fclose($hndl);
+		$sth->closeCursor();
 	}
 
 	/**
