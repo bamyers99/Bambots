@@ -181,7 +181,11 @@ class UIHelper
         	// Strip qualifier
         	$temppage = preg_replace('! \([^\)]+\)!', '', $temppage);
 
-        	// Only use first and last words
+        	// Look for an exact match
+			$temppage2 = $dbh_wikidata->quote($temppage);
+        	$exactsql = "SELECT ips_item_id, ips_site_id, 0 AS priority FROM wb_items_per_site WHERE ips_site_page = $temppage2";
+
+        	// Only use first and last words for partial match
         	$pageparts = explode(' ', $temppage);
         	if (count($pageparts) > 1) {
         		$temppage = $pageparts[0] . ' %' . $pageparts[count($pageparts) - 1];
@@ -189,7 +193,8 @@ class UIHelper
 
 			$temppage = $dbh_wikidata->quote("$temppage%"); // allow qualifier
 
-        	$sql = "SELECT ips_item_id, ips_site_id FROM wb_items_per_site WHERE ips_site_page LIKE $temppage LIMIT 10";
+        	$sql = "($exactsql) UNION (SELECT ips_item_id, ips_site_id, 1 AS priority FROM wb_items_per_site
+        		WHERE ips_site_page LIKE $temppage) ORDER BY priority LIMIT 10";
         	$sth = $dbh_wikidata->prepare($sql);
         	$sth->execute();
         	$sth->setFetchMode(PDO::FETCH_NUM);
@@ -200,16 +205,6 @@ class UIHelper
         		if (! isset($wikidata_ids[$id])) $wikidata_ids[$id] = array();
         		$wikidata_ids[$id][] = $site;
         	}
-
-        	// Strip items that already have a link to our site.
-//         	foreach ($wikidata_ids as $id => $sites) {
-//         		foreach ($sites as $site) {
-// 	        		if ($site == $params['wiki']) {
-// 	        			unset($wikidata_ids[$id]);
-// 	        			break;
-// 	        		}
-//         		}
-//         	}
         }
 
         $sth->closeCursor();
@@ -264,8 +259,8 @@ class UIHelper
 					$replag .= ($minutes == 1) ? 'minute' : 'minutes';
 				}
 
-				$replag .= " $seconds ";
-				$replag .= ($seconds == 1) ? 'second' : 'seconds';
+//				$replag .= " $seconds ";
+//				$replag .= ($seconds == 1) ? 'second' : 'seconds';
 
 				$replag = trim($replag);
 
