@@ -43,7 +43,7 @@ class TestDatabaseReportBot extends UnitTestCase
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
     	$pass = Config::get(DatabaseReportBot::LABSDB_PASSWORD);
 
-    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
+    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         $url = Config::get(MediaWiki::WIKIURLKEY);

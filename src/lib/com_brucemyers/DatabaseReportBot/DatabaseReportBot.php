@@ -58,13 +58,13 @@ class DatabaseReportBot
      	$user = Config::get(self::LABSDB_USERNAME);
     	$pass = Config::get(self::LABSDB_PASSWORD);
 
-    	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=$wiki_db", $user, $pass);
+    	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=$wiki_db;charset=utf8", $user, $pass);
     	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      	$this->dbh_wiki = $dbh_wiki;
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot", $user, $pass);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot;charset=utf8", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      	$this->dbh_tools = $dbh_tools;
-    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
+    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
     	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      	$this->dbh_wikidata = $dbh_wikidata;
      	$this->wiki_host = $wiki_host;

@@ -27,7 +27,7 @@ class Convert
 	 */
 	public static function clearUTF($s)
 	{
-		setlocale(LC_ALL, 'en_US.UTF8');
+		setlocale(LC_ALL, 'en_US.utf8');
 
 		$r = '';
 		$s1 = @iconv('UTF-8', 'ASCII//TRANSLIT', $s);

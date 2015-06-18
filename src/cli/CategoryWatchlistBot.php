@@ -106,7 +106,7 @@ function printCatTree($wikiname, $category)
     if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
     $user = Config::get(CategoryWatchlistBot::LABSDB_USERNAME);
     $pass = Config::get(CategoryWatchlistBot::LABSDB_PASSWORD);
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p", $user, $pass);
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
     $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     echo "Category tree for $wikiname - $category\n";;

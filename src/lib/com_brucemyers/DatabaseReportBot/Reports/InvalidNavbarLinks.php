@@ -126,7 +126,7 @@ class InvalidNavbarLinks extends DatabaseReport
 			$sql = "SELECT page_title FROM templatelinks, page " .
 				" WHERE tl_from_namespace = 10 AND tl_namespace = 10 AND tl_title = ? " .
 				" AND page_namespace = 10 AND page_id = tl_from";
-    		$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p", $user, $pass);
+    		$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$sth = $dbh_enwiki->prepare($sql);
 			$sth->bindValue(1, str_replace(' ', '_', $type_name));

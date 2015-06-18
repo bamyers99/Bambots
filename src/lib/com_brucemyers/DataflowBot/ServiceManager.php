@@ -75,7 +75,7 @@ class ServiceManager
 		if (! isset($this->dbdata[$wiki])) throw new Exception('ServiceManager.getDBConnection - unsupported wiki');
 		$dbdata = $this->dbdata[$wiki];
 
-		$dbh = new PDO("mysql:host={$dbdata['host']};dbname={$dbdata['dbname']}", $this->dbuser, $this->dbpass);
+		$dbh = new PDO("mysql:host={$dbdata['host']};dbname={$dbdata['dbname']};charset=utf8", $this->dbuser, $this->dbpass);
 		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		return $dbh;

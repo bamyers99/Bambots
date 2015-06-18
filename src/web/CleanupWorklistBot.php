@@ -147,7 +147,7 @@ function _test_category($category)
 	$enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
+	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
 	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$project_members = '';

@@ -22,6 +22,7 @@ use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\MediaWiki\WikidataItem;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
+use jbroadway\URLify;
 use PDO;
 
 class WikidataPotentialUnlinked extends DatabaseReport
@@ -50,6 +51,16 @@ class WikidataPotentialUnlinked extends DatabaseReport
 
 			case 'analyzeMissingEnwiki':
 				$this->analyzeMissingEnwiki();
+				return false;
+				break;
+
+			case 'diacriticDabs':
+				$this->diacriticDabs();
+				return false;
+				break;
+
+			case 'diacriticDabsHtml':
+				$this->diacriticDabsHtml();
 				return false;
 				break;
 		}
@@ -270,7 +281,7 @@ class WikidataPotentialUnlinked extends DatabaseReport
     	$pass = Config::get('DatabaseReportBot.labsdb_password');
     	$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
 
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki;charset=utf8", $user, $pass);
     	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     	// Load enwiki pagenames
@@ -420,7 +431,7 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 		$pass = Config::get('DatabaseReportBot.labsdb_password');
 		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
 
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki;charset=utf8", $user, $pass);
 		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$sql = 'SELECT title FROM hitlist ORDER by title';
@@ -466,5 +477,103 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 	static function getHasEnwikiPath()
 	{
 		return FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'hasenwiki';
+	}
+
+	/**
+	 * Convert diacritics to none diacritics.
+	 */
+	function diacriticDabs()
+	{
+		$user = Config::get('DatabaseReportBot.labsdb_username');
+		$pass = Config::get('DatabaseReportBot.labsdb_password');
+		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
+
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+		$startid = 0;
+		$endid = 10000;
+
+		// Get the max id
+		$sql = "SELECT MAX(id) FROM wikidata_dabs";
+		$sth = $dbh_wiki->query($sql);
+		$row = $sth->fetch(PDO::FETCH_NUM);
+		$maxid = (int)$row[0];
+		$sth->closeCursor();
+
+		while ($startid < $maxid) {
+			$sql = "SELECT * FROM wikidata_dabs WHERE id > $startid AND id <= $endid";
+			$sth = $dbh_wiki->query($sql);
+			$sth->setFetchMode(PDO::FETCH_ASSOC);
+
+			$usth = $dbh_wiki->prepare('UPDATE wikidata_dabs SET undiacritic = ? WHERE id = ?');
+			$dbh_wiki->beginTransaction();
+
+			while ($row = $sth->fetch()) {
+				$id = $row['id'];
+				$page = $row['ips_site_page'];
+        		// Strip qualifier
+        		$stripped = preg_replace('! \([^\)]+\)!u', '', $page);
+        		if (is_null($stripped)) echo "Error ($page) : " . array_flip(get_defined_constants(true)['pcre'])[preg_last_error()] . "\n";
+
+				$undiacritic = URLify::downcode($stripped);
+
+				$usth->bindValue(1, $undiacritic);
+				$usth->bindValue(2, $id);
+				$usth->execute();
+			}
+
+			$sth->closeCursor();
+    		$dbh_wiki->commit();
+			$startid = $endid;
+			$endid += 10000;
+			echo "Processed = $startid\n";
+		}
+
+		$sth->closeCursor();
+	}
+
+	/**
+	 * Write Dab potential dups html file
+	 */
+	function diacriticDabsHtml()
+	{
+		$user = Config::get('DatabaseReportBot.labsdb_username');
+		$pass = Config::get('DatabaseReportBot.labsdb_password');
+		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
+
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+		$sql = "SELECT undiacritic, GROUP_CONCAT(ips_item_id SEPARATOR ',') AS ids
+			FROM wikidata_dabs_unique
+			GROUP BY undiacritic HAVING count(*) > 1";
+
+		$hndl = fopen(FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'dabdups.html', 'w');
+		fwrite($hndl, '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		');
+
+		$sth = $dbh_wiki->query($sql);
+		$sth->setFetchMode(PDO::FETCH_NUM);
+
+		while ($row = $sth->fetch()) {
+			$encodedpage = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+			$ids = explode(',', $row[1]);
+
+			fwrite($hndl, $encodedpage);
+			foreach ($ids as $id) {
+				fwrite($hndl, " <a href='https://www.wikidata.org/wiki/Q$id'>Q$id</a>");
+			}
+			fwrite($hndl, "<br />\n");
+		}
+
+		fwrite($hndl, '</body>');
+		fclose($hndl);
+		$sth->closeCursor();
 	}
 }

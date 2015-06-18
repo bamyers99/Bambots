@@ -56,12 +56,12 @@ class ServiceManager
 	public function getDBConnection($wikiname)
 	{
 		if ($wikiname == 'tools') {
-			$dbh = new PDO("mysql:host={$this->tools_host};dbname=s51454__PageTools", $this->dbuser, $this->dbpass);
+			$dbh = new PDO("mysql:host={$this->tools_host};dbname=s51454__PageTools;charset=utf8", $this->dbuser, $this->dbpass);
 
 		} else {
     		$wiki_host = $this->wiki_host;
     		if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
-    		$dbh = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p", $this->dbuser, $this->dbpass);
+    		$dbh = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $this->dbuser, $this->dbpass);
 		}
 
     	$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

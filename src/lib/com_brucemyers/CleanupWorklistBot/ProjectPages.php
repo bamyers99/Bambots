@@ -62,7 +62,7 @@ class ProjectPages
      */
     public function load($category)
     {
-    	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+    	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$category = str_replace(' ', '_', $category);
     	// Determine the category type
@@ -155,7 +155,7 @@ class ProjectPages
     	// Load the pages
    		$this->dbh_tools->exec('TRUNCATE page');
    		$dbh_enwiki = null;
-   		$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+   		$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
    		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     	$sth = $dbh_enwiki->prepare($sql);
@@ -193,7 +193,7 @@ class ProjectPages
 
     	// Set importance
     	foreach(array_keys(CreateTables::$IMPORTANCES) as $importance) {
-   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
    			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     		$sth = $dbh_enwiki->prepare(self::SQL_Importance);
@@ -234,7 +234,7 @@ class ProjectPages
 
     	// Set class
     	foreach(array_keys(CreateTables::$CLASSES) as $class) {
-   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
    			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     		if ($class == 'Unassessed')

@@ -40,13 +40,13 @@ class TestMiscReports extends UnitTestCase
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
     	$pass = Config::get(DatabaseReportBot::LABSDB_PASSWORD);
 
-    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
+    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$tools_host = Config::get(TOOLS_HOST);
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot", $user, $pass);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot;charset=utf8", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$wikidata_host = Config::get(WIKIDATA_HOST);
-    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
+    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
     	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$url = Config::get(MediaWiki::WIKIURLKEY);
     	$wiki = new MediaWiki($url);
@@ -77,13 +77,13 @@ class TestMiscReports extends UnitTestCase
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
     	$pass = Config::get(DatabaseReportBot::LABSDB_PASSWORD);
 
-    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p", $user, $pass);
+    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$tools_host = Config::get(TOOLS_HOST);
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot", $user, $pass);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot;charset=utf8", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$wikidata_host = Config::get(WIKIDATA_HOST);
-    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p", $user, $pass);
+    	$dbh_wikidata = new PDO("mysql:host=$wikidata_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
     	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$url = Config::get(MediaWiki::WIKIURLKEY);
     	$wiki = new MediaWiki($url);

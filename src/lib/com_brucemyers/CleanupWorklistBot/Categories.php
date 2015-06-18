@@ -532,7 +532,7 @@ class Categories {
 			}
 
 			foreach ( $sqls as $param => $sql ) {
-    			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+    			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
     			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     			echo "$param => $sql\n";
 				$sth = $dbh_enwiki->prepare ( $sql );
@@ -592,7 +592,7 @@ class Categories {
 	 */
 	function loadCategoryMembers($catid, $cat)
 	{
-    	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p", $this->user, $this->pass);
+    	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$count = 0;
 		$this->dbh_tools->beginTransaction ();
