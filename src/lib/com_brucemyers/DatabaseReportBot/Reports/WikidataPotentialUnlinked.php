@@ -63,6 +63,11 @@ class WikidataPotentialUnlinked extends DatabaseReport
 				$this->diacriticDabsHtml();
 				return false;
 				break;
+
+			case 'tempload':
+				$this->tempload();
+				return false;
+				break;
 		}
 
 		return true;
@@ -480,7 +485,7 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 	}
 
 	/**
-	 * Convert diacritics to none diacritics.
+	 * Convert diacritics to non diacritics.
 	 */
 	function diacriticDabs()
 	{
@@ -575,5 +580,45 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 		fwrite($hndl, '</body>');
 		fclose($hndl);
 		$sth->closeCursor();
+	}
+
+	function tempload()
+	{
+		$user = Config::get('DatabaseReportBot.labsdb_username');
+		$pass = Config::get('DatabaseReportBot.labsdb_password');
+		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
+
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+		$hndl = fopen(FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'tempload', 'r');
+		if ($hndl === false) throw new Exception('file not found');
+
+    	$dbh_wiki->beginTransaction();
+		$sth = $dbh_wiki->prepare('INSERT IGNORE INTO explicit_dabs VALUES (?,?)');
+		$page_count = 0;
+
+		while (! feof($hndl)) {
+			$buffer = fgets($hndl);
+			$buffer = rtrim($buffer);
+			if (empty($buffer)) continue;
+			list($id, $pageid, $wiki, $pagename) = explode("\t", $buffer);
+
+			++$page_count;
+    		if ($page_count % 10000 == 0) {
+    			$dbh_wiki->commit();
+    			$dbh_wiki->beginTransaction();
+    		}
+
+        	// Strip qualifier
+        	$stripped = preg_replace('! \([^\)]+\)!u', '', $pagename);
+
+    		$sth->bindValue(1, $pageid);
+			$sth->bindValue(2, $stripped);
+			$sth->execute();
+		}
+
+    	$dbh_wiki->commit();
+		fclose($hndl);
 	}
 }

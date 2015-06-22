@@ -80,8 +80,10 @@ class RuleSetProcessor
 
                     if ($this->ledeEnd === null) {
                         $this->ledeEnd = false;
-                        if (preg_match('/^.*?(?:(?:\\r?\\n){2}|\\n==)/us', $data, $ledeMatches)){
-                            $this->ledeEnd = strlen($ledeMatches[0]);
+                        if (preg_match('/^.*?\\n==/us', $data, $ledeMatches)){ // Look for first section
+                            $this->ledeEnd = strlen($ledeMatches[0]) - 2;
+                        } else {
+                            $this->ledeEnd = strlen($data);
                         }
                     }
 

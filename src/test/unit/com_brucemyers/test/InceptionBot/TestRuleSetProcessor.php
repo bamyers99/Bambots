@@ -39,17 +39,18 @@ class TestRuleSetProcessor extends UnitTestCase
 EOT;
 
         $data = <<<'EOT2'
-        {{Infobox|population=50<ref name="gov"/>|title=Michigan}}
-        '''Michigan''' is in the United States.<ref name="USAReference">{{Cite web
-        	|url=http://usa.gov
-        	|title=USA Reference}}</ref>
+{{Infobox|population=50<ref name="gov"/>|title=MI}}
 
-        <!-- Shouldn't match rule InComment -->
+'''Michigan''' is in the United States.<ref name="USAReference">{{Cite web
+   	|url=http://usa.gov
+   	|title=USA Reference}}</ref>
 
-        ==See also==
-        [[Michigan City, Indiana]]<ref>{{Cite web|url=http://indiana.gov|title=Indiana Reference}}</ref>
+<!-- Shouldn't match rule InComment -->
 
-        {{Michigan-stub}}
+==See also==
+* [[Michigan City, Indiana]]<ref>{{Cite web|url=http://indiana.gov|title=Indiana Reference}}</ref>
+
+{{Michigan-stub}}
 EOT2;
 
         $ruleset = new RuleSet('test', $rules);
@@ -84,13 +85,13 @@ EOT2;
 EOT;
 
         $data = <<<'EOT2'
-        {{Infobox|title=Michigan}}
-        '''Michigan''' is in the United States.
+{{Infobox|title=Michigan}}
+'''Michigan''' is in the United States.
 
-        ==See also==
-        [[Michigan City, Indiana]]
+==See also==
+* [[Michigan City, Indiana]]
 
-        {{Michigan-stub}}
+{{Michigan-stub}}
 EOT2;
 
         $ruleset = new RuleSet('test', $rules);
