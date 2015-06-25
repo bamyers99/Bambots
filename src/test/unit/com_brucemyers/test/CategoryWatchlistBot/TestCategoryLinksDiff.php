@@ -33,7 +33,7 @@ use Mock;
 class TestCategoryLinksDiff extends UnitTestCase
 {
 
-    public function notestDiffLoad()
+    public function testDiffLoad()
     {
     	$outputdir = Config::get(CategoryWatchlistBot::OUTPUTDIR);
     	$outputdir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputdir);
@@ -108,7 +108,7 @@ class TestCategoryLinksDiff extends UnitTestCase
     	$this->assertEqual($pluscnt, 3, 'Bad plus count');
     }
 
-    public function testParseCategoriesTemplates()
+    public function notestParseCategoriesTemplates()
     {
 		$cats = array();
 		$templates = array();

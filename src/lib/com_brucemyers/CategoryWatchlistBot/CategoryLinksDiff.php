@@ -263,6 +263,7 @@ class CategoryLinksDiff
 
 			$pagekey = str_pad($ns, 4, '0', STR_PAD_LEFT) . $pagetitle; // Sort by namespace, title
 			$rev['t'] = $pagename;
+			$rev['ns'] = $ns;
 			$sortedrevs[$pagekey] = $rev;
 		}
 
@@ -272,13 +273,14 @@ class CategoryLinksDiff
 
 		foreach ($sortedrevs as $rev) {
 			$pagetitle = $rev['t'];
+			$ns = $rev['ns'];
 			$revid1 = (int)$rev[0];
 			$revtext1 = $rev[1];
 			if (empty($revtext1)) continue;
 			$revid2 = 0;
 			$revtext2 = '';
 
-			if (count($rev) == 5) {
+			if (count($rev) == 6) {
 				$revid2 = (int)$rev[2];
 				$revtext2 = $rev[3];
 				if (empty($revtext2)) continue;
@@ -314,8 +316,8 @@ class CategoryLinksDiff
 			$catchanges['-|T'] = array_diff($prevtemplates, $currtemplates);
 			$catchanges['-|C'] = array_diff($prevcats, $currcats);
 
-			// Write pseudo category if all categories were removed
-			if (count($currcats) == 0 && count($prevcats) != 0) {
+			// Write pseudo category if all categories were removed and not Draft ns
+			if (count($currcats) == 0 && count($prevcats) != 0 && $ns != 118) {
 				$catchanges['-|C'][] = '<allcategoriesremoved>';
 			}
 
