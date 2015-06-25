@@ -406,9 +406,6 @@ class Categories {
 			'Pages using duplicate arguments in template calls' => array (
 					'type' => 'no-date'
 			),
-			'Persondata templates without short description parameter' => array (
-					'type' => 'no-date'
-			),
 			'Plant articles needing a taxobox' => array (
 					'type' => 'no-date'
 			),
