@@ -203,7 +203,7 @@ class Categories {
 			),
 			'Articles with unsourced statements' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'References'
 			),
 			'Articles with weasel words' => array (
 					'type' => 'from-monthly',

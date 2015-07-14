@@ -86,7 +86,7 @@ while (! feof($ihndl)) {
 
 fclose($ihndl);
 
-processPage($pagetext, $ohndl);
+processPage($pageid, $pagetext);
 
 $text = <<<EOT
 
