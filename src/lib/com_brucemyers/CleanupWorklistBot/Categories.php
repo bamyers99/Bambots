@@ -397,6 +397,11 @@ class Categories {
 					'subcats' => 'only',
 					'group' => 'References'
 			),
+			'CS1 errors' => array (
+					'type' => 'no-date',
+					'subcats' => 'only',
+					'group' => 'References'
+			),
 			'Invalid conservation status' => array (
 					'type' => 'no-date'
 			),
@@ -547,9 +552,12 @@ class Categories {
 					}
 
 					if (! $skipCatLoad) {
-						$isth->execute ( $row );
-						++ $count;
 						$catid = (int)$row['id'];
+						if (isset($this->categories[$catid])) continue; // skip dup categories
+
+						$isth->execute ( $row );
+
+						++ $count;
 						$this->categories[$catid] = array('t' => $row['title'], 'm' => $row['month'], 'y' => $row['year']);
 
 						$this->loadCategoryMembers ( $catid, $title );

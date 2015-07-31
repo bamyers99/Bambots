@@ -31,6 +31,7 @@ class CreateTables
     {
     	// enwiki
    		$dbh_enwiki->exec('DROP TABLE page');
+   		$dbh_enwiki->exec('DROP TABLE categorylinks');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `category` (
 		  `cat_id` int(10) unsigned NOT NULL,
