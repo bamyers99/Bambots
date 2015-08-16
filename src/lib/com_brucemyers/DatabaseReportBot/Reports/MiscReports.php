@@ -49,6 +49,11 @@ class MiscReports extends DatabaseReport
     			$this->WikiProjectList($apis['dbh_wiki']);
     			return false;
     			break;
+
+    		case 'AgeAnomaly':
+    			$this->AgeAnomaly($apis['dbh_wiki']);
+    			return false;
+    			break;
     	}
 
     	return true;
@@ -57,8 +62,10 @@ class MiscReports extends DatabaseReport
     public function getUsage()
     {
     	return " - Misc reports\n" .
-    	"\t\tChemSpider - ChemSpider wikidata links\n";
-    	"\t\tJournalisted - Journalisted wikidata links";
+    	"\t\tChemSpider - ChemSpider wikidata links\n" .
+    	"\t\tJournalisted - Journalisted wikidata links\n" .
+    	"\t\tWikiProjectList - WikiProject list\n";
+    	"\t\tAgeAnomaly - Age anomaly report";
     }
 
 	public function getTitle()
@@ -419,5 +426,136 @@ class MiscReports extends DatabaseReport
 		fwrite($hndl, "</tbody></table></div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
 		fclose($hndl);
 
+	}
+
+	/**
+	 * Look for age anomolies
+	 *
+	 * @param PDO $dbh_wiki
+	 */
+	public function AgeAnomaly(PDO $dbh_wiki)
+	{
+		// Too old/young
+		$dbh_wiki->exec("DROP TABLE IF EXISTS s51454__wikidata.deathcats");
+		$dbh_wiki->exec("DROP TABLE IF EXISTS s51454__wikidata.deadpeople");
+
+		$sql = "CREATE TABLE s51454__wikidata.deathcats SELECT cat_title FROM enwiki_p.category
+			WHERE cat_title REGEXP '^(17|18|19|20|21)[[:digit:]]{2}_deaths$' AND cat_pages > 0";
+		$dbh_wiki->exec($sql);
+
+		$sql = "ALTER TABLE s51454__wikidata.deathcats ADD UNIQUE INDEX cat_title (cat_title)";
+		$dbh_wiki->exec($sql);
+
+		$sql = "CREATE TABLE s51454__wikidata.deadpeople SELECT cldeath.cl_from AS page_id, LEFT(cldeath.cl_to, 4) AS year
+			FROM s51454__wikidata.deathcats deathcats
+			JOIN enwiki_p.categorylinks cldeath ON cldeath.cl_to = deathcats.cat_title";
+		$dbh_wiki->exec($sql);
+
+		$sql = "ALTER TABLE s51454__wikidata.deadpeople ADD INDEX page_id (page_id)";
+		$dbh_wiki->exec($sql);
+
+		$sql = "SELECT DISTINCT deadpeople.page_id AS page_id,
+					CONVERT(LEFT(clbirth.cl_to, 4) USING utf8) as birthyear,
+					CONVERT(deadpeople.year USING utf8) as deathyear,
+					deadpeople.year - LEFT(clbirth.cl_to, 4) as age
+				FROM s51454__wikidata.deadpeople deadpeople
+				JOIN enwiki_p.categorylinks clbirth ON clbirth.cl_from = deadpeople.page_id
+				WHERE clbirth.cl_to REGEXP '^[[:digit:]]{4}_births$'
+				HAVING (age > 120 OR age < 1)";
+
+		$sth = $dbh_wiki->query($sql);
+		$sth->setFetchMode(PDO::FETCH_ASSOC);
+
+		$skip_ids = array(325918,42433680,1302587,12761471,32578395,4140251,21204233,3795672,8628592,5862569,22177303,
+			36286513,26501900,15776396,39753940,21308617,32062007,33468662,25575648,12255705,20755930,18048964,24351991,
+			9545191,24211762,18928421,38684243,584368,38676683,38659124,38655048,38643903,38632860,38619056,38619050,
+			38619045,853159,36509372,36509341,36509226,20396608,44457462,45040011,34169594,44818111,44918849,43574713,
+			45206896,44868847,5820690);
+
+		$badages = array();
+
+		while ($row = $sth->fetch()) {
+			$id = (int)$row['page_id'];
+			if (in_array($id, $skip_ids)) continue;
+			$badages[$id] = $row;
+			$byear = $row['birthyear'];
+			$dyear = $row['deathyear'];
+			$age = $row['age'];
+		}
+
+		$sth->closeCursor();
+		ksort($badages);
+
+		// Living dead
+		$sql = "SELECT cld1.cl_from FROM categorylinks AS cld1
+				STRAIGHT_JOIN categorylinks AS cll ON cld1.cl_from = cll.cl_from
+				WHERE cll.cl_to = 'Living_people' AND cld1.cl_to LIKE '20%\_deaths'";
+
+		$sth = $dbh_wiki->query($sql);
+		$sth->setFetchMode(PDO::FETCH_NUM);
+
+		$skip_ids = array(32816757,21213768,32992276);
+
+		$livingdead = array();
+
+		while ($row = $sth->fetch()) {
+			$id = (int)$row[0];
+			if (in_array($id, $skip_ids)) continue;
+			$livingdead[] = $id;
+		}
+
+		$sth->closeCursor();
+		sort($livingdead);
+
+		$asof_date = getdate();
+		$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'AgeAnomaly.html';
+		$hndl = fopen($path, 'wb');
+
+		// Header
+		fwrite($hndl, "<!DOCTYPE html>
+		<html><head>
+		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+		<title>Age Anomalies</title>
+		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+		</head><body>
+		<div style='display: table; margin: 0 auto;'>
+		<h1>Age Anomalies</h1>
+		<h3>As of $asof_date</h3>
+		");
+
+		// Body
+		fwrite($hndl, "<h2>Bad Ages</h2>\n");
+		if (empty($badages)) fwrite($hndl, "None\n");
+		else {
+			fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th><th>Birth</th><th>Death</th><th>Age</th></tr></thead><tbody>\n");
+
+			foreach ($badages as $id => $badage) {
+				$byear = $badage['birthyear'];
+				$dyear = $badage['deathyear'];
+				$age = $badage['age'];
+				$url = "https://en.wikipedia.org/w/index.php?curid=$id";
+				fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td><td>$byear</td><td>$dyear</td><td>$age</td></tr>\n");
+			}
+
+			fwrite($hndl, "</tbody></table>\n");
+		}
+
+		fwrite($hndl, "<h2>Living Dead</h2>\n");
+		if (empty($livingdead)) fwrite($hndl, "None\n");
+		else {
+			fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th></tr></thead><tbody>\n");
+
+			foreach ($livingdead as $id) {
+				$url = "https://en.wikipedia.org/w/index.php?curid=$id";
+				fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td></tr>\n");
+			}
+
+			fwrite($hndl, "</tbody></table>\n");
+		}
+
+		// Footer
+		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+		fclose($hndl);
 	}
 }

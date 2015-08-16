@@ -53,6 +53,7 @@ class WPPageListBot
     {
         $this->mediawiki = $mediawiki;
         $this->resultWriter = $resultWriter;
+        $ignore_ns = array(2,3,118,119); // User, Draft
 
         // Relabel some namespaces
         foreach (MediaWiki::$namespaces as $ns => $title) {
@@ -94,8 +95,11 @@ class WPPageListBot
                         else $continue = false;
 
                         foreach ($ret['query']['categorymembers'] as $cm) {
-                            $ns = $cm['ns'] - 1; // Convert from talk to non-talk namespace
-                            // If wasn't in talk namespace flip the namespace
+                            $ns = (int)$cm['ns'];
+                        	if (in_array($ns, $ignore_ns)) continue;
+
+                            $ns -= 1; // Convert from talk to non-talk namespace
+                        	// If wasn't in talk namespace flip the namespace
                             if (abs($ns % 2) == 1) $ns += 2;
                             if (! isset($pages[$ns])) $pages[$ns] = array();
                             $title = preg_replace('/(?:^Talk| talk):/', ':', $cm['title']);
@@ -139,10 +143,15 @@ class WPPageListBot
 
         if (! empty($this->bannertemplate)) $output .= '{{' . $this->bannertemplate . '}}' . "\n";
         $output .= 'This list was constructed from articles tagged with {{tl|' . $this->wikiproject .
-            '}} (or any other article in';
+            '}} (or any other article in ';
+
+        $cats = array();
         foreach ($this->categories as $category) {
-            $output .= ' [[:' . $category .']]';
+            $cats[] = '[[:' . $category .']]';
         }
+
+        $output .= implode(', ', $cats);
+
         $output .= ') as of ' . $this->curtime . '. This list makes possible [http://en.wikipedia.org/w/index.php?title=Special:RecentChangesLinked&target=' .
             urlencode(str_replace(' ', '_', $pagename)) . ' Recent article changes].' . "\n\n";
 
