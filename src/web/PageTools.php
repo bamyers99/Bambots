@@ -270,8 +270,14 @@ function display_data()
 			}
 
 			if (in_array($template['name'], $imdb_templates)) {
-				if (isset($template['params']['1'])) $page_auths['IMDb'] = 'nm' . $template['params']['1'];
-				if (isset($template['params']['id'])) $page_auths['IMDb'] = 'nm' . $template['params']['id'];
+				$imdb_id = '';
+				if (isset($template['params']['1'])) $imdb_id = $template['params']['1'];
+				if (isset($template['params']['id'])) $imdb_id = $template['params']['id'];
+
+				if (! empty($imdb_id)) {
+					if (substr($imdb_id, 0, 2) != 'nm') $imdb_id = 'nm' . $imdb_id;
+					$page_auths['IMDb'] = $imdb_id;
+				}
 			}
 
 			if (in_array($template['name'], $musicbrainz_templates)) {
