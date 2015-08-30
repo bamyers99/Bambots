@@ -316,8 +316,8 @@ class CategoryLinksDiff
 			$catchanges['-|T'] = array_diff($prevtemplates, $currtemplates);
 			$catchanges['-|C'] = array_diff($prevcats, $currcats);
 
-			// Write pseudo category if all categories were removed and not Draft ns
-			if (count($currcats) == 0 && count($prevcats) != 0 && $ns != 118) {
+			// Write pseudo category if all categories were removed and not Draft/Talk ns and not subpage
+			if (count($currcats) == 0 && count($prevcats) != 0 && $ns != 118 && ($ns % 2) == 0 && strpos($pagetitle, '/') === false) {
 				$catchanges['-|C'][] = '<allcategoriesremoved>';
 			}
 
