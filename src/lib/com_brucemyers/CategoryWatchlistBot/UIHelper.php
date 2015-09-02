@@ -49,9 +49,8 @@ class UIHelper
 		$sql = 'SELECT * FROM wikis ORDER BY wikititle';
 		$sth = $this->dbh_tools->query($sql);
 
-		//$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'lang' => 'en'),
-		//	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'lang' => 'en')); // Want first
-		$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'lang' => 'en')); // Want first
+		$wikis = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'lang' => 'en'),
+			'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'lang' => 'en')); // Want first
 
 		while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
 			$wikiname = $row['wikiname'];

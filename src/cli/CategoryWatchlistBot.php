@@ -26,7 +26,7 @@ $GLOBALS['botname'] = 'CategoryWatchlistBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
-//    	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org'),
+    	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'catNS' => 'Category', 'lang' => 'en'),
     	'enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'catNS' => 'Category', 'lang' => 'en'),
 //    	'svwiki' => array('title' => 'Svenska Wikipedia', 'domain' => 'sv.wikipedia.org'),
 //        'nlwiki' => array('title' => 'Nederlands Wikipedia', 'domain' => 'nl.wikipedia.org'),
@@ -40,7 +40,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 //        'cebwiki' => array('title' => 'Sinugboanong Binisaya Wikipedia', 'domain' => 'ceb.wikipedia.org'),
 //        'plwiki' => array('title' => 'Polski Wikipedia', 'domain' => 'pl.wikipedia.org'),
 //        'jawiki' => array('title' => '日本語 Wikipedia', 'domain' => 'ja.wikipedia.org'),
-        'ptwiki' => array('title' => 'Português Wikipedia', 'domain' => 'pt.wikipedia.org', 'catNS' => 'Categoria', 'lang' => 'pt')
+//        'ptwiki' => array('title' => 'Português Wikipedia', 'domain' => 'pt.wikipedia.org', 'catNS' => 'Categoria', 'lang' => 'pt')
 //        'zhwiki' => array('title' => '中文 Wikipedia', 'domain' => 'zh.wikipedia.org'),
 //        'ukwiki' => array('title' => 'Українська Wikipedia', 'domain' => 'uk.wikipedia.org')
     );
