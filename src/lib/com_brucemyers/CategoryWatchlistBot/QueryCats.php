@@ -25,7 +25,7 @@ class QueryCats
 	const CATEGORY_COUNT_UNAPPROVED = -2;
 	const CATEGORY_COUNT_DENIED = -3;
 	const CATEGORY_COUNT_RECALC = -4;
-	const MAX_UNAPPROVED_CATCOUNT = 100;
+	const MAX_UNAPPROVED_CATCOUNT = 500;
 
 	protected $dbh_wiki;
 	protected $dbh_tools;
