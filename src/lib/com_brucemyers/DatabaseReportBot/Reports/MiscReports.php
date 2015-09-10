@@ -54,6 +54,11 @@ class MiscReports extends DatabaseReport
     			$this->AgeAnomaly($apis['dbh_wiki']);
     			return false;
     			break;
+
+    		case 'MoreCategories':
+    			$this->MoreCategories($apis['dbh_wiki']);
+    			return false;
+    			break;
     	}
 
     	return true;
@@ -467,10 +472,10 @@ class MiscReports extends DatabaseReport
 		$sth->setFetchMode(PDO::FETCH_ASSOC);
 
 		$skip_ids = array(325918,42433680,1302587,12761471,32578395,4140251,21204233,3795672,8628592,5862569,22177303,
-			36286513,26501900,15776396,39753940,21308617,32062007,33468662,25575648,12255705,20755930,18048964,24351991,
-			9545191,24211762,18928421,38684243,584368,38676683,38659124,38655048,38643903,38632860,38619056,38619050,
-			38619045,853159,36509372,36509341,36509226,20396608,44457462,45040011,34169594,44818111,44918849,43574713,
-			45206896,44868847,5820690,12255259);
+				36286513,26501900,15776396,39753940,21308617,32062007,33468662,25575648,12255705,20755930,18048964,24351991,
+				9545191,24211762,18928421,38684243,584368,38676683,38659124,38655048,38643903,38632860,38619056,38619050,
+				38619045,853159,36509372,36509341,36509226,20396608,44457462,45040011,34169594,44818111,44918849,43574713,
+				45206896,44868847,5820690,12255259);
 
 		$badages = array();
 
@@ -528,17 +533,17 @@ class MiscReports extends DatabaseReport
 		fwrite($hndl, "<h2>Bad Ages</h2>\n");
 		if (empty($badages)) fwrite($hndl, "None\n");
 		else {
-			fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th><th>Birth</th><th>Death</th><th>Age</th></tr></thead><tbody>\n");
+		fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th><th>Birth</th><th>Death</th><th>Age</th></tr></thead><tbody>\n");
 
-			foreach ($badages as $id => $badage) {
+				foreach ($badages as $id => $badage) {
 				$byear = $badage['birthyear'];
-				$dyear = $badage['deathyear'];
-				$age = $badage['age'];
-				$url = "https://en.wikipedia.org/w/index.php?curid=$id";
-				fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td><td>$byear</td><td>$dyear</td><td>$age</td></tr>\n");
-			}
+						$dyear = $badage['deathyear'];
+								$age = $badage['age'];
+								$url = "https://en.wikipedia.org/w/index.php?curid=$id";
+								fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td><td>$byear</td><td>$dyear</td><td>$age</td></tr>\n");
+				}
 
-			fwrite($hndl, "</tbody></table>\n");
+				fwrite($hndl, "</tbody></table>\n");
 		}
 
 		fwrite($hndl, "<h2>Living Dead</h2>\n");
@@ -549,6 +554,166 @@ class MiscReports extends DatabaseReport
 			foreach ($livingdead as $id) {
 				$url = "https://en.wikipedia.org/w/index.php?curid=$id";
 				fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td></tr>\n");
+			}
+
+			fwrite($hndl, "</tbody></table>\n");
+		}
+
+		// Footer
+		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+		fclose($hndl);
+	}
+
+	/**
+	 * Look for more categories needed
+	 *
+	 * @param PDO $dbh_wiki
+	 */
+	public function MoreCategories(PDO $dbh_wiki)
+	{
+		// Get the people page ids
+		$dbh_wiki->exec("DROP TABLE IF EXISTS s51454__wikidata.people");
+		$dbh_wiki->exec("DROP TABLE IF EXISTS s51454__wikidata.people2");
+
+		$sql = "CREATE TABLE s51454__wikidata.people (page_id int unsigned NOT NULL, PRIMARY KEY (page_id))";
+		$dbh_wiki->exec($sql);
+		$sql = "CREATE TABLE s51454__wikidata.people2 (page_id int unsigned NOT NULL, PRIMARY KEY (page_id))";
+		$dbh_wiki->exec($sql);
+
+		$people_cats = array('Living_people', 'Possibly_living_people', 'Year_of_birth_missing_(living_people)',
+			'Year_of_birth_missing', 'Year_of_birth_unknown', 'Year_of_death_missing', 'Year_of_death_unknown');
+
+		foreach ($people_cats as $cat) {
+			$sql = "INSERT IGNORE INTO s51454__wikidata.people SELECT cl_from FROM enwiki_p.categorylinks WHERE cl_to = '$cat'";
+			$dbh_wiki->exec($sql);
+		}
+
+		$people_regexes = array('^(17|18|19|20)[[:digit:]]{2}s?_deaths$', '^(17|18|19|20)[[:digit:]]{2}s?_births$');
+
+		foreach ($people_regexes as $regex) {
+			$dbh_wiki->exec("DROP TABLE IF EXISTS s51454__wikidata.deathcats");
+
+			$sql = "CREATE TABLE s51454__wikidata.deathcats SELECT cat_title FROM enwiki_p.category
+				WHERE cat_title REGEXP '$regex' AND cat_pages > 0";
+			$dbh_wiki->exec($sql);
+
+			$sql = "ALTER TABLE s51454__wikidata.deathcats ADD UNIQUE INDEX cat_title (cat_title)";
+			$dbh_wiki->exec($sql);
+
+			$sql = "INSERT IGNORE INTO s51454__wikidata.people SELECT cldeath.cl_from
+				FROM s51454__wikidata.deathcats deathcats
+				JOIN enwiki_p.categorylinks cldeath ON cldeath.cl_to = deathcats.cat_title";
+			$dbh_wiki->exec($sql);
+		}
+
+		// Retrieve the peoples visible categories 10000 at a time
+		$offset = 0;
+		$needmorecats = array();
+
+		while (true) {
+			$dbh_wiki->exec("TRUNCATE s51454__wikidata.people2");
+
+			$sql = "INSERT INTO s51454__wikidata.people2 SELECT page_id FROM s51454__wikidata.people ORDER BY page_id LIMIT $offset, 10000";
+			$dbh_wiki->exec($sql);
+
+			$sql = "SELECT cl_from, GROUP_CONCAT(cl_to SEPARATOR ' ') AS cl_to FROM s51454__wikidata.people2 people
+				LEFT JOIN enwiki_p.categorylinks ON cl_from = people.page_id
+				LEFT JOIN enwiki_p.page ON page.page_title = cl_to AND page.page_namespace = 14
+				LEFT JOIN enwiki_p.page_props ON pp_page = page.page_id AND pp_propname = 'hiddencat'
+				WHERE pp_propname IS NULL
+	            GROUP BY cl_from";
+
+			$sth = $dbh_wiki->query($sql);
+			$sth->setFetchMode(PDO::FETCH_ASSOC);
+			$rowcnt = 0;
+
+			while ($row = $sth->fetch()) {
+				$page_id = $row['cl_from'];
+				$cats = explode(' ', $row['cl_to']);
+
+				foreach ($cats as $key => $cat) {
+					$wscat = str_replace('_', ' ', $cat); // _ is considered a regex word character
+
+					if (in_array($cat, $people_cats)) unset($cats[$key]);
+					elseif (preg_match('! stubs$!', $wscat)) unset($cats[$key]);
+					elseif (preg_match('!\balumni\b!i', $wscat)) unset($cats[$key]);
+					elseif (preg_match('!\bpeople from !i', $wscat)) unset($cats[$key]);
+					elseif (preg_match('!^\d{4}s? deaths$!', $wscat)) unset($cats[$key]);
+					elseif (preg_match('!^\d{4}s? births$!', $wscat)) unset($cats[$key]);
+				}
+
+				if (empty($cats)) $needmorecats[] = $page_id;
+				++$rowcnt;
+			}
+
+			$sth->closeCursor();
+			$sth = null;
+
+			if (! $rowcnt) break;
+
+			$offset += 10000;
+		}
+
+		if (empty($needmorecats)) return;
+
+		$already_templated = array('Improve_categories', 'Uncategorized', 'Uncategorized_stub');
+
+		// Retrieve the page title and templates
+		$sql = "SELECT page_title, GROUP_CONCAT(tl_title SEPARATOR ' ') AS tl_title
+			FROM enwiki_p.page
+			LEFT JOIN enwiki_p.templatelinks ON page_id = tl_from
+			WHERE page_id IN (" . implode(',', $needmorecats) . ")
+			GROUP BY page_id
+			ORDER BY page_title";
+
+		$sth = $dbh_wiki->query($sql);
+		$sth->setFetchMode(PDO::FETCH_ASSOC);
+		$page_titles = array();
+
+		while ($row = $sth->fetch()) {
+			$page_title = str_replace('_', ' ', $row['page_title']);
+			if (strpos($page_title, 'Deaths in') === 0) continue;
+
+			$templates = $row['tl_title'];
+			if (is_null($templates)) $templates = '';
+			$templates = explode(' ', $templates);
+
+			foreach ($templates as $template) {
+				if (in_array($template, $already_templated)) continue 2;
+			}
+
+			$page_titles[] = $page_title;
+		}
+
+		$sth->closeCursor();
+		$sth = null;
+
+		$asof_date = getdate();
+		$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'MoreCategories.html';
+		$hndl = fopen($path, 'wb');
+
+		// Header
+		fwrite($hndl, "<!DOCTYPE html>
+		<html><head>
+		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+		<title>More Categories</title>
+		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+		</head><body>
+		<div style='display: table; margin: 0 auto;'>
+		<h1>More Categories</h1>
+		<h3>As of $asof_date</h3>
+		");
+
+		// Body
+		if (empty($page_titles)) fwrite($hndl, "None\n");
+		else {
+			fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th></tr></thead><tbody>\n");
+
+			foreach ($page_titles as $page_title) {
+				$url = "https://en.wikipedia.org/wiki/" . urlencode(str_replace(' ', '_', $page_title));
+				$page_title = htmlentities($page_title, ENT_COMPAT, 'UTF-8');
+				fwrite($hndl, "<tr><td><a href=\"$url\">$page_title</a></td></tr>\n");
 			}
 
 			fwrite($hndl, "</tbody></table>\n");
