@@ -21,14 +21,14 @@ use com_brucemyers\Util\Logger;
 
 class ExistingResultParser
 {
-    protected $startTokens = array('<li>{{', '{{User:AlexNewArtBot/MaintDisplay|', '*{{');
+    protected $startTokens = array('<li>{{', '<li class{{=}}"IncBot', '{{User:AlexNewArtBot/MaintDisplay|', '*{{');
     protected $linePatterns = array(
         '!^(?:\\*|<li>)(?:\\{\\{(?:User:AlexNewArtBot/)?[Ll]a\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+\\s*started on\\s*([^,]+), score: (\\d+)!',
         '!^(?:\\*|<li>)(?:\\{\\{(?:User:AlexNewArtBot/)?[Ll]a\\||\\[\\[)([^\\]\\}]+)[\\]\\}]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User\\||\\[\\[User:[^\\|]+\\|)([^\\]\\}]+)[\\]\\}]+\\s*\\(.*started on\\s*([^,]+), score: (\\d+)!' // Can be ) in username
     );
     protected $maintPatterns = array(
-    		'!^<li>\\{\\{pagelinks\\|([^\\}]+)\\}+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)</li>!',
-    		'!^<li>\\[\\[:?([^\\]]+)[\\]]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)</li>!'
+    		'!^<li(?: class\\{\\{=\\}\\}"IncBot.")?>\\{\\{pagelinks\\|([^\\}]+)\\}+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)</li>!',
+    		'!^<li(?: class\\{\\{=\\}\\}"IncBot.")?>\\[\\[:?([^\\]]+)[\\]]+\\s*(?:\\([^\\]]+\\]\\]\\))?\\s*by\\s*(?:\\{\\{User|\\[\\[User:[^\\|]+)\\{\\{\\!\\}\\}([^\\]\\}]+)[\\]\\}]+(?:\\s*\\([^\\)]+\\))?\\s*started on\\s*([^,]+), score: (\\d+)</li>!'
     );
 
     /**

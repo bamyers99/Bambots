@@ -291,6 +291,8 @@ class InceptionBot
 
 [[User:AlexNewArtBot/{$rulename}|Rules]] | [[User:InceptionBot/NewPageSearch/{$rulename}/log|$logerror]] <includeonly>| [[$resultpage|Results page]] (for watching) </includeonly>| Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)
 
+'''Note''': The list display can now be customized by each user. See [[User:AlexNewArtBot#ldp|List display personalization]] for details.
+
 ";
 
     	// Determine suppressed namespaces
@@ -329,7 +331,21 @@ class InceptionBot
 
 	            $sanitized_title = str_replace('=', '&#61;', $pageinfo['title']);
 
-	        	if ($ns != 0) $output .= '<li>{{pagelinks|' . $sanitized_title . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
+	            // calc class
+	            $class = '';
+	            switch ($ns) {
+	                case 10:
+	                	$class = ' class{{=}}"IncBotT"';
+	                	break;
+	                case 14:
+	                	$class = ' class{{=}}"IncBotC"';
+	                	break;
+	                case 118:
+	                	$class = ' class{{=}}"IncBotD"';
+	                	break;
+	            }
+
+	        	if ($ns != 0) $output .= '<li' . $class . '>{{pagelinks|' . $sanitized_title . "}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>)";
 	        	elseif ($linecnt > self::MAX_FULL_TEMPLATE_LINES) $output .= '<li>[[' . $pageinfo['title'] . ']] ([[Talk:' . $pageinfo['title'] . '|talk]]) by [[User:' . $user . '|' . $displayuser . ']]';
 	        	else $output .= '<li>{{User:AlexNewArtBot/La|' . $sanitized_title . "}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>)";
 
@@ -383,12 +399,27 @@ class InceptionBot
 
 	                $sanitized_title = str_replace('=', '&#61;', $title);
 
+	                // calc class
+	                $ns = MediaWiki::getNamespaceId(MediaWiki::getNamespaceName($title));
+	                $class = '';
+	                switch ($ns) {
+	                	case 10:
+	                		$class = ' class{{=}}"IncBotT"';
+	                		break;
+	                	case 14:
+	                		$class = ' class{{=}}"IncBotC"';
+	                		break;
+	                	case 118:
+	                		$class = ' class{{=}}"IncBotD"';
+	                		break;
+	                }
+
 	        	    if ($linecnt > self::MAX_FULL_TEMPLATE_LINES && $linetype != 'MD') {
 	                    $output .= "<li>[[$title]] ([[Talk:$title|talk]]) by [[User:$user|$displayuser]] started on $timestamp, score: $totalScore</li>\n";
 	        	    } elseif ($linecnt > self::MAX_FULL_TEMPLATE_LINES && $linetype == 'MD') {
-	                    $output .= "<li>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>\n";
+	                    $output .= "<li$class>[[:$title]] by [[User:$user{{!}}$displayuser]] started on $timestamp, score: $totalScore</li>\n";
 	        	    } elseif ($linetype == 'MD') {
-	                    $output .= "<li>{{pagelinks|$sanitized_title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
+	                    $output .= "<li$class>{{pagelinks|$sanitized_title}} by [[User:$user{{!}}$displayuser]] (<span class{{=}}\"plainlinks\">[[User_talk:$user{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}$urlencodeduser&days{{=}}14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
 	        	    } else {
 	                    $output .= "<li>{{User:AlexNewArtBot/La|$sanitized_title}} by [[User:$user|$displayuser]] (<span class=\"plainlinks\">[[User_talk:$user|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/$user|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=$urlencodeduser&days=14 new pages &#40;$newpagecnt&#41;]</span>) started on $timestamp, score: $totalScore</li>\n";
 	                }

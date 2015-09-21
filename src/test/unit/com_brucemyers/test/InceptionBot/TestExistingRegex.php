@@ -39,11 +39,11 @@ class TestExistingRegex extends UnitTestCase
 <ul>
 <li>{{User:AlexNewArtBot/La|Basketball uniform}} by [[User:Accedie|Accedie]] (<span class="plainlinks">[[User_talk:Accedie|talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Accedie|contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user=Accedie&days=14 new pages &#40;1&#41;]</span>) started on 2013-12-25, score: 24</li>
 {{User:AlexNewArtBot/MaintDisplay|
-<li>{{pagelinks|Draft:DJ Many}} by [[User:Ocaasi{{!}}Ocaasi]] (<span class{{=}}"plainlinks">[[User_talk:Ocaasi{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Ocaasi{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Ocaasi&days{{=}}14 new pages &#40;1&#41;]</span>) started on 2013-12-23, score: 25</li>
+<li class{{=}}"IncBotD">{{pagelinks|Draft:DJ Many}} by [[User:Ocaasi{{!}}Ocaasi]] (<span class{{=}}"plainlinks">[[User_talk:Ocaasi{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Ocaasi{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Ocaasi&days{{=}}14 new pages &#40;1&#41;]</span>) started on 2013-12-23, score: 25</li>
 <li>[[:Category:Municipal coats of arms in Romania]] by [[User:Arms_Jones{{!}}Arms Jones]] started on 2014-01-02, score: 50</li>
 |0}}
 {{User:AlexNewArtBot/MaintDisplay|
-<li>[[Template:PitchforkSong]] ([[Template talk:PitchforkSong{{!}}talk]]) by [[User:Lu0490{{!}}Lu0490]] (<span class{{=}}"plainlinks">[[User_talk:Lu0490{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Lu0490{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Lu0490&days{{=}}14 new pages &#40;6&#41;]</span>) started on 2013-12-27, score: 21</li>
+<li class{{=}}"IncBotT">[[Template:PitchforkSong]] ([[Template talk:PitchforkSong{{!}}talk]]) by [[User:Lu0490{{!}}Lu0490]] (<span class{{=}}"plainlinks">[[User_talk:Lu0490{{!}}talk]]&nbsp;'''&#183;'''&#32;[[Special:Contributions/Lu0490{{!}}contribs]]&nbsp;'''&#183;'''&#32;[https://tools.wmflabs.org/bambots/UserNewPages.php?user{{=}}Lu0490&days{{=}}14 new pages &#40;6&#41;]</span>) started on 2013-12-27, score: 21</li>
 |1}}
 </ul>
 ----
