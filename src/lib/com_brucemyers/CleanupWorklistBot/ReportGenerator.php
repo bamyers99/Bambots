@@ -179,7 +179,7 @@ class ReportGenerator
 			<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct% are marked for cleanup, with $issue_count issues in total.</p>
 			<p>Listings: Alphabetic <b>&bull;</b> <a href=\"$bycaturl\">By category</a> <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
 			<table id='myTable' class='wikitable'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
-				<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>
+				<th>Oldest</th><th class='unsortable'>Issues</th></tr></thead><tbody>
     		");
 
 		foreach ($curclean as $title => &$art) {
@@ -191,6 +191,9 @@ class ReportGenerator
 			if ($write_csv) {
 				fwrite($csvhndl, CSVString::format(array($title, $art[self::KEY_IMP], $art[self::KEY_CLS], $icount, $consolidated['earliest'], $cats)) . "\n");
 			}
+
+			$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES], true);
+			$cats = implode(', ', $consolidated['issues']);
 
 			$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 			$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
@@ -223,6 +226,24 @@ class ReportGenerator
 		}
 		fclose($alphahndl);
 
+		// Calculate section anchors
+		$anchors = array();
+
+		foreach (Categories::$CATEGORIES as $catname => $catparams) {
+			$displayname = $catname;
+			if (isset($catparams['display'])) $displayname = $catparams['display'];
+
+			if (! isset($anchors[$displayname])) $anchors[$displayname] = array();
+			if (! in_array($displayname, $anchors[$displayname])) $anchors[$displayname][] = $displayname;
+			if (isset($catparams['display'])) $anchors[$displayname][] = $catname;
+		}
+
+		foreach (Categories::$SHORTCATS as $catname => $displayname) {
+			if (! isset($anchors[$displayname])) $anchors[$displayname] = array();
+			if (! in_array($displayname, $anchors[$displayname])) $anchors[$displayname][] = $displayname;
+			$anchors[$displayname][] = $catname;
+		}
+
 		if ($wiki_too_big) {
 
 			//
@@ -240,8 +261,14 @@ class ReportGenerator
 				if (isset(Categories::$CATEGORIES[$testcat]['group'])) $catgroup = Categories::$CATEGORIES[$testcat]['group'];
 				else $catgroup = 'General';
 
+				if (isset(Categories::$CATEGORIES[$cat]['display'])) $cat = Categories::$CATEGORIES[$cat]['display'];
+				elseif (isset(Categories::$SHORTCATS[$cat])) $cat = Categories::$SHORTCATS[$cat];
+
 				if (! isset($catgroups[$catgroup])) $catgroups[$catgroup] = array();
-				$catgroups[$catgroup][$cat] = $group;
+				if (isset($catgroups[$catgroup][$cat])) {
+					$catgroups[$catgroup][$cat] = array_merge($catgroups[$catgroup][$cat], $group);
+				}
+				else $catgroups[$catgroup][$cat] = $group;
 			}
 			unset($group);
 			unset($groups);
@@ -270,7 +297,7 @@ class ReportGenerator
 				<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of $asof_date.</p>
 				<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct% are marked for cleanup, with $issue_count issues in total.</p>
 				<p>Listings: <a href=\"$alphaurl\">Alphabetic</a> <b>&bull;</b> By category <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
-				<p>... represents the current category name.</p>
+				<p>... represents the current issue name. Issue names are abbreviated category names.</p>
 	    		");
 
 			// Write the TOC
@@ -294,8 +321,9 @@ class ReportGenerator
 				fwrite($bycathndl, "<li><a href='#$catgroup'>$catgroup</a></li>\n");
 				fwrite($bycathndl, "<ul>\n");
 
+				ksort($cats);
+
 				foreach ($cats as $cat => &$arts) {
-					$catlen = strlen($cat);
 					$artcount = count($arts);
 					fwrite($bycathndl, "<li><a href='#$cat'>$cat ($artcount)</a></li>\n");
 				}
@@ -315,11 +343,11 @@ class ReportGenerator
 				$artcount = count($newarts);
 				fwrite($bycathndl, "<a name='New articles'></a><h3>New articles ($artcount)</h3>\n");
 				fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>
-					<th class='unsortable'>Categories</th></tr></thead><tbody>\n
+					<th class='unsortable'>Issues</th></tr></thead><tbody>\n
 					");
 
 				foreach ($newarts as $title => &$art) {
-					$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES]);
+					$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES], true);
 					$artcats = implode(', ', $consolidated['issues']);
 					$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 					$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
@@ -337,7 +365,7 @@ class ReportGenerator
 				$artcount = count($resarts);
 				fwrite($bycathndl, "<a name='Resolved articles'></a><h3>Resolved articles ($artcount)</h3>\n");
 				fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>
-						<th class='unsortable'>Categories</th></tr></thead><tbody>\n
+						<th class='unsortable'>Issues</th></tr></thead><tbody>\n
 						");
 
 				foreach ($resarts as $title => &$fields) {
@@ -357,9 +385,13 @@ class ReportGenerator
 				foreach ($cats as $cat => &$arts) {
 					$catlen = strlen($cat);
 					$artcount = count($arts);
-					fwrite($bycathndl, "<a name='$cat'></a><h3>$cat ($artcount)</h3>\n");
+					if (! isset($anchors[$cat])) fwrite($bycathndl, "<a name='$cat'></a>");
+					else foreach ($anchors[$cat] as $anchorname) fwrite($bycathndl, "<a name='$anchorname'></a>");
+					fwrite($bycathndl, "<h3>$cat ($artcount)</h3>\n");
 					fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
-						<th>Oldest</th><th class='unsortable'>Categories</th></tr></thead><tbody>\n");
+						<th>Oldest</th><th class='unsortable'>Issues</th></tr></thead><tbody>\n");
+
+					ksort($arts);
 
 					foreach ($arts as $title => $dummy) {
 						//Strip the current cat prefix to make page smaller
@@ -391,10 +423,10 @@ class ReportGenerator
 
 			// Write stub wiki page
 
-			$output = "<noinclude>__NOINDEX__</noinclude>Cleanup listing for [[Wikipedia:{$wikiproject}{$project}|{$wikiproject}{$project_title}]] as of $asof_date.\n\n";
-			$output .= "Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.\n\n";
-			$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> [$bycaturl By category] <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
-			$output .= "'''Note''': The listing is too large to fit in a wiki page. An alternate listing can be found [$bycaturl here].\n";
+			//$output = "<noinclude>__NOINDEX__</noinclude>Cleanup listing for [[Wikipedia:{$wikiproject}{$project}|{$wikiproject}{$project_title}]] as of $asof_date.\n\n";
+			//$output .= "Of the $project_pages articles in this project $cleanup_pages or $artcleanpct % are marked for cleanup, with $issue_count issues in total.\n\n";
+			//$output .= "Listings: [$alphaurl Alphabetic] <b>·</b> [$bycaturl By category] <b>·</b> [$csvurl CSV] <b>·</b> [$histurl History]\n\n";
+			//$output .= "'''Note''': The listing is too large to fit in a wiki page. An alternate listing can be found [$bycaturl here].\n";
 
 			//$this->resultWriter->writeResults("User:CleanupWorklistBot/lists/$filesafe_project", $output, "most recent results, articles: $cleanup_pages, issues: $issue_count");
 
@@ -420,7 +452,7 @@ class ReportGenerator
 				$output .= "{| class='wikitable sortable'\n|-\n!Article!!Importance!!Class!!class='unsortable'|Categories\n";
 
 				foreach ($newarts as $title => &$art) {
-					$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES]);
+					$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES], true);
 					$artcats = implode(', ', $consolidated['issues']);
 					$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 					$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
@@ -557,9 +589,10 @@ class ReportGenerator
 	 * Determine the earliest date.
 	 *
 	 * @param array $cat_ids index into $this->categories keys = 'title', 'mth', 'yr'
+	 * @param bool $shortnames return short category names
 	 * @return array Earliest date 'earliest', 'issues', 'earliestsort' Consolidated issues, one string per category
 	 */
-	function _consolidateCats(&$cat_ids)
+	function _consolidateCats(&$cat_ids, $shortnames = false)
 	{
 		$results = array();
 		$earliestyear = 9999;
@@ -567,9 +600,13 @@ class ReportGenerator
 
 		foreach ($cat_ids as $cat_id) {
 			$cat = str_replace('_', ' ', $this->categories[$cat_id][self::KEY_TITLE]);
-			if (! isset($results[$cat])) {
-				$results[$cat] = array();
+			if ($shortnames)
+			{
+				if (isset(Categories::$CATEGORIES[$cat]['display'])) $cat = Categories::$CATEGORIES[$cat]['display'];
+				elseif (isset(Categories::$SHORTCATS[$cat])) $cat = Categories::$SHORTCATS[$cat];
 			}
+
+			if (! isset($results[$cat])) $results[$cat] = array();
 
 			if ($this->categories[$cat_id][self::KEY_YR] != null) {
 				$intyear = (int)$this->categories[$cat_id][self::KEY_YR];

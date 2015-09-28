@@ -31,183 +31,231 @@ class Categories {
 			),
 			'Article sections to be split' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Sections to be split'
 			),
 			'Articles about possible neologisms' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Possible neologisms'
 			),
 			'Articles containing potentially dated statements' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Potentially dated statements'
 			),
 			'Articles lacking in-text citations' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'In-text citations lacking'
 			),
 			'Articles lacking page references' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'References lacking'
 			),
 			'Articles lacking reliable references' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Reliable references lacking'
 			),
 			'Articles lacking sources' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Sources lacking'
 			),
 			'Articles needing additional categories' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Categories needed'
 			),
 			'Articles needing additional references' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'References needed'
 			),
 			'Articles needing cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Cleanup needed'
 			),
 			'Articles needing expert attention' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Clarity',
+					'display' => 'Expert attention needed'
 			),
 			'Articles needing link rot cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Link rot cleanup'
 			),
 			'Articles needing more viewpoints' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Viewpoints needed'
 			),
 			'Articles needing sections' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Sections needed'
 			),
 			'Articles needing the year an event occurred' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Year an event occurred needed'
 			),
 			'Articles requiring tables' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Tables needed'
 			),
 			'Articles slanted towards recent events' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Slanted towards recent events'
 			),
 			'Articles sourced by IMDb' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'IMDb sourced'
 			),
 			'Articles sourced only by IMDb' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'IMDb only sourced'
 			),
 			'Articles that may be too long' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Too long'
 			),
 			'Articles that may contain original research' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Original research'
 			),
 			'Articles that need to differentiate between fact and fiction' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Fact and fiction differentiation'
 			),
 			'Articles to be expanded' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Expansion needed'
 			),
 			'Articles to be merged' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Merge needed'
 			),
 			'Articles to be split' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Split needed'
 			),
 			'Articles with a promotional tone' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Promotional tone'
 			),
 			'Articles with broken or outdated citations' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Broken or outdated citations'
 			),
 			'Articles with close paraphrasing' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Close paraphrasing'
 			),
 			'Articles with close paraphrasing of public domain sources' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Close paraphrasing of public domain sources'
 			),
 			'Articles with dead external links' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Dead external links'
 			),
 			'Articles with disproportional geographic scope' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Disproportional geographic scope'
 			),
 			'Articles with disputed statements' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Disputed statements'
 			),
 			'Articles with excessive see also sections' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Excessive see also sections'
 			),
 			'Articles with failed verification' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Failed verification'
 			),
 			'Articles with improper non-free content' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Improper non-free content'
 			),
 			'Articles with improper non-free content (lists)' => array (
-					'type' => 'from-monthly'
+					'type' => 'from-monthly',
+					'display' => 'Improper non-free content (lists)'
 			),
 			'Articles with limited geographic scope' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Limited geographic scope'
 			),
 			'Articles with links needing disambiguation' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Links needing disambiguation'
 			),
 			'Articles with minor POV problems' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Minor POV problems'
 			),
 			'Articles with obsolete information' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Obsolete information'
 			),
 			'Articles with peacock terms' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Peacock terms'
 			),
 			'Articles with sections that need to be turned into prose' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Prose needed'
 			),
 			'Articles with specifically marked weasel-worded phrases' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Weasel-worded phrases'
 			),
 			'Articles with too few wikilinks' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Wikilinks needed'
 			),
 			'Articles with topics of unclear notability' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Notability unclear'
 			),
 			'Articles with trivia sections' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Trivia sections'
 			),
 			'Articles with unsourced statements' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Unsourced statements'
 			),
 			'Articles with weasel words' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Weasel words'
 			),
 			'Autobiographical articles' => array (
 					'type' => 'from-monthly',
@@ -247,11 +295,13 @@ class Categories {
 			),
 			'Orphaned articles' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Orphaned'
 			),
 			'Pages with excessive dablinks' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Dablinks excessive'
 			),
 			'Recently revised' => array (
 					'type' => 'from-monthly'
@@ -292,97 +342,120 @@ class Categories {
 			),
 			'Wikipedia articles in need of updating' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Update needed'
 			),
 			'Wikipedia articles needing clarification' => array (
 					'type' => 'from-monthly',
-					'group' => 'Clarity'
+					'group' => 'Clarity',
+					'display' => 'Clarification needed'
 			),
 			'Wikipedia articles needing context' => array (
 					'type' => 'from-monthly',
-					'group' => 'Clarity'
+					'group' => 'Clarity',
+					'display' => 'Context needed'
 			),
 			'Wikipedia articles needing copy edit' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Copy edit needed'
 			),
 			'Wikipedia articles needing factual verification' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Factual verification needed'
 			),
 			'Wikipedia articles needing page number citations' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Page number citations needed'
 			),
 			'Wikipedia articles needing reorganization' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Reorganization needed'
 			),
 			'Wikipedia articles needing rewrite' => array (
 					'type' => 'from-monthly',
-					'group' => 'Clarity'
+					'group' => 'Clarity',
+					'display' => 'Rewrite needed'
 			),
 			'Wikipedia articles needing style editing' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Style editing needed'
 			),
 			'Wikipedia articles that are too technical' => array (
 					'type' => 'from-monthly',
-					'group' => 'Clarity'
+					'group' => 'Clarity',
+					'display' => 'Too technical'
 			),
 			'Wikipedia articles with plot summary needing attention' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Plot summary needs attention'
 			),
 			'Wikipedia articles with possible conflicts of interest' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Conflict of interest'
 			),
 			'Wikipedia external links cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'External link cleanup'
 			),
 			'Wikipedia introduction cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Introduction cleanup'
 			),
 			'Wikipedia list cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'List cleanup'
 			),
 			'Wikipedia pages needing cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Cleanup needed'
 			),
 			'Wikipedia references cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Reference cleanup'
 			),
 			'Wikipedia spam cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'Neutrality',
+					'display' => 'Spam cleanup'
 			),
 			'Wikipedia articles containing buzzwords' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Buzzword cleanup'
 			),
 			'Wikipedia articles without plot summaries' => array (
 					'type' => 'from-monthly',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Plot summary needed'
 			),
 			'Wikipedia red link cleanup' => array (
 					'type' => 'from-monthly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Red link cleanup'
 			),
 
 			// no-date
 			'All articles needing coordinates' => array (
 					'type' => 'no-date',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Coordinates needed'
 			),
 			'All articles needing expert attention' => array (
 					'type' => 'no-date',
-					'group' => 'Clarity'
+					'group' => 'Clarity',
+					'display' => 'Expert attention needed'
 			),
 			'Animals cleanup' => array (
 					'type' => 'no-date',
@@ -390,12 +463,14 @@ class Categories {
 			),
 			'Articles needing more detailed references' => array (
 					'type' => 'no-date',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Detailed references needed'
 			),
 			'Articles with incorrect citation syntax' => array (
 					'type' => 'no-date',
 					'subcats' => 'only',
-					'group' => 'References'
+					'group' => 'References',
+					'display' => 'Citation syntax incorrect'
 			),
 			'CS1 errors' => array (
 					'type' => 'no-date',
@@ -409,7 +484,8 @@ class Categories {
 					'type' => 'no-date'
 			),
 			'Pages using duplicate arguments in template calls' => array (
-					'type' => 'no-date'
+					'type' => 'no-date',
+					'display' => 'Template call duplicate arguments'
 			),
 			'Plant articles needing a taxobox' => array (
 					'type' => 'no-date'
@@ -429,15 +505,35 @@ class Categories {
 			),
 			'Wikipedia articles needing cleanup after translation' => array (
 					'type' => 'no-date',
-					'group' => 'Content'
+					'group' => 'Content',
+					'display' => 'Translation cleanup needed'
 			),
 
 			// since-yearly
 			'Pages with DOIs inactive' => array (
 					'type' => 'since-yearly',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'DOIs inactive'
 			)
 	);
+
+	public static $SHORTCATS = array (
+			'Pages using citations with accessdate and no URL' => 'Citation with accessdate and no URL',
+			'Pages with archiveurl citation errors' => 'Archiveurl citation error',
+			'Pages containing cite templates with deprecated parameters' => 'Cite template with deprecated parameters',
+			'Pages using citations with old-style implicit et al. in editors' => 'Citation with old-style implicit et al. in editors',
+			'Pages with empty citations' => 'Empty citation',
+			'Pages using citations with format and no URL' => 'Citation with format and no URL',
+			'Pages with citations using conflicting page specifications' => 'Citation using conflicting page specification',
+			'Pages with citations having redundant parameters' => 'Citation has redundant parameters',
+			'Pages with citations lacking titles' => 'Citation lacking title',
+			'Pages using web citations with no URL' => 'Web citation with no URL',
+			'Pages with citations having bare URLs' => 'Citation with bare URL',
+			'Pages with citations using unnamed parameters' => 'Citation using unnamed parameter',
+			'Pages with citations using unsupported parameters' => 'Citation using unsupported parameter',
+			'Pages with URL errors' => 'URL error'
+	);
+
 	static $parentCats = array ();
 	var $dbh_tools;
 	var $enwiki_host;
