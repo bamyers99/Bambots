@@ -31,11 +31,10 @@ class ProjectPages
 	const SQL_Importance = "SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'";
 	const SQL_Class = "SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'";
 
-	var $dbh_enwiki;
 	var $enwiki_host;
 	var $user;
 	var $pass;
-	var $dbh_tools;
+	var $tools_host;
 
     /**
      * Constructor
@@ -43,14 +42,14 @@ class ProjectPages
 	 * @param string $enwiki_host
 	 * @param string $user
 	 * @param string $pass
-     * @param PDO $dbh_tools
+     * @param string $tools_host
      */
-     public function __construct($enwiki_host, $user, $pass, PDO $dbh_tools)
+     public function __construct($enwiki_host, $user, $pass, $tools_host)
     {
 		$this->enwiki_host = $enwiki_host;
 		$this->user = $user;
 		$this->pass = $pass;
-        $this->dbh_tools = $dbh_tools;
+        $this->tools_host = $tools_host;
     }
 
     /**
@@ -153,7 +152,10 @@ class ProjectPages
     	if (empty($sql)) throw new CatTypeNotFoundException("Category type not found for '$category'");
 
     	// Load the pages
-   		$this->dbh_tools->exec('TRUNCATE page');
+    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+   		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$dbh_tools->exec('TRUNCATE page');
+    	$dbh_tools = null;
    		$dbh_enwiki = null;
    		$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
    		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -163,22 +165,24 @@ class ProjectPages
     	$sth->setFetchMode(PDO::FETCH_ASSOC);
     	$sth->execute();
 
-    	$this->dbh_tools->beginTransaction();
-    	$isth = $this->dbh_tools->prepare('INSERT INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
+    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+   		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$dbh_tools->beginTransaction();
+    	$isth = $dbh_tools->prepare('INSERT INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
     	$page_count = 0;
 
     	while($row = $sth->fetch()) {
 			++$page_count;
     		if ($page_count % 1000 == 0) {
-    			$this->dbh_tools->commit();
-    			$this->dbh_tools->beginTransaction();
+    			$dbh_tools->commit();
+    			$dbh_tools->beginTransaction();
     		}
 			$isth->execute($row);
     	}
 
     	$sth->closeCursor();
     	$sth = null;
-    	$this->dbh_tools->commit();
+    	$dbh_tools->commit();
     	$isth = null;
 
     	// Delete the pages with no issues
@@ -188,7 +192,7 @@ class ProjectPages
     			FROM categorylinks
 			)';
 
-    	$this->dbh_tools->exec($sql);
+    	$dbh_tools->exec($sql);
     	$dbh_enwiki = null;
 
     	// Set importance
@@ -212,20 +216,20 @@ class ProjectPages
     		$sth = null;
     		$chunks = array_chunk($cl_froms, 100);
 
-    		$this->dbh_tools->beginTransaction();
+    		$dbh_tools->beginTransaction();
 
     		foreach ($chunks as $chunk) {
     			$count += count($chunk);
     			if ($count % 1000 == 0) {
-    				$this->dbh_tools->commit();
-    				$this->dbh_tools->beginTransaction();
+    				$dbh_tools->commit();
+    				$dbh_tools->beginTransaction();
     			}
     			$ids = implode(',', $chunk);
     			$sql = "UPDATE page SET importance = '$importance' WHERE talk_id IN ($ids)";
-    			$this->dbh_tools->exec($sql);
+    			$dbh_tools->exec($sql);
     		}
 
-    		$this->dbh_tools->commit();
+    		$dbh_tools->commit();
    			$dbh_enwiki = null;
     	}
 
@@ -258,23 +262,25 @@ class ProjectPages
     		$sth = null;
     		$chunks = array_chunk($cl_froms, 100);
 
-    		$this->dbh_tools->beginTransaction();
+    		$dbh_tools->beginTransaction();
 
     		foreach ($chunks as $chunk) {
     			$count += count($chunk);
     			if ($count % 1000 == 0) {
-    				$this->dbh_tools->commit();
-    				$this->dbh_tools->beginTransaction();
+    				$dbh_tools->commit();
+    				$dbh_tools->beginTransaction();
     			}
     			$ids = implode(',', $chunk);
     			$sql = "UPDATE page SET class = '$class' WHERE talk_id IN ($ids)";
-    			$this->dbh_tools->exec($sql);
+    			$dbh_tools->exec($sql);
     		}
 
-    		$this->dbh_tools->commit();
+    		$dbh_tools->commit();
     		$total_class += $count;
    			$dbh_enwiki = null;
     	}
+
+    	$dbh_tools = null;
 
     	if (! $total_class) Logger::log("$category (no classes found)");
 

@@ -42,10 +42,10 @@ class TestProjectPage extends UnitTestCase
 
     	new CreateTables($dbh_enwiki, $dbh_tools);
 
-    	$categories = new Categories($enwiki_host, $user, $pass, $dbh_tools);
+    	$categories = new Categories($enwiki_host, $user, $pass, $tools_host);
     	$categories->load(false);
 
-    	$project_pages = new ProjectPages($enwiki_host, $user, $pass, $dbh_tools);
+    	$project_pages = new ProjectPages($enwiki_host, $user, $pass, $tools_host);
 
     	$category = 'Michigan';
     	$page_count = $project_pages->load($category);

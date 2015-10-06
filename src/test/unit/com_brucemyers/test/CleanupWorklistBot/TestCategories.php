@@ -40,7 +40,7 @@ class TestCategories extends UnitTestCase
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     	new CreateTables($dbh_enwiki, $dbh_tools);
-    	$categories = new Categories($enwiki_host, $user, $pass, $dbh_tools);
+    	$categories = new Categories($enwiki_host, $user, $pass, $tools_host);
     	$count = $categories->load(false);
     	$this->assertEqual($count, 6, 'Wrong category count');
 

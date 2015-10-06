@@ -45,14 +45,14 @@ class TestReports extends UnitTestCase
 
     	new CreateTables($dbh_enwiki, $dbh_tools);
 
-    	$categories = new Categories($enwiki_host, $user, $pass, $dbh_tools);
+    	$categories = new Categories($enwiki_host, $user, $pass, $tools_host);
     	$categories->load(false);
 
     	$asof_date = getdate();
     	$outputdir = Config::get(CleanupWorklistBot::HTMLDIR);
     	$urlpath = Config::get(CleanupWorklistBot::URLPATH);
 
-    	$project_pages = new ProjectPages($enwiki_host, $user, $pass, $dbh_tools);
+    	$project_pages = new ProjectPages($enwiki_host, $user, $pass, $tools_host);
 
     	$wikiDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
     	$wikiDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $wikiDir);
@@ -60,7 +60,7 @@ class TestReports extends UnitTestCase
     	$wikiDir .= DIRECTORY_SEPARATOR;
     	$resultwriter = new FileResultWriter($wikiDir);
 
-    	$repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultwriter, $categories);
+    	$repgen = new ReportGenerator($tools_host, $outputdir, $urlpath, $asof_date, $resultwriter, $categories, $user, $pass);
 
     	$category = 'Good_article_nominees';
     	$page_count = $project_pages->load($category);

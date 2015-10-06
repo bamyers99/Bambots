@@ -69,16 +69,16 @@ class CleanupWorklistBot
         $restarted = '';
         if (! empty($startProject)) $restarted = ' (restarted)';
 
-        $categories = new Categories($enwiki_host, $user, $pass, $dbh_tools);
+        $categories = new Categories($enwiki_host, $user, $pass, $tools_host);
         $categories->load($skipCatLoad);
 
         $asof_date = getdate();
     	$outputdir = Config::get(self::HTMLDIR);
         $urlpath = Config::get(self::URLPATH);
 
-        $project_pages = new ProjectPages($enwiki_host, $user, $pass, $dbh_tools);
+        $project_pages = new ProjectPages($enwiki_host, $user, $pass, $tools_host);
 
-        $repgen = new ReportGenerator($dbh_tools, $outputdir, $urlpath, $asof_date, $resultWriter, $categories);
+        $repgen = new ReportGenerator($tools_host, $outputdir, $urlpath, $asof_date, $resultWriter, $categories, $user, $pass);
 
         // Generate each projects reports.
 

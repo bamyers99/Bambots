@@ -535,7 +535,7 @@ class Categories {
 	);
 
 	static $parentCats = array ();
-	var $dbh_tools;
+	var $tools_host;
 	var $enwiki_host;
 	var $user;
 	var $pass;
@@ -547,14 +547,14 @@ class Categories {
 	 * @param string $enwiki_host
 	 * @param string $user
 	 * @param string $pass
-	 * @param PDO $dbh_tools
+	 * @param string $tools_host
 	 */
-	public function __construct($enwiki_host, $user, $pass, PDO $dbh_tools)
+	public function __construct($enwiki_host, $user, $pass, $tools_host)
 	{
 		$this->enwiki_host = $enwiki_host;
 		$this->user = $user;
 		$this->pass = $pass;
-		$this->dbh_tools = $dbh_tools;
+		$this->tools_host = $tools_host;
 	}
 
 	/**
@@ -566,16 +566,22 @@ class Categories {
 	 */
 	public function load($skipCatLoad)
 	{
-		$count = 0;
+    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+   		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$count = 0;
 		if (! $skipCatLoad) {
-			$this->dbh_tools->exec ( 'TRUNCATE category' );
-			$this->dbh_tools->exec ( 'TRUNCATE categorylinks' );
-
-			$isth = $this->dbh_tools->prepare ( 'INSERT INTO category VALUES (:id, :title, :month, :year)' );
+			$dbh_tools->exec ( 'TRUNCATE category' );
+			$dbh_tools->exec ( 'TRUNCATE categorylinks' );
 		}
 
+		$dbh_tools = null;
+
 		foreach ( self::$CATEGORIES as $cat => $attribs ) {
+			$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+   			$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$isth = $dbh_tools->prepare ( 'INSERT INTO category VALUES (:id, :title, :month, :year)' );
 			$cattype = $attribs ['type'];
+
 			$subcatsonly = isset ( $attribs ['subcats'] );
 			if ($skipCatLoad && ! $subcatsonly)
 				continue;
@@ -656,20 +662,24 @@ class Categories {
 						++ $count;
 						$this->categories[$catid] = array('t' => $row['title'], 'm' => $row['month'], 'y' => $row['year']);
 
-						$this->loadCategoryMembers ( $catid, $title );
+						$this->loadCategoryMembers ( $catid, $title, $dbh_tools );
 					}
 				}
 
 				$sth->closeCursor ();
 				$sth = null;
-				$dbh_enwiki = null; // Yea, well, yea
+				$dbh_enwiki = null;
 			}
+
+			$isth = null;
+			$dbh_tools = null;
 		}
 
-		$isth = null;
 
 		if ($skipCatLoad) {
-			$results = $this->dbh_tools->query('SELECT * FROM category');
+			$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+   			$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$results = $dbh_tools->query('SELECT * FROM category');
 			$results->setFetchMode ( PDO::FETCH_ASSOC );
 
 			while ( $row = $results->fetch () ) {
@@ -679,6 +689,7 @@ class Categories {
 
 			$results->closeCursor();
 			$results = null;
+			$dbh_tools = null;
 		}
 
 		return $count;
@@ -691,13 +702,13 @@ class Categories {
 	 * @param string $cat
 	 *        	Category
 	 */
-	function loadCategoryMembers($catid, $cat)
+	function loadCategoryMembers($catid, $cat, PDO $dbh_tools)
 	{
     	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$count = 0;
-		$this->dbh_tools->beginTransaction ();
-		$isth = $this->dbh_tools->prepare ( 'INSERT INTO categorylinks VALUES (:cl_from, :cat_id)' );
+		$dbh_tools->beginTransaction ();
+		$isth = $dbh_tools->prepare ( 'INSERT INTO categorylinks VALUES (:cl_from, :cat_id)' );
 		$sql = "SELECT cl_from
 				FROM categorylinks
 				WHERE cl_to = ? AND cl_type = 'page'";
@@ -710,15 +721,15 @@ class Categories {
 		while ( $row = $sth->fetch () ) {
 			++ $count;
 			if ($count % 1000 == 0) {
-				$this->dbh_tools->commit ();
-				$this->dbh_tools->beginTransaction ();
+				$dbh_tools->commit ();
+				$dbh_tools->beginTransaction ();
 			}
 			$isth->execute ( array('cl_from' => $row['cl_from'], 'cat_id' => $catid) );
 		}
 
 		$sth->closeCursor ();
 		$sth = null;
-		$this->dbh_tools->commit ();
+		$dbh_tools->commit ();
 		$isth = null;
 		$dbh_enwiki = null;
 	}

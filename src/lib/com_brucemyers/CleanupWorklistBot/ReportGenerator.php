@@ -31,11 +31,13 @@ class ReportGenerator
 		7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December');
 	var $outputdir;
 	var $urlpath;
-	var $dbh_tools;
+	var $tools_host;
 	var $asof_date;
 	var $resultWriter;
 	var $categories;
 	var $catobj;
+	var $user;
+	var $pass;
 
 	// Key atoms to save memory
 	const KEY_IMP = 0;
@@ -51,19 +53,24 @@ class ReportGenerator
 	const KEY_CATS = 10;
 	const KEY_ICOUNT = 11;
 
-	function __construct(PDO $dbh_tools, $outputdir, $urlpath, $asof_date, ResultWriter $resultWriter, $catobj)
+	function __construct($tools_host, $outputdir, $urlpath, $asof_date, ResultWriter $resultWriter, $catobj, $user, $pass)
 	{
-		$this->dbh_tools = $dbh_tools;
+		$this->tools_host = $tools_host;
 		$this->outputdir = $outputdir;
 		$this->urlpath = $urlpath;
 		$this->asof_date = $asof_date;
         $this->resultWriter = $resultWriter;
         $this->catobj = $catobj;
+		$this->user = $user;
+		$this->pass = $pass;
 	}
 
 	function generateReports($project, $isWikiProject, $project_pages, $wiki_too_big = false, $max_page_size = MediaWiki::MAX_PAGE_SIZE,
 		$write_csv = true)
 	{
+    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+   		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 		$cleanup_pages = 0;
 		$issue_count = 0;
 		$added_pages = 0;
@@ -75,9 +82,9 @@ class ReportGenerator
 		$titles = array();
 		$project_title = str_replace('_', ' ', $project);
 		$filesafe_project = str_replace('/', '_', $project);
-		$clquery = $this->dbh_tools->prepare('SELECT cat_id FROM categorylinks WHERE cl_from = ?');
+		$clquery = $dbh_tools->prepare('SELECT cat_id FROM categorylinks WHERE cl_from = ?');
 
-		$results = $this->dbh_tools->query('SELECT `article_id`, `page_title`, `importance`, `class` FROM `page` p');
+		$results = $dbh_tools->query('SELECT `article_id`, `page_title`, `importance`, `class` FROM `page` p');
 
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			$pageid = (int)$row['article_id'];
@@ -554,7 +561,7 @@ class ReportGenerator
 		// Write the history list
 		//
 
-		$sth = $this->dbh_tools->prepare("INSERT INTO history VALUES (?, ?, $project_pages, $cleanup_pages, $issue_count, $added_pages, $removed_pages)");
+		$sth = $dbh_tools->prepare("INSERT INTO history VALUES (?, ?, $project_pages, $cleanup_pages, $issue_count, $added_pages, $removed_pages)");
 		$histdate = sprintf('%d-%02d-%02d', $this->asof_date['year'], $this->asof_date['mon'], $this->asof_date['mday']);
 		$sth->execute(array($project, $histdate));
 
@@ -571,7 +578,7 @@ class ReportGenerator
 		<table class='wikitable'><thead><tr><th>Date</th><th>Total articles</th><th>Cleanup articles</th><th>Cleanup issues</th><th>New articles</th><th>Resolved articles</th></tr></thead><tbody>\n
 		");
 
-		$sth = $this->dbh_tools->prepare("SELECT * FROM history WHERE project = ? ORDER BY time");
+		$sth = $dbh_tools->prepare("SELECT * FROM history WHERE project = ? ORDER BY time");
 		$sth->execute(array($project));
 
 		while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
@@ -586,10 +593,12 @@ class ReportGenerator
 
 		$wikiproject = (($isWikiProject) ? 'WikiProject_' : '') . $project;
 
-		$sth = $this->dbh_tools->prepare("DELETE FROM project WHERE `name` = ?");
+		$sth = $dbh_tools->prepare("DELETE FROM project WHERE `name` = ?");
 		$sth->execute(array($wikiproject));
-		$sth = $this->dbh_tools->prepare("INSERT INTO project VALUES (?, ?)");
+		$sth = $dbh_tools->prepare("INSERT INTO project VALUES (?, ?)");
 		$sth->execute(array($wikiproject, $wiki_too_big ? 1 : 0));
+
+		$dbh_tools = null;
 
 		return true;
 	}
