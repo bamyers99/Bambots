@@ -188,7 +188,7 @@ EOT;
     	$pass = $serviceMgr->getPass();
 
     	$backupFile = $outputdir . 'CategoryWatchlistBot_History.bz2';
-    	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CategoryWatchlistBot querys wikis runs | bzip2 -9 > $backupFile";
+    	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CategoryWatchlistBot querys wikis querycats runs | bzip2 -9 > $backupFile";
     	system($command);
 
     	$dw = date('w');
