@@ -41,7 +41,6 @@ class CleanupWorklistBot
     const LABSDB_USERNAME = 'CleanupWorklistBot.labsdb_username';
     const LABSDB_PASSWORD = 'CleanupWorklistBot.labsdb_password';
     protected $resultWriter;
-    protected $dbh_tools;
 
     public function __construct(&$ruleconfigs, ResultWriter $resultWriter, $skipCatLoad)
     {
@@ -55,12 +54,6 @@ class CleanupWorklistBot
     	$tools_host = Config::get(self::TOOLS_HOST);
     	$user = Config::get(self::LABSDB_USERNAME);
     	$pass = Config::get(self::LABSDB_PASSWORD);
-
-    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
-    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$this->dbh_tools = $dbh_tools;
 
         new CreateTables($dbh_tools);
 
@@ -114,7 +107,7 @@ class CleanupWorklistBot
         }
 
         // Generate the index page, doing separate from above because do not want the file open for a long time.
-        $this->_writeIndex($outputdir, $urlpath);
+        $this->_writeIndex($outputdir, $urlpath, $tools_host, $user, $pass);
 
 		$ts = $totaltimer->stop();
 		$totaltime = sprintf("%d days %d:%02d:%02d", $ts['days'], $ts['hours'], $ts['minutes'], $ts['seconds']);
@@ -129,7 +122,7 @@ class CleanupWorklistBot
     /**
      * Write the project index page
      */
-    protected function _writeIndex($outputdir, $urlpath)
+    protected function _writeIndex($outputdir, $urlpath, $tools_host, $user, $pass)
     {
         $idxpath = $outputdir . 'index.html';
         $idxhndl = fopen($idxpath, 'wb');
@@ -143,7 +136,9 @@ class CleanupWorklistBot
         <ul>\n
         ");
 
-        $results = $this->dbh_tools->query('SELECT * FROM `project` ORDER BY `name`');
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
+    	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $results = $dbh_tools->query('SELECT * FROM `project` ORDER BY `name`');
 
         while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
         	$project = $row['name'];

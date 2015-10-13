@@ -69,8 +69,9 @@ class MiscReports extends DatabaseReport
     	return " - Misc reports\n" .
     	"\t\tChemSpider - ChemSpider wikidata links\n" .
     	"\t\tJournalisted - Journalisted wikidata links\n" .
-    	"\t\tWikiProjectList - WikiProject list\n";
-    	"\t\tAgeAnomaly - Age anomaly report";
+    	"\t\tWikiProjectList - WikiProject list\n" .
+    	"\t\tAgeAnomaly - Age anomaly report\n" .
+    	"\t\tMoreCategories - People needing a notability category";
     }
 
 	public function getTitle()
