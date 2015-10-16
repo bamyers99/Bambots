@@ -54,10 +54,13 @@ class CleanupWorklistBot
     	$tools_host = Config::get(self::TOOLS_HOST);
     	$user = Config::get(self::LABSDB_USERNAME);
     	$pass = Config::get(self::LABSDB_PASSWORD);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
+    	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         new CreateTables($dbh_tools);
 
         if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('TRUNCATE project');
+        $dbh_tools = null;
 
         $restarted = '';
         if (! empty($startProject)) $restarted = ' (restarted)';
@@ -89,7 +92,7 @@ class CleanupWorklistBot
 
         	try {
 	        	$page_count = $project_pages->load($category);
-	        	if (! $page_count) {
+	        	if ($page_count < 10 && $project != 'Bhubaneswar') {
 	        		$errorrulsets[] = $project . ' (no pages in project)';
 	        		Logger::log($project . ' (no pages in project)');
 	        		continue;
@@ -116,7 +119,7 @@ class CleanupWorklistBot
         $this->_writeHtmlStatus(count($ruleconfigs), $totaltime, $errorrulsets, $asof_date, $outputdir);
         //$this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);
 
-        $this->_backupHistory($tools_host, $user, $pass);
+        $this->_backupHistory($tools_host, $user, $pass, $errorrulsets);
     }
 
     /**
@@ -236,8 +239,9 @@ EOT;
      * @param string $tools_host
      * @param string $user
      * @param string $pass
+     * @param array $errorrulsets
      */
-    protected function _backupHistory($tools_host, $user, $pass)
+    protected function _backupHistory($tools_host, $user, $pass, $errorrulsets)
     {
         $outputDir = Config::get(self::OUTPUTDIR);
         $outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
@@ -249,7 +253,9 @@ EOT;
     	system($command);
 
     	$email = new Email();
+    	$subject = 'CleanupWorklistBot backup';
+    	if (! empty($errorrulsets)) $subject .= ' - ERROR';
     	$attach = array($backupFile);
-    	$email->sendEmail('admin@brucemyers.com', Config::get(self::ERROREMAIL), 'CleanupWorklistBot backup', 'DB backup', $attach);
+    	$email->sendEmail('admin@brucemyers.com', Config::get(self::ERROREMAIL), $subject, 'DB backup', $attach);
     }
 }
