@@ -78,7 +78,6 @@ class http {
         curl_setopt($this->ch,CURLOPT_COOKIEFILE,''); // Enable cookie handling
         curl_setopt($this->ch,CURLOPT_COOKIEJAR,'/dev/null'); // Enable cookie handling again because sometimes CURLOPT_COOKIEFILE does not enable.
         curl_setopt($this->ch,CURLOPT_MAXCONNECTS,100);
-        curl_setopt($this->ch,CURLOPT_CLOSEPOLICY,CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
         //curl_setopt($this->ch, CURLOPT_VERBOSE, true);
         $this->postfollowredirs = 0;
         $this->getfollowredirs = 1;
