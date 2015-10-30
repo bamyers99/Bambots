@@ -50,6 +50,7 @@ class RuleSetProcessor
     	if ($cleandata === null) $cleandata = $data;
    		else $cleandata = preg_replace(CommonRegex::REFERENCE_REGEX, '', $cleandata);
         $cleandata = preg_replace(CommonRegex::COMMENT_REGEX, '', $cleandata);
+        if (preg_match(CommonRegex::REDIRECT_REGEX, $cleandata)) return $results;
 
         foreach ($this->ruleSet->rules as &$rule) {
             $score = $this->processRule($cleandata, $rule, $title);
