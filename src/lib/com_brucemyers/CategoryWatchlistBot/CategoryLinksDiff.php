@@ -140,8 +140,8 @@ class CategoryLinksDiff
     	$cur_rev_id = (int)$row['rev_id'];
     	$cur_timestamp = MediaWiki::wikiTimestampToUnixTimestamp($row['rev_timestamp']);
 
-    	// Limit to 2 hours max revisions
-    	$prev_timestamp = strtotime('-2 hours', $cur_timestamp);
+    	// Limit to 3 hours max revisions
+    	$prev_timestamp = strtotime('-3 hours', $cur_timestamp);
     	$prev_timestamp = MediaWiki::unixTimestampToWikiTimestamp($prev_timestamp);
 
     	$sth = $dbh_wiki->query("SELECT rev_id FROM revision WHERE rev_timestamp > '$prev_timestamp' ORDER BY rev_timestamp LIMIT 1");
