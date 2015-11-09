@@ -487,6 +487,11 @@ class Categories {
 					'type' => 'no-date',
 					'display' => 'Template call duplicate arguments'
 			),
+			'Pages with reference errors' => array ( // Tracks subcats of Pages with citation errors
+					'type' => 'no-date',
+					'group' => 'References',
+					'display' => 'Reference errors'
+			),
 			'Plant articles needing a taxobox' => array (
 					'type' => 'no-date'
 			),
@@ -517,6 +522,7 @@ class Categories {
 			)
 	);
 
+	// Short category names for CS1 errors subcats
 	public static $SHORTCATS = array (
 			'Pages using citations with accessdate and no URL' => 'Citation with accessdate and no URL',
 			'Pages with archiveurl citation errors' => 'Archiveurl citation error',
