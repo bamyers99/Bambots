@@ -275,7 +275,7 @@ class ReportGenerator
 
 				if (! isset($catgroups[$catgroup])) $catgroups[$catgroup] = array();
 				if (isset($catgroups[$catgroup][$cat])) {
-					$catgroups[$catgroup][$cat] = array_merge($catgroups[$catgroup][$cat], $group);
+					$catgroups[$catgroup][$cat] = $catgroups[$catgroup][$cat] + $group;
 				}
 				else $catgroups[$catgroup][$cat] = $group;
 			}
