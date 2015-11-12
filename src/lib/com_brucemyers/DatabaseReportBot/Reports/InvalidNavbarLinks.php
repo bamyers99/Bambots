@@ -90,10 +90,74 @@ class InvalidNavbarLinks extends DatabaseReport
 			),
 
 			'Election table' => array(
-		    	'children' => array('Election table', 'Election Table', 'Electiontable'),
-		    	'name_param' => 1,
-		    	'exclude_empty' => array(),
-		    	'exclude_values' => array(),
+				'children' => array('Election table', 'Election Table', 'Electiontable'),
+				'name_param' => 1,
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'Football squad' => array(
+				'children' => array('Football squad', 'Fs2'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'Navbox rugby league squad' => array(
+				'children' => array('Navbox rugby league squad'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'Rugby union squad' => array(
+				'children' => array('Rugby union squad'),
+				'name_param' => 'templatename',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'Campaignbox' => array(
+				'children' => array('Campaignbox'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'Team roster navbox' => array(
+				'children' => array('Team roster navbox', 'Baseball navbox', 'Baseball roster navbox', 'MLB roster navbox'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'National squad' => array(
+				'children' => array('National squad', 'National handball squad', 'National basketball squad', 'National field hockey squad', 'National squad no numbers'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'NRHP navigation box' => array(
+				'children' => array('NRHP navigation box'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'US county navigation box' => array(
+				'children' => array('US county navigation box'),
+				'name_param' => 'template_name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
 				'exclude_templates' => array()
 			),
 
