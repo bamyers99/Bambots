@@ -98,7 +98,15 @@ class InvalidNavbarLinks extends DatabaseReport
 			),
 
 			'Football squad' => array(
-				'children' => array('Football squad', 'Fs2'),
+				'children' => array('Football squad'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'Fs2' => array(
+				'children' => array('Fs2'),
 				'name_param' => 'name',
 				'exclude_empty' => array(),
 				'exclude_values' => array(),
@@ -138,7 +146,39 @@ class InvalidNavbarLinks extends DatabaseReport
 			),
 
 			'National squad' => array(
-				'children' => array('National squad', 'National handball squad', 'National basketball squad', 'National field hockey squad', 'National squad no numbers'),
+				'children' => array('National squad'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'National handball squad' => array(
+				'children' => array('National handball squad'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'National basketball squad' => array(
+				'children' => array('National basketball squad'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'National field hockey squad' => array(
+				'children' => array('National field hockey squad'),
+				'name_param' => 'name',
+				'exclude_empty' => array(),
+				'exclude_values' => array(),
+				'exclude_templates' => array()
+			),
+
+			'National squad no numbers' => array(
+				'children' => array('National squad no numbers'),
 				'name_param' => 'name',
 				'exclude_empty' => array(),
 				'exclude_values' => array(),
