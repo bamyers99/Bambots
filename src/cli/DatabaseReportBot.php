@@ -37,6 +37,7 @@ DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 
     $activereports = array(
         'BrokenSectionAnchors',
+    	'CircularCats',
     	'DiacriticRedLinks',
     	'InvalidNavbarLinks',
     	'MiscReports',
