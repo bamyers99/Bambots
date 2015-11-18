@@ -250,7 +250,9 @@ EOT;
 
     	$backupFile = $outputDir . 'CleanupWorklistBot_History.bz2';
     	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CleanupWorklistBot history | bzip2 -9 > $backupFile";
-    	system($command);
+    	Logger::log($command);
+    	$ret = system($command, $return_var);
+    	Logger::log("return=$ret | return_var=$return_var");
 
     	$email = new Email();
     	$subject = 'CleanupWorklistBot backup';
