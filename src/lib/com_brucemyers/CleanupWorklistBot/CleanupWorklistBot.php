@@ -98,7 +98,7 @@ class CleanupWorklistBot
 	        		continue;
 	        	}
 
-	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count, true); // Temporary until bot approval.
+	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count, true);
 	        	//$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
 	        	if (! $wikiPageCreated) $repgen->generateReports($project, $isWikiProject, $page_count, true,
 	        		MediaWiki::MAX_PAGE_SIZE, false);
@@ -108,6 +108,10 @@ class CleanupWorklistBot
 
         	Config::set(self::CURRENTPROJECT, '', true);
         }
+
+        // Free up memory for backup
+        unset($repgen);
+        unset($project_pages);
 
         // Generate the index page, doing separate from above because do not want the file open for a long time.
         $this->_writeIndex($outputdir, $urlpath, $tools_host, $user, $pass);
@@ -252,7 +256,6 @@ EOT;
     	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CleanupWorklistBot history | bzip2 -9 > $backupFile";
     	Logger::log($command);
     	$ret = system($command, $return_var);
-    	Logger::log("return=$ret | return_var=$return_var");
 
     	$email = new Email();
     	$subject = 'CleanupWorklistBot backup';
