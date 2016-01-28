@@ -33,6 +33,7 @@ class Properties
     public function __construct($filepath)
     {
         $this->filepath = $filepath;
+        if (! file_exists($filepath)) return;
         $data = file_get_contents($filepath);
         $data = preg_split('/\r?\n/', $data);
         $commentno = 0;
