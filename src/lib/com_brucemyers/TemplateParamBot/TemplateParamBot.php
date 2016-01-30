@@ -121,8 +121,8 @@ class TemplateParamBot
      */
     public function processXMLDump($filepath, $outputdir)
     {
-    	if (! preg_match('!(\\w+)-(\\d{8})-pages-meta-current.xml.bz2!', $filepath, $matches)) {
-    		return 'File path must resemble enwiki-20160113-pages-meta-current.xml.bz2';
+    	if (! preg_match('!(\\w+)-(\\d{8})-pages-articles.xml.bz2!', $filepath, $matches)) {
+    		return 'File path must resemble enwiki-20160113-pages-articles.xml.bz2';
     	}
     	if ($outputdir[0] != '/') {
     		return 'Output dir must start with /';
@@ -309,6 +309,9 @@ class TemplateParamBot
     function processPage()
     {
     	static $pagecnt = 0;
+
+    	$ns = (int)$this->parserState['namespace'];
+    	if ($ns != 0) return; // only want articles
     	++$pagecnt;
     	if ($pagecnt % 100000 == 0) echo "$pagecnt\n";
 
@@ -490,11 +493,14 @@ class TemplateParamBot
     {
         $dbh_tools = $this->serviceMgr->getDBConnection($wikiname);
 
-    	$sql = "SELECT p1.page_id, p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|') FROM page p1
+    	$sql = "SELECT p1.page_id, p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|') FROM page_props
+    		STRAIGHT_JOIN page p1 ON pp_page = p1.page_id
     		LEFT JOIN redirect ON rd_namespace = p1.page_namespace AND rd_title = p1.page_title
     		LEFT JOIN page p2 ON rd_from = p2.page_id
-    		WHERE p1.page_namespace = 10 AND p1.page_is_redirect = 0
-    		GROUP BY p1.page_title";
+    		WHERE pp_propname = 'templatedata'
+    			AND p1.page_namespace = 10
+    			AND p1.page_is_redirect = 0
+    		GROUP BY p1.page_id";
 
     	$sth = $dbh_tools->query($sql);
     	$sth->setFetchMode(PDO::FETCH_NUM);
