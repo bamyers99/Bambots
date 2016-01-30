@@ -46,4 +46,22 @@ class Convert
 
 		return $r;
 	}
+
+	/**
+	 * Calc crc16
+	 *
+	 * @param string $data
+	 */
+	public static function crc16(&$data)
+	{
+		$crc = 0xFFFF;
+		$len = strlen($data);
+		for ($i = 0; $i < $len; $i++) {
+			$x = (($crc >> 8) ^ ord($data[$i])) & 0xFF;
+			$x ^= $x >> 4;
+			$crc = (($crc << 8) ^ ($x << 12) ^ ($x << 5) ^ $x) & 0xFFFF;
+		}
+		return $crc;
+	}
+
 }

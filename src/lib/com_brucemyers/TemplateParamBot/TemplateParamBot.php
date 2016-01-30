@@ -17,17 +17,16 @@
 
 namespace com_brucemyers\TemplateParamBot;
 
-use com_brucemyers\Util\CSVString;
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\Util\Properties;
+use com_brucemyers\Util\Convert;
 use PDO;
+use Exception;
 
 class TemplateParamBot
 {
     const ERROREMAIL = 'TemplateParamBot.erroremail';
-    const MIN_PAGE_CNT = 'TemplateParamBot.min_page_cnt';
     const MAX_INSTANCE_CNT = 'TemplateParamBot.max_instance_cnt';
 
     const CACHE_PREFIX_RESULT = 'Result:';
@@ -37,8 +36,10 @@ class TemplateParamBot
     protected $serviceMgr;
     protected $parserState;
     protected $templates;
-    protected $tmpl_value_hndl;
+    protected $template_ids;
     protected $highest_revision_id;
+    protected $outputdir;
+    protected $wikiname;
 
     public function __construct(&$ruleconfigs)
     {
@@ -88,20 +89,6 @@ class TemplateParamBot
 		   		$errmsg = $this->generateSQLImport($argv[2], $argv[3], $argv[4]);
 		    	break;
 
-		    case 'createtables':
-				$dbh_tools = $this->serviceMgr->getDBConnection('tools');
-				new CreateTables($dbh_tools);
-				$errmsg = '';
-		    	break;
-
-		    case 'dumptemplatedata':
-				if ($argc < 4) {
-		    		return 'No wikiname and/or output dir supplied';
-		    	}
-
-		    	$errmsg = $this->dumpTemplateData($argv[2], $argv[3]);
-		    	break;
-
 		    default:
 		    	return 'Unknown action = ' . $action;
 		    	break;
@@ -119,6 +106,9 @@ class TemplateParamBot
     public function processQuery($queryid)
     {
 
+    	$filepath = "compress.bzip2://$outputdir$wikiname-tmpl-param-values.csv.bz2";
+    	$ihndl = fopen($filepath, 'r');
+
     	return '';
     }
 
@@ -131,17 +121,23 @@ class TemplateParamBot
      */
     public function processXMLDump($filepath, $outputdir)
     {
-    	if (! preg_match('!(\\w+)-(\\d{8})-pages-articles.xml.bz2!', $filepath, $matches)) {
-    		return 'File path must resemble enwiki-20160113-pages-articles.xml.bz2';
+    	if (! preg_match('!(\\w+)-(\\d{8})-pages-meta-current.xml.bz2!', $filepath, $matches)) {
+    		return 'File path must resemble enwiki-20160113-pages-meta-current.xml.bz2';
+    	}
+    	if ($outputdir[0] != '/') {
+    		return 'Output dir must start with /';
     	}
     	$wikiname = $matches[1];
     	$dumpdate = $matches[2];
+    	$this->wikiname = $wikiname;
 
 		if (! isset($this->ruleconfigs[$wikiname])) {
 			return "Wikiname not found = $wikiname";
 		}
 
 		if (substr($outputdir, -1) != DIRECTORY_SEPARATOR) $outputdir .= DIRECTORY_SEPARATOR;
+		$outputdir .= 'TemplateParamBot' . DIRECTORY_SEPARATOR;
+		$this->outputdir = $outputdir;
 
     	// Open the compressed dump file
     	$fh = bzopen($filepath, 'r');
@@ -155,13 +151,15 @@ class TemplateParamBot
     	xml_set_element_handler($xml_parser, array($this, 'startElement'), array($this, 'endElement'));
     	xml_set_character_data_handler($xml_parser, array($this, 'characterData'));
 
-    	// Open the value output file
-    	$value_filepath = "$outputdir$wikiname-tmpl-param-values.csv.bz2";
-    	$this->tmpl_value_hndl = bzopen($value_filepath, 'w');
-
     	$this->clearParserState();
     	$this->highest_revision_id = 0;
-    	$this->templates = array();
+    	$this->loadTemplateData($wikiname);
+
+    	// Delete the value files
+    	$tmplvalpath = $outputdir . $wikiname;
+    	if (is_dir($tmplvalpath)) exec('rm -rf ' . $tmplvalpath);
+    	clearstatcache();
+    	if (! is_dir($tmplvalpath)) mkdir($tmplvalpath, 0775);
 
     	// Parse the xml
     	while(! feof($fh)) {
@@ -178,46 +176,131 @@ class TemplateParamBot
     		}
     	}
 
-    	bzclose($fh);
-    	bzclose($this->tmpl_value_hndl);
-
-    	// Write the template name file
-    	$template_filepath = "$outputdir$wikiname-tmpl-param-templates.csv";
-    	$hndl = fopen($template_filepath, 'w');
-    	$min_page_cnt = (int)Config::get(self::MIN_PAGE_CNT);
-
-    	foreach ($this->templates as $tmplname => $template) {
-    		if ($template['pagecnt'] < $min_page_cnt && ! isset($template['redirect'])) continue;
-    		if (! isset($template['pageid'])) continue;
-
-			$values = array($tmplname,
-					$template['pageid'],
-					$template['pagecnt'],
-					$template['instancecnt'],
-					isset($template['redirect']) ? $template['redirect'] : ''
-			);
-
-			$line = CSVString::format($values);
-			fwrite($hndl, $line);
-			fwrite($hndl, "\n");
+    	// Compress the value files
+    	$subdirs = array_diff(scandir($tmplvalpath), array('..', '.'));
+    	foreach ($subdirs as $subdir) {
+    		if (! is_numeric($subdir)) continue;
+    		$fullpath = $tmplvalpath . DIRECTORY_SEPARATOR . $subdir;
+    		if (! is_dir($fullpath)) continue;
+    		exec('bzip2 -q ' . $fullpath . DIRECTORY_SEPARATOR . '*.csv');
     	}
 
-    	fclose($hndl);
-
-    	// Write the metadata
-    	$metadata_filepath = "$outputdir$wikiname-tmpl-param-metadata.properties";
-    	$metadata = new Properties($metadata_filepath);
-    	$wikidata = $this->ruleconfigs[$wikiname];
-
-    	$metadata->set('wikiname', $wikiname);
-    	$metadata->set('wikititle', $wikidata['title']);
-    	$metadata->set('wikidomain', $wikidata['domain']);
-    	$metadata->set('templateNS', $wikidata['templateNS']);
-    	$metadata->set('lang', $wikidata['lang']);
-    	$metadata->set('lastdumpdate', $dumpdate);
-    	$metadata->set('highest_revision_id', $this->highest_revision_id, true);
+    	$this->updateTables($wikiname, $dumpdate);
 
     	return '';
+    }
+
+    /**
+     * Update the tables
+     *
+     * @param string $wikiname
+     * @param string $dumpdate
+     */
+    function updateTables($wikiname, $dumpdate)
+    {
+    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
+
+    	new CreateTables($dbh_tools);
+
+		$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_templates` (
+    		`id` int unsigned NOT NULL PRIMARY KEY,
+    		`name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    		`page_count` int unsigned NOT NULL,
+    		`instance_count` int unsigned NOT NULL,
+    		`value_count` int unsigned NOT NULL,
+    		`last_update` datetime NOT NULL,
+    		`revision_id` int unsigned NOT NULL,
+    		UNIQUE `name` (`name`)
+    		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+		$dbh_tools->exec($sql);
+
+		$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_values` (
+    		`page_id` int unsigned NOT NULL,
+	    	`template_id` int unsigned NOT NULL,
+    		`instance_num` int unsigned NOT NULL,
+    		`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    		`param_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    		KEY `template_id` (`template_id`, `param_name`),
+    		KEY `page_id` (`page_id`)
+    		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+		$dbh_tools->exec($sql);
+
+		$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_totals` (
+    		`template_id` int unsigned NOT NULL,
+    		`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    		`value_count` int unsigned NOT NULL,
+    		`unique_value_count` int unsigned NOT NULL,
+    		`unique_values` blob NOT NULL,
+    		KEY `template_id` (`template_id`)
+    		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
+
+		$dbh_tools->exec("TRUNCATE {$wikiname}_templates");
+		$dbh_tools->exec("TRUNCATE {$wikiname}_values");
+		$dbh_tools->exec("TRUNCATE {$wikiname}_totals");
+
+    	preg_match('!(\\d{4})(\\d{2})(\\d{2})!', $dumpdate, $dd);
+
+    	$last_update = "{$dd[1]}-{$dd[2]}-{$dd[3]} 00:00:00";
+    	$templatecnt = $templateinstancecnt = $templatevaluecnt = 0;
+
+    	// Write the template info
+    	foreach ($this->templates as $tmplid => &$tp) {
+    		if (! $tp['valuecnt']) continue;
+
+    		$sth = $dbh_tools->prepare("INSERT INTO {$wikiname}_templates VALUES (?,?,?,?,?,?,?)");
+   			$sth->execute(array($tmplid, $tp['name'], $tp['pagecnt'], $tp['instancecnt'], $tp['valuecnt'],
+   				$last_update, $this->highest_revision_id));
+
+   			++$templatecnt;
+   			$templateinstancecnt += $tp['instancecnt'];
+   			$templatevaluecnt += $tp['valuecnt'];
+
+   			$sth = $dbh_tools->prepare("INSERT INTO {$wikiname}_totals VALUES (?,?,?,?,?)");
+
+   			foreach ($tp['values'] as $key => &$data) {
+
+   				if ($data['vals'] === false) {
+   					$uniquecount = 50;
+   					$uniquevalues = '';
+   				} else {
+   					$uniquecount = count($data['vals']);
+   					$tmp = array();
+   					foreach ($data['vals'] as $val => $cnt) {
+   						$tmp[] = $val;
+   						$tmp[] = $cnt;
+   					}
+   					$uniquevalues = implode("\v", $tmp);
+   				}
+
+   				$sth->execute(array($tmplid, $key, $data['cnt'], $uniquecount, $uniquevalues));
+   			}
+
+   			unset($data);
+	   	}
+
+    	unset($tp);
+
+    	// Add/update the wiki table entry
+    	$sth = $dbh_tools->prepare("SELECT wikititle FROM wikis WHERE wikiname = ?");
+    	$sth->bindParam(1, $wikiname);
+    	$sth->execute();
+
+    	if (! $sth->fetch(PDO::FETCH_ASSOC)) {
+    		$wikidata = $this->ruleconfigs[$wikiname];
+    		$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname,wikititle,wikidomain,templateNS,lang,lastdumpdate,
+    			revision_id,templatecnt,templateinstancecnt,templatevaluecnt) VALUES (?,?,?,?,?,?,?,?,?,?)');
+   			$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain'], $wikidata['templateNS'], $wikidata['lang'],
+   				$dumpdate, $this->highest_revision_id, $templatecnt, $templateinstancecnt, $templatevaluecnt));
+   			$sth = null;
+    	} else {
+			$sth = $dbh_tools->prepare('UPDATE wikis SET revision_id = ?, lastdumpdate = ?, templatecnt = ?,
+				templateinstancecnt = ?, templatevaluecnt = ? WHERE wikiname = ?');
+    		$sth->execute(array($this->highest_revision_id, $dumpdate, $templatecnt, $templateinstancecnt, $templatevaluecnt, $wikiname));
+    	}
+
+    	$sth = null;
+    	$dbh_tools = null;
     }
 
     /**
@@ -225,26 +308,12 @@ class TemplateParamBot
      */
     function processPage()
     {
-    	static $instancecnt = 0;
+    	static $pagecnt = 0;
+    	++$pagecnt;
+    	if ($pagecnt % 100000 == 0) echo "$pagecnt\n";
 
     	$revid = (int)$this->parserState['revision_id'];
 		if ($revid > $this->highest_revision_id) $this->highest_revision_id = $revid;
-
-		// Save template redirect target and template page id
-		if ($this->parserState['namespace'] == 10) {
-			$tmplname = $this->parserState['page_title'];
-			if (! isset($this->templates[$tmplname])) $this->templates[$tmplname] = array('pagecnt' => 0, 'instancecnt' => 0);
-
-			$this->templates[$tmplname]['pageid'] = $this->parserState['page_id'];
-
-			if (! empty($this->parserState['redirect_target'])) {
-				$redir = $this->parserState['redirect_target'];
-				$namespace = MediaWiki::getNamespaceName($redir);
-				if (strlen($namespace) > 0) $redir = substr($redir, strlen($namespace) + 1); // Strip namespace + :
-
-				$this->templates[$tmplname]['redirect'] = $redir;
-			}
-		}
 
 		// Parse the templates
 		$templates = TemplateParamParser::getTemplates($this->parserState['data']);
@@ -253,6 +322,8 @@ class TemplateParamBot
 		foreach ($templates as $template) {
 			$tmplname = $template['name'];
 			$params = $template['params'];
+			if (! isset($this->template_ids[$tmplname])) continue;
+			$tmplid = $this->template_ids[$tmplname];
 
 			foreach ($params as $key => $value) {
 				if (empty($value)) unset($params[$key]);
@@ -260,27 +331,58 @@ class TemplateParamBot
 
 			if (empty($params)) continue;
 
-			if (! isset($this->templates[$tmplname])) $this->templates[$tmplname] = array('pagecnt' => 0, 'instancecnt' => 0);
-			if (! isset($pagetemplates[$tmplname])) $pagetemplates[$tmplname] = 0;
-			++$pagetemplates[$tmplname];
+			if (! isset($pagetemplates[$tmplid])) $pagetemplates[$tmplid] = 0;
+			++$pagetemplates[$tmplid];
 
-			if ($pagetemplates[$tmplname] == 1) ++$this->templates[$tmplname]['pagecnt'];
-			++$this->templates[$tmplname]['instancecnt'];
+			if ($pagetemplates[$tmplid] == 1) ++$this->templates[$tmplid]['pagecnt'];
+			++$this->templates[$tmplid]['instancecnt'];
 
 			// Write a line to the value file
-			$values = array($this->parserState['page_id'], $tmplname, $pagetemplates[$tmplname]);
+			$values = array($this->parserState['page_id'], $pagetemplates[$tmplid]);
 
 			foreach ($params as $key => $value) {
-				$value = str_replace("\n", '<cr>', $value);
+				$value = str_replace("\n", '<cr>', $value); // don't want newlines in csv file
+				if (strlen($key) > 255) $key = substr($key, 0, 255);
+				if (strlen($value) > 255) $value = substr($value, 0, 255);
+
 				$values[] = $key;
 				$values[] = $value;
+				++$this->templates[$tmplid]['valuecnt'];
+
+				// Calc unique values
+				if (! isset($this->templates[$tmplid]['values'][$key])) {
+					$this->templates[$tmplid]['values'][$key] = array('cnt' => 0, 'vals' => array());
+				}
+				++$this->templates[$tmplid]['values'][$key]['cnt'];
+
+				if ($this->templates[$tmplid]['values'][$key]['vals'] !== false) {
+					if (! isset($this->templates[$tmplid]['values'][$key]['vals'][$value])) {
+						$this->templates[$tmplid]['values'][$key]['vals'][$value] = 1;
+					} else {
+						++$this->templates[$tmplid]['values'][$key]['vals'][$value];
+					}
+
+					if (count($this->templates[$tmplid]['values'][$key]['vals']) == 50) {
+						$this->templates[$tmplid]['values'][$key]['vals'] = false; // reclaim memory
+					}
+				}
 			}
 
-			$line = CSVString::format($values);
-			bzwrite($this->tmpl_value_hndl, $line);
-			bzwrite($this->tmpl_value_hndl, "\n");
-			++$instancecnt;
-			if ($instancecnt % 100000 == 0) echo "$instancecnt\n";
+			$subdir = (Convert::crc16($tmplid) % 100);
+
+			$filepath = $this->outputdir . $this->wikiname . DIRECTORY_SEPARATOR . $subdir;
+			if (! is_dir($filepath)) mkdir($filepath, 0775);
+			$filepath .= DIRECTORY_SEPARATOR . $tmplid . '.csv';
+			$hndl = fopen($filepath, 'a');
+			if (! $hndl) {
+				throw new Exception("processPage - error opening $filepath");
+			}
+
+			$line = implode("\v", $values); // vertical tab
+			fwrite($hndl, $line);
+			fwrite($hndl, "\n");
+
+			fclose($hndl);
 		}
     }
 
@@ -290,7 +392,7 @@ class TemplateParamBot
     function clearParserState()
     {
     	$this->parserState = array('container' => '', 'element' => '', 'page_id' => '', 'namespace' => '', 'data' => '',
-    		'page_title' => '', 'redirect_target' => '', 'revision_id' => 0);
+    		'page_title' => '', 'revision_id' => 0);
     }
 
     /**
@@ -307,10 +409,6 @@ class TemplateParamBot
     	switch ($name) {
     		case 'page':
     			if ($this->parserState['container'] == '') $this->parserState['container'] = 'page';
-    			break;
-
-    		case 'redirect':
-    			if ($this->parserState['container'] == 'page') $this->parserState['redirect_target'] = $attribs['title'];
     			break;
 
     		case 'revision':
@@ -384,180 +482,39 @@ class TemplateParamBot
     }
 
     /**
-     * Generate template param value sql import file
+     * Load template names and redirects to them
      *
-     * mysql --defaults-file=~/replica.my.cnf -h enwiki.labsdb s51454__TemplateParamBot_p <enwiki-tmpl-param.sql
-     *
-     * @param string $tmplfilepath
-     * @param string $valuefilepath
-     * @param string $outputdir
-     * @return string Error message
+     * @param string $wikiname
      */
-    public function generateSQLImport($tmplfilepath, $valuefilepath, $outputdir)
+    function loadTemplateData($wikiname)
     {
-    	if (! preg_match('!(\\w+)-tmpl-param-templates.csv!', $filepath, $matches)) {
-    		return 'Template file path must resemble enwiki-tmpl-param-templates.csv';
-    	}
-    	$wikiname = $matches[1];
+        $dbh_tools = $this->serviceMgr->getDBConnection($wikiname);
 
-		if (! isset($this->ruleconfigs[$wikiname])) {
-			return "Wikiname not found = $wikiname";
-		}
-
-    	$filepath = "$outputdir$wikiname-tmpl-param-metadata.properties";
-    	$metadata = new Properties($filepath);
-
-		if (substr($outputdir, -1) != DIRECTORY_SEPARATOR) $outputdir .= DIRECTORY_SEPARATOR;
-
-    	$max_instance_cnt = Config::get(self::MAX_INSTANCE_CNT);
-
-    	// Load the templates
-    	$templates = array();
-
-    	$ihndl = fopen($tmplfilepath, 'r');
-
-    	while (! feof($ihndl)) {
-    		$buffer = rtrim(fgets($ihndl));
-    		if (empty($buffer)) continue;
-
-    		list($tmplname,$pageid,$pagecnt,$instancecnt,$redirect) = CSVString::parse($buffer);
-
-    		$templates[$tmplname] = array('pageid' => $pageid, 'pagecnt' => $pagecnt, 'instancecnt' => $instancecnt,
-    			'redirect' => $redirect, 'paramnames' => array());
-    	}
-
-    	fclose($ihndl);
-
-    	$filepath = "$outputdir$wikiname-tmpl-param.sql.bz2";
-    	$ohndl = bzopen($filepath, 'w');
-
-    	$this->writeSQLHeader($ohndl, $metadata);
-
-    	$filepath = "compress.bzip2://$outputdir$wikiname-tmpl-param-values.csv.bz2";
-    	$ihndl = fopen($filepath, 'r');
-
-    	while (! feof($ihndl)) {
-    		$buffer = rtrim(fgets($ihndl));
-    		if (empty($buffer)) continue;
-
-    		$fields = CSVString::parse($buffer);
-    		$pageid = $fields[0];
-    		$tmplname = $fields[1];
-    		$instancenum = $fields[2];
-    		$params = array();
-    	}
-
-    	fclose($ihndl);
-
-    	$this->writeSQLTrailer($ohndl, $metadata, $templates);
-
-    	bzclose($ohndl);
-
-    	return '';
-    }
-
-    function writeSQLHeader($hndl, Properties $metadata)
-    {
-    	$wikiname = $metadata->get('wikiname');
-
-    	$sql = <<<EOT
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-
-CREATE TABLE IF NOT EXISTS `{$wikiname}_templates` (
-    	`template_id` int unsigned NOT NULL PRIMARY KEY,
-    	`page_count` int unsigned NOT NULL,
-    	`instance_count` int unsigned NOT NULL,
-    	`last_update` datetime NOT NULL,
-    	`revision_id` int unsigned NOT NULL
-    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `{$wikiname}_values` (
-    	`page_id` int unsigned NOT NULL,
-    	`template_id` int unsigned NOT NULL,
-    	`instance_num` int unsigned NOT NULL,
-    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-    	`param_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-    	KEY `template_id` (`template_id`)
-    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `{$wikiname}_totals` (
-    	`template_id` int unsigned NOT NULL,
-    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-    	`value_count` int unsigned NOT NULL,
-    	`unique_value_count` int unsigned NOT NULL,
-    	KEY `template_id` (`template_id`)
-    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*!40101 SET character_set_client = @saved_cs_client */;
-EOT;
-
-    	fwrite($hndl, $sql);
-
-
-    	// Add the wiki table entry if needed
-    	$wikidata = $this->ruleconfigs[$wikiname];
-    	$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname,wikititle,wikidomain,templateNS,lang,lastdumpdate,revision_id,templatecnt,templateinstancecnt,templatevaluecnt) VALUES (?,?,?,?,?,?,0,0,0,0)');
-   		$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain'], $wikidata['templateNS'], $wikidata['lang'], $dumpdate));
-
-    	$sth = $dbh_tools->prepare('UPDATE wikis SET revision_id = ? WHERE wikiname = ?');
-    	$sth->execute(array($this->highest_revision_id, $wikiname));
-    }
-
-    function writeSQLTrailer($hndl, Properties $metadata, $templates)
-    {
-    	$sql = <<<EOT
-
-/*!40000 ALTER TABLE `$wikiname` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-EOT;
-
-    	fwrite($hndl, $sql);
-
-    }
-
-    public function dumpTemplateData($wikiname, $outputdir)
-    {
-    	$filepath = "$outputdir$wikiname-tmpl-param-templatedata.csv";
-    	$hndl = fopen($filepath, 'w');
-
-    	$dbh_tools = $this->serviceMgr->getDBConnection($wikiname);
-
-    	$sql = "SELECT p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|') FROM page_props
-    		STRAIGHT_JOIN page p1 ON pp_page = p1.page_id
+    	$sql = "SELECT p1.page_id, p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|') FROM page p1
     		LEFT JOIN redirect ON rd_namespace = p1.page_namespace AND rd_title = p1.page_title
-    		STRAIGHT_JOIN page p2 ON rd_from = p2.page_id
-    		WHERE pp_propname = 'templatedata' AND
-    			AND p1.page_namespace = 10
+    		LEFT JOIN page p2 ON rd_from = p2.page_id
+    		WHERE p1.page_namespace = 10 AND p1.page_is_redirect = 0
     		GROUP BY p1.page_title";
 
     	$sth = $dbh_tools->query($sql);
     	$sth->setFetchMode(PDO::FETCH_NUM);
 
     	while ($row = $sth->fetch()) {
-    		fwrite($hndl, "{$row[0]}\n");
+    	    $templid = $row[0];
+    		$templname = str_replace('_', ' ', $row[1]);
+    		$redirtmpls = explode('|', $row[2]);
+
+    		$this->template_ids[$templname] = $templid;
+    		$this->templates[$templid] = array('name' => $templname,'pagecnt' => 0, 'instancecnt' => 0, 'valuecnt' => 0,
+    				'values' => array());
+
+    		foreach ($redirtmpls as $templname) {
+    			$templname = str_replace('_', ' ', $templname);
+    			$this->template_ids[$templname] = $templid;
+    		}
     	}
 
-    	fclose($hndl);
+    	$sth = null;
+    	$dbh_tools = null;
     }
 }

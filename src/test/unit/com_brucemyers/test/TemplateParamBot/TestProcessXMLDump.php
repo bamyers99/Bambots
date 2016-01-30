@@ -18,6 +18,7 @@
 namespace com_brucemyers\test\TemplateParamBot;
 
 use com_brucemyers\TemplateParamBot\TemplateParamBot;
+use com_brucemyers\TemplateParamBot\ServiceManager;
 use com_brucemyers\Util\FileCache;
 use UnitTestCase;
 
@@ -29,6 +30,11 @@ class TestProcessXMLDump extends UnitTestCase
     	$datadir = FileCache::getCacheDir();
     	$infilepath = $datadir . DIRECTORY_SEPARATOR . 'enwiki-20160113-pages-articles.xml.bz2';
     	$this->_createDumpFile($infilepath);
+
+    	$serviceMgr = new ServiceManager();
+    	$dbh_wiki = $serviceMgr->getDBConnection('enwiki');
+    	$dbh_tools = $serviceMgr->getDBConnection('tools');
+    	new CreateTables($dbh_wiki, $dbh_tools);
 
     	$ruleconfigs = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en'));
 
@@ -175,7 +181,7 @@ class TestProcessXMLDump extends UnitTestCase
     				|1976
     				|12
     				|11}}
-    			|honorific=Mr}}</text>
+    			|honorific=}}</text>
     </revision>
   </page>
   <page>
