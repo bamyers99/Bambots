@@ -143,7 +143,7 @@ class TemplateParamParser
 					}
 
 					$param_name = trim($param_name);
-					$tmpl_params[$param_name] = trim($param_value);
+					if (strlen($param_name)) $tmpl_params[$param_name] = trim($param_value);
 				}
 			}
 

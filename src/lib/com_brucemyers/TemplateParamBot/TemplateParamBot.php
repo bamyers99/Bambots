@@ -21,6 +21,7 @@ use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Convert;
+use com_brucemyers\Util\FileCache;
 use PDO;
 use Exception;
 
@@ -87,6 +88,14 @@ class TemplateParamBot
 		    	}
 
 		   		$errmsg = $this->generateSQLImport($argv[2], $argv[3], $argv[4]);
+		    	break;
+
+		    case 'dumptemplateids':
+		    	if ($argc < 3) {
+		    		return 'No wikiname supplied';
+		    	}
+
+		    	$errmsg = $this->dumpTemplateIds($argv[2]);
 		    	break;
 
 		    default:
@@ -395,7 +404,7 @@ class TemplateParamBot
     function clearParserState()
     {
     	$this->parserState = array('container' => '', 'element' => '', 'page_id' => '', 'namespace' => '', 'data' => '',
-    		'page_title' => '', 'revision_id' => 0);
+    		'revision_id' => 0);
     }
 
     /**
@@ -456,10 +465,6 @@ class TemplateParamBot
     	switch ($this->parserState['container']) {
     		case 'page':
     			switch ($this->parserState['element']) {
-    				case 'title':
-    					$this->parserState['page_title'] .= $data;
-    					break;
-
     				case 'ns':
     					$this->parserState['namespace'] .= $data;
     					break;
@@ -520,6 +525,47 @@ class TemplateParamBot
     		}
     	}
 
+    	$sth = null;
+    	$dbh_tools = null;
+    }
+
+    /**
+     * Dump template ids and redirects to them for templates with templatedata
+     *
+     * @param string $wikiname
+     */
+    function dumpTemplateIds($wikiname)
+    {
+    	$outpath = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . $wikiname . 'TemplateIds.tsv';
+    	$hndl = fopen($outpath, 'w');
+        $dbh_tools = $this->serviceMgr->getDBConnection($wikiname);
+
+    	$sql = "SELECT p1.page_id, p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|') FROM page_props
+    		STRAIGHT_JOIN page p1 ON pp_page = p1.page_id
+    		LEFT JOIN redirect ON rd_namespace = p1.page_namespace AND rd_title = p1.page_title
+    		LEFT JOIN page p2 ON rd_from = p2.page_id
+    		WHERE pp_propname = 'templatedata'
+    			AND p1.page_namespace = 10
+    			AND p1.page_is_redirect = 0
+    		GROUP BY p1.page_id";
+
+    	$sth = $dbh_tools->query($sql);
+    	$sth->setFetchMode(PDO::FETCH_NUM);
+
+    	while ($row = $sth->fetch()) {
+    	    $templid = $row[0];
+    		$templname = str_replace('_', ' ', $row[1]);
+    		$redirtmpls = explode('|', $row[2]);
+
+    		fwrite($hndl, "$templname\t$templid\n");
+
+    		foreach ($redirtmpls as $templname) {
+    			$templname = str_replace('_', ' ', $templname);
+    			fwrite($hndl, "$templname\t$templid\n");
+     		}
+    	}
+
+		fclose($hndl);
     	$sth = null;
     	$dbh_tools = null;
     }
