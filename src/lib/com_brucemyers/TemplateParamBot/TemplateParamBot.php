@@ -82,6 +82,14 @@ class TemplateParamBot
 		   		$errmsg = $this->processXMLDump($argv[2], $argv[3]);
 		    	break;
 
+		    case 'processparamdump':
+				if ($argc < 4) {
+		    		return 'No filepath and/or output dir supplied';
+		    	}
+
+		   		$errmsg = $this->processParamDump($argv[2], $argv[3]);
+		    	break;
+
 		    case 'gensqlimport':
 				if ($argc < 5) {
 		    		return 'No template filepath and/or value filepath and/or output dir supplied';
@@ -140,13 +148,13 @@ class TemplateParamBot
     	$dumpdate = $matches[2];
     	$this->wikiname = $wikiname;
 
-		if (! isset($this->ruleconfigs[$wikiname])) {
-			return "Wikiname not found = $wikiname";
-		}
+    	if (! isset($this->ruleconfigs[$wikiname])) {
+    		return "Wikiname not found = $wikiname";
+    	}
 
-		if (substr($outputdir, -1) != DIRECTORY_SEPARATOR) $outputdir .= DIRECTORY_SEPARATOR;
-		$outputdir .= 'TemplateParamBot' . DIRECTORY_SEPARATOR;
-		$this->outputdir = $outputdir;
+    	if (substr($outputdir, -1) != DIRECTORY_SEPARATOR) $outputdir .= DIRECTORY_SEPARATOR;
+    	$outputdir .= 'TemplateParamBot' . DIRECTORY_SEPARATOR;
+    	$this->outputdir = $outputdir;
 
     	// Open the compressed dump file
     	$fh = bzopen($filepath, 'r');
@@ -179,9 +187,9 @@ class TemplateParamBot
     		}
 
     		if (! xml_parse($xml_parser, $buffer, feof($fh))) {
-        		return sprintf('XML error: %s at line %d',
-                    xml_error_string(xml_get_error_code($xml_parser)),
-                    xml_get_current_line_number($xml_parser));
+    			return sprintf('XML error: %s at line %d',
+    					xml_error_string(xml_get_error_code($xml_parser)),
+    					xml_get_current_line_number($xml_parser));
     		}
     	}
 
@@ -200,6 +208,139 @@ class TemplateParamBot
     }
 
     /**
+     * Process a template parameter dump
+     *
+     * @param string $infilepath
+     * @param string $outputdir
+     * @return string Error message
+     */
+    public function processParamDump($infilepath, $outputdir)
+    {
+    	if (! preg_match('!(\\w+)-(\\d{8})-TemplateParams.bz2!', $infilepath, $matches)) {
+    		return 'File path must resemble enwiki-20160113-TemplateParams.bz2';
+    	}
+    	if ($outputdir[0] != '/') {
+    		return 'Output dir must start with /';
+    	}
+    	$wikiname = $matches[1];
+    	$dumpdate = $matches[2];
+    	$this->wikiname = $wikiname;
+
+		if (! isset($this->ruleconfigs[$wikiname])) {
+			return "Wikiname not found = $wikiname";
+		}
+
+		if (substr($outputdir, -1) != DIRECTORY_SEPARATOR) $outputdir .= DIRECTORY_SEPARATOR;
+		$outputdir .= 'TemplateParamBot' . DIRECTORY_SEPARATOR;
+		$this->outputdir = $outputdir;
+
+    	// Open the compressed dump file
+    	$fh = fopen("compress.bzip2://$infilepath", 'r');
+    	if (! $fh) {
+    		return "Dump file not found = $infilepath";
+    	}
+
+    	$this->highest_revision_id = 0;
+    	$this->loadTemplateData($wikiname);
+
+    	// Delete the value files
+    	$tmplvalpath = $outputdir . $wikiname;
+    	if (is_dir($tmplvalpath)) exec('rm -rf ' . $tmplvalpath);
+    	clearstatcache();
+    	if (! is_dir($tmplvalpath)) mkdir($tmplvalpath, 0775);
+
+    	$pageid = '';
+    	$pagetemplates = array();
+
+    	// Parse tsv file
+    	while(! feof($fh)) {
+			$buffer = fgets($fh);
+			$buffer = rtrim($buffer, "\n");
+			if (empty($buffer)) continue;
+
+			$data = explode("\v", $buffer);
+
+			if ($data[0][0] == 'P') { // page
+				$pageid = substr($data[0], 1);
+    			$revid = (int)$data[1];
+				if ($revid > $this->highest_revision_id) $this->highest_revision_id = $revid;
+				$pagetemplates = array();
+
+			} else { // template
+				$tmplid = substr($data[0], 1);
+				if (! isset($this->templates[$tmplid])) continue; // template is gone
+
+				if (! isset($pagetemplates[$tmplid])) $pagetemplates[$tmplid] = 0;
+				++$pagetemplates[$tmplid];
+
+				if ($pagetemplates[$tmplid] == 1) ++$this->templates[$tmplid]['pagecnt'];
+				++$this->templates[$tmplid]['instancecnt'];
+
+				// Write a line to the value file
+				$values = array($pageid, $pagetemplates[$tmplid]);
+				$paramcnt = count($data);
+
+				for ($x=1; $x < $paramcnt; $x += 2) {
+					$key = $data[$x];
+					$value = $data[$x+1];
+					$values[] = $key;
+					$values[] = $value;
+					++$this->templates[$tmplid]['valuecnt'];
+
+					// Calc unique values
+					if (! isset($this->templates[$tmplid]['values'][$key])) {
+						$this->templates[$tmplid]['values'][$key] = array('cnt' => 0, 'vals' => array());
+					}
+					++$this->templates[$tmplid]['values'][$key]['cnt'];
+
+					if ($this->templates[$tmplid]['values'][$key]['vals'] !== false) {
+						if (! isset($this->templates[$tmplid]['values'][$key]['vals'][$value])) {
+							$this->templates[$tmplid]['values'][$key]['vals'][$value] = 1;
+						} else {
+							++$this->templates[$tmplid]['values'][$key]['vals'][$value];
+						}
+
+						if (count($this->templates[$tmplid]['values'][$key]['vals']) == 50) {
+							$this->templates[$tmplid]['values'][$key]['vals'] = false; // reclaim memory
+						}
+					}
+				}
+
+				$subdir = (Convert::crc16($tmplid) % 100);
+
+				$filepath = $this->outputdir . $this->wikiname . DIRECTORY_SEPARATOR . $subdir;
+				if (! is_dir($filepath)) mkdir($filepath, 0775);
+				$filepath .= DIRECTORY_SEPARATOR . $tmplid . '.csv';
+				$hndl = fopen($filepath, 'a');
+				if (! $hndl) {
+					throw new Exception("processPage - error opening $filepath");
+				}
+
+				$line = implode("\v", $values); // vertical tab
+				fwrite($hndl, $line);
+				fwrite($hndl, "\n");
+
+				fclose($hndl);
+			}
+    	}
+
+    	fclose($fh);
+
+    	// Compress the value files
+    	$subdirs = array_diff(scandir($tmplvalpath), array('..', '.'));
+    	foreach ($subdirs as $subdir) {
+    		if (! is_numeric($subdir)) continue;
+    		$fullpath = $tmplvalpath . DIRECTORY_SEPARATOR . $subdir;
+    		if (! is_dir($fullpath)) continue;
+    		exec('bzip2 -q ' . $fullpath . DIRECTORY_SEPARATOR . '*.csv');
+    	}
+
+    	$this->updateTables($wikiname, $dumpdate);
+
+    	return '';
+    }
+
+/**
      * Update the tables
      *
      * @param string $wikiname

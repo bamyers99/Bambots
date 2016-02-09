@@ -25,11 +25,82 @@ use UnitTestCase;
 class TestProcessXMLDump extends UnitTestCase
 {
 
-    public function testProcessXMLDump()
+	public function testProcessParamDump()
+	{
+		$datadir = FileCache::getCacheDir();
+		$infilepath = $datadir . DIRECTORY_SEPARATOR . 'enwiki-20160113-TemplateParams.bz2';
+		$this->_createParamDumpFile($infilepath);
+
+		$serviceMgr = new ServiceManager();
+		$dbh_wiki = $serviceMgr->getDBConnection('enwiki');
+		$dbh_tools = $serviceMgr->getDBConnection('tools');
+		new CreateTables($dbh_wiki, $dbh_tools);
+
+		$ruleconfigs = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en'));
+
+		$templBot = new TemplateParamBot($ruleconfigs);
+
+		$errmsg = $templBot->processParamDump($infilepath, $datadir);
+		if (! empty($errmsg)) echo "$errmsg\n";
+
+		$this->assertEqual($errmsg, '', 'processParamDump error');
+	}
+
+	protected function _createParamDumpFile($filepath)
+	{
+		$text = <<<EOT
+P101	699432101
+T3	1	1976	2	12	3	1
+T2	birth_date	{{Birth date|1976|12|1}}	honorific	Mr	title	Person 101
+P102	699432102
+T3	1	1976	2	12	3	2
+T2	birth_date	{{Birth date|1976|12|2}}	honorific	Dr	title	Person 102
+P103	699432103
+T3	1	1976	2	12	3	3
+T2	birth_date	{{Birth date|1976|12|3}}	honorific	Mrs	title	Person 103
+P104	699432104
+T3	1	1976	2	12	3	4
+T2	birth_date	{{Birth date|1976|12|4}}	honorific	Miss	title	Person 104
+P105	699432105
+T3	1	1976	2	12	3	5
+T2	birth_date	{{Birth date|1976|12|5}}	honorific	Mr	title	Person 105
+P106	699432106
+T3	1	1976	2	12	3	6
+T2	birth_date	{{Birth date|1976|12|6}}	honorific	Mr	title	Person 106
+P107	699432107
+T3	1	1976	2	12	3	7
+T2	birth_date	{{Birth date|1976|12|7}}	honorific	Mr	title	Person 107
+P108	699432108
+T3	1	1976	2	12	3	8
+T2	birth_date	{{Birth date|1976|12|8}}	honorific	Mr	title	Person 108
+P109	699432109
+T3	1	1976	2	12	3	9
+T2	birth_date	{{Birth date|1976|12|9}}	honorific	Mr	title	Person 109
+P110	699432110
+T3	1	1976	2	12	3	10
+T3	1	1976	2	12	3	10
+T2	birth_date	{{Birth date|1976|12|10}}	honorific	Mr	title	Person 110a
+T2	birth_date	{{Birth date|1976|12|10}}	honorific	Dr	title	Person 110b
+P111	699432111
+T3	1	1976	2	12	3	11
+T2	birth_date	{{Birth date|1976|12|11}}	title	Person 111
+P112	699432112
+T3	1	1976	2	12	3	12	df	y
+T2	birth_date	{{Birth date|1976|12|12|df=y}}	honorific	Mr	title	Person 112
+EOT;
+
+		$text = str_replace("\t", "\v", $text);
+
+		$bz = bzopen($filepath, 'w');
+		bzwrite($bz, $text);
+		bzclose($bz);
+	}
+
+    public function notestProcessXMLDump()
     {
     	$datadir = FileCache::getCacheDir();
     	$infilepath = $datadir . DIRECTORY_SEPARATOR . 'enwiki-20160113-pages-articles.xml.bz2';
-    	$this->_createDumpFile($infilepath);
+    	$this->_createXMLDumpFile($infilepath);
 
     	$serviceMgr = new ServiceManager();
     	$dbh_wiki = $serviceMgr->getDBConnection('enwiki');
@@ -46,7 +117,7 @@ class TestProcessXMLDump extends UnitTestCase
     	$this->assertEqual($errmsg, '', 'processXMLDump error');
     }
 
-    protected function _createDumpFile($filepath)
+    protected function _createXMLDumpFile($filepath)
     {
     	$text = <<<EOT
 <mediawiki xmlns="http://www.mediawiki.org/xml/export-0.10/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.10/ http://www.mediawiki.org/xml/export-0.10.xsd" version="0.10" xml:lang="en">
