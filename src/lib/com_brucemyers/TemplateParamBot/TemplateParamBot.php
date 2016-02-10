@@ -25,6 +25,12 @@ use com_brucemyers\Util\FileCache;
 use PDO;
 use Exception;
 
+/**
+ * Sample usage:
+ *
+ * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php processparamdump /data/project/bambots/Bambots/data/enwiki-20160113-TemplateParams.bz2 /data/project/bambots/Bambots/data
+ * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php dumptemplateids enwiki
+ */
 class TemplateParamBot
 {
     const ERROREMAIL = 'TemplateParamBot.erroremail';
@@ -360,7 +366,8 @@ class TemplateParamBot
     		`value_count` int unsigned NOT NULL,
     		`last_update` datetime NOT NULL,
     		`revision_id` int unsigned NOT NULL,
-    		UNIQUE `name` (`name`)
+    		UNIQUE `name` (`name`),
+    		KEY `instance_count` (`instance_count` DESC)
     		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 		$dbh_tools->exec($sql);
 
