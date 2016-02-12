@@ -28,7 +28,8 @@ use Exception;
 /**
  * Sample usage:
  *
- * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php processparamdump /data/project/bambots/Bambots/data/enwiki-20160113-TemplateParams.bz2 /data/project/bambots/Bambots/data
+ * jsub curl http://website/enwikiTemplateParams -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateParams
+ * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php loadtotalsoffsets /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateTotals /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateOffsets
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php dumptemplateids enwiki
  */
 class TemplateParamBot
@@ -88,21 +89,21 @@ class TemplateParamBot
 		   		$errmsg = $this->processXMLDump($argv[2], $argv[3]);
 		    	break;
 
-		    case 'processparamdump':
-				if ($argc < 4) {
-		    		return 'No filepath and/or output dir supplied';
-		    	}
+	    	case 'processparamdump':
+	    		if ($argc < 4) {
+	    			return 'No filepath and/or output dir supplied';
+	    		}
 
-		   		$errmsg = $this->processParamDump($argv[2], $argv[3]);
-		    	break;
+	    		$errmsg = $this->processParamDump($argv[2], $argv[3]);
+	    		break;
 
-		    case 'gensqlimport':
-				if ($argc < 5) {
-		    		return 'No template filepath and/or value filepath and/or output dir supplied';
-		    	}
+		    case 'loadtotalsoffsets':
+    			if ($argc < 4) {
+    				return 'No totals and/or offset paths supplied';
+    			}
 
-		   		$errmsg = $this->generateSQLImport($argv[2], $argv[3], $argv[4]);
-		    	break;
+    			$errmsg = $this->loadTotalsOffsets($argv[2], $argv[3]);
+    			break;
 
 		    case 'dumptemplateids':
 		    	if ($argc < 3) {
@@ -346,7 +347,7 @@ class TemplateParamBot
     	return '';
     }
 
-/**
+	/**
      * Update the tables
      *
      * @param string $wikiname
@@ -363,7 +364,7 @@ class TemplateParamBot
     		`name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     		`page_count` int unsigned NOT NULL,
     		`instance_count` int unsigned NOT NULL,
-    		`value_count` int unsigned NOT NULL,
+    		`file_offset` bigint NOT NULL,
     		`last_update` datetime NOT NULL,
     		`revision_id` int unsigned NOT NULL,
     		UNIQUE `name` (`name`),
@@ -386,7 +387,6 @@ class TemplateParamBot
     		`template_id` int unsigned NOT NULL,
     		`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     		`value_count` int unsigned NOT NULL,
-    		`unique_value_count` int unsigned NOT NULL,
     		`unique_values` blob NOT NULL,
     		KEY `template_id` (`template_id`)
     		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -399,19 +399,18 @@ class TemplateParamBot
     	preg_match('!(\\d{4})(\\d{2})(\\d{2})!', $dumpdate, $dd);
 
     	$last_update = "{$dd[1]}-{$dd[2]}-{$dd[3]} 00:00:00";
-    	$templatecnt = $templateinstancecnt = $templatevaluecnt = 0;
+    	$templatecnt = $templateinstancecnt = 0;
 
     	// Write the template info
     	foreach ($this->templates as $tmplid => &$tp) {
     		if (! $tp['valuecnt']) continue;
 
     		$sth = $dbh_tools->prepare("INSERT INTO {$wikiname}_templates VALUES (?,?,?,?,?,?,?)");
-   			$sth->execute(array($tmplid, $tp['name'], $tp['pagecnt'], $tp['instancecnt'], $tp['valuecnt'],
+   			$sth->execute(array($tmplid, $tp['name'], $tp['pagecnt'], $tp['instancecnt'],
    				$last_update, $this->highest_revision_id));
 
    			++$templatecnt;
    			$templateinstancecnt += $tp['instancecnt'];
-   			$templatevaluecnt += $tp['valuecnt'];
 
    			$sth = $dbh_tools->prepare("INSERT INTO {$wikiname}_totals VALUES (?,?,?,?,?)");
 
@@ -446,18 +445,183 @@ class TemplateParamBot
     	if (! $sth->fetch(PDO::FETCH_ASSOC)) {
     		$wikidata = $this->ruleconfigs[$wikiname];
     		$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname,wikititle,wikidomain,templateNS,lang,lastdumpdate,
-    			revision_id,templatecnt,templateinstancecnt,templatevaluecnt) VALUES (?,?,?,?,?,?,?,?,?,?)');
+    			revision_id,templatecnt,templateinstancecnt) VALUES (?,?,?,?,?,?,?,?,?,?)');
    			$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain'], $wikidata['templateNS'], $wikidata['lang'],
-   				$dumpdate, $this->highest_revision_id, $templatecnt, $templateinstancecnt, $templatevaluecnt));
+   				$dumpdate, $this->highest_revision_id, $templatecnt, $templateinstancecnt));
    			$sth = null;
     	} else {
 			$sth = $dbh_tools->prepare('UPDATE wikis SET revision_id = ?, lastdumpdate = ?, templatecnt = ?,
-				templateinstancecnt = ?, templatevaluecnt = ? WHERE wikiname = ?');
-    		$sth->execute(array($this->highest_revision_id, $dumpdate, $templatecnt, $templateinstancecnt, $templatevaluecnt, $wikiname));
+				templateinstancecnt = ? WHERE wikiname = ?');
+    		$sth->execute(array($this->highest_revision_id, $dumpdate, $templatecnt, $templateinstancecnt, $wikiname));
     	}
 
     	$sth = null;
     	$dbh_tools = null;
+    }
+
+    /**
+     * Load totals and offsets.
+     *
+     * @param string $totalsfilepath
+     * @param string $offsetsfilepath
+     */
+    function loadTotalsOffsets($totalsfilepath, $offsetsfilepath)
+    {
+        if (! preg_match('!(\\w+)-(\\d{8})-TemplateTotals!', $totalsfilepath, $matches)) {
+    		return 'totalsfilepath must resemble enwiki-20160113-TemplateTotals';
+    	}
+
+    	$wikiname = $matches[1];
+    	$dumpdate = $matches[2];
+
+    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
+
+    	new CreateTables($dbh_tools);
+
+    	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_templates` (
+    	`id` int unsigned NOT NULL PRIMARY KEY,
+    	`name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`page_count` int unsigned NOT NULL,
+    	`instance_count` int unsigned NOT NULL,
+    	`file_offset` bigint NOT NULL,
+    	`last_update` datetime NOT NULL,
+    	`revision_id` int unsigned NOT NULL,
+    	UNIQUE `name` (`name`),
+    	KEY `instance_count` (`instance_count` DESC)
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
+
+    	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_values` (
+    	`page_id` int unsigned NOT NULL,
+    	`template_id` int unsigned NOT NULL,
+    	`instance_num` int unsigned NOT NULL,
+    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`param_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	KEY `template_id` (`template_id`, `param_name`),
+    	KEY `page_id` (`page_id`)
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
+
+    	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_totals` (
+    	`template_id` int unsigned NOT NULL,
+    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`value_count` int unsigned NOT NULL,
+    	`unique_values` blob NOT NULL,
+    	KEY `template_id` (`template_id`)
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
+
+    	$dbh_tools->exec("TRUNCATE {$wikiname}_templates");
+    	$dbh_tools->exec("TRUNCATE {$wikiname}_values");
+    	$dbh_tools->exec("TRUNCATE {$wikiname}_totals");
+
+    	preg_match('!(\\d{4})(\\d{2})(\\d{2})!', $dumpdate, $dd);
+
+    	$last_update = "{$dd[1]}-{$dd[2]}-{$dd[3]} 00:00:00";
+    	$templatecnt = $templateinstancecnt = 0;
+
+    	$hndl = fopen($totalsfilepath, 'r');
+    	if ($hndl === false) return 'totalsfilepath not found';
+
+    	$sth_template = $dbh_tools->prepare("INSERT INTO {$wikiname}_templates VALUES (?,?,?,?,?,?,?)");
+    	$sth_total = $dbh_tools->prepare("INSERT INTO {$wikiname}_totals VALUES (?,?,?,?)");
+    	$count = 0;
+    	$dbh_tools->beginTransaction ();
+
+    	while (! feof($hndl)) {
+    		$buffer = fgets($hndl);
+    		$buffer = rtrim($buffer, "\n");
+    		if (empty($buffer)) continue;
+
+    		$type = $buffer[0];
+    		++$count;
+    		if ($count % 1000 == 0) {
+    			$dbh_tools->commit();
+    			$dbh_tools->beginTransaction();
+    		}
+
+    		if ($type == 'T') {
+    			$parts = explode("\t", $buffer);
+    			$tmplid = substr($parts[0], 1);
+    			$pagecnt = $parts[1];
+    			$instancecnt = $parts[2];
+
+    			$sth_template->execute(array($tmplid, $tmplid, $pagecnt, $instancecnt, 0, $last_update, 0));
+
+    			++$templatecnt;
+    			$templateinstancecnt += $instancecnt;
+
+    		} else { // P
+    			$parts = explode("\t", $buffer);
+    			$paramname = substr($parts[0], 1);
+    			$valuecnt = $parts[1];
+
+    			$partcnt = count($parts);
+    			if ($partcnt == 2) {
+    				$uniquevalues = '';
+    			} else {
+					$tmp = array();
+
+    				for ($x = 2; $x < $partcnt; $x += 2) {
+    					$tmp[] = $parts[$x];
+    					$tmp[] = $parts[$x+1];
+					}
+					$uniquevalues = implode("\t", $tmp);
+    			}
+
+   				$sth_total->execute(array($tmplid, $paramname, $valuecnt, $uniquevalues));
+    		}
+    	}
+
+    	fclose($hndl);
+    	$dbh_tools->commit();
+
+    	// Load the offsets
+
+    	$hndl = fopen($offsetsfilepath, 'r');
+    	if ($hndl === false) return 'offsetsfilepath not found';
+
+    	$sth_template = $dbh_tools->prepare("UPDATE {$wikiname}_templates SET file_offset = ? WHERE id = ?");
+    	$count = 0;
+    	$dbh_tools->beginTransaction ();
+
+    	while (! feof($hndl)) {
+    		$buffer = fgets($hndl);
+    		$buffer = rtrim($buffer, "\n");
+    		if (empty($buffer)) continue;
+    		list($tmplid, $offset) = explode("\t", $buffer);
+
+    	   	++$count;
+    		if ($count % 1000 == 0) {
+    			$dbh_tools->commit();
+    			$dbh_tools->beginTransaction();
+    		}
+
+    		$sth_template->execute(array($offset, $tmplid));
+    	}
+
+    	fclose($hndl);
+    	$dbh_tools->commit();
+
+        // Add/update the wiki table entry
+    	$sth = $dbh_tools->prepare("SELECT wikititle FROM wikis WHERE wikiname = ?");
+    	$sth->bindParam(1, $wikiname);
+    	$sth->execute();
+
+    	if (! $sth->fetch(PDO::FETCH_ASSOC)) {
+    		$wikidata = $this->ruleconfigs[$wikiname];
+    		$sth = $dbh_tools->prepare('INSERT INTO wikis (wikiname,wikititle,wikidomain,templateNS,lang,lastdumpdate,
+    			revision_id,templatecnt,templateinstancecnt) VALUES (?,?,?,?,?,?,?,?,?)');
+   			$sth->execute(array($wikiname, $wikidata['title'], $wikidata['domain'], $wikidata['templateNS'], $wikidata['lang'],
+   				$dumpdate, 0, $templatecnt, $templateinstancecnt));
+   			$sth = null;
+    	} else {
+			$sth = $dbh_tools->prepare('UPDATE wikis SET revision_id = ?, lastdumpdate = ?, templatecnt = ?,
+				templateinstancecnt = ? WHERE wikiname = ?');
+    		$sth->execute(array(0, $dumpdate, $templatecnt, $templateinstancecnt, $wikiname));
+    	}
+
+    	return '';
     }
 
     /**
@@ -507,7 +671,6 @@ class TemplateParamBot
 
 				$values[] = $key;
 				$values[] = $value;
-				++$this->templates[$tmplid]['valuecnt'];
 
 				// Calc unique values
 				if (! isset($this->templates[$tmplid]['values'][$key])) {
@@ -664,7 +827,7 @@ class TemplateParamBot
     		$redirtmpls = explode('|', $row[2]);
 
     		$this->template_ids[$templname] = $templid;
-    		$this->templates[$templid] = array('name' => $templname,'pagecnt' => 0, 'instancecnt' => 0, 'valuecnt' => 0,
+    		$this->templates[$templid] = array('name' => $templname,'pagecnt' => 0, 'instancecnt' => 0,
     				'values' => array());
 
     		foreach ($redirtmpls as $templname) {
@@ -716,5 +879,7 @@ class TemplateParamBot
 		fclose($hndl);
     	$sth = null;
     	$dbh_tools = null;
+
+    	echo "Template IDs written to $outpath\n";
     }
 }

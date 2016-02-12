@@ -25,7 +25,53 @@ use UnitTestCase;
 class TestProcessXMLDump extends UnitTestCase
 {
 
-	public function testProcessParamDump()
+	public function testLoadTotalsOffsets()
+	{
+		$datadir = FileCache::getCacheDir();
+		$totalsfilepath = $datadir . DIRECTORY_SEPARATOR . 'enwiki-20160113-TemplateTotals';
+		$offsetsfilepath = $datadir . DIRECTORY_SEPARATOR . 'enwiki-20160113-TemplateOffsets';
+		$this->_createTotalsOffsetsFiles($totalsfilepath, $offsetsfilepath);
+
+		$serviceMgr = new ServiceManager();
+		$dbh_wiki = $serviceMgr->getDBConnection('enwiki');
+		$dbh_tools = $serviceMgr->getDBConnection('tools');
+		new CreateTables($dbh_wiki, $dbh_tools);
+
+		$ruleconfigs = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en'));
+
+		$templBot = new TemplateParamBot($ruleconfigs);
+
+		$errmsg = $templBot->loadTotalsOffsets($totalsfilepath, $offsetsfilepath);
+		if (! empty($errmsg)) echo "$errmsg\n";
+
+		$this->assertEqual($errmsg, '', 'processParamDump error');
+	}
+
+	protected function _createTotalsOffsetsFiles($totalsfilepath, $offsetsfilepath)
+	{
+		$text = <<<EOT
+T3382507	12	13
+Pbirth_date	13	{{Birth date         |1976         |12         |11}}	1	{{Birth date|1976|12|10}}	2	{{Birth date|1976|12|12|df=y}}	1	{{Birth date|1976|12|1}}	1	{{Birth date|1976|12|2}}	1	{{Birth date|1976|12|3}}	1	{{Birth date|1976|12|4}}	1	{{Birth date|1976|12|5}}	1	{{Birth date|1976|12|6}}	1	{{Birth date|1976|12|7}}	1	{{Birth date|1976|12|8}}	1	{{Birth date|1976|12|9}}	1
+Phonorific	12	Dr	2	Miss	1	Mr	8	Mrs	1
+Ptitle	13	Person 101	1	Person 102	1	Person 103	1	Person 104	1	Person 105	1	Person 106	1	Person 107	1	Person 108	1	Person 109	1	Person 110a	1	Person 110b	1	Person 111	1	Person 112	1
+T6594285	12	13
+P1	13	1976	13
+P2	13	12	13
+P3	13	1	1	10	2	11	1	12	1	2	1	3	1	4	1	5	1	6	1	7	1	8	1	9	1
+Pdf	1	y	1
+EOT;
+
+		file_put_contents($totalsfilepath, $text);
+
+		$text = <<<EOT
+3382507	0
+6594285	1042
+EOT;
+
+		file_put_contents($offsetsfilepath, $text);
+	}
+
+	public function notestProcessParamDump()
 	{
 		$datadir = FileCache::getCacheDir();
 		$infilepath = $datadir . DIRECTORY_SEPARATOR . 'enwiki-20160113-TemplateParams.bz2';

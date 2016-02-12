@@ -45,8 +45,7 @@ class CreateTables
     	  `lastdumpdate` char(8) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	  `revision_id` int unsigned NOT NULL,
    	  	  `templatecnt` int unsigned NOT NULL,
-   	  	  `templateinstancecnt` int unsigned NOT NULL,
-    	  `templatevaluecnt` int unsigned NOT NULL
+   	  	  `templateinstancecnt` int unsigned NOT NULL
 		  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
     }
