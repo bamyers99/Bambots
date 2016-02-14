@@ -49,6 +49,7 @@ class L10N
     public function get($key, $capFirst = false)
     {
         $value =  $this->properties->get($key);
+        if (empty($value)) $value = $key;
         if ($capFirst) $value = mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, mb_strlen($value) - 1, 'UTF-8');
         return $value;
     }

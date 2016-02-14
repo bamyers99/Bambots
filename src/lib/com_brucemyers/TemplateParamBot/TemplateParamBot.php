@@ -31,6 +31,7 @@ use Exception;
  * jsub curl http://website/enwikiTemplateParams -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateParams
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php loadtotalsoffsets /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateTotals /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateOffsets
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php dumptemplateids enwiki
+ * UPDATE s51454__TemplateParamBot_p.enwiki_templates, enwiki_p.page SET `name` = replace(page_title, '_', ' ') WHERE page_id = id;
  */
 class TemplateParamBot
 {
@@ -546,7 +547,7 @@ class TemplateParamBot
     			$pagecnt = $parts[1];
     			$instancecnt = $parts[2];
 
-    			$sth_template->execute(array($tmplid, $tmplid, $pagecnt, $instancecnt, 0, $last_update, 0));
+    			$sth_template->execute(array($tmplid, $tmplid, $pagecnt, $instancecnt, -1, $last_update, 0));
 
     			++$templatecnt;
     			$templateinstancecnt += $instancecnt;

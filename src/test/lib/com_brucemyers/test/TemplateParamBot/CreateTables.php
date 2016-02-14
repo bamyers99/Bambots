@@ -66,8 +66,8 @@ class CreateTables
     	// load enwiki
 
    		$dbh_enwiki->exec("INSERT INTO page VALUES (1, 10, 'Infobox_Person', 1)");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (2, 10, 'Infobox_person', 0)");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (3, 10, 'Birth_date', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (3382507, 10, 'Infobox_person', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (6594285, 10, 'Birth_date', 0)");
 
    		$dbh_enwiki->exec("INSERT INTO page VALUES (101, 0, 'Person_101', 0)");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (102, 0, 'Person_102', 0)");
@@ -110,7 +110,7 @@ class CreateTables
 }
 EOT;
 
-   		$sth = $dbh_enwiki->prepare("INSERT INTO page_props VALUES (2, 'templatedata', ?)");
+   		$sth = $dbh_enwiki->prepare("INSERT INTO page_props VALUES (3382507, 'templatedata', ?)");
    		$sth->bindValue(1, $templatedata);
    		$sth->execute();
 
@@ -152,7 +152,7 @@ EOT;
 }
 EOT;
 
-   		$sth = $dbh_enwiki->prepare("INSERT INTO page_props VALUES (3, 'templatedata', ?)");
+   		$sth = $dbh_enwiki->prepare("INSERT INTO page_props VALUES (6594285, 'templatedata', ?)");
    		$sth->bindValue(1, $templatedata);
    		$sth->execute();
 
