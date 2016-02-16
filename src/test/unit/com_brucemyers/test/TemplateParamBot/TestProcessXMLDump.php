@@ -20,6 +20,7 @@ namespace com_brucemyers\test\TemplateParamBot;
 use com_brucemyers\TemplateParamBot\TemplateParamBot;
 use com_brucemyers\TemplateParamBot\ServiceManager;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\Config;
 use UnitTestCase;
 
 class TestProcessXMLDump extends UnitTestCase
@@ -69,6 +70,63 @@ EOT;
 EOT;
 
 		file_put_contents($offsetsfilepath, $text);
+	}
+
+	public function testLoadInstances()
+	{
+		$datadir = Config::get(TemplateParamBot::DATADIR) . DIRECTORY_SEPARATOR . 'TemplateParamBot';
+	    if (! is_dir($datadir)) {
+        	mkdir($datadir);
+        }
+		$instancefilepath = $datadir . DIRECTORY_SEPARATOR . 'enwiki-20160113-TemplateParams';
+		$this->_createInstanceFile($instancefilepath);
+
+		$serviceMgr = new ServiceManager();
+		$dbh_tools = $serviceMgr->getDBConnection('tools');
+		$dbh_tools->exec("INSERT INTO loads VALUES ('enwiki',3382507,'S','','2000-01-01','00:00:00')");
+
+		$ruleconfigs = array('enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en'));
+
+		$templBot = new TemplateParamBot($ruleconfigs);
+
+		$errmsg = $templBot->processLoads();
+		if (! empty($errmsg)) echo "$errmsg\n";
+
+		$this->assertEqual($errmsg, '', 'processParamDump error');
+	}
+
+	protected function _createInstanceFile($instancefilepath)
+	{
+		$text = <<<EOT
+3382507	101	birth_date	{{Birth date|1976|12|1}}	honorific	Mr	title	Person 101
+3382507	102	birth_date	{{Birth date|1976|12|2}}	honorific	Dr	title	Person 102
+3382507	103	birth_date	{{Birth date|1976|12|3}}	honorific	Mrs	title	Person 103
+3382507	104	birth_date	{{Birth date|1976|12|4}}	honorific	Miss	title	Person 104
+3382507	105	birth_date	{{Birth date|1976|12|5}}	honorific	Mr	title	Person 105
+3382507	106	birth_date	{{Birth date|1976|12|6}}	honorific	Mr	title	Person 106
+3382507	107	birth_date	{{Birth date|1976|12|7}}	honorific	Mr	title	Person 107
+3382507	108	birth_date	{{Birth date|1976|12|8}}	honorific	Mr	title	Person 108
+3382507	109	birth_date	{{Birth date|1976|12|9}}	honorific	Mr	title	Person 109
+3382507	110	birth_date	{{Birth date|1976|12|10}}	honorific	Mr	title	Person 110a
+3382507	110	birth_date	{{Birth date|1976|12|10}}	honorific	Dr	title	Person 110b
+3382507	111	birth_date	{{Birth date         |1976         |12         |11}}	title	Person 111
+3382507	112	birth_date	{{Birth date|1976|12|12|df=y}}	honorific	Mr	title	Person 112
+6594285	101	1	1976	2	12	3	1
+6594285	102	1	1976	2	12	3	2
+6594285	103	1	1976	2	12	3	3
+6594285	104	1	1976	2	12	3	4
+6594285	105	1	1976	2	12	3	5
+6594285	106	1	1976	2	12	3	6
+6594285	107	1	1976	2	12	3	7
+6594285	108	1	1976	2	12	3	8
+6594285	109	1	1976	2	12	3	9
+6594285	110	1	1976	2	12	3	10
+6594285	110	1	1976	2	12	3	10
+6594285	111	1	1976	2	12	3	11
+6594285	112	1	1976	2	12	3	12	df	y
+EOT;
+
+		file_put_contents($instancefilepath, $text);
 	}
 
 	public function notestProcessParamDump()

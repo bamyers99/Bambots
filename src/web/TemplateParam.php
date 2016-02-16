@@ -38,11 +38,17 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
 get_params();
 
+switch ($action) {
+	case 'getLoadStatus':
+		getLoadStatus();
+		exit;
+}
+
 // Redirect to get the results so have a bookmarkable url
 if (isset($_POST['template']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-	$extra = 'TemplateParam.php?template=' . urlencode($params['template']);
+	$extra = 'TemplateParam.php?wiki=' . urlencode($params['wiki']) . '&template=' . urlencode($params['template']);
 	$protocol = HttpUtil::getProtocol();
 	header("Location: $protocol://$host$uri/$extra", true, 302);
 	exit;
@@ -60,7 +66,9 @@ function display_form()
 {
 	global $uihelper, $params, $wikis, $l10n, $action;
 	$title = '';
-	if (! empty($params['template'])) $title = ' : ' . $params['template'];
+	if (! empty($params['template'])) $title .= ' : ' . $params['template'];
+	if (! empty($params['param'])) $title .= ' : ' . $params['param'];
+	if (! empty($params['value'])) $title .= ' : ' . $params['value'];
 	$title = htmlentities($title, ENT_COMPAT, 'UTF-8');
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -108,6 +116,14 @@ function display_form()
         		display_template();
         		break;
 
+    		case 'paramlinks':
+        		display_paramlinks();
+        		break;
+
+        	case 'valuelinks':
+        		display_valuelinks();
+        		break;
+
     		default:
     			display_all_templates();
     			break;
@@ -136,49 +152,43 @@ function display_all_templates()
 		echo '</ul>';
 	}
 
-	if (! empty($results['results'])) {
-		echo <<< EOT
-		<script type='text/javascript'>
-			$(document).ready(function()
-			    {
-		        $('.tablesorter').tablesorter({ headers: { 0: {sorter:"text"}, 1: { sorter: false} } });
-			    }
-			);
-		</script>
+	if (empty($results['results'])) return;
+
+	echo <<< EOT
+	<script type='text/javascript'>
+		$(document).ready(function()
+		    {
+	        $('.tablesorter').tablesorter({ headers: { 0: {sorter:"text"}, 1: { sorter: false} } });
+		    }
+		);
+	</script>
 EOT;
 
-		$protocol = HttpUtil::getProtocol();
-		$domain = $wikis[$params['wiki']]['domain'];
-		$wikiprefix = "$protocol://$domain/wiki/Template:";
-		$host  = $_SERVER['HTTP_HOST'];
-		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+	$protocol = HttpUtil::getProtocol();
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
-		echo "<table class='wikitable tablesorter'><thead><tr><th>" .
-				htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
-				htmlentities($l10n->get('info', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
-				htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
-				htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
+	echo "<table class='wikitable tablesorter'><thead><tr><th>" .
+			htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
+			htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
+			htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
 
-		foreach ($results['results'] as $result) {
-			$tmplname = $result['name'];
+	foreach ($results['results'] as $result) {
+		$tmplname = $result['name'];
 
-			echo "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $tmplname)) . "\">" .
-				htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a></td>";
+		$extra = "TemplateParam.php?wiki=" . urlencode($params['wiki']) . "&template=" . urlencode($tmplname);
+		echo "<td><a href=\"$protocol://$host$uri/$extra\">" .
+			htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a></td>";
 
-			$extra = "TemplateParam.php?template=" . urlencode($tmplname);
-			echo "<td style='text-align:center'><a href=\"$protocol://$host$uri/$extra\">" .
-				htmlentities($l10n->get('info'), ENT_COMPAT, 'UTF-8') . "</a></td>";
+		echo "<td style='text-align:right'>{$result['page_count']}&nbsp;</td><td style='text-align:right'>{$result['instance_count']}&nbsp;</td></tr>";
+	}
 
-			echo "<td style='text-align:right'>{$result['page_count']}&nbsp;</td><td style='text-align:right'>{$result['instance_count']}&nbsp;</td></tr>";
-		}
+	echo "</tbody></table>\n";
 
-		echo "</tbody></table>\n";
-
-		if (count($results['results']) == 100) {
-			$extra = "TemplateParam.php?page=" . ($params['page'] + 1);
-			echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
-				htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
-		}
+	if (count($results['results']) == 100) {
+		$extra = "TemplateParam.php?wiki=" . urlencode($params['wiki']) . "&page=" . ($params['page'] + 1);
+		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
+			htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
 	}
 }
 
@@ -190,6 +200,12 @@ function display_template()
 	global $uihelper, $params, $wikis, $l10n;
 
 	$results = $uihelper->getTemplate($params);
+	$pagelinks = true;
+
+	if (! empty($results['info']) && $results['info']['file_offset'] == -1) {
+		echo '<div>' . htmlentities($l10n->get('pagelistsunavailable', true), ENT_COMPAT, 'UTF-8') . '</div>';
+		$pagelinks = false;
+	}
 
 	if (! empty($results['errors'])) {
 		echo '<h3>Messages</h3><ul>';
@@ -199,74 +215,308 @@ function display_template()
 		echo '</ul>';
 	}
 
-	if (! empty($results['info'])) {
-		echo <<< EOT
-		<script type='text/javascript'>
-			$(document).ready(function()
-			    {
-		        $('.tablesorter').tablesorter({ headers: { 0: {sorter:"text"}, 3: { sorter: false} } });
-			    }
-			);
-		</script>
+	if (empty($results['info'])) return;
+
+	echo <<< EOT
+	<script type='text/javascript'>
+		$(document).ready(function()
+		    {
+	        $('.tablesorter').tablesorter({ headers: { 0: {sorter:"text"}, 3: { sorter: false} } });
+		    }
+		);
+	</script>
 EOT;
 
-		$protocol = HttpUtil::getProtocol();
-		$domain = $wikis[$params['wiki']]['domain'];
-		$wikiprefix = "$protocol://$domain/wiki/Template:";
-		$host  = $_SERVER['HTTP_HOST'];
-		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-		$protocol = HttpUtil::getProtocol();
-		$tmplname = $params['template'];
+	$protocol = HttpUtil::getProtocol();
+	$domain = $wikis[$params['wiki']]['domain'];
+	$wikiprefix = "$protocol://$domain/wiki/Template:";
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+	$tmplname = $params['template'];
+	$wikitext = '';
 
-		if (isset($results['info']['TemplateData'])) $templatedata = $results['info']['TemplateData'];
-		else $templatedata = false;
+	if (isset($results['info']['TemplateData'])) $templatedata = $results['info']['TemplateData'];
+	else $templatedata = false;
 
-		if ($templatedata) $paramdef = $templatedata->getParams();
-		else $paramdef = false;
+	if ($templatedata) $paramdef = $templatedata->getParams();
+	else $paramdef = false;
 
-		echo '<div><b>' . htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') .
-				"</b>: <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $tmplname)) . "\">" .
-				htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a>";
-		echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['page_count'] . '</div>';
-		echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['instance_count'] . '</div>';
+	echo '<div><b>' . htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') .
+			"</b>: <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $tmplname)) . "\">" .
+			htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a>";
+	echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['page_count'] . '</div>';
+	echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['instance_count'] . '</div>';
 
-		echo "<table class='wikitable tablesorter'><thead><tr><th>" .
-				htmlentities($l10n->get('paramname', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
-				htmlentities($l10n->get('validparamname', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
-				htmlentities($l10n->get('valuecount', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
-				htmlentities($l10n->get('uniquevalues', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
+	$wikitext .= $l10n->get('template', true) . ": [[Template:$tmplname|$tmplname]]<br />\n";
+	$wikitext .= $l10n->get('pagecount', true) . ": {$results['info']['page_count']}<br />\n";
+	$wikitext .= $l10n->get('transclusioncount', true) . ": {$results['info']['instance_count']}<br />\n";
+	$asof = $wikis[$params['wiki']]['lastdumpdate'];
+	$wikitext .= $l10n->get('asofdate', true) . ": " . substr($asof, 0, 4) . "-" . substr($asof, 4, 2) .
+			"-" . substr($asof, 6) . "<br />\n";
 
-		foreach ($results['info']['params'] as $param) {
-			$paramname = htmlentities($param['param_name'], ENT_COMPAT, 'UTF-8');
-			$validparamname = '&nbsp;';
-			if ($paramdef) {
-				if (isset($paramdef[$paramname])) {
-					if (isset($paramdef[$paramname]['deprecated'])) $validparamname = 'D';
-					else $validparamname = 'Y';
-				} else {
-					$validparamname = 'N';
-				}
-			}
+	echo "<table class='wikitable tablesorter'><thead><tr><th>" .
+			htmlentities($l10n->get('paramname', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
+			htmlentities($l10n->get('validparamname', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
+			htmlentities($l10n->get('valuecount', true), ENT_COMPAT, 'UTF-8') . "</th><th>" .
+			htmlentities($l10n->get('uniquevalues', true), ENT_COMPAT, 'UTF-8') . ' (' .
+			htmlentities($l10n->get('count'), ENT_COMPAT, 'UTF-8') . ")</th></tr></thead><tbody>\n";
 
-			$uniques = explode("\t", $param['unique_values']);
-			$cnt = count($uniques);
-			if ($cnt > 1) {
-				$uniquedata = '';
-				for ($x = 0; $x < $cnt; $x += 2) {
-					$val = htmlentities($uniques[$x], ENT_COMPAT, 'UTF-8');
-					$count = $uniques[$x + 1];
-					$uniquedata .= "$val&nbsp;&nbsp;($count)<br />";
-				}
+	$headings = implode('!!', array($l10n->get('paramname', true), $l10n->get('validparamname', true),
+			$l10n->get('valuecount', true), $l10n->get('uniquevalues', true) . ' (' . $l10n->get('count') . ')'
+	));
 
+	$wikitext .= "{| class=\"wikitable sortable\"\n|-\n!$headings\n";
+
+	foreach ($results['info']['params'] as $param) {
+		$paramname = htmlentities($param['param_name'], ENT_COMPAT, 'UTF-8');
+		$validparamname = '&nbsp;';
+		if ($paramdef) {
+			if (isset($paramdef[$paramname])) {
+				if (isset($paramdef[$paramname]['deprecated'])) $validparamname = 'D';
+				else $validparamname = 'Y';
 			} else {
-				$uniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
+				$validparamname = 'N';
 			}
-
-			echo "<td>$paramname</td><td style='text-align:center'>$validparamname</td><td style='text-align:right'>{$param['value_count']}&nbsp;</td><td>$uniquedata</td></tr>";
 		}
 
-		echo '</tbody></table>';
+		$parmpageslink = '';
+		if ($pagelinks) {
+			$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
+				"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
+			$parmpageslink = " <a href='$protocol://$host$uri/$extra'>(page&nbsp;links)</a>";
+		}
+
+		$uniques = explode("\t", $param['unique_values']);
+		$cnt = count($uniques);
+		if ($cnt > 1) {
+			$uniquedata = '';
+			$wuniquedata = '';
+			for ($x = 0; $x < $cnt; $x += 2) {
+				$val = htmlentities($uniques[$x], ENT_COMPAT, 'UTF-8');
+				$count = $uniques[$x + 1];
+
+				$valuepageslink = '';
+				if ($pagelinks) {
+					$extra = 'TemplateParam.php?action=valuelinks&wiki=' . urlencode($params['wiki']) .
+						'&template=' . urlencode($tmplname) . '&param=' . urlencode($param['param_name']).
+						'&value=' . urlencode($uniques[$x]);
+					$valuepageslink = " <a href='$protocol://$host$uri/$extra'>(page&nbsp;links)</a>";
+				}
+
+				$uniquedata .= "$val&nbsp;&nbsp;($count)$valuepageslink<br />";
+				$wuniquedata .= "<nowiki>$val</nowiki>&nbsp;&nbsp;($count)<br />";
+			}
+
+		} else {
+			$uniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
+			$wuniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
+		}
+
+		echo "<td>$paramname$parmpageslink</td><td style='text-align:center'>$validparamname</td><td style='text-align:right'>{$param['value_count']}&nbsp;</td><td>$uniquedata</td></tr>";
+		$csvdata = implode('||', array($paramname, $validparamname, $param['value_count'], $wuniquedata));
+		$wikitext .= "|-\n|$csvdata\n";
 	}
+
+	echo '</tbody></table>';
+	echo '<div>' . htmlentities($l10n->get('validnamekey', true), ENT_COMPAT, 'UTF-8') . '</div>';
+
+	$wikitext .= "|}\n" . $l10n->get('validnamekey', true);
+	echo '<br /><b>' . htmlentities($l10n->get('wikitext', true), ENT_COMPAT, 'UTF-8') .
+		'</b><form><textarea rows="20" cols="65" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+		'</textarea></form>';
+
+}
+
+/**
+ * Display a parameters links
+ */
+function display_paramlinks()
+{
+	global $uihelper, $params, $wikis, $l10n;
+
+	$results = $uihelper->getTemplate($params);
+	$pagelinks = true;
+
+	if (! empty($results['info'])) {
+		if ($results['info']['file_offset'] == -1) {
+			$results['errors'][] = htmlentities($l10n->get('pagelistsunavailable', true), ENT_COMPAT, 'UTF-8');
+			$pagelinks = false;
+		}
+
+		if (! isset($results['info']['params'][$params['param']])) {
+			$results['errors'][] = htmlentities($l10n->get('invalidparameter', true) . " = {$params['param']}", ENT_COMPAT, 'UTF-8');
+			$pagelinks = false;
+		}
+	}
+
+	if (! empty($results['errors'])) {
+		echo '<h3>Messages</h3><ul>';
+		foreach ($results['errors'] as $msg) {
+			echo "<li>$msg</li>";
+		}
+		echo '</ul>';
+	}
+
+	if (empty($results['info']) || ! $pagelinks) return;
+
+	$loaded = checkLoadStatus($results['info']);
+	if ($loaded['status'] != 'C') return;
+
+	$results = $uihelper->getPages('paramlinks', $params, 100);
+	$protocol = HttpUtil::getProtocol();
+	$domain = $wikis[$params['wiki']]['domain'];
+	$wikiprefix = "$protocol://$domain/wiki/";
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+
+	echo '<table class="wikitable"><thead><tr><th>' . htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') .
+		'</th></tr></thead><tbody>';
+
+	foreach ($results['results'] as $page) {
+		$page = $page['page_title'];
+		echo "<tr><td><a href=\"$wikiprefix$page\">" .
+			htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
+	}
+
+	echo '<tbody></table>';
+
+	if (count($results['results']) == 100) {
+		$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
+			"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']) . "&page=" . ($params['page'] + 1);
+		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
+			htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
+	}
+}
+
+/**
+ * Display a values links
+ */
+function display_valuelinks()
+{
+	global $uihelper, $params, $wikis, $l10n;
+
+	$results = $uihelper->getTemplate($params);
+	$pagelinks = true;
+
+	if (! empty($results['info'])) {
+		if ($results['info']['file_offset'] == -1) {
+			$results['errors'][] = htmlentities($l10n->get('pagelistsunavailable', true), ENT_COMPAT, 'UTF-8');
+			$pagelinks = false;
+		}
+
+		if (! isset($results['info']['params'][$params['param']])) {
+			$results['errors'][] = htmlentities($l10n->get('invalidparameter', true) . " = {$params['param']}", ENT_COMPAT, 'UTF-8');
+			$pagelinks = false;
+		}
+	}
+
+	if (! empty($results['errors'])) {
+		echo '<h3>Messages</h3><ul>';
+		foreach ($results['errors'] as $msg) {
+			echo "<li>$msg</li>";
+		}
+		echo '</ul>';
+	}
+
+	if (empty($results['info']) || ! $pagelinks) return;
+
+	$loaded = checkLoadStatus($results['info']);
+	if ($loaded['status'] != 'C') return;
+
+	$results = $uihelper->getPages('valuelinks', $params, 100);
+	$protocol = HttpUtil::getProtocol();
+	$domain = $wikis[$params['wiki']]['domain'];
+	$wikiprefix = "$protocol://$domain/wiki/";
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+
+	echo '<table class="wikitable"><thead><tr><th>' . htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') .
+		'</th></tr></thead><tbody>';
+
+	foreach ($results['results'] as $page) {
+		$page = $page['page_title'];
+		echo "<tr><td><a href=\"$wikiprefix$page\">" .
+			htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
+	}
+
+	echo '<tbody></table>';
+
+	if (count($results['results']) == 100) {
+		$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
+			"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']) .
+			"&value=" . urlencode($params['value']) . "&page=" . ($params['page'] + 1);
+		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
+			htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
+	}
+}
+
+/**
+ * Check the parameter value load status
+ *
+ * @param array $info Template info
+ * @return array status => S,R,E,C, progress => progress message
+ */
+function checkLoadStatus($info)
+{
+	global $uihelper, $params, $wikis, $l10n;
+
+	$loaded = $uihelper->checkLoadStatus($params, $info);
+
+	if ($loaded['status'] == 'C' || $loaded['status'] == 'E') return $loaded;
+
+	// Display load status
+	$protocol = HttpUtil::getProtocol();
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+	$extra = "TemplateParam.php?action=getLoadStatus&wiki=" . urlencode($params['wiki']) .
+		"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']);
+	$statuslink = "$protocol://$host$uri/$extra";
+
+	$label = $l10n->get('loadstatus', true);
+
+	echo "<div>$label: <span id='loadStatus'>&nbsp;</span></div>";
+
+	$script = <<< EOT
+<script>
+	var getLoadStatus = function () {
+		$.get( "$statuslink", function( data ) {
+			switch (data.status) {
+				case 'S':
+				case 'R':
+					$( "#loadStatus" ).html( data.progress );
+					setTimeout(getLoadStatus, 15000);
+					break;
+				case 'E':
+					$( "#loadStatus" ).html( "Load error" );
+					break;
+				case 'C':
+					location.reload(true);
+					break;
+			}
+		}, "json" );
+	}
+
+	setTimeout(getLoadStatus, 0);
+</script>
+<noscript><div>Refresh the page to see if loading is complete.</div></noscript>
+EOT;
+
+	echo $script;
+
+	return $loaded;
+}
+
+/**
+ * Ajax get load status
+ */
+function getLoadStatus()
+{
+	global $uihelper, $params, $wikis, $l10n, $action;
+
+	$results = $uihelper->getTemplate($params);
+	$loaded = $uihelper->checkLoadStatus($params, $results['info']);
+
+	echo json_encode(array('status' => $loaded['status'], 'progress' => $loaded['progress']));
 }
 
 /**
@@ -288,6 +538,10 @@ function get_params()
 		if (empty($action)) $action = 'template';
 		$params['template'] = ucfirst(trim(str_replace('_', ' ', $params['template'])));
 	}
+
+	$params['param'] = isset($_REQUEST['param']) ? $_REQUEST['param'] : '';
+	$params['value'] = isset($_REQUEST['value']) ? $_REQUEST['value'] : '';
+
 }
 
 ?>

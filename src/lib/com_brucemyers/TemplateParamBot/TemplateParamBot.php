@@ -19,9 +19,10 @@ namespace com_brucemyers\TemplateParamBot;
 
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\Config;
-use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Convert;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\MySQLDate;
+use com_brucemyers\Util\Timer;
 use PDO;
 use Exception;
 
@@ -31,15 +32,13 @@ use Exception;
  * jsub curl http://website/enwikiTemplateParams -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateParams
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php loadtotalsoffsets /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateTotals /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateOffsets
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php dumptemplateids enwiki
- * UPDATE s51454__TemplateParamBot_p.enwiki_templates, enwiki_p.page SET `name` = replace(page_title, '_', ' ') WHERE page_id = id;
  */
 class TemplateParamBot
 {
     const ERROREMAIL = 'TemplateParamBot.erroremail';
     const MAX_INSTANCE_CNT = 'TemplateParamBot.max_instance_cnt';
-
-    const CACHE_PREFIX_RESULT = 'Result:';
-    const CACHE_PREFIX_ATOM = 'Atom:';
+    const DATADIR = 'TemplateParamBot.datadir';
+    const LOAD_COMMAND = 'TemplateParamBot.load_command';
 
     protected $ruleconfigs;
     protected $serviceMgr;
@@ -73,13 +72,8 @@ class TemplateParamBot
 
 		$action = $argv[1];
 		switch ($action) {
-		    case 'query':
-		    	if ($argc < 3) {
-		    		return 'No query id supplied';
-		    	}
-
-		    	$queryid = (int)$argv[2];
-		    	$errmsg = $this->processQuery($queryid);
+		    case 'processloads':
+		    	$errmsg = $this->processLoads();
 		    	break;
 
 		    case 'processxmldump':
@@ -123,16 +117,100 @@ class TemplateParamBot
     }
 
     /**
-     * Process a query
+     * Process load requests
      *
-     * @param int $queryid
      * @return string Error message
      */
-    public function processQuery($queryid)
+    public function processLoads()
     {
+        $datadir = Config::get(TemplateParamBot::DATADIR);
+        $datadir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $datadir);
+        $datadir = preg_replace('!(/|\\\\)$!', '', $datadir); // Drop trailing slash
+        $datadir .= DIRECTORY_SEPARATOR;
+        $rowsfound = true;
 
-    	$filepath = "compress.bzip2://$outputdir$wikiname-tmpl-param-values.csv.bz2";
-    	$ihndl = fopen($filepath, 'r');
+    while ($rowsfound) {
+
+        $dbh_tools = $this->serviceMgr->getDBConnection('tools');
+        $sth = $dbh_tools->query("SELECT wikiname, template_id FROM loads WHERE status = 'S'");
+        $rows = $sth->fetchAll(PDO::FETCH_ASSOC);
+        $timer = new Timer();
+        $rowsfound = false;
+
+        foreach ($rows as $row) {
+        	$rowsfound = true;
+        	$timer->start();
+        	$wikiname = $row['wikiname'];
+        	$templid = $row['template_id'];
+
+        	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
+        	$template = $sth->fetch(PDO::FETCH_ASSOC);
+        	$offset = $template['file_offset'];
+        	$dumpdate = date('Ymd', strtotime($template['last_update']));
+        	$instancecnt = $template['instance_count'];
+        	$template = $template['name'];
+
+        	$sth = $dbh_tools->prepare("UPDATE loads SET status = 'R', progress = ? WHERE wikiname = ? AND template_id = $templid");
+        	$sth->execute(array("Loading $instancecnt instances for $template", $wikiname));
+
+	    	$filepath = $datadir . 'TemplateParamBot' . DIRECTORY_SEPARATOR . "$wikiname-$dumpdate-TemplateParams";
+	    	$hndl = fopen($filepath, 'r');
+	    	if ($hndl === false) {
+	    		$sth = $dbh_tools->prepare("UPDATE loads SET status = 'E', progress = ? WHERE wikiname = ? AND template_id = $templid");
+	    		$sth->execute(array("File not found = $wikiname-$dumpdate-TemplateParams", $wikiname));
+	    		continue;
+	    	}
+	    	fseek($hndl, $offset);
+
+	    	$prev_pageid = '';
+	    	$loadedcnt = 0;
+	    	$valuecnt = 0;
+	    	$sth = $dbh_tools->prepare("INSERT INTO `{$wikiname}_values` VALUES (?,?,?,?,?)");
+			$sth2 = $dbh_tools->prepare("UPDATE loads SET progress = ? WHERE wikiname = ? AND template_id = $templid");
+	    	$dbh_tools->beginTransaction();
+
+	    	while (! feof($hndl)) {
+	    		$line = rtrim(fgets($hndl), "\n");
+	    		if (empty($line)) continue;
+
+	    		$line = explode("\t", $line);
+	    		$readid = $line[0];
+	    		if ($readid != $templid) break;
+
+				$pageid = $line[1];
+				if ($pageid != $prev_pageid) $instancenum = -1;
+				$prev_pageid = $pageid;
+				++$instancenum;
+				++$loadedcnt;
+
+				$cnt = count($line);
+				for ($x = 2; $x < $cnt; $x += 2) {
+					$param_name = $line[$x];
+					$param_value = $line[$x + 1];
+					$sth->execute(array($pageid, $templid, $instancenum, $param_name, $param_value));
+
+					++$valuecnt;
+					if ($valuecnt % 2000 == 0) {
+						$sth2->execute(array("Loaded $loadedcnt of $instancecnt instances for $template", $wikiname));
+
+						$dbh_tools->commit();
+						$dbh_tools->beginTransaction();
+					}
+				}
+	    	}
+
+	    	$dbh_tools->commit();
+	    	fclose($hndl);
+
+    		$ts = $timer->stop();
+	    	$lastrun = MySQLDate::toMySQLDatetime(time());
+	    	$runtime = $ts['hours'] . ':' . $ts['minutes'] . ':' . $ts['seconds'];
+
+	    	$sth = $dbh_tools->prepare("UPDATE loads SET status = 'C', progress = ?, lastrun = ?, runtime = ? WHERE wikiname = ? AND template_id = $templid");
+	    	$sth->execute(array("Loaded $instancecnt instances for $template", $lastrun, $runtime, $wikiname));
+        	$dbh_tools->exec("UPDATE `{$wikiname}_templates` SET loaded = 'Y' WHERE id = $templid");
+        }
+    }
 
     	return '';
     }
@@ -487,6 +565,7 @@ class TemplateParamBot
     	`file_offset` bigint NOT NULL,
     	`last_update` datetime NOT NULL,
     	`revision_id` int unsigned NOT NULL,
+    	`loaded` char CHARACTER SET utf8 COLLATE utf8_bin,
     	UNIQUE `name` (`name`),
     	KEY `instance_count` (`instance_count` DESC)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -498,8 +577,7 @@ class TemplateParamBot
     	`instance_num` int unsigned NOT NULL,
     	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	`param_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-    	KEY `template_id` (`template_id`, `param_name`),
-    	KEY `page_id` (`page_id`)
+    	KEY `template_id` (`template_id`, `param_name`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
@@ -512,9 +590,11 @@ class TemplateParamBot
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
-    	$dbh_tools->exec("TRUNCATE {$wikiname}_templates");
-    	$dbh_tools->exec("TRUNCATE {$wikiname}_values");
-    	$dbh_tools->exec("TRUNCATE {$wikiname}_totals");
+    	$dbh_tools->exec("TRUNCATE `{$wikiname}_templates`");
+    	$dbh_tools->exec("TRUNCATE `{$wikiname}_values`");
+    	$dbh_tools->exec("TRUNCATE `{$wikiname}_totals`");
+    	$sth = $dbh_tools->prepare('DELETE FROM loads WHERE wikiname = ?');
+    	$sth->execute(array($wikiname));
 
     	preg_match('!(\\d{4})(\\d{2})(\\d{2})!', $dumpdate, $dd);
 
@@ -524,8 +604,8 @@ class TemplateParamBot
     	$hndl = fopen($totalsfilepath, 'r');
     	if ($hndl === false) return 'totalsfilepath not found';
 
-    	$sth_template = $dbh_tools->prepare("INSERT INTO {$wikiname}_templates VALUES (?,?,?,?,?,?,?)");
-    	$sth_total = $dbh_tools->prepare("INSERT INTO {$wikiname}_totals VALUES (?,?,?,?)");
+    	$sth_template = $dbh_tools->prepare("INSERT INTO `{$wikiname}_templates` VALUES (?,?,?,?,?,?,?,?)");
+    	$sth_total = $dbh_tools->prepare("INSERT INTO `{$wikiname}_totals` VALUES (?,?,?,?)");
     	$count = 0;
     	$dbh_tools->beginTransaction ();
 
@@ -547,7 +627,7 @@ class TemplateParamBot
     			$pagecnt = $parts[1];
     			$instancecnt = $parts[2];
 
-    			$sth_template->execute(array($tmplid, $tmplid, $pagecnt, $instancecnt, -1, $last_update, 0));
+    			$sth_template->execute(array($tmplid, $tmplid, $pagecnt, $instancecnt, -1, $last_update, 0, 'N'));
 
     			++$templatecnt;
     			$templateinstancecnt += $instancecnt;
@@ -582,7 +662,7 @@ class TemplateParamBot
     	$hndl = fopen($offsetsfilepath, 'r');
     	if ($hndl === false) return 'offsetsfilepath not found';
 
-    	$sth_template = $dbh_tools->prepare("UPDATE {$wikiname}_templates SET file_offset = ? WHERE id = ?");
+    	$sth_template = $dbh_tools->prepare("UPDATE `{$wikiname}_templates` SET file_offset = ? WHERE id = ?");
     	$count = 0;
     	$dbh_tools->beginTransaction ();
 
@@ -621,6 +701,9 @@ class TemplateParamBot
 				templateinstancecnt = ? WHERE wikiname = ?');
     		$sth->execute(array(0, $dumpdate, $templatecnt, $templateinstancecnt, $wikiname));
     	}
+
+    	$sql = "UPDATE `{$wikiname}_templates`, `{$wikiname}_p`.page SET `name` = replace(page_title, '_', ' ') WHERE page_id = id";
+    	$dbh_tools->exec($sql);
 
     	return '';
     }
@@ -832,6 +915,7 @@ class TemplateParamBot
     				'values' => array());
 
     		foreach ($redirtmpls as $templname) {
+    			if (empty($templname)) continue;
     			$templname = str_replace('_', ' ', $templname);
     			$this->template_ids[$templname] = $templid;
     		}
@@ -872,6 +956,7 @@ class TemplateParamBot
     		fwrite($hndl, "$templname\t$templid\n");
 
     		foreach ($redirtmpls as $templname) {
+    			if (empty($templname)) continue;
     			$templname = str_replace('_', ' ', $templname);
     			fwrite($hndl, "$templname\t$templid\n");
      		}

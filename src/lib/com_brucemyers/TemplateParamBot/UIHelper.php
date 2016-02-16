@@ -18,6 +18,7 @@
 namespace com_brucemyers\TemplateParamBot;
 
 use com_brucemyers\Util\L10N;
+use com_brucemyers\Util\Config;
 use PDO;
 
 class UIHelper
@@ -73,13 +74,10 @@ class UIHelper
 		if ($page < 0 || $page > 1000) $page = 0;
 		$offset = $page * $max_rows;
 
-		$sql = "SELECT * FROM {$wikiname}_templates ORDER BY instance_count DESC LIMIT $offset,$max_rows";
+		$sql = "SELECT * FROM `{$wikiname}_templates` ORDER BY instance_count DESC LIMIT $offset,$max_rows";
 		$sth = $this->dbh_tools->query($sql);
-		$sth->setFetchMode(PDO::FETCH_ASSOC);
 
-		while ($row = $sth->fetch()) {
-			$results[] = $row;
-		}
+		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
 
 		return array('errors' => $errors, 'results' => $results);
 	}
@@ -96,26 +94,28 @@ class UIHelper
 		$errors = array();
 		$wikiname = $params['wiki'];
 
-		$sth = $this->dbh_tools->prepare("SELECT * FROM {$wikiname}_templates WHERE `name` = ?");
+		$sth = $this->dbh_tools->prepare("SELECT * FROM `{$wikiname}_templates` WHERE `name` = ?");
 		$sth->execute(array($params['template']));
 
 		if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
 			$info['page_count'] = $row['page_count'];
 			$info['instance_count'] = $row['instance_count'];
-			$tmplid = $row['id'];
+			$info['file_offset'] = $row['file_offset'];
+			$info['loaded'] = $row['loaded'];
+			$info['tmplid'] = $row['id'];
 			$info['params'] = array();
 
-			$sql = "SELECT * FROM {$wikiname}_totals WHERE template_id = $tmplid ORDER BY param_name";
+			$sql = "SELECT * FROM `{$wikiname}_totals` WHERE template_id = {$info['tmplid']} ORDER BY param_name";
 			$sth = $this->dbh_tools->query($sql);
 			$sth->setFetchMode(PDO::FETCH_ASSOC);
 
 			while ($row = $sth->fetch()) {
-				$info['params'][] = $row;
+				$info['params'][$row['param_name']] = $row;
 			}
 
 			// Fetch the TemplateData
 			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-			$sql = "SELECT pp_value FROM page_props WHERE pp_page = $tmplid AND pp_propname = 'templatedata'";
+			$sql = "SELECT pp_value FROM page_props WHERE pp_page = {$info['tmplid']} AND pp_propname = 'templatedata'";
 			$sth = $dbh_wiki->query($sql);
 			if ($row = $sth->fetch(PDO::FETCH_NUM)) {
 				$info['TemplateData'] = new TemplateData($row[0]);
@@ -132,4 +132,77 @@ class UIHelper
 
 		return array('errors' => $errors, 'info' => $info);
 	}
+
+	/**
+	 * Check parameter value load status
+	 *
+	 * @param array $params
+	 * @param array $info Template info
+	 * @return array status => S,R,E,C, progress => progress message
+	 */
+	public function checkLoadStatus($params, $info)
+	{
+		if ($info['loaded'] == 'Y') return array('status' => 'C', 'progress' => '');
+
+		$wikiname = $params['wiki'];
+
+		$sth = $this->dbh_tools->prepare('SELECT status, progress FROM loads WHERE wikiname = ? AND template_id = ?');
+		$sth->execute(array($wikiname, $info['tmplid']));
+
+		if ($row = $sth->fetch(PDO::FETCH_NUM)) {
+			return array('status' => $row[0], 'progress' => $row[1]);
+		}
+
+		$sth = $this->dbh_tools->prepare("INSERT INTO loads VALUES (?,?,'S','Loading data','2000-01-01','00:00:00')");
+		$sth->execute(array($wikiname, $info['tmplid']));
+
+		// Tickle the loader
+		$command = Config::get(TemplateParamBot::LOAD_COMMAND);
+		exec($command);
+
+		return array('status' => 'S', 'progress' => 'Loading data');
+	}
+
+	/**
+	 * Get watch list results
+	 *
+	 * @param string $type
+	 * @param array $params
+	 * @param int $max_rows
+	 * @return array Results, keys = errors - array(), results - array()
+	 */
+	public function getPages($type, $params, $max_rows)
+	{
+		$results = array();
+		$errors = array();
+		$wikiname = $params['wiki'];
+
+		$page = $params['page'];
+		$page = $page - 1;
+		if ($page < 0 || $page > 1000) $page = 0;
+		$offset = $page * $max_rows;
+
+		$sth = $this->dbh_tools->prepare("SELECT id FROM `{$wikiname}_templates` WHERE `name` = ?");
+		$sth->execute(array($params['template']));
+
+		$row = $sth->fetch(PDO::FETCH_NUM);
+		$templid = $row[0];
+
+		if ($type == 'paramlinks') {
+			$where = 'wp.page_id = pv.page_id AND param_name = ?';
+			$values = array($params['param']);
+		} else { // valuelinks
+			$where = 'wp.page_id = pv.page_id AND param_name = ? AND param_value = ?';
+			$values = array($params['param'], $params['value']);
+		}
+
+		$sql = "SELECT DISTINCT page_title FROM `{$wikiname}_p`.page wp, `{$wikiname}_values` pv WHERE $where ORDER BY page_title LIMIT $offset,$max_rows";
+		$sth = $this->dbh_tools->prepare($sql);
+		$sth->execute($values);
+
+		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+		return array('errors' => $errors, 'results' => $results);
+	}
+
 }

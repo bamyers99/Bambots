@@ -37,9 +37,18 @@ class TemplateData
 		// Normalization
 		if (isset($this->data['params'])) {
 			foreach ($this->data['params'] as $name => $config) {
-				if (isset($config['deprecated']) && $config['deprecated'] === false) unset($this->data['params'][$name]['deprecated']);
-				if (isset($config['required']) && $config['required'] === false) unset($this->data['params'][$name]['required']);
-				if (isset($config['suggested']) && $config['suggested'] === false) unset($this->data['params'][$name]['suggested']);
+				if (isset($config['deprecated']) && ($config['deprecated'] === false || empty($config['deprecated']))) {
+					unset($this->data['params'][$name]['deprecated']);
+					unset($config['deprecated']);
+				}
+				if (isset($config['required']) && ($config['required'] === false || empty($config['required']))) {
+					unset($this->data['params'][$name]['required']);
+					unset($config['required']);
+				}
+				if (isset($config['suggested']) && ($config['suggested'] === false || empty($config['suggested']))) {
+					unset($this->data['params'][$name]['suggested']);
+					unset($config['suggested']);
+				}
 
 				if (isset($config['aliases'])) {
 					foreach ($config['aliases'] as $alias) {

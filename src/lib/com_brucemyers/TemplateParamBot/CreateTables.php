@@ -28,11 +28,14 @@ class CreateTables
 	 */
     public function __construct(PDO $dbh_tools)
     {
-    	$sql = "CREATE TABLE IF NOT EXISTS `querys` (
-   	  	  `hash` char(32) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL PRIMARY KEY,
-    	  `params` varchar(2048) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	$sql = "CREATE TABLE IF NOT EXISTS `loads` (
+		  `wikiname` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	  `template_id` int unsigned NOT NULL,
+    	  `status` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	  `progress` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
     	  `lastrun` datetime NOT NULL,
-    	  `runtime` time NOT NULL
+    	  `runtime` time NOT NULL,
+    	  UNIQUE `wikiname_tmplid` (`wikiname`,`template_id`)
     	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
