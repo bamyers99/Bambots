@@ -77,6 +77,16 @@ class InceptionBot
 
         unset($temppages); // Free-up the memory
 
+        // Retrieve triage pages to get redirects that were replaced with a real page.
+        $lister = new TriagePageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
+
+        while (($triagepages = $lister->getNextBatch()) !== false) {
+        	foreach ($triagepages as &$triagepage) {
+				if (! isset($allpages[$triagepage['title']])) $allpages[$triagepage['title']] = $triagepage;
+        	}
+        }
+        unset($triagepage);
+
         Logger::log('New page count = ' . count($allpages));
 
         // Rename moved pages

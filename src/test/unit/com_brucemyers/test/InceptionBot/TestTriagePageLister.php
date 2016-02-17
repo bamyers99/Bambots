@@ -17,21 +17,21 @@
 
 namespace com_brucemyers\test\InceptionBot;
 
-use com_brucemyers\InceptionBot\NewPageLister;
+use com_brucemyers\InceptionBot\TriagePageLister;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Config;
 use UnitTestCase;
 
-class TestNewPageLister extends UnitTestCase
+class TestTriagePageLister extends UnitTestCase
 {
-    public function TestNewPageLister()
+    public function TestTriagePageLister()
     {
         $url = Config::get(MediaWiki::WIKIURLKEY);
         $mediawiki = new MediaWiki($url);
 
         $earliestTimestamp = date('Ymd') . '000000'; // Beginning of today
         $latestTimestamp = date('Ymd') . '120000';
-        $lister = new NewPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
+        $lister = new TriagePageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
         $allpages = array();
 
@@ -39,8 +39,9 @@ class TestNewPageLister extends UnitTestCase
             $allpages = array_merge($allpages, $pages);
         }
 
-        $this->assertTrue((count($allpages) > 0), 'No new pages');
+        $this->assertTrue((count($allpages) > 0), 'No triage pages');
 
+        echo 'Page count = ' . count($allpages) . "\n";
         print_r($allpages[0]);
     }
 }
