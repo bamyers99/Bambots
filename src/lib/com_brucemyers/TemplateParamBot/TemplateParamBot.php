@@ -951,6 +951,7 @@ class TemplateParamBot
     	while ($row = $sth->fetch()) {
     	    $templid = $row[0];
     		$templname = str_replace('_', ' ', $row[1]);
+    		if (strpos($templname, '/doc') !== false) continue;
     		$redirtmpls = explode('|', $row[2]);
 
     		fwrite($hndl, "$templname\t$templid\n");
