@@ -150,7 +150,16 @@ class UIHelper
 		$sth->execute(array($wikiname, $info['tmplid']));
 
 		if ($row = $sth->fetch(PDO::FETCH_NUM)) {
-			return array('status' => $row[0], 'progress' => $row[1]);
+			$progress = $row[1];
+			$status = $row[0];
+			if ($row[0] == 'S') {
+				$sth = $this->dbh_tools->prepare("SELECT progress FROM loads WHERE status = 'R'");
+				$sth->execute();
+				if ($row = $sth->fetch(PDO::FETCH_NUM)) {
+					$progress .= " ; waiting for {$row[0]}";
+				}
+			}
+			return array('status' => $status, 'progress' => $progress);
 		}
 
 		$sth = $this->dbh_tools->prepare("INSERT INTO loads VALUES (?,?,'S','Loading data','2000-01-01','00:00:00')");
