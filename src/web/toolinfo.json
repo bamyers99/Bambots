@@ -58,4 +58,14 @@
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
+,
+	{
+	    "name" : "TemplateParam",
+	    "title" : "Template parameter usage",
+	    "description" : "Displays template parameter usage from monthly data dump",
+	    "url" : "https://tools.wmflabs.org/bambots/TemplateParam.php",
+	    "keywords" : "template",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
 ]

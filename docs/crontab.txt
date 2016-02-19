@@ -1,6 +1,6 @@
 # m h  dom mon dow   command
-17 22 1 * * jlocal /data/project/bambots/Bambots/src/scripts/WikiProjectList.sh
-17 2 2 * * jlocal /data/project/bambots/Bambots/src/scripts/AgeAnomaly.sh
+17 22 1 * * jsub -N DatabaseReportBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DatabaseReportBot.php MiscReports WikiProjectList
+17 2 2 * * jsub -N DatabaseReportBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DatabaseReportBot.php MiscReports AgeAnomaly
 45 * * * * jsub -N CategoryWatchlistBot -wd /data/project/bambots/Bambots/src/cli -mem 768m php CategoryWatchlistBot.php >/data/project/bambots/Bambots/logs/CategoryWatchlistBot.cron
-10 1 * * * jlocal /data/project/bambots/Bambots/src/scripts/dataflowbot.sh >/dev/null
-17 2 * * tue jlocal /data/project/bambots/Bambots/src/scripts/cleanupworklistbot.sh
+10 1 * * * jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DataflowBot.php >/dev/null
+17 2 * * tue jsub -N CleanupWorklistBot -wd /data/project/bambots/Bambots/src/cli -mem 768m php CleanupWorklistBot.php

@@ -11,6 +11,7 @@ Bambots are a collection of [Wikipedia](https://en.wikipedia.org/) bots/tools.
 * InceptionBot is a WikiProject new article locator.
 * PageTools is a tool for locating wikidata pages in other languages and for authority control id searchs.
 * ReplicationLag is a tool for displaying database replication lag.
+* TemplateParamBot is a template parameter extractor.
 * WikidataBot is an unfinished wikidata report generator.
 * WPMissingTmplBot is a WikiProject talk page missing banner locator.
 * WPPageListBot is a WikiProject associated page locator.
