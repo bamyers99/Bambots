@@ -198,11 +198,11 @@ class UIHelper
 		$templid = $row[0];
 
 		if ($type == 'paramlinks') {
-			$where = 'wp.page_id = pv.page_id AND param_name = ?';
-			$values = array($params['param']);
+			$where = 'pv.template_id = ? AND wp.page_id = pv.page_id AND pv.param_name = ?';
+			$values = array($templid, $params['param']);
 		} else { // valuelinks
-			$where = 'wp.page_id = pv.page_id AND param_name = ? AND param_value = ?';
-			$values = array($params['param'], $params['value']);
+			$where = 'pv.template_id = ? AND wp.page_id = pv.page_id AND pv.param_name = ? AND pv.param_value = ?';
+			$values = array($templid, $params['param'], $params['value']);
 		}
 
 		$sql = "SELECT DISTINCT page_title FROM `{$wikiname}_p`.page wp, `{$wikiname}_values` pv WHERE $where ORDER BY page_title LIMIT $offset,$max_rows";
