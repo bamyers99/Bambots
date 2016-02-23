@@ -104,8 +104,9 @@ class CreateTables
                         "label": "Honorific",
                         "description": "The honorific, ie. Mr, Dr, etc",
                         "type": "string",
-                        "required": false
-                }
+                        "required": false,
+                        "suggested": true
+    }
         }
 }
 EOT;

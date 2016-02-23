@@ -57,7 +57,7 @@ class UIHelper
 	}
 
 	/**
-	 * Get watch list results
+	 * Get all templates
 	 *
 	 * @param array $params
 	 * @param int $max_rows
@@ -83,7 +83,7 @@ class UIHelper
 	}
 
 	/**
-	 * Get watch list results
+	 * Get template data
 	 *
 	 * @param array $params
 	 * @return array Results, keys = errors - array(), info - array('page_count', 'instance_count', 'TemplateData', 'params' => array())
@@ -173,7 +173,7 @@ class UIHelper
 	}
 
 	/**
-	 * Get watch list results
+	 * Get parameter results
 	 *
 	 * @param string $type
 	 * @param array $params
@@ -214,4 +214,42 @@ class UIHelper
 		return array('errors' => $errors, 'results' => $results);
 	}
 
+	/**
+	 * Get parameter missing results
+	 *
+	 * @param array $params
+	 * @param int $max_rows
+	 * @return array Results, keys = errors - array(), results - array()
+	 */
+	public function getMissing($params, $max_rows)
+	{
+		$results = array();
+		$errors = array();
+		$wikiname = $params['wiki'];
+
+		$page = $params['page'];
+		$page = $page - 1;
+		if ($page < 0 || $page > 1000) $page = 0;
+		$offset = $page * $max_rows;
+
+		$sth = $this->dbh_tools->prepare("SELECT id FROM `{$wikiname}_templates` WHERE `name` = ?");
+		$sth->execute(array($params['template']));
+
+		$row = $sth->fetch(PDO::FETCH_NUM);
+		$templid = $row[0];
+
+		$sql = "SELECT DISTINCT page_title FROM `{$wikiname}_values` pv1 " .
+			" LEFT JOIN `{$wikiname}_values` pv2 ON pv1.template_id = pv2.template_id AND pv2.param_name = ? " .
+			" AND pv1.page_id = pv2.page_id AND pv1.instance_num = pv2.instance_num " .
+			" LEFT JOIN `{$wikiname}_p`.page wp ON wp.page_id = pv1.page_id " .
+			" WHERE pv1.template_id = ? AND pv2.page_id IS NULL " .
+			" ORDER BY page_title LIMIT $offset,$max_rows";
+
+		$sth = $this->dbh_tools->prepare($sql);
+		$sth->execute(array($params['param'], $templid));
+
+		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+		return array('errors' => $errors, 'results' => $results);
+	}
 }

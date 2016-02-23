@@ -68,6 +68,7 @@ function display_form()
 	$title = '';
 	if (! empty($params['template'])) $title .= ' : ' . $params['template'];
 	if (! empty($params['param'])) $title .= ' : ' . $params['param'];
+	if ($action == 'missing') $title .= ' (' . $l10n->get('missing') . ')';
 	if (! empty($params['value'])) $title .= ' : ' . $params['value'];
 	$title = htmlentities($title, ENT_COMPAT, 'UTF-8');
     ?>
@@ -124,7 +125,11 @@ function display_form()
         		display_valuelinks();
         		break;
 
-    		default:
+        	case 'missing':
+        		display_missing();
+        		break;
+
+        	default:
     			display_all_templates();
     			break;
     	}
@@ -270,10 +275,21 @@ EOT;
 	foreach ($results['info']['params'] as $param) {
 		$paramname = htmlentities($param['param_name'], ENT_COMPAT, 'UTF-8');
 		$validparamname = '&nbsp;';
+		$missinglink = false;
+
 		if ($paramdef) {
 			if (isset($paramdef[$paramname])) {
 				if (isset($paramdef[$paramname]['deprecated'])) $validparamname = 'D';
-				else $validparamname = 'Y';
+				else {
+					$validparamname = 'Y';
+					if (isset($paramdef[$paramname]['required'])) {
+						$missinglink = true;
+						$validparamname .= ' (R)';
+					} elseif (isset($paramdef[$paramname]['suggested'])) {
+						$missinglink = true;
+						$validparamname .= ' (S)';
+					}
+				}
 			} else {
 				$validparamname = 'N';
 			}
@@ -283,7 +299,15 @@ EOT;
 		if ($pagelinks) {
 			$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
 				"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
-			$parmpageslink = " <a href='$protocol://$host$uri/$extra'>(page&nbsp;links)</a>";
+			$parmpageslink = " <a href='$protocol://$host$uri/$extra'>(" .
+				str_replace(' ', '&nbsp;', htmlentities($l10n->get('pagelinks'), ENT_COMPAT, 'UTF-8')) . ")</a>";
+
+			if ($missinglink) {
+				$extra = "TemplateParam.php?action=missing&wiki=" . urlencode($params['wiki']) .
+					"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
+				$parmpageslink .= " <a href='$protocol://$host$uri/$extra'>(" .
+					str_replace(' ', '&nbsp;', htmlentities($l10n->get('missing'), ENT_COMPAT, 'UTF-8')) . ")</a>";
+			}
 		}
 
 		$uniques = explode("\t", $param['unique_values']);
@@ -363,6 +387,12 @@ function display_paramlinks()
 	if ($loaded['status'] != 'C') return;
 
 	$results = $uihelper->getPages('paramlinks', $params, 100);
+
+	if (empty($results['results'])) {
+		echo '<div><b>No more results</b></div>';
+		return;
+	}
+
 	$protocol = HttpUtil::getProtocol();
 	$domain = $wikis[$params['wiki']]['domain'];
 	$wikiprefix = "$protocol://$domain/wiki/";
@@ -370,21 +400,88 @@ function display_paramlinks()
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
 	echo '<table class="wikitable"><thead><tr><th>' . htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') .
-		'</th></tr></thead><tbody>';
+	'</th></tr></thead><tbody>';
 
 	foreach ($results['results'] as $page) {
 		$page = $page['page_title'];
 		echo "<tr><td><a href=\"$wikiprefix$page\">" .
-			htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
+		htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
 	}
 
 	echo '<tbody></table>';
 
 	if (count($results['results']) == 100) {
 		$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
-			"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']) . "&page=" . ($params['page'] + 1);
+		"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']) . "&page=" . ($params['page'] + 1);
 		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
-			htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
+		htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
+	}
+}
+
+/**
+ * Display missing a parameter
+ */
+function display_missing()
+{
+	global $uihelper, $params, $wikis, $l10n;
+
+	$results = $uihelper->getTemplate($params);
+	$pagelinks = true;
+
+	if (! empty($results['info'])) {
+		if ($results['info']['file_offset'] == -1) {
+			$results['errors'][] = htmlentities($l10n->get('pagelistsunavailable', true), ENT_COMPAT, 'UTF-8');
+			$pagelinks = false;
+		}
+
+		if (! isset($results['info']['params'][$params['param']])) {
+			$results['errors'][] = htmlentities($l10n->get('invalidparameter', true) . " = {$params['param']}", ENT_COMPAT, 'UTF-8');
+			$pagelinks = false;
+		}
+	}
+
+	if (! empty($results['errors'])) {
+		echo '<h3>Messages</h3><ul>';
+		foreach ($results['errors'] as $msg) {
+			echo "<li>$msg</li>";
+		}
+		echo '</ul>';
+	}
+
+	if (empty($results['info']) || ! $pagelinks) return;
+
+	$loaded = checkLoadStatus($results['info']);
+	if ($loaded['status'] != 'C') return;
+
+	$results = $uihelper->getMissing($params, 100);
+
+	if (empty($results['results'])) {
+		echo '<div><b>No more results</b></div>';
+		return;
+	}
+
+	$protocol = HttpUtil::getProtocol();
+	$domain = $wikis[$params['wiki']]['domain'];
+	$wikiprefix = "$protocol://$domain/wiki/";
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+
+	echo '<table class="wikitable"><thead><tr><th>' . htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') .
+	'</th></tr></thead><tbody>';
+
+	foreach ($results['results'] as $page) {
+		$page = $page['page_title'];
+		echo "<tr><td><a href=\"$wikiprefix$page\">" .
+		htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
+	}
+
+	echo '<tbody></table>';
+
+	if (count($results['results']) == 100) {
+		$extra = "TemplateParam.php?action=missing&wiki=" . urlencode($params['wiki']) .
+		"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']) . "&page=" . ($params['page'] + 1);
+		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
+		htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
 	}
 }
 
@@ -424,6 +521,12 @@ function display_valuelinks()
 	if ($loaded['status'] != 'C') return;
 
 	$results = $uihelper->getPages('valuelinks', $params, 100);
+
+	if (empty($results['results'])) {
+		echo '<div><b>No more results</b></div>';
+		return;
+	}
+
 	$protocol = HttpUtil::getProtocol();
 	$domain = $wikis[$params['wiki']]['domain'];
 	$wikiprefix = "$protocol://$domain/wiki/";
@@ -442,7 +545,7 @@ function display_valuelinks()
 	echo '<tbody></table>';
 
 	if (count($results['results']) == 100) {
-		$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
+		$extra = "TemplateParam.php?action=valuelinks&wiki=" . urlencode($params['wiki']) .
 			"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']) .
 			"&value=" . urlencode($params['value']) . "&page=" . ($params['page'] + 1);
 		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
