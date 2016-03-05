@@ -1,6 +1,6 @@
 <?php
 /**
- Copyright 2014 Myers Enterprises II
+ Copyright 2014-2016 Myers Enterprises II
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
-use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\Util\TemplateParamParser;
 use PDO;
 
@@ -199,6 +197,14 @@ class InvalidNavbarLinks extends DatabaseReport
 				'exclude_empty' => array(),
 				'exclude_values' => array(),
 				'exclude_templates' => array()
+			),
+
+			'Graphical timeline' => array(
+					'children' => array('Graphical timeline'),
+					'name_param' => 'link-to',
+					'exclude_empty' => array(),
+					'exclude_values' => array(),
+					'exclude_templates' => array()
 			),
 
 			'Navbox' => array( // Must be last because 'MySQL server has gone away' happens after this is run
