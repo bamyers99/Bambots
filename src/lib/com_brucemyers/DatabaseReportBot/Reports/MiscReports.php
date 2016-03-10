@@ -500,7 +500,7 @@ class MiscReports extends DatabaseReport
 		$sth = $dbh_wiki->query($sql);
 		$sth->setFetchMode(PDO::FETCH_NUM);
 
-		$skip_ids = array(32816757,21213768,32992276);
+		$skip_ids = array(32816757,21213768,32992276,1855946);
 
 		$livingdead = array();
 

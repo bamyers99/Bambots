@@ -30,6 +30,8 @@ use Exception;
  * Sample usage:
  *
  * jsub curl http://website/enwikiTemplateParams -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateParams
+ * jsub curl http://website/enwikiTemplateTotals -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateTotals
+ * jsub curl http://website/enwikiTemplateOffsets -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateOffsets
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php loadtotalsoffsets /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateTotals /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20160113-TemplateOffsets
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php dumptemplateids enwiki
  */
