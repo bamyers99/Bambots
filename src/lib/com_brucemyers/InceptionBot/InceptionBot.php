@@ -22,6 +22,7 @@ use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\CommonRegex;
 
 class InceptionBot
 {
@@ -161,6 +162,11 @@ class InceptionBot
         Logger::log('Updated page count = ' . count($updatedpages));
 
         $mediawiki->getPagesWithCache($updatedpages, true);
+
+        $this->_dropRedirects($mediawiki, $newestpages);
+        Logger::log('Newest page count w/o redirects = ' . count($newestpages));
+        $this->_dropRedirects($mediawiki, $updatedpages);
+        Logger::log('Updated page count w/o redirects = ' . count($updatedpages));
 
         $timer = new Timer();
 
@@ -544,5 +550,19 @@ EOT;
         $output .= "|}\n";
 
         $this->resultWriter->writeResults('User:InceptionBot/Creators', $output, "$creatorcnt creators");
+    }
+
+    /**
+     * Drop redirect pages.
+     *
+     * @param MediaWiki $mediawiki
+     * @param unknown $thepages
+     */
+    protected function _dropRedirects(MediaWiki $mediawiki, &$thepages)
+    {
+    	foreach ($thepages as $key => $title) {
+    		$data = $mediawiki->getPageWithCache($title);
+    		if (preg_match(CommonRegex::REDIRECT_REGEX, $data)) unset($thepages[$key]);
+    	}
     }
 }
