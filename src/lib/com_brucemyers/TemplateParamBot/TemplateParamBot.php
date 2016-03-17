@@ -145,6 +145,23 @@ class TemplateParamBot
         	$wikiname = $row['wikiname'];
         	$templid = $row['template_id'];
 
+        	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+        	$sql = "SELECT pp_value FROM page_props WHERE pp_page = $templid AND pp_propname = 'templatedata'";
+        	$sth = $dbh_wiki->query($sql);
+        	if ($td = $sth->fetch(PDO::FETCH_NUM)) {
+        		$templatedata = new TemplateData($td[0]);
+				$paramdefs = $templatedata->getParams();
+        	} else {
+        		$ts = $timer->stop();
+        		$lastrun = MySQLDate::toMySQLDatetime(time());
+        		$runtime = $ts['hours'] . ':' . $ts['minutes'] . ':' . $ts['seconds'];
+
+        		$sth = $dbh_tools->prepare("UPDATE loads SET status = 'C', progress = ?, lastrun = ?, runtime = ? WHERE wikiname = ? AND template_id = $templid");
+        		$sth->execute(array("Loaded 0 instances for $templid", $lastrun, $runtime, $wikiname));
+        		$dbh_tools->exec("UPDATE `{$wikiname}_templates` SET loaded = 'Y' WHERE id = $templid");
+        		continue;
+        	}
+
         	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
         	$template = $sth->fetch(PDO::FETCH_ASSOC);
         	$offset = $template['file_offset'];
@@ -168,8 +185,9 @@ class TemplateParamBot
 	    	$loadedcnt = 0;
 	    	$valuecnt = 0;
 	    	$sth = $dbh_tools->prepare("INSERT INTO `{$wikiname}_values` VALUES (?,?,?,?,?)");
-			$sth2 = $dbh_tools->prepare("UPDATE loads SET progress = ? WHERE wikiname = ? AND template_id = $templid");
-	    	$dbh_tools->beginTransaction();
+			$sthprogress = $dbh_tools->prepare("UPDATE loads SET progress = ? WHERE wikiname = ? AND template_id = $templid");
+			$sthmissing = $dbh_tools->prepare("INSERT INTO `{$wikiname}_missings` VALUES (?,?,?)");
+			$dbh_tools->beginTransaction();
 
 	    	while (! feof($hndl)) {
 	    		$line = rtrim(fgets($hndl), "\n");
@@ -180,10 +198,20 @@ class TemplateParamBot
 	    		if ($readid != $templid) break;
 
 				$pageid = $line[1];
-				if ($pageid != $prev_pageid) $instancenum = -1;
+				if ($pageid != $prev_pageid) {
+					$instancenum = -1;
+					$missing_written = array();
+				}
 				$prev_pageid = $pageid;
 				++$instancenum;
 				++$loadedcnt;
+
+				$params_used = array();
+				foreach ($paramdefs as $param_name => $paramdef) {
+					if (isset($paramdef['required']) || isset($paramdef['suggested'])) {
+						$params_used[$param_name] = false;
+					}
+				}
 
 				$cnt = count($line);
 				for ($x = 2; $x < $cnt; $x += 2) {
@@ -191,12 +219,21 @@ class TemplateParamBot
 					$param_value = $line[$x + 1];
 					$sth->execute(array($pageid, $templid, $instancenum, $param_name, $param_value));
 
+					if (isset($params_used[$param_name])) $params_used[$param_name] = true;
+
 					++$valuecnt;
 					if ($valuecnt % 2000 == 0) {
-						$sth2->execute(array("Loaded $loadedcnt of $instancecnt instances for $template", $wikiname));
+						$sthprogress->execute(array("Loaded $loadedcnt of $instancecnt instances for $template", $wikiname));
 
 						$dbh_tools->commit();
 						$dbh_tools->beginTransaction();
+					}
+				}
+
+				foreach ($params_used as $param_name => $param_used) {
+					if (! $param_used && ! isset($missing_written[$param_name])) {
+						$sthmissing->execute(array($templid, $param_name, $pageid));
+						$missing_written[$param_name] = true;
 					}
 				}
 	    	}
@@ -592,9 +629,18 @@ class TemplateParamBot
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
+    	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_missings` (
+    	`template_id` int unsigned NOT NULL,
+    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`page_id` int unsigned NOT NULL,
+    	KEY `template_id` (`template_id`, `param_name`)
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
+
     	$dbh_tools->exec("TRUNCATE `{$wikiname}_templates`");
     	$dbh_tools->exec("TRUNCATE `{$wikiname}_values`");
     	$dbh_tools->exec("TRUNCATE `{$wikiname}_totals`");
+    	$dbh_tools->exec("TRUNCATE `{$wikiname}_missings`");
     	$sth = $dbh_tools->prepare('DELETE FROM loads WHERE wikiname = ?');
     	$sth->execute(array($wikiname));
 

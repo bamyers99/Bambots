@@ -238,15 +238,13 @@ class UIHelper
 		$row = $sth->fetch(PDO::FETCH_NUM);
 		$templid = $row[0];
 
-		$sql = "SELECT DISTINCT page_title FROM `{$wikiname}_values` pv1 " .
-			" LEFT JOIN `{$wikiname}_values` pv2 ON pv1.template_id = pv2.template_id AND pv2.param_name = ? " .
-			" AND pv1.page_id = pv2.page_id AND pv1.instance_num = pv2.instance_num " .
-			" LEFT JOIN `{$wikiname}_p`.page wp ON wp.page_id = pv1.page_id " .
-			" WHERE pv1.template_id = ? AND pv2.page_id IS NULL " .
+		$sql = "SELECT page_title FROM `{$wikiname}_missings` miss " .
+			" STRAIGHT_JOIN `{$wikiname}_p`.page wp ON wp.page_id = miss.page_id " .
+			" WHERE miss.template_id = ? AND miss.param_name = ? " .
 			" ORDER BY page_title LIMIT $offset,$max_rows";
 
 		$sth = $this->dbh_tools->prepare($sql);
-		$sth->execute(array($params['param'], $templid));
+		$sth->execute(array($templid, $params['param']));
 
 		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
 
