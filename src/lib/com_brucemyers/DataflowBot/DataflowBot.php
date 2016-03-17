@@ -60,13 +60,14 @@ class DataflowBot
     				'priority' => 'best',
     				'valuetype' => 'image',
     				'title' => 'Class')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnFirstImage',
-    			'params' => array(
-    				'insertpos' => 'append',
-    	    		'lookupcol' => '1',
-    				'title' => 'Image',
-    				'nonfree' => 'no',
-    				'fileoptions' => 'left|100x100px')),
+// Commented out because does not handle redirected non-free images
+//     		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnFirstImage',
+//     			'params' => array(
+//     				'insertpos' => 'append',
+//     	    		'lookupcol' => '1',
+//     				'title' => 'Image',
+//     				'nonfree' => 'no',
+//     				'fileoptions' => 'left|100x100px')),
     		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnFirstSentence',
     			'params' => array(
     				'insertpos' => 'append',
@@ -80,7 +81,7 @@ class DataflowBot
     		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\ToWikitable',
     			'params' => array(
     				'sortable' => '1',
-					'unsortable' => '7')),
+					'unsortable' => '6')),
     		array('class' => 'com_brucemyers\\DataflowBot\\Loaders\\WikiLoader',
     			'params' => array(
     				'wiki' => 'enwiki',

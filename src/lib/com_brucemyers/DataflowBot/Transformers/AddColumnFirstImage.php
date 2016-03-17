@@ -179,6 +179,8 @@ class AddColumnFirstImage extends AddColumn
 	/**
 	 * Check an images free status.
 	 *
+	 * NOTE: This does not handle redirected files.
+	 *
 	 * @param string $filename Image filename
 	 * @return bool true = free
 	 */
