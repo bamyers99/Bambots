@@ -25,7 +25,7 @@ class TemplateData
 	{
 		if (strlen($json) > 1 && substr($json, 0, 2) === "\037\213" ) {
 //			$json = gzdecode($json); // gzdecode not available in < php 5.4
-			$json = gzuncompress(substr($json,10,-8));
+			$json = gzinflate(substr($json,10,-8));
 		}
 
 		$this->data = json_decode($json, true);
