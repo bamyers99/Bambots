@@ -38,6 +38,12 @@ class TemplateData
 		// Normalization
 		if (isset($this->data['params'])) {
 			foreach ($this->data['params'] as $name => $config) {
+				if (isset($config['inherits'])) {
+					$this->data['params'][$name] = array_merge($this->data['params'][$config['inherits']], $config);
+					if (isset($this->data['params'][$name]['aliases'])) unset($this->data['params'][$name]['aliases']);
+					$config = $this->data['params'][$name];
+				}
+
 				if (isset($config['deprecated']) && ($config['deprecated'] === false || empty($config['deprecated']))) {
 					unset($this->data['params'][$name]['deprecated']);
 					unset($config['deprecated']);
@@ -54,11 +60,8 @@ class TemplateData
 				if (isset($config['aliases'])) {
 					foreach ($config['aliases'] as $alias) {
 						$this->data['params'][$alias] = $config;
+						unset($this->data['params'][$alias]['aliases']);
 					}
-				}
-
-				if (isset($config['inherits'])) {
-					$this->data['params'][$name] = $this->data['params'][$config['inherits']];
 				}
 			}
 		}

@@ -162,6 +162,16 @@ class TemplateParamBot
         		continue;
         	}
 
+        	// Calc aliases
+        	$aliases = array();
+        	foreach ($paramdefs as $param_name => $paramdef) {
+        		if (isset($paramdef['aliases'])) {
+					foreach ($paramdef['aliases'] as $alias) {
+						$aliases[$alias] = $param_name;
+					}
+        		}
+        	}
+
         	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
         	$template = $sth->fetch(PDO::FETCH_ASSOC);
         	$offset = $template['file_offset'];
@@ -208,8 +218,10 @@ class TemplateParamBot
 
 				$params_used = array();
 				foreach ($paramdefs as $param_name => $paramdef) {
+					$unaliased = $param_name;
+					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
 					if (isset($paramdef['required']) || isset($paramdef['suggested'])) {
-						$params_used[$param_name] = false;
+						$params_used[$unaliased] = false;
 					}
 				}
 
@@ -219,7 +231,9 @@ class TemplateParamBot
 					$param_value = $line[$x + 1];
 					$sth->execute(array($pageid, $templid, $instancenum, $param_name, $param_value));
 
-					if (isset($params_used[$param_name])) $params_used[$param_name] = true;
+					$unaliased = $param_name;
+					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
+					if (isset($params_used[$unaliased])) $params_used[$unaliased] = true;
 
 					++$valuecnt;
 					if ($valuecnt % 2000 == 0) {
@@ -231,9 +245,13 @@ class TemplateParamBot
 				}
 
 				foreach ($params_used as $param_name => $param_used) {
-					if (! $param_used && ! isset($missing_written[$param_name])) {
-						$sthmissing->execute(array($templid, $param_name, $pageid));
-						$missing_written[$param_name] = true;
+					$unaliased = $param_name;
+					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
+
+
+					if (! $param_used && ! isset($missing_written[$unaliased])) {
+						$sthmissing->execute(array($templid, $unaliased, $pageid));
+						$missing_written[$unaliased] = true;
 					}
 				}
 	    	}

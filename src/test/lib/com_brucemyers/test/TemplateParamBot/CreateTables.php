@@ -123,20 +123,23 @@ EOT;
                         "label": "Year of birth",
                         "description": "The year in which the person was born",
                         "type": "number",
-                        "required": true
+                        "required": true,
+   						"aliases" : ["year"]
                 },
                 "2": {
                         "label": "Month of birth",
                         "description": "The month (number) in which the person was born",
                         "type": "number",
-                        "required": true
-                },
+                        "required": true,
+   						"aliases" : ["month"]
+    			},
                 "3": {
                         "label": "Day of birth",
                         "description": "The day (number) in which the person was born",
                         "type": "number",
-                        "required": true
-                },
+                        "required": true,
+   						"aliases" : ["day"]
+    			},
                 "df": {
                         "label": "Day first",
                         "description": "When set to 'y' or 'yes', the date of birth is output in a DMY format",
