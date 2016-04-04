@@ -30,7 +30,7 @@ class CreateTablesBSA
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
-   		$dbh_enwiki->exec('DROP TABLE page');
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS page');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
  			`rd_from` int unsigned NOT NULL default 0 PRIMARY KEY,
@@ -98,5 +98,12 @@ class CreateTablesBSA
     	$dbh_enwiki->exec("INSERT INTO page VALUES (13,0,'Culture_of_Israel')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (14,0,'Theatre_of_Israel')");
     	$dbh_enwiki->exec("INSERT INTO redirect VALUES (14,0,'Culture_of_Israel','','Theater')");
+
+    	// Bad section redirect
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (15,0,'Xfce')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (16,0,'Xfburn')");
+    	$dbh_enwiki->exec("INSERT INTO redirect VALUES (16,0,'Xfce','','Applications')");
+    	$dbh_enwiki->exec("INSERT INTO pagelinks VALUES (2,0,0,'Xfburn')");
+
     }
 }

@@ -17,17 +17,25 @@
 
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
-use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\Config;
+use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use MediaWiki\Sanitizer;
 use PDO;
 use Exception;
 
 class BrokenSectionAnchors extends DatabaseReport
 {
+	protected $outputDir;
+
     public function init($apis, $params)
     {
+    	$outputDir = Config::get(DatabaseReportBot::OUTPUTDIR);
+    	$outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
+    	$outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
+    	$outputDir .= DIRECTORY_SEPARATOR;
+    	$this->outputDir = $outputDir;
+
     	if (empty($params)) return true;
 
     	$option = $params[0];
@@ -111,7 +119,7 @@ class BrokenSectionAnchors extends DatabaseReport
 
 		// Load the view counts
 		$viewcounts = array();
-		$hndl = fopen(self::getWikiviewsPath(), 'r');
+		$hndl = fopen($this->getWikiviewsPath(), 'r');
 		if ($hndl === false) throw new Exception('wikiviews not found');
 
 		while (! feof($hndl)) {
@@ -160,7 +168,7 @@ class BrokenSectionAnchors extends DatabaseReport
 				$fragment = str_replace('_', ' ', $fragment);
 				$source = str_replace('_', ' ', $source);
 				$target = str_replace('_', ' ', $target);
-				$results[] = array($source, "[[$target#$fragment]]", $incomingcnt, $viewcount, max($viewcount, $incomingcnt));
+				$results[$source] = array($source, "[[$target#$fragment]]", $incomingcnt, $viewcount, max($viewcount, $incomingcnt));
 			}
 		}
 
@@ -169,13 +177,57 @@ class BrokenSectionAnchors extends DatabaseReport
 		fclose($hndl);
 
 		// Sort descending by incoming link/view count
-		usort($results, function($a, $b) {
+		uasort($results, function($a, $b) {
 			if ($a[4] < $b[4]) return 1; // Inverted because want descending sort
 			if ($a[4] > $b[4]) return -1;
 			return strcmp($a[1], $b[1]);
 		});
 
-		return $results;
+		// Load the previous list
+		$prevpath = $this->outputDir . 'brokensectionanchors';
+		$hndl = fopen($prevpath, 'r');
+		$prevredirs = array();
+
+		while (! feof($hndl)) {
+			$buffer = fgets($hndl);
+			$buffer = rtrim($buffer, "\n");
+			if (empty($buffer)) continue;
+			$prevredirs[] = $buffer;
+		}
+
+		fclose($hndl);
+
+		$groups = array('comment' => 'Record count: ' . count($results),
+				'groups' => array());
+		$curredirs = array_keys($results);
+
+		// Calculate the new redirs
+		$newredirs = array_diff($curredirs, $prevredirs);
+
+		$newest = array();
+
+		foreach ($newredirs as $source) {
+			$newest[] = $results[$source];
+			unset($results[$source]);
+		}
+
+		$groups['groups']['Newest'] = $newest;
+		$groups['groups']['Older'] = array_slice($results, 0, 5000 - count($newest));
+
+		// Save the previous redirs
+		$bakprevpath = $prevpath . '.bak';
+		@unlink($bakprevpath);
+		rename($prevpath, $bakprevpath);
+
+		// Write the current redirs
+		$hndl = fopen($prevpath, 'w');
+		foreach ($curredirs as $curredir) {
+			fwrite($hndl, "$curredir\n");
+		}
+
+		fclose($hndl);
+
+		return $groups;
 	}
 
 	/**
@@ -230,7 +282,7 @@ class BrokenSectionAnchors extends DatabaseReport
 			" WHERE rd_fragment IS NOT NULL AND rd_fragment <> '' AND rd_namespace = 0 AND page_namespace = 0 AND rd_from = page_id " .
 			" ORDER BY page_title";
 
-		$tempfile = self::getWikiviewsPath();
+		$tempfile = $this->getWikiviewsPath();
 		$hndl = fopen($tempfile, 'w');
 
 		$sth = $dbh_wiki->query($sql);
@@ -251,8 +303,8 @@ class BrokenSectionAnchors extends DatabaseReport
 	 *
 	 * @return string
 	 */
-	static function getWikiviewsPath()
+	function getWikiviewsPath()
 	{
-		return FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'wikiviews';
+		return $this->outputDir . 'wikiviews';
 	}
 }

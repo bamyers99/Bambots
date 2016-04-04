@@ -20,8 +20,8 @@ namespace com_brucemyers\test\DatabaseReportBot;
 use com_brucemyers\DatabaseReportBot\Reports\BrokenSectionAnchors;
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\FileCache;
 use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\MediaWiki\DataWiki;
 use com_brucemyers\test\DatabaseReportBot\CreateTablesBSA;
 use UnitTestCase;
 use PDO;
@@ -55,9 +55,10 @@ class TestBrokenSectionAnchors extends UnitTestCase
         $renderedwiki = new RenderedWiki($url);
 
     	new CreateTablesBSA($dbh_enwiki);
+    	$this->_createDataFiles();
 
-    	$redirects = array('Anesthesia record', 'Anesthesia not found');
-    	$targets = array('[[Anesthesia#Anesthetic monitoring]]', '[[Anesthesia#Anesthetic not found]]');
+    	$redirects = array('Anesthesia record', 'Anesthesia not found', 'Xfburn');
+    	$targets = array('[[Anesthesia#Anesthetic monitoring]]', '[[Anesthesia#Anesthetic not found]]', '[[Xfce#Applications]]');
 
     	$apis = array(
     	    'dbh_wiki' => $dbh_enwiki,
@@ -74,16 +75,39 @@ class TestBrokenSectionAnchors extends UnitTestCase
     	);
 
 		$report = new BrokenSectionAnchors();
-		$rows = $report->getRows($apis);
+		$report->init($apis, array());
+		$groups = $report->getRows($apis);
 
-		$this->assertEqual(count($rows), 1, 'Wrong number of broken section anchors');
+		//echo count($groups['groups']['Newest']) . "\n";
+		$this->assertEqual(count($groups['groups']['Newest']), 1, 'Wrong number of Newest broken section anchors');
+		//echo count($groups['groups']['Older']) . "\n";
+		$this->assertEqual(count($groups['groups']['Older']), 1, 'Wrong number of Older broken section anchors');
+		//print_r($groups);
 
-		$row = $rows[0];
+		$row = reset($groups['groups']['Newest']);
 		$this->assertTrue(in_array($row[0], $redirects), 'Wrong redirect page title 1');
 		$this->assertTrue(in_array($row[1], $targets), 'Wrong target page 1');
 
-		//$row = $rows[1];
-		//$this->assertTrue(in_array($row[0], $redirects), 'Wrong redirect page title 2');
-		//$this->assertTrue(in_array($row[1], $targets), 'Wrong target page 2');
+		$row = reset($groups['groups']['Older']);
+		$this->assertTrue(in_array($row[0], $redirects), 'Wrong redirect page title 2');
+		$this->assertTrue(in_array($row[1], $targets), 'Wrong target page 2');
+    }
+
+    protected function _createDataFiles()
+    {
+    	$outputDir = Config::get(DatabaseReportBot::OUTPUTDIR);
+    	$outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
+    	$outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
+    	$outputDir .= DIRECTORY_SEPARATOR;
+
+    	$hndl = fopen($outputDir . 'wikiviews', 'w');
+    	fwrite($hndl, "Anesthesia_record 45 0\n");
+    	fwrite($hndl, "Anesthesia_not_found 34 0\n");
+    	fwrite($hndl, "Xfburn 15 0\n");
+    	fclose($hndl);
+
+    	$hndl = fopen($outputDir . 'brokensectionanchors', 'w');
+    	fwrite($hndl, "Xfburn\n");
+    	fclose($hndl);
     }
 }

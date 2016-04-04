@@ -104,6 +104,7 @@ class DatabaseReportBot
     		$chunkcount = 1;
 			$groups = true;
 			if (isset($rows['linktemplate'])) $linktemplate = $rows['linktemplate'];
+			if (isset($rows['comment'])) $comment = $rows['comment'];
     	} else {
     		if (isset($rows['linktemplate'])) {
     			$linktemplate = $rows['linktemplate'];
@@ -165,7 +166,7 @@ class DatabaseReportBot
 
 			unset($group);
 
-			$comment = 'Record count: ' . $recordcnt;
+			if (! isset($comment)) $comment = 'Record count: ' . $recordcnt;
 		    $this->resultWriter->writeResults($outputPage . '/' . $reportTitle, $output, $comment);
 		} else {
 
