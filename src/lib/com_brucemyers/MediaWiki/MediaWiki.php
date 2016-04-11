@@ -171,7 +171,11 @@ class MediaWiki extends wikipedia
 			}
 		}
 
-        return unserialize($ret);
+		$retval = unserialize($ret);
+		if ($retval === false) {
+			throw new Exception("unserialize failed = $ret");
+		}
+        return $retval;
     }
 
     /**
