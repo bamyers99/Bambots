@@ -173,7 +173,12 @@ class MediaWiki extends wikipedia
 
 		$retval = unserialize($ret);
 		if ($retval === false) {
-			throw new Exception("unserialize failed = $ret");
+			// Patch the last 8 bytes because of garbage chars if $ret length = 32767
+			$ret = substr_replace($ret, "\";}}}}}}", -8, 8);
+			$retval = unserialize($ret);
+			if ($retval === false) {
+				throw new Exception("unserialize failed = $ret");
+			}
 		}
         return $retval;
     }
