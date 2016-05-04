@@ -57,8 +57,10 @@ class TestBrokenSectionAnchors extends UnitTestCase
     	new CreateTablesBSA($dbh_enwiki);
     	$this->_createDataFiles();
 
-    	$redirects = array('Anesthesia record', 'Anesthesia not found', 'Xfburn');
+    	$redirects = array('[[Anesthesia record]]', '[[Anesthesia not found]]', '[[Xfburn]]');
     	$targets = array('[[Anesthesia#Anesthetic monitoring]]', '[[Anesthesia#Anesthetic not found]]', '[[Xfce#Applications]]');
+    	$grouped_redirects = array('[[Xfburn]]#Applications', '[[Anesthesia record]]#Anesthetic monitoring');
+    	$grouped_targets = array('[[Xfce]]', '[[Anesthesia]]');
 
     	$apis = array(
     	    'dbh_wiki' => $dbh_enwiki,
@@ -80,17 +82,23 @@ class TestBrokenSectionAnchors extends UnitTestCase
 
 		//echo count($groups['groups']['Newest']) . "\n";
 		$this->assertEqual(count($groups['groups']['Newest']), 1, 'Wrong number of Newest broken section anchors');
-		//echo count($groups['groups']['Older']) . "\n";
-		$this->assertEqual(count($groups['groups']['Older']), 1, 'Wrong number of Older broken section anchors');
+		//echo count($groups['groups']['Older (partial list)']) . "\n";
+		$this->assertEqual(count($groups['groups']['Older (partial list)']), 1, 'Wrong number of Older broken section anchors');
+		//echo count($groups['groups']['Grouped by target page (partial list)']) . "\n";
+		$this->assertEqual(count($groups['groups']['Grouped by target page (partial list)']), 2, 'Wrong number of grouped broken section anchors');
 		//print_r($groups);
 
 		$row = reset($groups['groups']['Newest']);
 		$this->assertTrue(in_array($row[0], $redirects), 'Wrong redirect page title 1');
 		$this->assertTrue(in_array($row[1], $targets), 'Wrong target page 1');
 
-		$row = reset($groups['groups']['Older']);
+		$row = reset($groups['groups']['Older (partial list)']);
 		$this->assertTrue(in_array($row[0], $redirects), 'Wrong redirect page title 2');
 		$this->assertTrue(in_array($row[1], $targets), 'Wrong target page 2');
+
+		$row = reset($groups['groups']['Grouped by target page (partial list)']);
+		$this->assertTrue(in_array($row[0], $grouped_redirects), 'Wrong redirect page title 3');
+		$this->assertTrue(in_array($row[1], $grouped_targets), 'Wrong target page 3');
     }
 
     protected function _createDataFiles()

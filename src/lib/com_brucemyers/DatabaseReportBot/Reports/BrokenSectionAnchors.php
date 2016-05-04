@@ -168,7 +168,7 @@ class BrokenSectionAnchors extends DatabaseReport
 				$fragment = str_replace('_', ' ', $fragment);
 				$source = str_replace('_', ' ', $source);
 				$target = str_replace('_', ' ', $target);
-				$results[$source] = array($source, "[[$target#$fragment]]", $incomingcnt, $viewcount, max($viewcount, $incomingcnt));
+				$results[$source] = array("[[$source]]", "[[$target#$fragment]]", $incomingcnt, $viewcount, max($viewcount, $incomingcnt));
 			}
 		}
 
@@ -198,10 +198,43 @@ class BrokenSectionAnchors extends DatabaseReport
 		fclose($hndl);
 
 		$groups = array('comment' => 'Record count: ' . count($results),
+				'linktemplate' => false,
 				'groups' => array());
+
+		// Group by target page
+		$targets = array();
+
+		foreach ($results as $result) {
+			$target = explode('#', $result[1], 2);
+			$target = substr($target[0], 2);
+			if (! isset($targets[$target])) $targets[$target] = array();
+			$targets[$target][] = $result;
+		}
+
+		uasort($targets, function($a, $b) {
+			$ca = count($a);
+			$cb = count($b);
+			if ($ca < $cb) return 1; // Inverted because want descending sort
+			if ($ca > $cb) return -1;
+			return 0;
+		});
+
+		$targettmp = array_slice($targets, 0, 1000, true);
+		$targets = array();
+
+		foreach ($targettmp as $target => $result) {
+			$redirs = array();
+			foreach ($result as $redir) {
+				$section = explode('#', $redir[1], 2);
+				$section = substr($section[1], 0, -2);
+				$redirs[] = $redir[0] . "#$section";
+			}
+			$targets[] = array(implode('<br />', $redirs), "[[$target]]", count($result), '', '');
+		}
+
 		$curredirs = array_keys($results);
 
-		// Calculate the new redirs
+		// Calculate the new broken redirs
 		$newredirs = array_diff($curredirs, $prevredirs);
 
 		$newest = array();
@@ -212,7 +245,8 @@ class BrokenSectionAnchors extends DatabaseReport
 		}
 
 		$groups['groups']['Newest'] = $newest;
-		$groups['groups']['Older'] = array_slice($results, 0, 5000 - count($newest));
+		$groups['groups']['Older (partial list)'] = array_slice($results, 0, 1000);
+		$groups['groups']['Grouped by target page (partial list)'] = $targets;
 
 		// Save the previous redirs
 		$bakprevpath = $prevpath . '.bak';

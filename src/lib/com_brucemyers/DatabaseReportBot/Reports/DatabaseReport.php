@@ -17,10 +17,6 @@
 
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
-use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\RenderedWiki\RenderedWiki;
-use PDO;
-
 abstract class DatabaseReport
 {
 
