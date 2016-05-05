@@ -103,8 +103,11 @@ class DatabaseReportBot
     	if (isset($rows['groups'])) {
     		$chunkcount = 1;
 			$groups = true;
+			$forceTOC = false;
+
 			if (isset($rows['linktemplate'])) $linktemplate = $rows['linktemplate'];
 			if (isset($rows['comment'])) $comment = $rows['comment'];
+			if (isset($rows['forceTOC'])) $forceTOC = $rows['forceTOC'];
     	} else {
     		if (isset($rows['linktemplate'])) {
     			$linktemplate = $rows['linktemplate'];
@@ -141,6 +144,7 @@ class DatabaseReportBot
 		if ($groups) {
 			$recordcnt = 0;
 			$output = $intro;
+			if ($forceTOC) $output .= "__FORCETOC__\n";
 
 			foreach ($rows['groups'] as $groupname => &$group) {
 				$recordcnt += count($group);

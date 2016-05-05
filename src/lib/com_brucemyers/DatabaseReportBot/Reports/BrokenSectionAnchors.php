@@ -199,6 +199,7 @@ class BrokenSectionAnchors extends DatabaseReport
 
 		$groups = array('comment' => 'Record count: ' . count($results),
 				'linktemplate' => false,
+				'forceTOC' => true,
 				'groups' => array());
 
 		// Group by target page
