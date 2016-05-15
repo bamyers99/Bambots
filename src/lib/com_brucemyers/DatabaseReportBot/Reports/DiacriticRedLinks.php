@@ -273,7 +273,7 @@ class DiacriticRedLinks extends DatabaseReport
 		foreach ($lines as $line) {
 			if (isset($sections[$line])) {
 				$type = $sections[$line]['type'];
-				if ($type == 'oldsection') $curlinks['oldsection'][] = $line;
+				if ($type == 'oldsection') $curlinks['oldsection'][] = $line . "\n";
 				continue;
 			}
 
@@ -403,7 +403,7 @@ class DiacriticRedLinks extends DatabaseReport
 			fwrite($hndl, "$line"); // \n is already in $line
 		}
 
-		fwrite($hndl, "''Older sets of results can be found at [[Wikipedia:MWA/old]]''\n");
+//		fwrite($hndl, "''Older sets of results can be found at [[Wikipedia:MWA/old]]''\n");
 
 		fclose($hndl);
 	}
