@@ -28,7 +28,7 @@ while (! feof($ihndl)) {
 	$prevtmplcount += (int)($namespace / 10);
 }
 
-if ($prevcount > 9) {
+if ($prevcount > 29) {
 	fwrite($ohndl, "$prevtitle\t$prevcount\t$prevtmplcount");
 }
 

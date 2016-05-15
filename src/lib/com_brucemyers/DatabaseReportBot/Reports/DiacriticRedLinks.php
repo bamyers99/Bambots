@@ -18,10 +18,9 @@
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
 use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\RenderedWiki\RenderedWiki;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Convert;
-use MediaWiki\Sanitizer;
+use com_brucemyers\Util\Logger;
 use PDO;
 
 class DiacriticRedLinks extends DatabaseReport
@@ -220,7 +219,7 @@ class DiacriticRedLinks extends DatabaseReport
 	 *
 	 * @param PDO $dbh_wiki
 	 */
-	function dumpredlinks(PDO $dbh_wiki)
+	function donotuse_dumpredlinks(PDO $dbh_wiki)
 	{
 		$dbh_wiki->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 		$dumppath = self::getDumpPath();
@@ -293,6 +292,10 @@ class DiacriticRedLinks extends DatabaseReport
 
 		$dumppath = self::getDumpPath();
 		$hndl = fopen($dumppath, 'r');
+		if (! $hndl) {
+			Logger::log("$dumppath not found");
+			return;
+		}
 		$results = array();
 		$oldresults = array();
 
