@@ -37,6 +37,8 @@ class MediaWiki extends wikipedia
     const MAX_PAGE_SIZE = 2000000;
 
     static public $namespaces = array(
+    				-2 => 'Media',
+    				-1 => 'Special',
                     0 => 'Article',
                     1 => 'Article talk',
                     2 => 'User',
@@ -246,7 +248,7 @@ class MediaWiki extends wikipedia
      * Get multiple pages last revision
      *
      * @param $pagenames array Page names
-     * @return array Page text, pagename=>revision info (timestamp|minor|comment|user)
+     * @return array Page text, pagename=>revision info (timestamp|minor|comment|user|revid|parentid)
      */
     public function getPagesLastRevision($pagenames)
     {
@@ -256,7 +258,8 @@ class MediaWiki extends wikipedia
 
         foreach ($pageChunks as $pageChunk) {
         	$pagenames = implode('|', $pageChunk);
-        	$ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvprop=timestamp|flags|comment|user&continue=');
+        	$ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) .
+        		'&rvprop=timestamp|flags|comment|user|ids&continue=');
 
         	if (isset($ret['error'])) {
         		throw new Exception('Query Error ' . $ret['error']['info']);

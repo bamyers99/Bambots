@@ -29,7 +29,7 @@ class FileReader implements FlowReader
 	/**
 	 * Read records
 	 *
-	 * @param int $max_records Maximum number of records to read at once (default = 100)
+	 * @param int $max_records Maximum number of records to read at once (default = 100), -1 = all
 	 * @return mixed false = end of records, array = records (arrays of fields)
 	 */
 	function readRecords($max_records = 100)

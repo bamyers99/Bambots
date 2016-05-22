@@ -21,7 +21,7 @@ use com_brucemyers\DataflowBot\io\FlowReader;
 use com_brucemyers\DataflowBot\io\FlowWriter;
 use com_brucemyers\DataflowBot\ComponentParameter;
 
-class ToWikitable extends Transformer
+class FilterColumn extends Transformer
 {
 	var $paramValues;
 	var $firstRowHeaders;
@@ -33,7 +33,7 @@ class ToWikitable extends Transformer
 	 */
 	public function getTitle()
 	{
-		return 'Create Wikitable';
+		return 'Filter Column';
 	}
 
 	/**
@@ -43,7 +43,7 @@ class ToWikitable extends Transformer
 	 */
 	public function getDescription()
 	{
-		return 'Put data into a Wikitable';
+		return 'Filter a column by regex';
 	}
 
 	/**
@@ -54,11 +54,12 @@ class ToWikitable extends Transformer
 	public function getParameterTypes()
 	{
 		return array(
-			new ComponentParameter('sortable', ComponentParameter::PARAMETER_TYPE_BOOL, 'Sortable', '',
-					array('default' => 1)),
-			new ComponentParameter('unsortable', ComponentParameter::PARAMETER_TYPE_STRING, 'Non-sortable columns',
-				'Comma separated list of column numbers; Column numbers start at 1',
-		    	array('size' => 10, 'maxlength' => 64))
+			new ComponentParameter('filtercol', ComponentParameter::PARAMETER_TYPE_STRING, 'Filter column #',
+		    	'Column numbers start at 1',
+		    	array('size' => 5, 'maxlength' => 6)),
+			new ComponentParameter('filterregex', ComponentParameter::PARAMETER_TYPE_STRING, 'Regular expression',
+		    	'! must be escaped',
+		    	array('size' => 30, 'maxlength' => 256))
 		);
 	}
 
@@ -84,7 +85,7 @@ class ToWikitable extends Transformer
 	 */
 	public function isFirstRowHeaders()
 	{
-		return false;
+		return $this->firstRowHeaders;
 	}
 
 	/**
@@ -97,54 +98,28 @@ class ToWikitable extends Transformer
 	public function process(FlowReader $reader, FlowWriter $writer)
 	{
 		$firstrow = true;
-		$sortable = ($this->paramValues['sortable'] == '1') ? ' sortable' : '';
-		$unsortables = array();
-		if (! empty($this->paramValues['unsortable'])) $unsortables = explode(',', $this->paramValues['unsortable']);
-
-		$nonsorts = array();
-		if (! empty($sortable)) {
-			foreach ($unsortables as $unsortable) {
-				$colnum = (int)trim($unsortable) - 1;
-				if ($colnum < 0) return "Invalid unsortable column #";
-				$nonsorts[] = $colnum;
-			}
-		}
-
-		$header = array(array("{| class=\"wikitable$sortable\""));
-		$writer->writeRecords($header);
+		$colnum = (int)$this->paramValues['filtercol'] - 1;
+		if ($colnum < 0) return "Invalid filter column #";
+		$regex = $this->paramValues['filterregex'];
 
 		while ($rows = $reader->readRecords()) {
-			$lines = array();
-
-			foreach ($rows as $key => $row) {
+			foreach ($rows as $row) {
 				if ($firstrow) {
 					$firstrow = false;
-					if ($this->firstRowHeaders) {
-						$headers = array();
-						foreach ($row as $key => $column) {
-							$value = $column;
-							if (in_array($key, $nonsorts)) $value = 'class="unsortable"|' . $value;
-							$headers[] = $value;
-						}
-
-						$lines[] = array("|-");
-						$headers = implode('!!', $headers);
-						$lines[] = array("!$headers");
-
+					if ($this->isFirstRowHeaders()) {
+						$rows = array($row);
+						$writer->writeRecords($rows);
 						continue;
 					}
 				}
 
-				$lines[] = array("|-");
-				$row = implode('||', $row);
-				$lines[] = array("|$row");
+				if ($colnum >= count($row)) return "Invalid filter column #";
+				if (preg_match("!$regex!u", $row[$colnum])) {
+					$rows = array($row);
+					$writer->writeRecords($rows);
+				}
 			}
-
-			$writer->writeRecords($lines);
 		}
-
-		$footer = array(array("|}"));
-		$writer->writeRecords($footer);
 
 		return true;
 	}

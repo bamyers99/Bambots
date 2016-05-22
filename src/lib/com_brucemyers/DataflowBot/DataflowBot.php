@@ -30,68 +30,26 @@ class DataflowBot
 {
 	const ERROREMAIL = 'DataflowBot.erroremail';
 
-    public function __construct()
+    public function __construct($argcnt, $argval)
     {
-    	$components = array(
-    	    array('class' => 'com_brucemyers\\DataflowBot\\Extractors\\SQLQuery',
-    			'params' => array(
-    	    		'wiki' => 'enwiki',
-    				'sql' => "SELECT rc_title AS Article, COUNT(*) AS Edits,
-  						COUNT(DISTINCT rc_user_text) AS Editors, -- used to be rc_user which counted all IPs as same
-  						ROUND(LN(COUNT(*)) * (LN(COUNT(DISTINCT rc_user_text))+1.4), 2) AS `Weighted rank`
-						FROM recentchanges
-						WHERE rc_namespace = 0
-  						AND rc_timestamp > DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 7 DAY), '%Y%m%d%H%i%s')
-						GROUP BY article ORDER BY `Weighted rank` DESC
-						LIMIT 20;")),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\DeleteColumn',
-    			'params' => array(
-    				'deletecol' => '4')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\ResolveRedirectColumn',
-    			'params' => array(
-    				'linkcol' => '1')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\WikilinkColumn',
-    			'params' => array(
-    				'linkcol' => '1')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnPageClass',
-    			'params' => array(
-    				'insertpos' => '2',
-    	    		'lookupcol' => '1',
-    				'priority' => 'best',
-    				'valuetype' => 'image',
-    				'title' => 'Class')),
-// Commented out because does not handle redirected non-free images
-//     		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnFirstImage',
-//     			'params' => array(
-//     				'insertpos' => 'append',
-//     	    		'lookupcol' => '1',
-//     				'title' => 'Image',
-//     				'nonfree' => 'no',
-//     				'fileoptions' => 'left|100x100px')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnFirstSentence',
-    			'params' => array(
-    				'insertpos' => 'append',
-    	    		'lookupcol' => '1',
-    				'title' => 'Abstract')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnSequentialNumber',
-    			'params' => array(
-    				'insertpos' => '1',
-    				'title' => 'Rank',
-    				'startnum' => '1')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\ToWikitable',
-    			'params' => array(
-    				'sortable' => '1',
-					'unsortable' => '6')),
-    		array('class' => 'com_brucemyers\\DataflowBot\\Loaders\\WikiLoader',
-    			'params' => array(
-    				'wiki' => 'enwiki',
-					'pagename' => 'Top 20 enwiki articles by edits and editors in past 7 days',
-    				'header' => 'Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)',
-    				'footer' => ''))
-    			);
+    	if ($argcnt > 1) {
+			switch ($argval[1]) {
+				case "MostEdited":
+					$components = $this->_configMostEdited();
+    				$flownum = 1;
+					break;
+
+				case "PopularLowQuality":
+					$components = $this->_configPopularLowQuality();
+    				$flownum = 2;
+					break;
+			}
+    	} else {
+    		$components = $this->_configMostEdited();
+    		$flownum = 1;
+    	}
 
     	$compnum = 0;
-    	$flownum = 1;
     	$firstRowHeaders = false;
     	$serviceMgr = new ServiceManager();
 
@@ -157,21 +115,204 @@ class DataflowBot
 				$retval = $compobj->init($component['params'], $firstRowHeaders, $flownum);
 				if ($retval !== true) {
 					Logger::log("init failed for $flownum-$compnum $retval");
-					fclose($ih);
+					fclose ( $ih );
 					break;
 				}
 
-				$retval = $compobj->process($reader);
+				$retval = $compobj->process ( $reader );
 				if ($retval !== true) {
-					Logger::log("process failed for $flownum-$compnum $retval");
-					fclose($ih);
+					Logger::log ( "process failed for $flownum-$compnum $retval" );
+					fclose ( $ih );
 					break;
 				}
 
-				fclose($ih);
+				fclose ( $ih );
 			}
 
-			++$compnum;
-    	}
+			++ $compnum;
+		}
+	}
+
+	/**
+	 * MostEdited
+	 */
+	function _configMostEdited() {
+		$components = array (
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\SQLQuery',
+						'params' => array (
+							'wiki' => 'enwiki',
+							'sql' => "SELECT rc_title AS Article, COUNT(*) AS Edits,
+  						COUNT(DISTINCT rc_user_text) AS Editors, -- used to be rc_user which counted all IPs as same
+  						ROUND(LN(COUNT(*)) * (LN(COUNT(DISTINCT rc_user_text))+1.4), 2) AS `Weighted rank`
+						FROM recentchanges
+						WHERE rc_namespace = 0
+  						AND rc_timestamp > DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 7 DAY), '%Y%m%d%H%i%s')
+						GROUP BY article ORDER BY `Weighted rank` DESC
+						LIMIT 20;"
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\DeleteColumn',
+						'params' => array (
+							'deletecol' => '4'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\ResolveRedirectColumn',
+						'params' => array (
+							'linkcol' => '1'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\WikilinkColumn',
+						'params' => array (
+							'linkcol' => '1'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnPageClass',
+						'params' => array (
+							'insertpos' => '2',
+							'lookupcol' => '1',
+							'priority' => 'best',
+							'valuetype' => 'image',
+							'title' => 'Class'
+						)
+				),
+				// Commented out because does not handle redirected non-free images
+				// array('class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnFirstImage',
+				// 'params' => array(
+				// 'insertpos' => 'append',
+				// 'lookupcol' => '1',
+				// 'title' => 'Image',
+				// 'nonfree' => 'no',
+				// 'fileoptions' => 'left|100x100px')),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnFirstSentence',
+						'params' => array (
+							'insertpos' => 'append',
+							'lookupcol' => '1',
+							'title' => 'Abstract'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnSequentialNumber',
+						'params' => array (
+							'insertpos' => '1',
+							'title' => 'Rank',
+							'startnum' => '1'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\ToWikitable',
+						'params' => array (
+							'sortable' => '1',
+							'unsortable' => '6'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Loaders\\WikiLoader',
+						'params' => array (
+							'wiki' => 'enwiki',
+    						'pagename' => 'Top 20 enwiki articles by edits and editors in past 7 days',
+    						'header' => 'Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)',
+    						'footer' => ''))
+    	);
+
+		return $components;
+    }
+
+    /**
+     * PopularLowQuality
+     */
+	function _configPopularLowQuality() {
+		$components = array (
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\TopPageViews',
+						'params' => array (
+							'wiki' => 'en.wikipedia.org',
+							'date' => '-5 days'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\ResolveRedirectColumn',
+						'params' => array (
+							'linkcol' => '1'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnRevisionID',
+						'params' => array (
+							'insertpos' => 'append',
+							'lookupcol' => '1',
+							'title' => 'Revision ID'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnORESScore',
+						'params' => array (
+							'wiki' => 'enwiki',
+							'model' => 'wp10',
+							'lookupcol' => '3',
+							'insertpos' => '2',
+							'title' => 'ORES prediction'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\DeleteColumn',
+						'params' => array (
+							'deletecol' => '4'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
+						'params' => array (
+							'filtercol' => '2',
+							'filterregex' => '^(Stub|Start|C)$'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\SortData',
+						'params' => array (
+							'sortcol1' => '2',
+							'sorttype1' => 'enum',
+							'sortdir1' => 'asc',
+							'sortenum1' => 'Stub|Start|C',
+							'sortcol2' => '3',
+							'sorttype2' => 'numeric',
+							'sortdir2' => 'desc'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\WikilinkColumn',
+						'params' => array (
+							'linkcol' => '1'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\AddColumnSequentialNumber',
+						'params' => array (
+							'insertpos' => '1',
+							'title' => 'Rank',
+							'startnum' => '1'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\ToWikitable',
+						'params' => array (
+							'sortable' => '1'
+						)
+				),
+				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Loaders\\WikiLoader',
+						'params' => array (
+							'wiki' => 'enwiki',
+    						'pagename' => 'Popular low quality articles',
+    						'header' => 'Lowest quality high-popularity articles<br />Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)',
+    						'footer' => ''))
+    	);
+
+		return $components;
     }
 }

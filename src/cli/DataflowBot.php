@@ -33,21 +33,7 @@ try {
     Logger::log('Started');
     FileCache::purgeExpired();
 
-    if ($argc > 1) {
-    	$action = $argv[1];
-    	switch ($action) {
-    		case '':
-    			exit;
-    			break;
-
-    		default:
-    			echo 'Unknown action = ' . $action;
-    			exit;
-    			break;
-    	}
-    }
-
-    $bot = new DataflowBot();
+    $bot = new DataflowBot($argc, $argv);
 
     $ts = $timer->stop();
 

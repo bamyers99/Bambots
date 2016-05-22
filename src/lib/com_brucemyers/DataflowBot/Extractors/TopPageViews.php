@@ -20,9 +20,9 @@ namespace com_brucemyers\DataflowBot\Extractors;
 use com_brucemyers\DataflowBot\io\FlowWriter;
 use com_brucemyers\DataflowBot\ComponentParameter;
 use com_brucemyers\Util\Curl;
-use com_brucemyers\Util\CSVString;
+use com_brucemyers\MediaWiki\MediaWiki;
 
-class UrlCsvExtractor extends Extractor
+class TopPageViews extends Extractor
 {
 	var $paramValues;
 
@@ -33,7 +33,7 @@ class UrlCsvExtractor extends Extractor
 	 */
 	public function getTitle()
 	{
-		return 'URL Delimited Text';
+		return 'Wiki Top Page Views';
 	}
 
 	/**
@@ -43,7 +43,7 @@ class UrlCsvExtractor extends Extractor
 	 */
 	public function getDescription()
 	{
-		return 'Retrieve a delimited text file from a URL.';
+		return 'Retrieve top page views for wiki.';
 	}
 
 	/**
@@ -54,15 +54,10 @@ class UrlCsvExtractor extends Extractor
 	public function getParameterTypes()
 	{
 		return array(
-		    new ComponentParameter('sep', ComponentParameter::PARAMETER_TYPE_ENUM, 'Field separator', '',
-		    		array('enum' => array(',' => ',', ';' => ';', '|' => '|', 'space' => '<space>', 'tab' => '<tab>'))),
-			new ComponentParameter('delim', ComponentParameter::PARAMETER_TYPE_ENUM, 'Text delimiter', '',
-					array('enum' => array('"' => '"', "'" => "'", '' => '<none>'))),
-			new ComponentParameter('firstrow', ComponentParameter::PARAMETER_TYPE_BOOL, 'First row contains headings', ''),
-			new ComponentParameter('subdmn', ComponentParameter::PARAMETER_TYPE_STRING, 'Input file http://', '',
-					array('size' => 6, 'maxlength' => 32, 'concatwithnext' => true)),
-			new ComponentParameter('file', ComponentParameter::PARAMETER_TYPE_STRING, '.wmflabs.org/', '',
-					array('size' => 50, 'maxlength' => 1024))
+			new ComponentParameter('wiki', ComponentParameter::PARAMETER_TYPE_ENUM, 'Wiki', '',
+				array('enum' => array('en.wikipedia.org' => 'English Wikipedia'))),
+			new ComponentParameter('date', ComponentParameter::PARAMETER_TYPE_STRING, 'Date in PHP strtotime() format', '',
+				array('size' => 6, 'maxlength' => 32))
 		);
 	}
 
@@ -86,7 +81,7 @@ class UrlCsvExtractor extends Extractor
 	 */
 	public function isFirstRowHeaders()
 	{
-		return (! empty($this->paramValues['firstrow']));
+		return true;
 	}
 
 	/**
@@ -97,24 +92,26 @@ class UrlCsvExtractor extends Extractor
 	 */
 	public function process(FlowWriter $writer)
 	{
-		$URL = "https://{$this->paramValues['subdmn']}.wmflabs.org/{$this->paramValues['file']}";
+		$URL = "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/{$this->paramValues['wiki']}/all-access/" .
+			date('Y/m/d', strtotime($this->paramValues['date']));
 		$curl = $this->serviceMgr->getCurl();
 		$data = $curl::getUrlContents($URL);
 		if ($data === false) return "Problem reading $URL (" . Curl::$lastError . ")";
 
-		$rows = preg_split('!\r?\n!', $data, 0, PREG_SPLIT_NO_EMPTY);
+		$rows = array(array('Article', 'Views'));
+		$writer->writeRecords($rows);
 
-		$sep = $this->paramValues['sep'];
-		if ($sep == 'space') $sep = ' ';
-		elseif ($sep == 'tab') $sep = "\t";
+		$data = json_decode($data, true);
 
-		$delim = $this->paramValues['delim'];
-		if ($sep == "\t") $delim = '';
+		foreach ($data['items'][0]['articles'] as $article) {
+			$page = $article['article'];
+			$views = $article['views'];
+			$ns_name = MediaWiki::getNamespaceName($page);
+			if ($ns_name != '') continue;
+			if ($page == 'Main_Page') continue;
 
-		foreach ($rows as &$row) {
-			$csvdata = CSVString::parse($row, $sep, $delim);
-			$csvdata = array($csvdata);
-			$writer->writeRecords($csvdata);
+			$rows = array(array($page, $views));
+			$writer->writeRecords($rows);
 		}
 
 		return true;

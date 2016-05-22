@@ -17,13 +17,13 @@
 
 namespace com_brucemyers\DataflowBot\Transformers;
 
+use com_brucemyers\DataflowBot\Component;
 use com_brucemyers\DataflowBot\io\FlowReader;
 use com_brucemyers\DataflowBot\io\FlowWriter;
 use com_brucemyers\DataflowBot\ComponentParameter;
 
-class ToWikitable extends Transformer
+class AddColumnRevisionID extends AddColumn
 {
-	var $paramValues;
 	var $firstRowHeaders;
 
 	/**
@@ -33,7 +33,7 @@ class ToWikitable extends Transformer
 	 */
 	public function getTitle()
 	{
-		return 'Create Wikitable';
+		return 'Add Column Current Revision ID';
 	}
 
 	/**
@@ -43,7 +43,7 @@ class ToWikitable extends Transformer
 	 */
 	public function getDescription()
 	{
-		return 'Put data into a Wikitable';
+		return 'Add a new column with the current revision ID. enwiki only.';
 	}
 
 	/**
@@ -53,13 +53,14 @@ class ToWikitable extends Transformer
 	 */
 	public function getParameterTypes()
 	{
-		return array(
-			new ComponentParameter('sortable', ComponentParameter::PARAMETER_TYPE_BOOL, 'Sortable', '',
-					array('default' => 1)),
-			new ComponentParameter('unsortable', ComponentParameter::PARAMETER_TYPE_STRING, 'Non-sortable columns',
-				'Comma separated list of column numbers; Column numbers start at 1',
-		    	array('size' => 10, 'maxlength' => 64))
+		$basetypes = parent::getParameterTypes();
+		$types = array(
+		    new ComponentParameter('lookupcol', ComponentParameter::PARAMETER_TYPE_STRING, 'Article name column #',
+		    		'Column numbers start at 1',
+		    		array('size' => 3, 'maxlength' => 3))
 		);
+
+		return array_merge($basetypes, $types);
 	}
 
 	/**
@@ -84,7 +85,7 @@ class ToWikitable extends Transformer
 	 */
 	public function isFirstRowHeaders()
 	{
-		return false;
+		return $this->firstRowHeaders;
 	}
 
 	/**
@@ -97,54 +98,60 @@ class ToWikitable extends Transformer
 	public function process(FlowReader $reader, FlowWriter $writer)
 	{
 		$firstrow = true;
-		$sortable = ($this->paramValues['sortable'] == '1') ? ' sortable' : '';
-		$unsortables = array();
-		if (! empty($this->paramValues['unsortable'])) $unsortables = explode(',', $this->paramValues['unsortable']);
-
-		$nonsorts = array();
-		if (! empty($sortable)) {
-			foreach ($unsortables as $unsortable) {
-				$colnum = (int)trim($unsortable) - 1;
-				if ($colnum < 0) return "Invalid unsortable column #";
-				$nonsorts[] = $colnum;
-			}
-		}
-
-		$header = array(array("{| class=\"wikitable$sortable\""));
-		$writer->writeRecords($header);
+		$firstrow2 = true;
+		$column = (int)$this->paramValues['lookupcol'] - 1;
+		if ($column < 0) return "Invalid Article name column # {$this->paramValues['lookupcol']}";
 
 		while ($rows = $reader->readRecords()) {
-			$lines = array();
+			$pagenames = array();
 
+			// Gather the pagenames
 			foreach ($rows as $key => $row) {
 				if ($firstrow) {
 					$firstrow = false;
-					if ($this->firstRowHeaders) {
-						$headers = array();
-						foreach ($row as $key => $column) {
-							$value = $column;
-							if (in_array($key, $nonsorts)) $value = 'class="unsortable"|' . $value;
-							$headers[] = $value;
-						}
-
-						$lines[] = array("|-");
-						$headers = implode('!!', $headers);
-						$lines[] = array("!$headers");
-
+					if ($this->isFirstRowHeaders()) {
+						$retval = $this->insertColumn($rows[$key], $this->paramValues['title']);
+						if ($retval !== true) return $retval;
 						continue;
 					}
 				}
 
-				$lines[] = array("|-");
-				$row = implode('||', $row);
-				$lines[] = array("|$row");
+				if ($column >= count($row)) return "Invalid Article name column # {$this->paramValues['lookupcol']}";
+				$pagename = preg_replace('/\\[|\\]/u', '', $row[$column]);
+				if (strlen($pagename) == 0) return "Row with no page name";
+				if ($pagename[0] == ':') $pagename = substr($pagename, 1);
+
+				$pagenames[] = $pagename;
 			}
 
-			$writer->writeRecords($lines);
-		}
+			$wiki = $this->serviceMgr->getMediaWiki('enwiki');
 
-		$footer = array(array("|}"));
-		$writer->writeRecords($footer);
+			$revisions = $wiki->getPagesLastRevision($pagenames);
+
+			// Process each page
+
+			foreach ($rows as $key => $row) {
+				if ($firstrow2) {
+					$firstrow2 = false;
+					if ($this->isFirstRowHeaders()) {
+						$row = array($rows[$key]);
+						$writer->writeRecords($row);
+						continue;
+					}
+				}
+
+				$pagename = preg_replace('/\\[|\\]/u', '', $row[$column]);
+				if ($pagename[0] == ':') $pagename = substr($pagename, 1);
+
+				if (! isset($revisions[$pagename])) continue; // deleted/non-existant
+				$value = $revisions[$pagename]['revid'];
+
+				$retval = $this->insertColumn($rows[$key], $value);
+				if ($retval !== true) return $retval;
+				$row = array($rows[$key]);
+				$writer->writeRecords($row);
+			}
+		}
 
 		return true;
 	}
