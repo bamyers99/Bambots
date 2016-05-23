@@ -47,6 +47,16 @@ class DeleteColumn extends Transformer
 	}
 
 	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public function getID()
+	{
+		return 'DelCol';
+	}
+
+	/**
 	 * Get parameter types.
 	 *
 	 * @return array ComponentParameter

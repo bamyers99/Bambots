@@ -33,7 +33,7 @@ class CreateTablesT20
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
-   		$dbh_enwiki->exec('DROP TABLE recentchanges');
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS recentchanges');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `recentchanges` (
 		  `rc_user_text` varchar(255) binary NOT NULL,

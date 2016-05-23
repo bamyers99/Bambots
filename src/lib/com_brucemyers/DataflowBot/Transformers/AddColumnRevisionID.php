@@ -47,6 +47,16 @@ class AddColumnRevisionID extends AddColumn
 	}
 
 	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public function getID()
+	{
+		return 'ACRID';
+	}
+
+	/**
 	 * Get parameter types.
 	 *
 	 * @return array ComponentParameter

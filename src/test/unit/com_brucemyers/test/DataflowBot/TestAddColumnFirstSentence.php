@@ -43,16 +43,15 @@ class TestAddColumnFirstSentence extends UnitTestCase
     	$flowWriter = &new \MockFlowWriter();
         $rows = self::$data;
         $rows[0][] = 'Abstract';
-        $rows[1][] = "The <b>apple</b> is a fruit in the Malus family.";
-        $rows[2][] = "<b>Helen D'Arcy Stewart</b> (born 1934) is an artist who is 5ft (10 m) tall.";
+        $rows[1][] = "The <b>apple</b> is a fruit in the Malus family.                                                          "; // Pad past 100 chars
+        $rows[2][] = "<b>Helen D'Arcy Stewart</b> (born 1934) is an artist who is 5ft (10 m) tall.                              ";
         $flowWriter->expectAt(0, 'writeRecords', array($rows));
         $flowWriter->expectCallCount('writeRecords', 1);
 
         Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
         $mediaWiki = &new \MockMediaWiki();
-        $mediaWiki->returnsAt(0, 'getPageLead', "The <b>apple</b> is a fruit in the Malus family.");
-
-        $mediaWiki->returnsAt(1, 'getPageLead', "<b>Helen D'Arcy Stewart</b> (born 1934) is an artist who is 5ft (10 m) tall.");
+        $mediaWiki->returnsAt(0, 'getPageLead', $rows[1][2]);
+        $mediaWiki->returnsAt(1, 'getPageLead', $rows[2][2]);
 
     	Mock::generate('com_brucemyers\\DataflowBot\\ServiceManager', 'MockServiceManager');
         $serviceMgr = &new \MockServiceManager();

@@ -33,7 +33,7 @@ class Curl
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_URL, $URL);
-		curl_setopt($ch, CURLOPT_USERAGENT, 'bambots');
+		curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
 		$contents = curl_exec($ch);
 		if ($contents === false) self::$lastError = curl_error($ch);
 		curl_close($ch);

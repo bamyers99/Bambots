@@ -17,12 +17,7 @@
 
 namespace com_brucemyers\DataflowBot\Transformers;
 
-use com_brucemyers\DataflowBot\io\FlowReader;
-use com_brucemyers\DataflowBot\io\FlowWriter;
-use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\CleanupWorklistBot\CreateTables;
 use com_brucemyers\DataflowBot\ComponentParameter;
-use PDO;
 
 abstract class AddColumn extends Transformer
 {

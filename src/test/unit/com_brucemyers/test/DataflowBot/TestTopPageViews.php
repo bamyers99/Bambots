@@ -46,7 +46,8 @@ class TestTopPageViews extends UnitTestCase
 
     	$params = array(
     	    'wiki' => 'en.wikipedia.org',
-    		'date' => '-5 days'
+    		'daysago' => '5',
+    		'checkdays' => '1'
     	);
 
     	$result = $extractor->init($params);

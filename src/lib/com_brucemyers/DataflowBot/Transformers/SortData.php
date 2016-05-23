@@ -48,6 +48,16 @@ class SortData extends Transformer
 	}
 
 	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public function getID()
+	{
+		return 'Sort';
+	}
+
+	/**
 	 * Get parameter types.
 	 *
 	 * @return array ComponentParameter

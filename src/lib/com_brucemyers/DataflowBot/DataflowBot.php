@@ -50,11 +50,22 @@ class DataflowBot
     	}
 
     	$compnum = 0;
+    	$compcnts = array();
     	$firstRowHeaders = false;
     	$serviceMgr = new ServiceManager();
 
     	foreach ($components as $component) {
 			$compobj = new $component['class']($serviceMgr);
+			$compID = $compobj->getID();
+			if (! isset($compcnts[$compID])) $compcnts[$compID] = 0;
+			++$compcnts[$compID];
+
+			foreach ($component['params'] as $param_name => $param_value) {
+				$tempname = $compID;
+				if ($compcnts[$compID] > 1) $tempname .= $compcnts[$compID];
+				$tempname .= "#$param_name";
+				$serviceMgr->setVar($tempname, $param_value);
+			}
 
 			if ($compobj instanceof Extractor) {
 				$outfilename = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . "Dataflow#$flownum#$compnum";
@@ -227,12 +238,19 @@ class DataflowBot
      * PopularLowQuality
      */
 	function _configPopularLowQuality() {
+		$header = <<<EOT
+:'''Warning:''' many of the articles shown here have only transient popularity probably due to automated downloads and some of them are incorrectly classified because they are composed of mostly template content. Please disregard such mistakes.
+
+==Lowest quality high-popularity articles==
+Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Page views asof: @@TPV#year@@-@@TPV#month@@-@@TPV#day@@
+EOT;
 		$components = array (
 				array (
 						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\TopPageViews',
 						'params' => array (
 							'wiki' => 'en.wikipedia.org',
-							'date' => '-5 days'
+							'daysago' => '5',
+							'checkdays' => '3'
 						)
 				),
 				array (
@@ -309,7 +327,7 @@ class DataflowBot
 						'params' => array (
 							'wiki' => 'enwiki',
     						'pagename' => 'Popular low quality articles',
-    						'header' => 'Lowest quality high-popularity articles<br />Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)',
+    						'header' => $header,
     						'footer' => ''))
     	);
 

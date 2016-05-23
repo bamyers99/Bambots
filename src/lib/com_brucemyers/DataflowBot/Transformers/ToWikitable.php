@@ -47,6 +47,16 @@ class ToWikitable extends Transformer
 	}
 
 	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public function getID()
+	{
+		return 'ToWiki';
+	}
+
+	/**
 	 * Get parameter types.
 	 *
 	 * @return array ComponentParameter

@@ -51,6 +51,13 @@ abstract class Component
 	public abstract function getParameterTypes();
 
 	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public abstract function getID();
+
+	/**
 	 * Is the first row column headers?
 	 *
 	 * @return bool Is the first row column headers?

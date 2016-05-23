@@ -47,6 +47,16 @@ class TopPageViews extends Extractor
 	}
 
 	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public function getID()
+	{
+		return 'TPV';
+	}
+
+	/**
 	 * Get parameter types.
 	 *
 	 * @return array ComponentParameter
@@ -56,7 +66,9 @@ class TopPageViews extends Extractor
 		return array(
 			new ComponentParameter('wiki', ComponentParameter::PARAMETER_TYPE_ENUM, 'Wiki', '',
 				array('enum' => array('en.wikipedia.org' => 'English Wikipedia'))),
-			new ComponentParameter('date', ComponentParameter::PARAMETER_TYPE_STRING, 'Date in PHP strtotime() format', '',
+			new ComponentParameter('daysago', ComponentParameter::PARAMETER_TYPE_STRING, 'Days ago', '',
+				array('size' => 6, 'maxlength' => 32)),
+			new ComponentParameter('checkdays', ComponentParameter::PARAMETER_TYPE_STRING, 'Days to check before days ago', '',
 				array('size' => 6, 'maxlength' => 32))
 		);
 	}
@@ -92,25 +104,50 @@ class TopPageViews extends Extractor
 	 */
 	public function process(FlowWriter $writer)
 	{
-		$URL = "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/{$this->paramValues['wiki']}/all-access/" .
-			date('Y/m/d', strtotime($this->paramValues['date']));
-		$curl = $this->serviceMgr->getCurl();
-		$data = $curl::getUrlContents($URL);
-		if ($data === false) return "Problem reading $URL (" . Curl::$lastError . ")";
+		$daysago = (int)$this->paramValues['daysago'];
+		$checkdays = $tcheckdays = (int)$this->paramValues['checkdays'];
+		$tpvtimes = array();
+
+		while ($tcheckdays) {
+			--$tcheckdays;
+			$tpvtime = strtotime('-' . ($daysago + $tcheckdays) . ' days');
+			$tpvtimes[] = $tpvtime;
+			$this->serviceMgr->setVar($this->getID() . '#year', date('Y', $tpvtime));
+			$this->serviceMgr->setVar($this->getID() . '#month', date('m', $tpvtime));
+			$this->serviceMgr->setVar($this->getID() . '#day', date('d', $tpvtime));
+		}
+
+		$pageviews = array();
+
+		foreach ($tpvtimes as $tpvtime) {
+			$tpvdate = date('Y/m/d', $tpvtime);
+			$URL = "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/{$this->paramValues['wiki']}/all-access/" .
+				$tpvdate;
+			$curl = $this->serviceMgr->getCurl();
+			$data = $curl::getUrlContents($URL);
+			if ($data === false) return "Problem reading $URL (" . Curl::$lastError . ")";
+
+			$data = json_decode($data, true);
+
+			foreach ($data['items'][0]['articles'] as $article) {
+				$page = $article['article'];
+				$views = $article['views'];
+				$ns_name = MediaWiki::getNamespaceName($page);
+				if ($ns_name != '') continue;
+				if ($page == 'Main_Page') continue;
+
+				if (! isset($pageviews[$page])) $pageviews[$page] = array('cnt' => 0);
+				++$pageviews[$page]['cnt'];
+				$pageviews[$page]['views'] = $views;
+			}
+		}
 
 		$rows = array(array('Article', 'Views'));
 		$writer->writeRecords($rows);
 
-		$data = json_decode($data, true);
-
-		foreach ($data['items'][0]['articles'] as $article) {
-			$page = $article['article'];
-			$views = $article['views'];
-			$ns_name = MediaWiki::getNamespaceName($page);
-			if ($ns_name != '') continue;
-			if ($page == 'Main_Page') continue;
-
-			$rows = array(array($page, $views));
+		foreach ($pageviews as $page => $pageview) {
+			if ($pageview['cnt'] != $checkdays) continue;
+			$rows = array(array($page, $pageview['views']));
 			$writer->writeRecords($rows);
 		}
 

@@ -47,6 +47,16 @@ class WikiLoader extends Loader
 	}
 
 	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public function getID()
+	{
+		return 'WikiLoad';
+	}
+
+	/**
 	 * Get parameter types.
 	 *
 	 * @return array ComponentParameter
@@ -102,8 +112,8 @@ class WikiLoader extends Loader
 	{
 		$wiki = $this->paramValues['wiki'];
 		$pagename = 'User:DataflowBot/output/' . $this->paramValues['pagename'] . ' (id-' . $this->flowID . ')';
-		$header = $this->paramValues['header'];
-		$footer = $this->paramValues['footer'];
+		$header = $this->serviceMgr->replaceVars($this->paramValues['header']);
+		$footer = $this->serviceMgr->replaceVars($this->paramValues['footer']);
 
 		$output = $header;
 		if (! empty($output)) {

@@ -20,7 +20,6 @@ namespace com_brucemyers\DataflowBot\Transformers;
 use com_brucemyers\DataflowBot\Component;
 use com_brucemyers\DataflowBot\io\FlowReader;
 use com_brucemyers\DataflowBot\io\FlowWriter;
-use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\DataflowBot\ComponentParameter;
 use com_brucemyers\Util\CommonRegex;
 
@@ -46,6 +45,16 @@ class AddColumnFirstImage extends AddColumn
 	public function getDescription()
 	{
 		return 'Add a new column with the first image on a page. enwiki only.';
+	}
+
+	/**
+	 * Get the component identifier.
+	 *
+	 * @return string ID
+	 */
+	public function getID()
+	{
+		return 'ACFI';
 	}
 
 	/**

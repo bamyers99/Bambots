@@ -39,6 +39,7 @@ class ServiceManager
 	protected $dbdata = array();
 	protected $dbuser;
 	protected $dbpass;
+	protected $paramList = array();
 
 	/**
 	 * Constructor
@@ -119,5 +120,48 @@ class ServiceManager
     	}
 
     	return $resultwriter;
+	}
+
+	/**
+	 * Set a variable in the list.
+	 *
+	 * @param string $name
+	 * @param string $value
+	 */
+	public function setVar($name, $value)
+	{
+		$this->paramList[$name] = $value;
+	}
+
+	/**
+	 * Get a variable from the list.
+	 *
+	 * @param string $name
+	 * @return string Variable value
+	 */
+	public function getVar($name)
+	{
+		if (isset($this->paramList[$name])) return $this->paramList[$name];
+		return '';
+	}
+
+	/**
+	 * Replace variables denoted by {} in the text.
+	 *
+	 * @param string $text
+	 * @return string
+	 */
+	public function replaceVars($text)
+	{
+		while (preg_match('/^(.*)@@(.*?)@@(.*)$/s', $text, $matches)) {
+			$head = $matches[1];
+			$varname = $matches[2];
+			$tail = $matches[3];
+
+			$value = $this->getVar($varname);
+			$text = $head . $value . $tail;
+		}
+
+		return $text;
 	}
 }
