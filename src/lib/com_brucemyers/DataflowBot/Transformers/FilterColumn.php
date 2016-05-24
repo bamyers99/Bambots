@@ -67,7 +67,10 @@ class FilterColumn extends Transformer
 			new ComponentParameter('filtercol', ComponentParameter::PARAMETER_TYPE_STRING, 'Filter column #',
 		    	'Column numbers start at 1',
 		    	array('size' => 5, 'maxlength' => 6)),
-			new ComponentParameter('filterregex', ComponentParameter::PARAMETER_TYPE_STRING, 'Regular expression',
+			new ComponentParameter('includeregex', ComponentParameter::PARAMETER_TYPE_STRING, 'Include if matches regular expression',
+		    	'! must be escaped',
+		    	array('size' => 30, 'maxlength' => 256)),
+			new ComponentParameter('excluderegex', ComponentParameter::PARAMETER_TYPE_STRING, 'Exclude if matches regular expression',
 		    	'! must be escaped',
 		    	array('size' => 30, 'maxlength' => 256))
 		);
@@ -110,7 +113,10 @@ class FilterColumn extends Transformer
 		$firstrow = true;
 		$colnum = (int)$this->paramValues['filtercol'] - 1;
 		if ($colnum < 0) return "Invalid filter column #";
-		$regex = $this->paramValues['filterregex'];
+		$includeregex = false;
+		$excluderegex = false;
+		if (isset($this->paramValues['includeregex'])) $includeregex = $this->paramValues['includeregex'];
+		if (isset($this->paramValues['excluderegex'])) $excluderegex = $this->paramValues['excluderegex'];
 
 		while ($rows = $reader->readRecords()) {
 			foreach ($rows as $row) {
@@ -124,7 +130,12 @@ class FilterColumn extends Transformer
 				}
 
 				if ($colnum >= count($row)) return "Invalid filter column #";
-				if (preg_match("!$regex!u", $row[$colnum])) {
+				if ($includeregex !== false && preg_match("!$includeregex!u", $row[$colnum])) {
+					$rows = array($row);
+					$writer->writeRecords($rows);
+				}
+
+				if ($excluderegex !== false && ! preg_match("!$excluderegex!u", $row[$colnum])) {
 					$rows = array($row);
 					$writer->writeRecords($rows);
 				}

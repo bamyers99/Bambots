@@ -254,6 +254,13 @@ EOT;
 						)
 				),
 				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
+						'params' => array (
+							'filtercol' => '1',
+							'excluderegex' => '^List_of'
+						)
+				),
+				array (
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\ResolveRedirectColumn',
 						'params' => array (
 							'linkcol' => '1'
@@ -287,7 +294,7 @@ EOT;
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
 						'params' => array (
 							'filtercol' => '2',
-							'filterregex' => '^(Stub|Start|C)$'
+							'includeregex' => '^(Stub|Start|C)$'
 						)
 				),
 				array (

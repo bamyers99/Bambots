@@ -33,7 +33,7 @@ class TestFilterColumn extends UnitTestCase
 			array('Delete 2', 'FA')
 	);
 
-    public function testTransformer()
+    public function testIncludeRegex()
     {
     	$serviceMgr = new ServiceManager();
 
@@ -60,7 +60,50 @@ class TestFilterColumn extends UnitTestCase
 
     	$params = array(
 			'filtercol' => '2',
-			'filterregex' => '^(Stub|Start|C)$'
+			'includeregex' => '^(Stub|Start|C)$'
+    	);
+
+    	$result = $transformer->init($params, true);
+    	$this->assertEqual($result, true, 'init failed');
+
+    	$result = $transformer->isFirstRowHeaders();
+    	$this->assertEqual($result, true, 'first row must be headers');
+
+    	$result = $transformer->process($flowReader, $flowWriter);
+    	$this->assertEqual($result, true, 'process failed');
+
+    	$result = $transformer->terminate();
+    	$this->assertEqual($result, true, 'terminate failed');
+    }
+
+    public function testExcludeRegex()
+    {
+    	$serviceMgr = new ServiceManager();
+
+    	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowReader', 'MockFlowReader');
+    	$flowReader = &new \MockFlowReader();
+    	$flowReader->returns('readRecords', false);
+    	$flowReader->returnsAt(0, 'readRecords', self::$data);
+
+    	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowWriter', 'MockFlowWriter');
+    	$flowWriter = &new \MockFlowWriter();
+        $rows = self::$data;
+        unset($rows[2]);
+        unset($rows[5]);
+
+        $rows = array_values($rows); // reindex
+
+        $flowWriter->expectAt(0, 'writeRecords', array(array($rows[0])));
+        $flowWriter->expectAt(1, 'writeRecords', array(array($rows[1])));
+        $flowWriter->expectAt(2, 'writeRecords', array(array($rows[2])));
+        $flowWriter->expectAt(3, 'writeRecords', array(array($rows[3])));
+        $flowWriter->expectCallCount('writeRecords', 4);
+
+    	$transformer = new FilterColumn($serviceMgr);
+
+    	$params = array(
+			'filtercol' => '1',
+			'excluderegex' => '^Delete'
     	);
 
     	$result = $transformer->init($params, true);
