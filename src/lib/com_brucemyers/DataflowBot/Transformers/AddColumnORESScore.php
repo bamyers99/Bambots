@@ -120,8 +120,9 @@ class AddColumnORESScore extends AddColumn
 		$curl = $this->serviceMgr->getCurl();
 		$wiki = $this->paramValues['wiki'];
 		$model = $this->paramValues['model'];
+		$max_records = 100;
 
-		while ($rows = $reader->readRecords()) {
+		while ($rows = $reader->readRecords($max_records)) {
 			$revids = array();
 
 			// Gather the pagenames
@@ -146,6 +147,7 @@ class AddColumnORESScore extends AddColumn
 			if ($data === false) return "Problem reading $URL (" . Curl::$lastError . ")";
 
 			$data = json_decode($data, true);
+			if (is_null($data)) return "json_decode error for $URL";
 
 			// Process each page
 

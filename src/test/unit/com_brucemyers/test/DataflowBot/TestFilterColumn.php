@@ -20,6 +20,7 @@ namespace com_brucemyers\test\DataflowBot;
 use UnitTestCase;
 use com_brucemyers\DataflowBot\Transformers\FilterColumn;
 use com_brucemyers\DataflowBot\ServiceManager;
+use com_brucemyers\test\DataflowBot\CreateTablesFilterCol;
 use Mock;
 
 class TestFilterColumn extends UnitTestCase
@@ -104,6 +105,96 @@ class TestFilterColumn extends UnitTestCase
     	$params = array(
 			'filtercol' => '1',
 			'excluderegex' => '^Delete'
+    	);
+
+    	$result = $transformer->init($params, true);
+    	$this->assertEqual($result, true, 'init failed');
+
+    	$result = $transformer->isFirstRowHeaders();
+    	$this->assertEqual($result, true, 'first row must be headers');
+
+    	$result = $transformer->process($flowReader, $flowWriter);
+    	$this->assertEqual($result, true, 'process failed');
+
+    	$result = $transformer->terminate();
+    	$this->assertEqual($result, true, 'terminate failed');
+    }
+
+    public function testDisambigNo()
+    {
+    	$serviceMgr = new ServiceManager();
+    	$dbh_enwiki = $serviceMgr->getDBConnection('enwiki');
+    	new CreateTablesFilterCol($dbh_enwiki);
+
+    	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowReader', 'MockFlowReader');
+    	$flowReader = &new \MockFlowReader();
+    	$flowReader->returns('readRecords', false);
+    	$flowReader->returnsAt(0, 'readRecords', self::$data);
+
+    	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowWriter', 'MockFlowWriter');
+    	$flowWriter = &new \MockFlowWriter();
+        $rows = self::$data;
+        unset($rows[2]);
+        unset($rows[5]);
+
+        $rows = array_values($rows); // reindex
+
+        $flowWriter->expectAt(0, 'writeRecords', array(array($rows[0])));
+        $flowWriter->expectAt(1, 'writeRecords', array(array($rows[1])));
+        $flowWriter->expectAt(2, 'writeRecords', array(array($rows[2])));
+        $flowWriter->expectAt(3, 'writeRecords', array(array($rows[3])));
+        $flowWriter->expectCallCount('writeRecords', 4);
+
+    	$transformer = new FilterColumn($serviceMgr);
+
+    	$params = array(
+			'filtercol' => '1',
+			'disambig' => 'no'
+    	);
+
+    	$result = $transformer->init($params, true);
+    	$this->assertEqual($result, true, 'init failed');
+
+    	$result = $transformer->isFirstRowHeaders();
+    	$this->assertEqual($result, true, 'first row must be headers');
+
+    	$result = $transformer->process($flowReader, $flowWriter);
+    	$this->assertEqual($result, true, 'process failed');
+
+    	$result = $transformer->terminate();
+    	$this->assertEqual($result, true, 'terminate failed');
+    }
+
+    public function testDisambigYes()
+    {
+    	$serviceMgr = new ServiceManager();
+    	$dbh_enwiki = $serviceMgr->getDBConnection('enwiki');
+    	new CreateTablesFilterCol($dbh_enwiki);
+
+    	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowReader', 'MockFlowReader');
+    	$flowReader = &new \MockFlowReader();
+    	$flowReader->returns('readRecords', false);
+    	$flowReader->returnsAt(0, 'readRecords', self::$data);
+
+    	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowWriter', 'MockFlowWriter');
+    	$flowWriter = &new \MockFlowWriter();
+        $rows = self::$data;
+        unset($rows[1]);
+        unset($rows[3]);
+        unset($rows[4]);
+
+        $rows = array_values($rows); // reindex
+
+        $flowWriter->expectAt(0, 'writeRecords', array(array($rows[0])));
+        $flowWriter->expectAt(1, 'writeRecords', array(array($rows[1])));
+        $flowWriter->expectAt(2, 'writeRecords', array(array($rows[2])));
+        $flowWriter->expectCallCount('writeRecords', 3);
+
+    	$transformer = new FilterColumn($serviceMgr);
+
+    	$params = array(
+			'filtercol' => '1',
+			'disambig' => 'yes'
     	);
 
     	$result = $transformer->init($params, true);

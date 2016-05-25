@@ -158,8 +158,8 @@ class AddColumnRevisionID extends AddColumn
 
 				$retval = $this->insertColumn($rows[$key], $value);
 				if ($retval !== true) return $retval;
-				$row = array($rows[$key]);
-				$writer->writeRecords($row);
+				$rows2 = array($rows[$key]);
+				$writer->writeRecords($rows2);
 			}
 		}
 

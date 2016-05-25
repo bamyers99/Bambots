@@ -239,7 +239,7 @@ class DataflowBot
      */
 	function _configPopularLowQuality() {
 		$header = <<<EOT
-:'''Warning:''' many of the articles shown here have only transient popularity probably due to automated downloads and some of them are incorrectly classified because they are composed of mostly template content. Please disregard such mistakes.
+{{Notice|The tool for detecting low quality articles which generates the list below is still in an experimental stage. '''You can help''' by notifying us of potential problems, apparent mislistings, and your suggestions >>>'''[[User talk:Jimbo Wales#Third update|here]]'''<<<.}}
 
 ==Lowest quality high-popularity articles==
 Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Page views asof: @@TPV#year@@-@@TPV#month@@-@@TPV#day@@
@@ -298,6 +298,13 @@ EOT;
 						)
 				),
 				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
+						'params' => array (
+							'filtercol' => '1',
+							'disambig' => 'no'
+						)
+				),
+				array (
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\SortData',
 						'params' => array (
 							'sortcol1' => '2',
@@ -335,7 +342,8 @@ EOT;
 							'wiki' => 'enwiki',
     						'pagename' => 'Popular low quality articles',
     						'header' => $header,
-    						'footer' => ''))
+    						'footer' => '')
+				)
     	);
 
 		return $components;
