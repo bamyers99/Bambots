@@ -239,18 +239,26 @@ class DataflowBot
      */
 	function _configPopularLowQuality() {
 		$header = <<<EOT
-{{Notice|The tool for detecting low quality articles which generates the list below is still in an experimental stage. '''You can help''' by notifying us of potential problems, apparent mislistings, and your suggestions >>>'''[[User talk:Jimbo Wales#Third update|here]]'''<<<.}}
+{{Notice|The tool for detecting low quality articles which generates the list below is still in an experimental stage. '''You can help''' by notifying us of potential problems, apparent mislistings, and your suggestions [[User talk:DataflowBot/output/Popular low quality articles (id-2)|on the talk page]].}}
 
 ==Lowest quality high-popularity articles==
-Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Page views asof: @@TPV#year@@-@@TPV#month@@-@@TPV#day@@
+Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Weekly page views asof: @@PopPg#year@@-@@PopPg#month@@-@@PopPg#day@@
 EOT;
 		$components = array (
+// 				array (
+// 						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\TopPageViews',
+// 						'params' => array (
+// 							'wiki' => 'en.wikipedia.org',
+// 							'daysago' => '5',
+// 							'checkdays' => '3'
+// 						)
+// 				),
 				array (
-						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\TopPageViews',
+						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\PopularPages',
 						'params' => array (
-							'wiki' => 'en.wikipedia.org',
-							'daysago' => '5',
-							'checkdays' => '3'
+							'pagename' => 'User:West.andrew.g/Popular_pages',
+							'minmobile' => '2',
+							'maxmobile' => '95'
 						)
 				),
 				array (

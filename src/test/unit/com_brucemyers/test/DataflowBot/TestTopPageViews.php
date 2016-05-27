@@ -1,6 +1,6 @@
 <?php
 /**
- Copyright 2015 Myers Enterprises II
+ Copyright 2016 Myers Enterprises II
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -51,15 +51,15 @@ class TestTopPageViews extends UnitTestCase
     	);
 
     	$result = $extractor->init($params);
-    	$this->assertEqual($result, true, 'init failed');
+    	$this->assertIdentical($result, true, 'init failed');
 
     	$result = $extractor->isFirstRowHeaders();
-    	$this->assertEqual($result, true, 'first row must be headers');
+    	$this->assertIdentical($result, true, 'first row must be headers');
 
     	$result = $extractor->process($flowWriter);
-    	$this->assertEqual($result, true, 'process failed');
+    	$this->assertIdentical($result, true);
 
     	$result = $extractor->terminate();
-    	$this->assertEqual($result, true, 'terminate failed');
+    	$this->assertIdentical($result, true, 'terminate failed');
     }
 }

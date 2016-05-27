@@ -67,16 +67,16 @@ class TestAddColumnPageClass extends UnitTestCase
     	);
 
     	$result = $transformer->init($params, true);
-    	$this->assertEqual($result, true, 'init failed');
+    	$this->assertIdentical($result, true, 'init failed');
 
     	$result = $transformer->isFirstRowHeaders();
-    	$this->assertEqual($result, true, 'first row must be headers');
+    	$this->assertIdentical($result, true, 'first row must be headers');
 
     	$result = $transformer->process($flowReader, $flowWriter);
-    	$this->assertEqual($result, true, 'process failed');
+    	$this->assertIdentical($result, true);
 
     	$result = $transformer->terminate();
-    	$this->assertEqual($result, true, 'terminate failed');
+    	$this->assertIdentical($result, true, 'terminate failed');
     }
 
     public function testCommonImageColumn2()
@@ -115,15 +115,15 @@ class TestAddColumnPageClass extends UnitTestCase
     	);
 
     	$result = $transformer->init($params, true);
-    	$this->assertEqual($result, true, 'init failed');
+    	$this->assertIdentical($result, true, 'init failed');
 
     	$result = $transformer->isFirstRowHeaders();
-    	$this->assertEqual($result, true, 'first row must be headers');
+    	$this->assertIdentical($result, true, 'first row must be headers');
 
     	$result = $transformer->process($flowReader, $flowWriter);
-    	$this->assertEqual($result, true, 'process failed');
+    	$this->assertIdentical($result, true);
 
     	$result = $transformer->terminate();
-    	$this->assertEqual($result, true, 'terminate failed');
+    	$this->assertIdentical($result, true, 'terminate failed');
     }
 }

@@ -153,7 +153,7 @@ class ServiceManager
 	 */
 	public function replaceVars($text)
 	{
-		while (preg_match('/^(.*)@@(.*?)@@(.*)$/s', $text, $matches)) {
+		while (preg_match('/^(.*)@@(.*?)@@(.*)$/su', $text, $matches)) {
 			$head = $matches[1];
 			$varname = $matches[2];
 			$tail = $matches[3];

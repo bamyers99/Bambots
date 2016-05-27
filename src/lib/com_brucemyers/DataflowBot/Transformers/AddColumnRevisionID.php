@@ -1,6 +1,6 @@
 <?php
 /**
- Copyright 2015 Myers Enterprises II
+ Copyright 2016 Myers Enterprises II
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -130,6 +130,7 @@ class AddColumnRevisionID extends AddColumn
 				$pagename = preg_replace('/\\[|\\]/u', '', $row[$column]);
 				if (strlen($pagename) == 0) return "Row with no page name";
 				if ($pagename[0] == ':') $pagename = substr($pagename, 1);
+				$pagename = str_replace(' ', '_', $pagename);
 
 				$pagenames[] = $pagename;
 			}

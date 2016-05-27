@@ -53,15 +53,15 @@ class TestUrlCsvExtractor extends UnitTestCase
     	);
 
     	$result = $extractor->init($params);
-    	$this->assertEqual($result, true, 'init failed');
+    	$this->assertIdentical($result, true, 'init failed');
 
     	$result = $extractor->isFirstRowHeaders();
-    	$this->assertEqual($result, true, 'first row must be headers');
+    	$this->assertIdentical($result, true, 'first row must be headers');
 
     	$result = $extractor->process($flowWriter);
-    	$this->assertEqual($result, true, 'process failed');
+    	$this->assertIdentical($result, true);
 
     	$result = $extractor->terminate();
-    	$this->assertEqual($result, true, 'terminate failed');
+    	$this->assertIdentical($result, true, 'terminate failed');
     }
 }

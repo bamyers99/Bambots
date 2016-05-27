@@ -50,6 +50,8 @@ class TestWikiLoader extends UnitTestCase
     	Mock::generate('com_brucemyers\\DataflowBot\\ServiceManager', 'MockServiceManager');
         $serviceMgr = &new \MockServiceManager();
         $serviceMgr->returns('getWikiResultWriter', $resultWriter);
+        $serviceMgr->returnsAt(0, 'replaceVars', 'Header');
+        $serviceMgr->returnsAt(1, 'replaceVars', 'Footer');
 
         $loader = new WikiLoader($serviceMgr);
 
@@ -61,15 +63,15 @@ class TestWikiLoader extends UnitTestCase
     	);
 
     	$result = $loader->init($params, true, 1);
-    	$this->assertEqual($result, true, 'init failed');
+    	$this->assertIdentical($result, true, 'init failed');
 
     	$result = $loader->isFirstRowHeaders();
-    	$this->assertEqual($result, true, 'first row must be headers');
+    	$this->assertIdentical($result, true, 'first row must be headers');
 
     	$result = $loader->process($flowReader);
-    	$this->assertEqual($result, true, 'process failed');
+    	$this->assertIdentical($result, true, 'process failed');
 
     	$result = $loader->terminate();
-    	$this->assertEqual($result, true, 'terminate failed');
+    	$this->assertIdentical($result, true, 'terminate failed');
     }
 }
