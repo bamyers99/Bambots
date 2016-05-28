@@ -218,7 +218,7 @@ class FilterColumn extends Transformer
 
 			foreach ($pages as $pagedata) {
 				$disambig = $pagedata[2];
-				if (! empty($disambig)) $disambigs[] = $disambig;
+				if (! is_null($disambig)) $disambigs[] = $disambig;
 			}
 		}
 

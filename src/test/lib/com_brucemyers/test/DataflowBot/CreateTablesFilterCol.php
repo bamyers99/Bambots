@@ -56,7 +56,7 @@ class CreateTablesFilterCol
    		$dbh_enwiki->exec("INSERT INTO page VALUES (2, 0, 'Delete_1', 1)");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (3, 0, 'Rome', 0)");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (4, 0, 'London', 1)");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (5, 0, 'Delete_2', 0)");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (5, 0, '0', 0)");
 
     	$dbh_enwiki->exec("INSERT INTO page_props VALUES (2,'disambiguation','')");
     	$dbh_enwiki->exec("INSERT INTO page_props VALUES (5,'disambiguation','')");

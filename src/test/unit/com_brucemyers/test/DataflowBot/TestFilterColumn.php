@@ -31,7 +31,7 @@ class TestFilterColumn extends UnitTestCase
 			array('Delete 1', 'GA'),
 			array('Rome', 'Stub'),
 			array('London', 'C'),
-			array('Delete 2', 'FA')
+			array('0', 'FA')
 	);
 
     public function testIncludeRegex()
@@ -104,7 +104,7 @@ class TestFilterColumn extends UnitTestCase
 
     	$params = array(
 			'filtercol' => '1',
-			'excluderegex' => '^Delete'
+			'excluderegex' => '^Delete|0'
     	);
 
     	$result = $transformer->init($params, true);
