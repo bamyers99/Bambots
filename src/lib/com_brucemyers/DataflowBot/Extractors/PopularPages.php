@@ -20,6 +20,7 @@ namespace com_brucemyers\DataflowBot\Extractors;
 use com_brucemyers\DataflowBot\io\FlowWriter;
 use com_brucemyers\DataflowBot\ComponentParameter;
 use com_brucemyers\Util\WikitableParser;
+use com_brucemyers\MediaWiki\MediaWiki;
 
 class PopularPages extends Extractor
 {
@@ -145,6 +146,10 @@ class PopularPages extends Extractor
 			$page = preg_replace('/\\[|\\]/u', '', $page);
 			$pageviews = $row[self::HEADING_POS_VIEWS];
 			$mobilepct = (int)$row[self::HEADING_POS_MOBILEPCT];
+
+			$ns_name = MediaWiki::getNamespaceName($page);
+			if ($ns_name != '') continue;
+			if ($page == 'Main_Page') continue;
 
 			if ($mobilepct <= $minmobile || $mobilepct >= $maxmobile) continue;
 

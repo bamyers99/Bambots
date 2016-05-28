@@ -28,8 +28,8 @@ class TestSortData extends UnitTestCase
 			array('Article', 'ORES prediction', 'Views'),
 			array('Rome', 'Stub', '4'),
 			array('Paris', 'Start', '6'),
-			array('Berlin', 'C', '2'),
-			array('London', 'C', '5'),
+			array('Berlin', 'C', '7'),
+			array('London', 'C', '5,000'),
 			array('Milan', 'Stub', '5')
 	);
 
@@ -37,8 +37,8 @@ class TestSortData extends UnitTestCase
 			array('Milan', 'Stub', '5'),
 			array('Rome', 'Stub', '4'),
 			array('Paris', 'Start', '6'),
-			array('London', 'C', '5'),
-			array('Berlin', 'C', '2')
+			array('London', 'C', '5,000'),
+			array('Berlin', 'C', '7')
 	);
 
     public function testTransformer()

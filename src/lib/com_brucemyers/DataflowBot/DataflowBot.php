@@ -302,7 +302,7 @@ EOT;
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
 						'params' => array (
 							'filtercol' => '2',
-							'includeregex' => '^(Stub|Start|C)$'
+							'includeregex' => '^(Stub|Start)$'
 						)
 				),
 				array (

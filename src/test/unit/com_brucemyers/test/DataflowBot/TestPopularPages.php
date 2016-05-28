@@ -132,13 +132,11 @@ EOT;
         $flowWriter = &new \MockFlowWriter();
         $rows = array(array('Article', 'Views'));
         $flowWriter->expectAt(0, 'writeRecords', array($rows));
-        $rows = array(array('Main_Page', '127,477,970'));
-        $flowWriter->expectAt(1, 'writeRecords', array($rows));
         $rows = array(array('Captain_America:_Civil_War', '1,284,748'));
-        $flowWriter->expectAt(2, 'writeRecords', array($rows));
+        $flowWriter->expectAt(1, 'writeRecords', array($rows));
         $rows = array(array('X-Men:_Apocalypse', '1,009,485'));
-        $flowWriter->expectAt(3, 'writeRecords', array($rows));
-        $flowWriter->expectCallCount('writeRecords', 4);
+        $flowWriter->expectAt(2, 'writeRecords', array($rows));
+        $flowWriter->expectCallCount('writeRecords', 3);
 
         Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
         $mediaWiki = &new \MockMediaWiki();

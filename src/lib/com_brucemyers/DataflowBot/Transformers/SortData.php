@@ -185,6 +185,8 @@ class SortData extends Transformer
 			}
 
 			if ($sort['type'] != 'alpha') {
+				if (is_string($aval)) $aval = str_replace(',', '', $aval);
+				if (is_string($bval)) $bval = str_replace(',', '', $bval);
 				$aval = (float)$aval;
 				$bval = (float)$bval;
 			}
