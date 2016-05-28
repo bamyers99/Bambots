@@ -240,11 +240,6 @@ class CategoryLinksDiff
     {
     	$revisions = $wiki->getRevisionsText($revids);
 
-    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
-    	$dbh_tools->beginTransaction();
-		$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category, flags) VALUES (?,?,?,?,?,?)");
-		$insert_count = 0;
-
 		// Resort so in reverse namespace, title order
 
 		$sortedrevs = array();
@@ -272,6 +267,12 @@ class CategoryLinksDiff
 		krsort($sortedrevs); // Reverse so that recent changes has articles first
 
 		foreach ($sortedrevs as $rev) {
+			// Prevent MySQL server has gone away
+	    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
+	    	$dbh_tools->beginTransaction();
+			$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category, flags) VALUES (?,?,?,?,?,?)");
+			$insert_count = 0;
+
 			$pagetitle = $rev['t'];
 			$ns = $rev['ns'];
 			$revid1 = (int)$rev[0];
@@ -344,10 +345,10 @@ class CategoryLinksDiff
 		    		$isth->execute();
 				}
 			}
-		}
 
-    	$dbh_tools->commit();
-    	$dbh_tools = null;
+    		$dbh_tools->commit();
+    		$dbh_tools = null;
+		}
     }
 
     /**
