@@ -168,7 +168,8 @@ class ProjectPages
     	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->beginTransaction();
-    	$isth = $dbh_tools->prepare('INSERT INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
+    	// IGNORE necessary because of replica database integrity issues
+    	$isth = $dbh_tools->prepare('INSERT IGNORE INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
     	$page_count = 0;
 
     	while($row = $sth->fetch()) {
