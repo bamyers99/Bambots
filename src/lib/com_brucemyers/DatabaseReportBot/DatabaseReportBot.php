@@ -99,6 +99,7 @@ class DatabaseReportBot
     	$rows = $report->getRows($apis);
 
 		$linktemplate = 'dbr link';
+		$rowstyle = '';
 
     	if (isset($rows['groups'])) {
     		$chunkcount = 1;
@@ -108,10 +109,15 @@ class DatabaseReportBot
 			if (isset($rows['linktemplate'])) $linktemplate = $rows['linktemplate'];
 			if (isset($rows['comment'])) $comment = $rows['comment'];
 			if (isset($rows['forceTOC'])) $forceTOC = $rows['forceTOC'];
+			if (isset($rows['rowstyle'])) $rowstyle = $rows['rowstyle'];
     	} else {
     		if (isset($rows['linktemplate'])) {
     			$linktemplate = $rows['linktemplate'];
     			unset ($rows['linktemplate']);
+    		}
+    		if (isset($rows['rowstyle'])){
+    			$rowstyle = $rows['rowstyle'];
+    			unset ($rows['rowstyle']);
     		}
 
 	    	$rowchunks = array_chunk($rows, self::MAX_ROWS_PER_PAGE);
@@ -152,7 +158,7 @@ class DatabaseReportBot
 				$rowcnt = 1;
 
 				foreach ($group as $row) {
-					$output .= "|-\n";
+					$output .= "|- $rowstyle\n";
 					$output .= "| $rowcnt\n";
 					foreach ($row as $colnum => $column) {
 						$output .= "| ";
@@ -181,7 +187,7 @@ class DatabaseReportBot
 				$output = $intro . $header;
 
 				foreach ($rowchunk as $row) {
-					$output .= "|-\n";
+					$output .= "|- $rowstyle\n";
 					$output .= "| $rowcnt\n";
 					foreach ($row as $colnum => $column) {
 						$output .= "| ";
