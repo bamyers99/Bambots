@@ -1,6 +1,6 @@
 <?php
 /**
- Copyright 2014 Myers Enterprises II
+ Copyright 2016 Myers Enterprises II
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@ namespace com_brucemyers\DatabaseReportBot\Reports;
 
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\RenderedWiki\RenderedWiki;
+use com_brucemyers\MediaWiki\WikidataSPARQL;
+use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
+use MediaWiki\Sanitizer;
 use PDO;
 
 class MiscReports extends DatabaseReport
@@ -59,6 +61,11 @@ class MiscReports extends DatabaseReport
     			$this->MoreCategories($apis['dbh_wiki']);
     			return false;
     			break;
+
+    		case 'WikidataPeopleAuthCtrl':
+    			$this->WikidataPeopleAuthCtrl($apis['dbh_wiki']);
+    			return false;
+    			break;
     	}
 
     	return true;
@@ -71,7 +78,8 @@ class MiscReports extends DatabaseReport
     	"\t\tJournalisted - Journalisted wikidata links\n" .
     	"\t\tWikiProjectList - WikiProject list\n" .
     	"\t\tAgeAnomaly - Age anomaly report\n" .
-    	"\t\tMoreCategories - People needing a notability category";
+    	"\t\tMoreCategories - People needing a notability category\n" .
+    	"\t\tWikidataPeopleAuthCtrl - Wikidata people authority control properties";
     }
 
 	public function getTitle()
@@ -719,6 +727,222 @@ class MiscReports extends DatabaseReport
 
 			fwrite($hndl, "</tbody></table>\n");
 		}
+
+		// Footer
+		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+		fclose($hndl);
+	}
+
+	/**
+	 * Wikidata people authority control properties
+	 *
+	 * @param PDO $dbh_wiki
+	 */
+	public function WikidataPeopleAuthCtrl(PDO $dbh_wiki)
+	{
+		$wdwiki = new WikidataWiki();
+
+		// Get the auth control props with instance of 'Wikidata property for authority control for people'
+
+		$query = 'SELECT%20%3Fprop%20%3FpropLabel%20%3FpropDescription%20%28SAMPLE%28%3Fexample_target%29%20AS%20%3Fexample_target%29%0AWHERE%0A{%0A%20%20%3Fprop%20wdt%3AP31%20wd%3AQ19595382%20.%0A%20%20OPTIONAL%20{%3Fprop%20wdt%3AP1855%20%3Fexample_target}%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%0A%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22%0A%20%20}%0A}%0AGROUP%20BY%20%3Fprop%20%3FpropLabel%20%3FpropDescription%0AORDER%20BY%20UCASE%28%3FpropLabel%29';
+
+		$sparql = new WikidataSPARQL();
+
+		$rows = $sparql->query($query);
+
+		$props = array(
+			'P213' => array('label' => 'ISNI', 'exampleid' => 'Q21930050', 'people' => false),
+			'P269' => array('label' => 'SUDOC AUTHORITIES', 'exampleid' => 'Q535', 'people' => false),
+			'P906' => array('label' => 'SELIBR', 'exampleid' => 'Q762', 'people' => false),
+			'P349' => array('label' => 'NDL ID', 'exampleid' => 'Q307', 'people' => false),
+			'P244' => array('label' => 'LCAUTH ID', 'exampleid' => 'Q5582', 'people' => false),
+			'P227' => array('label' => 'GND ID', 'exampleid' => 'Q212190', 'people' => false),
+			'P396' => array('label' => 'SBN ID', 'exampleid' => 'Q307', 'people' => false),
+			'P950' => array('label' => 'BNE ID', 'exampleid' => 'Q79822', 'people' => false),
+			'P214' => array('label' => 'VIAF ID', 'exampleid' => 'Q447070', 'people' => false),
+			'P268' => array('label' => 'BNF ID', 'exampleid' => 'Q7836', 'people' => false),
+			'P549' => array('label' => 'MATHEMATICS GENEALOGY PROJECT ID', 'exampleid' => 'Q7604', 'people' => false),
+			'P949' => array('label' => 'NATIONAL LIBRARY OF ISRAEL ID', 'exampleid' => 'Q42', 'people' => false),
+			'P409' => array('label' => 'NLA (AUSTRALIA) ID', 'exampleid' => 'Q436699', 'people' => false),
+			'P691' => array('label' => 'NKCR AUT ID', 'exampleid' => 'Q57434', 'people' => false),
+			'P1005' => array('label' => 'PTBNP ID', 'exampleid' => 'Q134461', 'people' => false),
+			'P1017' => array('label' => 'BAV ID', 'exampleid' => 'Q551550', 'people' => false),
+			'P646' => array('label' => 'FREEBASE ID', 'exampleid' => 'Q307', 'people' => false),
+			'P1273' => array('label' => 'CANTIC-ID', 'exampleid' => 'Q561147', 'people' => false),
+			'P1207' => array('label' => 'NUKAT (WARSAWU) AUTHORITIES', 'exampleid' => 'Q42552', 'people' => false),
+			'P1309' => array('label' => 'EGAXA ID', 'exampleid' => 'Q307', 'people' => false),
+			'P1422' => array('label' => 'SANDRART.NET PERSON ID', 'exampleid' => 'Q312304', 'people' => false),
+			'P866' => array('label' => 'PERLENTAUCHER ID', 'exampleid' => 'Q307', 'people' => false),
+			'P1670' => array('label' => 'LAC ID', 'exampleid' => 'Q307', 'people' => false),
+			'P1368' => array('label' => 'LNB ID', 'exampleid' => 'Q615419', 'people' => false),
+			'P1695' => array('label' => 'NLP ID', 'exampleid' => 'Q12904', 'people' => false),
+			'P1375' => array('label' => 'NSK ID', 'exampleid' => 'Q336571', 'people' => false),
+			'P723' => array('label' => 'DBNL ID', 'exampleid' => 'Q2359791', 'people' => false),
+			'P1741' => array('label' => 'GTAA ID', 'exampleid' => 'Q523644', 'people' => false),
+			'P648' => array('label' => 'OPEN LIBRARY ID', 'exampleid' => 'Q5685', 'people' => false),
+			'P1871' => array('label' => 'CERL ID', 'exampleid' => 'Q307', 'people' => false),
+			'P2163' => array('label' => 'FAST-ID', 'exampleid' => 'Q307', 'people' => false),
+			'P865' => array('label' => 'BMLO', 'exampleid' => 'Q11933906', 'people' => false),
+			'P998' => array('label' => 'DMOZ ID', 'exampleid' => 'Q255', 'people' => false),
+			'P1248' => array('label' => 'KULTURNAV-id', 'exampleid' => 'Q959698', 'people' => false),
+			'P1902' => array('label' => 'SPOTIFY ARTIST ID', 'exampleid' => 'Q2757867', 'people' => false),
+			'P1430' => array('label' => 'OPENPLAQUES SUBJECT ID', 'exampleid' => 'Q207', 'people' => false),
+			'P1284' => array('label' => 'MUNZINGER IBA', 'exampleid' => 'Q1684721', 'people' => false),
+			'P1839' => array('label' => 'US FEDERAL ELECTION COMMISSION ID', 'exampleid' => 'Q516515', 'people' => false),
+			'P1296' => array('label' => 'GRAN ENCICLOPEDIA CATALANA ID', 'exampleid' => 'Q207', 'people' => false),
+			'P1749' => array('label' => 'PARLEMENT & POLITIEK ID', 'exampleid' => 'Q57792', 'people' => false),
+			'P1048' => array('label' => 'NCL ID', 'exampleid' => 'Q228889', 'people' => false),
+			'P2390' => array('label' => 'BALLOTPEDIA ID', 'exampleid' => 'Q76', 'people' => false),
+			'P1417' => array('label' => 'ENCYCLOPEDIA BRITANNICA ONLINE ID', 'exampleid' => 'Q7374', 'people' => false),
+			'P1003' => array('label' => 'NLR (ROMANIA) ID', 'exampleid' => 'Q77177', 'people' => false),
+			'P651' => array('label' => 'BIOGRAFISH PORTAAL NUMBER', 'exampleid' => 'Q2929721', 'people' => false),
+			'P902' => array('label' => 'HDS ID', 'exampleid' => 'Q435456', 'people' => false),
+			'P1286' => array('label' => 'MUNZINGER POP ID', 'exampleid' => 'Q272203', 'people' => false),
+			'P1280' => array('label' => 'CONOR ID', 'exampleid' => 'Q1031', 'people' => false),
+			'P863' => array('label' => 'INPHO ID', 'exampleid' => 'Q219368', 'people' => false),
+			'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false)
+
+		);
+
+		foreach ($rows as $row) {
+			$label = strtoupper($row['propLabel']['value']);
+			$propid = pathinfo($row['prop']['value'], PATHINFO_BASENAME);
+			if (isset($row['example_target'])) $exampleid = pathinfo($row['example_target']['value'], PATHINFO_BASENAME);
+			elseif (isset($props[$propid]['exampleid'])) $exampleid = $props[$propid]['exampleid'];
+			else $exampleid = '';
+
+			$props[$propid] = array('label' => $label, 'exampleid' => $exampleid);
+		}
+
+		uasort($props, function ($a, $b) {
+			return strcmp($a['label'], $b['label']);
+		});
+
+		// Get the properties and example items
+		$items = array();
+
+		foreach ($props as $propid => $prop) {
+			$items[] = "Property:$propid";
+			if (! empty($prop['exampleid'])) $items[] = $prop['exampleid'];
+		}
+
+		$items = $wdwiki->getItemsWithCache($items);
+
+		$propertyitems = array();
+		$exampleitems = array();
+
+		foreach ($items as $item) {
+			$id = $item->getId();
+			if (empty($id)) continue;
+			if ($id[0] == 'Q') $exampleitems[$id] = $item;
+			else $propertyitems[$id] = $item;
+		}
+
+		$asof_date = getdate();
+		$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPeopleAuthCtrl.html';
+		$hndl = fopen($path, 'wb');
+
+		// Header
+		fwrite($hndl, "<!DOCTYPE html>
+		<html><head>
+		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+		<title>Wikidata people authority control properties</title>
+		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+		</head><body>
+		<div style='display: table; margin: 0 auto;'>
+		<h1>Wikidata people authority control properties</h1>
+		<h3>As of $asof_date</h3>
+		");
+
+		// Body
+
+		$wikitext = "{{anchor|Authority control}}\n<translate>\n==Authority control==\n</translate>\n{{List of properties/Header}}\n";
+		$nonpeople = array();
+
+		foreach ($props as $propid => $prop) {
+			$intid = substr($propid, 1);
+			$example_subject = $prop['exampleid'];
+			$example_object = '';
+			if (! isset($propertyitems[$propid])) continue;
+			$property = $propertyitems[$propid];
+			$datatype = $property->getDatatype();
+
+			if (! empty($example_subject)) {
+				$examples = $property->getStatementsOfType('P1855');
+				$occurrence = false;
+
+				foreach ($examples as $key => $example) {
+					if ($example == $example_subject) {
+						$occurrence = $key;
+						break;
+					}
+				}
+
+				if ($occurrence === false) {
+					if (! empty($examples)) $occurrence = 0;
+				}
+
+				if ($occurrence === false) {
+					$propvalues = $exampleitems[$example_subject]->getStatementsOfType($propid);
+					if (! empty($propvalues)) $example_object = $propvalues[0];
+				} else {
+					$qualifiers = $property->getStatementQualifiers('P1855', $occurrence);
+					if (isset($qualifiers[$propid])) $example_object = $qualifiers[$propid][0];
+				}
+
+				if (! empty($example_object)) {
+					$urlformatter = $property->getStatementsOfType('P1630');
+					if (! empty($urlformatter)) {
+						$example_object = '[' . Sanitizer::escapeWikitextInUrl(str_replace('$1', $example_object, $urlformatter[0])) . ' ' .
+							Sanitizer::wfEscapeWikiText($example_object) . ']';
+					}
+				}
+			}
+
+			if (isset($prop['people'])) {
+				$label = str_replace(' ', '&nbsp;', $property->getLabelDescription('label', 'en'));
+				$nonpeople[] = "[[Property:$propid|$label&nbsp;($propid)]]";
+			}
+
+			$wikitext .= "<tr><td>{{label|$propid}}</td><td>[[Property:$propid|$propid]]</td><td>$datatype</td><td>{{autodescription|$propid}}</td><td>$example_object</td><td>-</td></tr>\n";
+			//$wikitext .= "{{List of properties/Row|id=$intid|example-subject=$example_subject|example-object=$example_object}}\n"; // Too many expensive function calls
+		}
+
+		$nonpeople = implode(', ', $nonpeople);
+
+		$wikitext .= <<<END
+</table>
+
+{{anchor|Query}}
+<translate>
+
+== Query ==
+The following [https://query.wikidata.org/ SPARQL query] was used to generate this list of properties with {{Statement||31|19595382}}:
+</translate>
+
+{{SPARQL|query=SELECT ?prop ?propLabel ?propDescription (SAMPLE(?example_target) AS ?example_target)
+WHERE
+{
+  ?prop wdt:P31 wd:Q19595382 .
+  OPTIONAL {?prop wdt:P1855 ?example_target} .
+  SERVICE wikibase:label {
+    bd:serviceParam wikibase:language "en"
+  }
+}
+GROUP BY ?prop ?propLabel ?propDescription
+ORDER BY UCASE(?propLabel)
+}}
+
+<translate>
+The following additional properties are also included:
+</translate>
+
+:$nonpeople
+END;
+
+		fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+			'</textarea></form>');
 
 		// Footer
 		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");

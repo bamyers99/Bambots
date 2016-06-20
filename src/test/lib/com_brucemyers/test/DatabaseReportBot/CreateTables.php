@@ -19,7 +19,7 @@ namespace com_brucemyers\test\DatabaseReportBot;
 
 use PDO;
 
-class CreateTablesBSA
+class CreateTables
 {
 	/**
 	 * Create test tables
@@ -30,9 +30,7 @@ class CreateTablesBSA
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
-   		$dbh_enwiki->exec('DROP TABLE IF EXISTS page');
-
-    	$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
+		$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
  			`rd_from` int unsigned NOT NULL default 0 PRIMARY KEY,
  			`rd_namespace` int NOT NULL default 0,
  			`rd_title` varchar(255) binary NOT NULL default '',
@@ -52,7 +50,6 @@ class CreateTablesBSA
 
     	$sql = "CREATE TABLE IF NOT EXISTS pagelinks (
     		`pl_from` int unsigned NOT NULL default 0,
-    		`pl_from_namespace` int NOT NULL default 0,
     		`pl_namespace` int NOT NULL default 0,
     		`pl_title` varchar(255) binary NOT NULL default ''
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -73,7 +70,7 @@ class CreateTablesBSA
     	$dbh_enwiki->exec("INSERT INTO page VALUES (3,0,'Anesthesia')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (4,0,'Anesthesia_record')");
     	$dbh_enwiki->exec("INSERT INTO redirect VALUES (4,0,'Anesthesia','','Anesthetic monitoring')");
-    	$dbh_enwiki->exec("INSERT INTO pagelinks VALUES (1,0,0,'Anesthesia_record')");
+    	$dbh_enwiki->exec("INSERT INTO pagelinks VALUES (1,0,'Anesthesia_record')");
 
     	// Good section redirect with template in section heading
     	$dbh_enwiki->exec("INSERT INTO page VALUES (5,0,'2nd_Regiment,_Royal_Horse_Artillery')");
@@ -98,12 +95,5 @@ class CreateTablesBSA
     	$dbh_enwiki->exec("INSERT INTO page VALUES (13,0,'Culture_of_Israel')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (14,0,'Theatre_of_Israel')");
     	$dbh_enwiki->exec("INSERT INTO redirect VALUES (14,0,'Culture_of_Israel','','Theater')");
-
-    	// Bad section redirect
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (15,0,'Xfce')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (16,0,'Xfburn')");
-    	$dbh_enwiki->exec("INSERT INTO redirect VALUES (16,0,'Xfce','','Applications')");
-    	$dbh_enwiki->exec("INSERT INTO pagelinks VALUES (2,0,0,'Xfburn')");
-
     }
 }

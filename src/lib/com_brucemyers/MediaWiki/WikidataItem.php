@@ -61,11 +61,22 @@ class WikidataItem
 	/**
 	 * Get the item id.
 	 *
-	 * @return string blank if no item
+	 * @return string empty if no item
 	 */
 	public function getId()
 	{
 		if (isset($this->data['id'])) return $this->data['id'];
+		return '';
+	}
+
+	/**
+	 * Get the datatype of a property.
+	 *
+	 * @return string empty if no datatype
+	 */
+	public function getDatatype()
+	{
+		if (isset($this->data['datatype'])) return $this->data['datatype'];
 		return '';
 	}
 
@@ -86,81 +97,126 @@ class WikidataItem
 				$type = $claim['mainsnak']['datavalue']['type'];
 				$value= $claim['mainsnak']['datavalue']['value'];
 
-				switch ($type) {
-				    case 'wikibase-entityid':
-						$entity_type = $value['entity-type'];
-						$entity_id = $value['numeric-id'];
-						$statements[] = self::$entity_types[$entity_type] . $entity_id;
-				    	break;
-
-				    case 'string':
-				    	$statements[] = $value;
-				    	break;
-
-				    case 'time':
-				    	$time = '';
-				    	$datetime = explode('T', $value['time']);
-				    	$date = $datetime[0];
-				    	if (isset($datetime[1])) $time = $datetime[1];
-
-				    	$bce = '';
-				    	if ($date[0] == '+') $date = substr($date, 1);
-				    	elseif ($date[0] == '-') {
-				    		$date = substr($date, 1);
-				    		$bce = ' BCE';
-				    	}
-
-				    	$precision = $value['precision'];
-				    	switch ($precision) {
-				    	    case '14': // second
-				    	    	$value = $date . ' ' . $time . $bce;
-				    	    	break;
-				    	    case '13': // minute
-				    	    	$value = $date . ' ' . substr($time, 0, 5) . $bce;
-				    	    	break;
-				    		case '12': // hour
-				    	    	$value = $date . ' ' . substr($time, 0, 2) . ':00' . $bce;
-				    	    	break;
-				    		case '11': // day
-				    	    	$value = $date . $bce;
-				    	    	break;
-				    		case '10': // month
-				    			$parts = explode('-', $date);
-				    	    	$value = $parts[0] . '-' . $parts[1] . $bce;
-				    	    	break;
-				    		case '9': // year
-				    			$parts = explode('-', $date);
-				    	    	$value = $parts[0] . $bce;
-				    	    	break;
-				    		case '8': // decade
-				    			$parts = explode('-', $date);
-				    	    	$value = $parts[0] . 's' . $bce;
-				    	    	break;
-				    		case '7': // century
-				    			$parts = explode('-', $date);
-				    	    	$value = substr($parts[0], 0, 2) . ' century' . $bce;
-				    	    	break;
-				    		case '6': // millennium
-				    			$parts = explode('-', $date);
-				    	    	$value = substr($parts[0], 0, 1) . ' millenium' . $bce;
-				    	    	break;
-				    	    default:
-				    			$parts = explode('-', $date);
-				    	    	$value = $parts[0] . $bce;
-				    	    	break;
-				    	}
-
-				    	$statements[] = $value;
-				    	break;
-
-				    default:
-				    	Logger::log("WikidataItem::getStatementsOfType($property_id) unknown value type='$type' value=$value");
-				    	break;
-				}
+				$statements[] = $this->decodeValue($type, $value);
 			}
 		}
 
 		return $statements;
+	}
+
+	/**
+	 * Decode a value
+	 *
+	 * @param string $type
+	 * @param mixed $value
+	 */
+	protected function decodeValue($type, $value)
+	{
+		switch ($type) {
+			case 'wikibase-entityid':
+				$entity_type = $value['entity-type'];
+				$entity_id = $value['numeric-id'];
+				return self::$entity_types[$entity_type] . $entity_id;
+				break;
+
+			case 'string':
+				return $value;
+				break;
+
+			case 'time':
+				$time = '';
+				$datetime = explode('T', $value['time']);
+				$date = $datetime[0];
+				if (isset($datetime[1])) $time = $datetime[1];
+
+				$bce = '';
+				if ($date[0] == '+') $date = substr($date, 1);
+				elseif ($date[0] == '-') {
+					$date = substr($date, 1);
+					$bce = ' BCE';
+				}
+
+				$precision = $value['precision'];
+				switch ($precision) {
+					case '14': // second
+						$value = $date . ' ' . $time . $bce;
+						break;
+					case '13': // minute
+						$value = $date . ' ' . substr($time, 0, 5) . $bce;
+						break;
+					case '12': // hour
+						$value = $date . ' ' . substr($time, 0, 2) . ':00' . $bce;
+						break;
+					case '11': // day
+						$value = $date . $bce;
+						break;
+					case '10': // month
+						$parts = explode('-', $date);
+						$value = $parts[0] . '-' . $parts[1] . $bce;
+						break;
+					case '9': // year
+						$parts = explode('-', $date);
+						$value = $parts[0] . $bce;
+						break;
+					case '8': // decade
+						$parts = explode('-', $date);
+						$value = $parts[0] . 's' . $bce;
+						break;
+					case '7': // century
+						$parts = explode('-', $date);
+						$value = substr($parts[0], 0, 2) . ' century' . $bce;
+						break;
+					case '6': // millennium
+						$parts = explode('-', $date);
+						$value = substr($parts[0], 0, 1) . ' millenium' . $bce;
+						break;
+					default:
+						$parts = explode('-', $date);
+						$value = $parts[0] . $bce;
+						break;
+				}
+
+				return $value;
+				break;
+
+			default:
+				Logger::log("WikidataItem::decodeValue unknown value type='$type' value=$value");
+				break;
+		}
+	}
+
+	/**
+	 * Get a statements qualifiers.
+	 *
+	 * @param string $property_id
+	 * @param int $occurrence
+	 * @return array(propid => array(values))
+	 */
+	public function getStatementQualifiers($property_id, $occurrence)
+	{
+		$occurrence = (int)$occurrence;
+		$qualifiers = array();
+
+		if (! isset($this->data['claims']) || ! isset($this->data['claims'][$property_id])) return $qualifiers;
+		if (count($this->data['claims'][$property_id]) < $occurrence + 1) return $qualifiers;
+
+		$claim = $this->data['claims'][$property_id][$occurrence];
+
+		if (! isset($claim['qualifiers'])) return $qualifiers;
+
+		foreach ($claim['qualifiers'] as $key => $values) {
+			foreach ($values as $val) {
+				if ($val['snaktype'] == 'value') {
+					$type = $val['datavalue']['type'];
+					$value= $val['datavalue']['value'];
+
+					if (! isset($qualifiers[$key])) $qualifiers[$key] = array();
+					$qualifiers[$key][] = $this->decodeValue($type, $value);
+				}
+			}
+		}
+
+		return $qualifiers;
 	}
 
 	/**

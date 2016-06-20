@@ -29,7 +29,7 @@ class CreateTablesFilterCol
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
-   		$dbh_enwiki->exec('DROP TABLE page');
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS page');
    		$dbh_enwiki->exec('DROP TABLE IF EXISTS page_props');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `page_props` (

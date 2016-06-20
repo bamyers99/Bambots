@@ -389,4 +389,40 @@ class Sanitizer {
 			return "&$name;";
 		}
 	}
+
+	/**
+	 * Escapes the given text so that it may be output using addWikiText()
+	 * without any linking, formatting, etc. making its way through. This
+	 * is achieved by substituting certain characters with HTML entities.
+	 * As required by the callers, <nowiki> is not used. It currently does
+	 * not filter out characters which have special meaning only at the
+	 * start of a line, such as "*".
+	 *
+	 * @param string $text
+	 * @return string
+	 */
+	static function wfEscapeWikiText( $text )
+	{
+		$text = str_replace(
+				array( '[',             '|',      "'",     'ISBN '        , '://'         , "\n=" ),
+				array( '&#91;', '&#124;', '&#39;', 'ISBN&#32;', '&#58;//' , "\n&#61;" ),
+				htmlspecialchars($text) );
+		return $text;
+	}
+
+	/**
+	 * Escape wikitext in a url
+	 *
+	 * @param string $url
+	 * @return string
+	 */
+	static function escapeWikitextInUrl( $url )
+	{
+		return str_replace( array(
+				'[', ']',     '<', '>',     '\'',  ' ', "\r", "\n", "\t"
+		), array(
+				'%5B', '%5D', '%3C', '%3E', '%27', '%20', '%0D', '%0A', '%09'
+		), $url );
+
+	}
 }

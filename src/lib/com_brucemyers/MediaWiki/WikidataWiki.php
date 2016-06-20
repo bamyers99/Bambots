@@ -1,6 +1,6 @@
 <?php
 /**
- Copyright 2014 Myers Enterprises II
+ Copyright 2016 Myers Enterprises II
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ class WikidataWiki extends MediaWiki
     /**
      * Get item with caching
      *
-     * @param string $itemname Item name Q...
+     * @param string $itemname Item name Q... or Property:P...
      * @return WikidataItem Item data
      */
     public function getItemWithCache($itemname)
@@ -51,7 +51,25 @@ class WikidataWiki extends MediaWiki
     /**
      * Get items without caching
      *
-     * @param array $itemnames Item name Q...
+     * @param array $itemnames Item name Q... or Property:P...
+     * @return array WikidataItem Item data
+     */
+    public function getItemsWithCache($itemnames)
+    {
+    	$ret = array();
+    	$pages = $this->getPagesWithCache((array)$itemnames);
+
+    	foreach ($pages as $page) {
+    		$ret[] = new WikidataItem(json_decode($page, true));
+    	}
+
+    	return $ret;
+    }
+
+    /**
+     * Get items without caching
+     *
+     * @param array $itemnames Item name Q... or Property:P...
      * @return array WikidataItem Item data
      */
     public function getItemsNoCache($itemnames)

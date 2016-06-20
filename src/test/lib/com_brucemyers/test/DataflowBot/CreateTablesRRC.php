@@ -30,7 +30,7 @@ class CreateTablesRRC
     public function __construct(PDO $dbh_enwiki)
     {
     	// enwiki
-   		$dbh_enwiki->exec('DROP TABLE page');
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS page');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
  			`rd_from` int unsigned NOT NULL default 0 PRIMARY KEY,
