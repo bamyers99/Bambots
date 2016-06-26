@@ -857,7 +857,7 @@ class MiscReports extends DatabaseReport
 
 		// Body
 
-		$wikitext = "{{anchor|Authority control}}\n<translate>\n==Authority control==\n</translate>\n{{List of properties/Header}}\n";
+		$wikitext = "{{anchor|Authority control}}\n<translate>\n==Authority control== <!--T:1-->\n</translate>\n{{List of properties/Header}}\n";
 		$nonpeople = array();
 
 		foreach ($props as $propid => $prop) {
@@ -917,7 +917,7 @@ class MiscReports extends DatabaseReport
 {{anchor|Query}}
 <translate>
 
-== Query ==
+== Query == <!--T:2-->
 The following [https://query.wikidata.org/ SPARQL query] was used to generate this list of properties with {{Statement||31|19595382}}:
 </translate>
 
@@ -935,6 +935,7 @@ ORDER BY UCASE(?propLabel)
 }}
 
 <translate>
+<!--T:3-->
 The following additional properties are also included:
 </translate>
 
