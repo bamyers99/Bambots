@@ -1,0 +1,13 @@
+
+CREATE TABLE `navelgazer` (
+  `user_name` varchar(255) NOT NULL,
+  `property_id` int(11) NOT NULL,
+  `create_count` int(11) NOT NULL,
+  KEY `username` (`user_name`),
+  KEY `property_id` (`property_id`)
+) ENGINE=Aria DEFAULT CHARSET=utf8
+
+sql enwiki
+TRUNCATE s51454__wikidata.navelgazer;
+LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/navelgazer.tsv' INTO TABLE s51454__wikidata.navelgazer CHARACTER SET utf8;
+INSERT INTO s51454__wikidata.navelgazer VALUES ('Data asof: 2016-06-01', -99, 0);
