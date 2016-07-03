@@ -1,5 +1,5 @@
 
-CREATE TABLE `navelgazer` (
+CREATE TABLE s51454__wikidata.`navelgazer` (
   `user_name` varchar(255) NOT NULL,
   `property_id` int(11) NOT NULL,
   `create_count` int(11) NOT NULL,
@@ -9,5 +9,5 @@ CREATE TABLE `navelgazer` (
 
 sql enwiki
 TRUNCATE s51454__wikidata.navelgazer;
-LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/navelgazer.tsv' INTO TABLE s51454__wikidata.navelgazer CHARACTER SET utf8;
-INSERT INTO s51454__wikidata.navelgazer VALUES ('Data asof: 2016-06-01', -99, 0);
+LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/navelgazer.tsv' INTO TABLE s51454__wikidata.navelgazer CHARACTER SET binary;
+INSERT INTO s51454__wikidata.navelgazer VALUES ('Data as of: 2016-xx-xx', -99, 0);

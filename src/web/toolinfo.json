@@ -68,4 +68,14 @@
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
+,
+	{
+	    "name" : "WikidataNavelGazer",
+	    "title" : "Wikidata statement addition counts",
+	    "description" : "Displays wikidata users statement addition counts",
+	    "url" : "https://tools.wmflabs.org/bambots/NavelGazer.php",
+	    "keywords" : "wikidata,statistics,stats",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
 ]

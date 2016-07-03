@@ -22,8 +22,8 @@ $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
-error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-ini_set("display_errors", 1);
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -42,6 +42,14 @@ display_form($navels);
 function display_form($navels)
 {
 	global $params;
+	$edit_types = array(
+		-1 => 'Label additions',
+		-2 => 'Description additions',
+		-3 => 'Alias additions',
+		-4 => 'Site link additions',
+		-5 => 'Merges'
+	);
+
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
@@ -62,13 +70,29 @@ function display_form($navels)
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2>Wikidata Navel Gazer</h2>
-		<h3>users property addition counts</h3>
+		<h2>Wikidata Navel Gazer<sup>[1]</sup><?php
+		if (! empty($params['username'])) echo ' - ' . $params['username'];
+		elseif (! empty($params['property'])) {
+			if ($params['property'] < 0) {
+				if (isset($edit_types[$params['property']])) echo ' - ' . $edit_types[$params['property']];
+			} else {
+				echo ' - P' . $params['property'];
+			}
+		}
+		?></h2>
+		<h3>users statement addition counts</h3>
         <form action="NavelGazer.php" method="post">
         <table class="form">
         <tr><td><b>Username</b></td><td><input id="username" name="username" type="text" size="10" value="<?php echo $params['username'] ?>" /></td></tr>
         <tr><td colspan='2'>or</td></tr>
-        <tr><td><b>Property</b></td><td><input id="property" name="property" type="text" size="10" value="<?php echo 'P' . $params['property'] ?>" /></td></tr>
+        <tr><td><b>Property</b></td><td><input id="property" name="property" type="text" size="10" value="<?php if (! empty($params['property'])) echo 'P' . $params['property'] ?>" /> example: P31</td></tr>
+        <tr><td>Pseudo properties</td><td><?php
+         	foreach ($edit_types as $key => $edit_type) {
+         		if ($key != -1) echo ', ';
+        		if ($key == -3) echo '<br />';
+        		echo "P$key = {$edit_type}";
+        	}
+        ?></td></tr>
         <tr><td colspan='2'><hr /></td></tr>
         <tr><td><b>Property label language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /></td></tr>
         <tr><td colspan='2'><input type="submit" value="Submit" /></td></tr>
@@ -89,7 +113,25 @@ function display_form($navels)
 			else echo 'Property not found';
 
 		} elseif (! empty($params['username'])) {
-			echo $navels['dataasof'] . "<br />\n";
+			if (! empty($params['property'])) echo "Clear the Username field to do a property search<br />\n";
+			echo $navels['dataasof'] . "<sup>[2]</sup><br /><br />\n";
+
+			$misc = array();
+
+			foreach ($navels['data'] as $key => $row) {
+				if ($row[0] < 0) {
+					$misc[] = $edit_types[$row[0]] . ": {$row[2]}<br />\n";
+					unset($navels['data'][$key]);
+				}
+			}
+
+			if (! empty($misc)) {
+				sort($misc);
+				foreach ($misc as $statement) {
+					echo $statement;
+				}
+			}
+
 			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Count</th></tr></thead><tbody>\n";
 
 			usort($navels['data'], function($a, $b) {
@@ -105,10 +147,14 @@ function display_form($navels)
 			echo "</tbody></table>\n";
 
 		} else { // property
-			echo $navels['dataasof'] . "<br />\n";
-			$url = "https://www.wikidata.org/wiki/Property:P" . $params['property'];
-			$term_text = htmlentities($navels['property_label'], ENT_COMPAT, 'UTF-8');
-			echo "Property: <a href='$url'>$term_text (P{$params['property']})</a><br />\n";
+			echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
+			if ($params['property'] < 0) {
+				if (isset($edit_types[$params['property']])) echo 'Action: ' . $edit_types[$params['property']] . "<br />\n";
+			} else {
+				$url = "https://www.wikidata.org/wiki/Property:P" . $params['property'];
+				$term_text = htmlentities($navels['property_label'], ENT_COMPAT, 'UTF-8');
+				echo "Property: <a href='$url'>$term_text (P{$params['property']})</a><br />\n";
+			}
 			if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
 			echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Count</th></tr></thead><tbody>\n";
@@ -121,8 +167,9 @@ function display_form($navels)
 		}
 	}
 ?>
-        </div><br /><div style="display: table; margin: 0 auto;">
-    Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99">Bamyers99</a></div></body></html><?php
+        <br /><div><sup>1</sup><a href='http://www.merriam-webster.com/dictionary/navel-gazing'>navel–gazing</a> (Merriam-Webster)</div>
+        <div><sup>2</sup>Data derived from database dump wikidatawiki-stub-meta-history.xml revision comments</div>
+        <div>Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
 function get_navels()
@@ -134,7 +181,7 @@ function get_navels()
 
 	if (empty($params['username']) && empty($params['property'])) return $return;
 
-	$wikiname = 'wikidatawiki';
+	$wikiname = 'enwiki';
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
@@ -143,7 +190,7 @@ function get_navels()
 	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-	$sth = $dbh_wiki->query("SELECT user_name FROM s51454__wikidata.navelgazer WHERE user_name LIKE 'Data asof:%'");
+	$sth = $dbh_wiki->query("SELECT user_name FROM s51454__wikidata.navelgazer WHERE user_name LIKE 'Data as of:%'");
 
 	$row = $sth->fetch(PDO::FETCH_NUM);
 	$dataasof = $row[0];
@@ -172,7 +219,7 @@ function get_navels()
 			$term_text = $row['lang_text'];
 			if (is_null($term_text)) $term_text = $row['en_text'];
 
-			$data[] = array($row['property_id'], $term_text, $row['create_count']);
+			$data[$row['property_id']] = array($row['property_id'], $term_text, $row['create_count']); // removes dups
 		}
 
 	} else { // property

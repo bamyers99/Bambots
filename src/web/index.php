@@ -31,6 +31,7 @@
     <li><a href="CategoryWatchlist.php">Category membership watchlist</a></li>
     <li><a href="PageTools.php">Page tools - searches for Wikidata item in other languages; provides Authority control searches</a></li>
     <li><a href="TemplateParam.php">Template parameter usage viewer</a></li>
+    <li><a href="NavelGazer.php">Wikidata users statement addition counts</a></li>
     </ul>
 </body>
 </html>

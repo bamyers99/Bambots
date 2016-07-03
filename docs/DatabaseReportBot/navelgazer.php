@@ -19,64 +19,62 @@ define('PROP_DATE_OF_BIRTH', 'P569');
 define('PROP_DATE_OF_DEATH', 'P570');
 
 $count = 0;
-$people = array();
+$edits = array();
+$username = false;
+$edittypes = array(
+	'wbsetclaim-create' => 0,
+	'wbcreateclaim' => 0,
+	'wbsetlabel-add' => -1,
+	'wbsetdescription-add' => -2,
+	'wbsetaliases-add' => -3,
+	'wbsetsitelink-add' => -4,
+	'wbmergeitems-from' => -5
+);
 
 $hndl = fopen('php://stdin', 'r');
 while (! feof($hndl)) {
-	if (++$count % 100000 == 0) echo "Processed $count\n";
+	if (++$count % 1000000 == 0) echo "Processed $count\n";
 	$buffer = fgets($hndl);
 	if (empty($buffer)) continue;
-	$buffer = str_replace('/mediawiki/page/revision/text=', '', $buffer);
+	$buffer = str_replace('/mediawiki/page/revision', '', $buffer);
 
-	$data = json_decode($buffer, true);
-	$id = $data['id'];
+	if (preg_match('!^/contributor/ip=([^\n]+)!', $buffer, $matches)) {
+		$username = false;
+	} elseif (preg_match('!^/contributor/username=([^\n]+)!', $buffer, $matches)) {
+		$username = $matches[1];
+	} elseif (preg_match('!^/comment=([^\n]+)!', $buffer, $matches)) {
+		if ($username === false) continue;
+		$comment = $matches[1];
 
-	if (! isset($data['claims']) || ! isset($data['claims'][PROP_DATE_OF_DEATH]) || ! isset($data['claims'][PROP_DATE_OF_BIRTH])) {
-		echo "Dates not found for $id\n";
-		continue;
+		foreach ($edittypes as $edittype => $typevalue) {
+			if (strpos($comment, $edittype) !== false) {
+				if ($typevalue === 0) {
+					if (! preg_match('!\\[\\[Property:P(\d+)!', $comment, $matches)) break;
+					$typevalue = $matches[1];
+				}
+
+				$key = "a$typevalue"; // don't want a numeric key
+
+				if (! isset($edits[$username])) $edits[$username] = array();
+				if (! isset($edits[$username][$key])) $edits[$username][$key] = 0;
+				++$edits[$username][$key];
+				break;
+			}
+		}
 	}
 
-	if (count($data['claims'][PROP_DATE_OF_DEATH]) > 1) continue; // Multiple death dates
-	if (count($data['claims'][PROP_DATE_OF_BIRTH]) > 1) continue; // Multiple birth dates
-	if (! isset($data['claims'][PROP_DATE_OF_BIRTH][0]['mainsnak']['datavalue'])) continue;
-	if (! isset($data['claims'][PROP_DATE_OF_DEATH][0]['mainsnak']['datavalue'])) continue;
+}
 
-	$precision = (int)$data['claims'][PROP_DATE_OF_BIRTH][0]['mainsnak']['datavalue']['value']['precision'];
-	if ($precision < 11) continue; // Want at least day precision
+echo "Processed $count\n";
 
-	$birthdate = getdateparts($data['claims'][PROP_DATE_OF_BIRTH][0]['mainsnak']['datavalue']['value']['time']);
-	$deathdate = getdateparts($data['claims'][PROP_DATE_OF_DEATH][0]['mainsnak']['datavalue']['value']['time']);
+fclose($hndl);
+$hndl = fopen('navelgazer.tsv', 'w');
 
-	$key = $birthdate['year'] . $birthdate['month'] . $birthdate['day'] . $deathdate['year'] . $deathdate['month'] . $deathdate['day'];
-	if (! isset($people[$key])) $people[$key] = array();
-	$people[$key][] = $id;
+foreach ($edits as $username => $totals) {
+	foreach ($totals as $key => $total) {
+		$key = substr($key, 1);
+		fwrite($hndl, "$username\t$key\t$total\n");
+	}
 }
 
 fclose($hndl);
-$hndl = fopen('potentialdups.txt', 'w');
-
-foreach ($people as $persons) {
-	if (count($persons) < 2) continue;
-	foreach ($persons as $id) fwrite($hndl, "[https://www.wikidata.org/wiki/$id $id] ");
-	fwrite($hndl, "<br />\n");
-}
-
-fclose($hndl);
-
-function getdateparts($date)
-{
-	$return = array();
-
-	// Dates are stored as 28 characters if the year > 99, else 26 characters +00000002014-01-01T00:00:00Z or +000000050-01-01T00:00:00Z
-	if (strlen($date) > 26) {
-		$return['year'] = substr($date, 8, 4);
-		$return['month'] = substr($date, 13, 2);
-		$return['day'] = substr($date, 16, 2);
-	} else {
-		$return['year'] = substr($date, 8, 2);
-		$return['month'] = substr($date, 11, 2);
-		$return['day'] = substr($date, 14, 2);
-	}
-
-	return $return;
-}
