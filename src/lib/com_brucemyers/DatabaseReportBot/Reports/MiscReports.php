@@ -800,7 +800,8 @@ class MiscReports extends DatabaseReport
 			'P1286' => array('label' => 'MUNZINGER POP ID', 'exampleid' => 'Q272203', 'people' => false),
 			'P1280' => array('label' => 'CONOR ID', 'exampleid' => 'Q1031', 'people' => false),
 			'P863' => array('label' => 'INPHO ID', 'exampleid' => 'Q219368', 'people' => false),
-			'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false)
+			'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false),
+			'P2267' => array('label' => 'POLITIFACT PERSONALITY ID', 'exampleid' => 'Q76', 'people' => false)
 
 		);
 
@@ -946,6 +947,7 @@ END;
 			'</textarea></form>');
 
 		// Footer
+		fwrite($hndl, '<br />Property count: ' . count($props));
 		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
 		fclose($hndl);
 	}
