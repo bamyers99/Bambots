@@ -25,6 +25,7 @@ use com_brucemyers\DataflowBot\Extractors\Extractor;
 use com_brucemyers\DataflowBot\Transformers\Transformer;
 use com_brucemyers\DataflowBot\Loaders\Loader;
 use com_brucemyers\Util\Logger;
+use Exception;
 
 class DataflowBot
 {
@@ -75,17 +76,15 @@ class DataflowBot
 
 				$retval = $compobj->init($component['params']);
 				if ($retval !== true) {
-					Logger::log("init failed for $flownum-$compnum $retval");
 					fclose($oh);
-					break;
+					throw new Exception("init failed for $flownum-$compnum $retval");
 				}
 				$firstRowHeaders = $compobj->isFirstRowHeaders();
 
 				$retval = $compobj->process($writer);
 				if ($retval !== true) {
-					Logger::log("process failed for $flownum-$compnum $retval");
 					fclose($oh);
-					break;
+					throw new Exception("process failed for $flownum-$compnum $retval");
 				}
 
 				fclose($oh);
@@ -101,19 +100,17 @@ class DataflowBot
 
 				$retval = $compobj->init($component['params'], $firstRowHeaders);
 				if ($retval !== true) {
-					Logger::log("init failed for $flownum-$compnum $retval");
 					fclose($ih);
 					fclose($oh);
-					break;
+					throw new Exception("init failed for $flownum-$compnum $retval");
 				}
 				$firstRowHeaders = $compobj->isFirstRowHeaders();
 
 				$retval = $compobj->process($reader, $writer);
 				if ($retval !== true) {
-					Logger::log("process failed for $flownum-$compnum $retval");
 					fclose($ih);
 					fclose($oh);
-					break;
+					throw new Exception("process failed for $flownum-$compnum $retval");
 				}
 
 				fclose($ih);
@@ -125,19 +122,17 @@ class DataflowBot
 
 				$retval = $compobj->init($component['params'], $firstRowHeaders, $flownum);
 				if ($retval !== true) {
-					Logger::log("init failed for $flownum-$compnum $retval");
-					fclose ( $ih );
-					break;
+					fclose($ih);
+					throw new Exception("init failed for $flownum-$compnum $retval");
 				}
 
-				$retval = $compobj->process ( $reader );
+				$retval = $compobj->process($reader);
 				if ($retval !== true) {
-					Logger::log ( "process failed for $flownum-$compnum $retval" );
-					fclose ( $ih );
-					break;
+					fclose($ih);
+					throw new Exception("process failed for $flownum-$compnum $retval");
 				}
 
-				fclose ( $ih );
+				fclose($ih);
 			}
 
 			++ $compnum;

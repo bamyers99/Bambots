@@ -143,11 +143,36 @@ class AddColumnORESScore extends AddColumn
 
 			$URL = "https://ores.wmflabs.org/v2/scores/$wiki/$model/?revids=" . implode('|', $revids);
 			//Logger::log($URL);
-			$data = $curl::getUrlContents($URL);
-			if ($data === false) return "Problem reading $URL (" . Curl::$lastError . ")";
 
-			$data = json_decode($data, true);
-			if (is_null($data)) return "json_decode error for $URL";
+			$trys = 0;
+
+			while ($trys++ < 5) {
+				$data = $curl::getUrlContents($URL);
+				if ($data === false) {
+					if ($trys == 5) return "Problem reading $URL (" . Curl::$lastError . ")";
+					sleep($trys * 60);
+					continue;
+				}
+
+				$data = json_decode($data, true);
+
+				if (is_null($data)) {
+					if ($trys == 5) return "json_decode error for $URL";
+					sleep($trys * 60);
+					continue;
+				}
+
+				if (! isset($data['scores'])) {
+					if ($trys == 5) {
+						Logger::log(print_r($data, true));
+						return "scores not set for $URL";
+					}
+					sleep($trys * 60);
+					continue;
+				}
+
+				break;
+			}
 
 			// Process each page
 

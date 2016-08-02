@@ -1,1 +1,1 @@
-bunzip2 -c wikidatawiki.bz2 | ./xml2 | grep '"P214"|\"P213"\|"P227"\|"P906"\|"P269"\|"P268"\|"P1053"\|"P1015"\|"P245"\|"P434"\|"P549"\|"P409"\|"P349"\|"P691"\|"P396"\|"P950"\|"P496"\|"P651"\|"P428"' >authoritycontrol.txt
+bunzip2 -c wikidatawiki.bz2 | ./xml2 | grep '"P214"\|"P213"\|"P227"\|"P906"\|"P269"\|"P268"\|"P1053"\|"P1015"\|"P245"\|"P434"\|"P549"\|"P409"\|"P349"\|"P691"\|"P396"\|"P950"\|"P496"\|"P651"\|"P428"' >authoritycontrol.txt
