@@ -15,9 +15,6 @@
  limitations under the License.
  */
 
-define('PROP_DATE_OF_BIRTH', 'P569');
-define('PROP_DATE_OF_DEATH', 'P570');
-
 $count = 0;
 $edits = array();
 $username = false;
