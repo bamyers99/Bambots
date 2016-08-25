@@ -64,7 +64,7 @@ function display_form($subclasses)
 		if ($title != "Q{$params['id']}") $title = "$title (Q{$params['id']})";
 		$title = " : $title";
 	} else {
-		$title = ' : Major root classes';
+		$title = ' : Top root classes';
 	}
 
 	$title = htmlentities($title, ENT_COMPAT, 'UTF-8');
@@ -125,7 +125,7 @@ function display_form($subclasses)
 
 			// Display class info
 			if ($params['id'] == 0) {
-				echo "Data as of: {$subclasses['dataasof']}<sup>[1]</sup><br />\n";
+				echo "Data as of<sup>[1]</sup>: {$subclasses['dataasof']}<br />\n";
 				echo "Class count<sup>[2]</sup>: " . intl_num_format($subclasses['classcnt']) . "<br />\n";
 
 			} else {
@@ -185,14 +185,14 @@ function display_form($subclasses)
 				}
 
 
-				echo "<tr><td>Data as of:</td><td>{$subclasses['dataasof']}<sup>[1]</sup></td></tr>\n";
+				echo "<tr><td>Data as of<sup>[1]</sup>:</td><td>{$subclasses['dataasof']}</td></tr>\n";
 				echo "</tbody></table>\n";
 			}
 
 			// Display children
 			if (! empty($subclasses['children'])) {
 				if ($params['id'] == 0) {
-					echo "<h2>Major root classes</h2>\n";
+					echo "<h2>Top root classes</h2>\n";
 				} else {
 					$child_label = (count($subclasses['children']) == 1) ? 'Direct subclass' : 'Direct subclasses';
 					echo "<h2>$child_label</h2>\n";
@@ -225,7 +225,7 @@ function display_form($subclasses)
 	}
 ?>
        <br /><div><sup>1</sup>Data derived from database dump wikidatawiki-pages-articles.xml</div>
-       <?php if ($params['id'] == 0) {?><div><sup>2</sup>Class count only includes classes that are a parent or child class. (no parentless classes other than root classes which have a child class)</div><?php } ?>
+       <?php if ($params['id'] == 0) {?><div><sup>2</sup>Class count only includes classes that are a parent or child class. (no parentless (root) classes other than ones which have at least one child class)</div><?php } ?>
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
        <div>Note: Some totals may not balance due to a class having the same super-parent class multiple times.</div>
@@ -285,7 +285,7 @@ function get_subclasses()
 				" AND wbd.term_type = 'description' AND wbd.term_language = ? " .
 				" LEFT JOIN wikidatawiki_p.wb_terms wbden ON sct.qid = wbden.term_entity_id AND wbden.term_entity_type = 'item' " .
 				" AND wbden.term_type = 'description' AND wbden.term_language = 'en' " .
-				" WHERE sct.qid = ?";
+				" WHERE sct.qid = ? LIMIT 1";
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, $params['lang']);
@@ -310,13 +310,16 @@ function get_subclasses()
 
 	// Retrieve the parent classes
 	if ($params['id'] != 0) {
-		$sql = "SELECT scc.parent_qid, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
-			" FROM s51454__wikidata.subclassclasses scc " .
-			" LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.parent_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' " .
-			" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
-			" LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.parent_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' " .
-			" AND wbten.term_type = 'label' AND wbten.term_language = 'en' " .
-			" WHERE scc.child_qid = ? ";
+		$en_text = '';
+		if ($params['lang'] != 'en') $en_text = ', wbten.term_text AS en_text';
+
+		$sql = "SELECT scc.parent_qid, wbt.term_text AS lang_text $en_text ";
+		$sql .= " FROM s51454__wikidata.subclassclasses scc ";
+		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.parent_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
+		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
+		if ($params['lang'] != 'en') $sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.parent_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+		if ($params['lang'] != 'en') $sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		$sql .= " WHERE scc.child_qid = ? ";
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, $params['lang']);
@@ -326,10 +329,10 @@ function get_subclasses()
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
 			$term_text = $row['lang_text'];
-			if (is_null($term_text)) $term_text = $row['en_text'];
+			if (is_null($term_text) && $params['lang'] != 'en') $term_text = $row['en_text'];
 			if (is_null($term_text)) $term_text = 'Q' . $row['parent_qid'];
 
-			$parents[] = array($row['parent_qid'], $term_text);
+			$parents[$row['parent_qid']] = array($row['parent_qid'], $term_text); // removes dup terms
 		}
 	}
 
@@ -345,8 +348,8 @@ function get_subclasses()
 		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
 		if ($params['lang'] != 'en') $sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON sct.qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
 		if ($params['lang'] != 'en') $sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
-		$sql .= " WHERE sct.root = 'Y' and sct.directchildcnt + sct.indirectchildcnt + sct.directinstcnt + sct.indirectinstcnt > 100 ";
-		$sql .= " ORDER BY sct.directchildcnt + sct.indirectchildcnt + sct.directinstcnt + sct.indirectinstcnt DESC";
+		$sql .= " WHERE sct.root = 'Y' ";
+		$sql .= " ORDER BY sct.directchildcnt + sct.indirectchildcnt + sct.directinstcnt + sct.indirectinstcnt DESC LIMIT 200";
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, $params['lang']);
@@ -377,8 +380,8 @@ function get_subclasses()
 		if (is_null($term_text) && $params['lang'] != 'en') $term_text = $row['en_text'];
 		if (is_null($term_text)) $term_text = 'Q' . $row['qid'];
 
-		$children[] = array($row['qid'], $term_text, $row['directchildcnt'], $row['indirectchildcnt'],
-			$row['directinstcnt'], $row['indirectinstcnt']);
+		$children[$row['qid']] = array($row['qid'], $term_text, $row['directchildcnt'], $row['indirectchildcnt'],
+			$row['directinstcnt'], $row['indirectinstcnt']); // removes dup terms
 	}
 
 	$return = array('class' => $class, 'parents' => $parents, 'children' => $children, 'dataasof' => $dataasof, 'classcnt' => $classcnt);
