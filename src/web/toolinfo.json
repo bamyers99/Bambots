@@ -71,7 +71,7 @@
 ,
 	{
 	    "name" : "WikidataNavelGazer",
-	    "title" : "Wikidata statement addition counts",
+	    "title" : "Wikidata statement addition counts (Navel Gazer)",
 	    "description" : "Displays wikidata users statement addition counts",
 	    "url" : "https://tools.wmflabs.org/bambots/NavelGazer.php",
 	    "keywords" : "wikidata,statistics,stats",
