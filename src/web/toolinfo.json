@@ -78,4 +78,14 @@
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
+,
+	{
+	    "name" : "WikidataClassBrowser",
+	    "title" : "Wikidata class browser",
+	    "description" : "Displays wikidata class information including subclass and instance totals",
+	    "url" : "https://tools.wmflabs.org/bambots/WikidataClasses.php",
+	    "keywords" : "wikidata,class,statistics,stats",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
 ]

@@ -27,9 +27,10 @@ $GLOBALS['botname'] = 'CleanupWorklistBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
 define('CACHE_PREFIX_WDCLS', 'WDCLS:');
 define('MAX_CHILD_CLASSES', 500);
+define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
 
-error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-ini_set("display_errors", 1);
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -64,7 +65,7 @@ function display_form($subclasses)
 		if ($title != "Q{$params['id']}") $title = "$title (Q{$params['id']})";
 		$title = " : $title";
 	} else {
-		$title = ' : Top root classes';
+		$title = ' : Widely used root classes';
 	}
 
 	$title = htmlentities($title, ENT_COMPAT, 'UTF-8');
@@ -192,7 +193,7 @@ function display_form($subclasses)
 			// Display children
 			if (! empty($subclasses['children'])) {
 				if ($params['id'] == 0) {
-					echo "<h2>Top root classes</h2>\n";
+					echo "<h2>Widely used root classes</h2>\n";
 				} else {
 					$child_label = (count($subclasses['children']) == 1) ? 'Direct subclass' : 'Direct subclasses';
 					echo "<h2>$child_label</h2>\n";
@@ -225,7 +226,7 @@ function display_form($subclasses)
 	}
 ?>
        <br /><div><sup>1</sup>Data derived from database dump wikidatawiki-pages-articles.xml</div>
-       <?php if ($params['id'] == 0) {?><div><sup>2</sup>Class count only includes classes that are a parent or child class. (no parentless (root) classes other than ones which have at least one child class)</div><?php } ?>
+       <?php if ($params['id'] == 0) {?><div><sup>2</sup>Root classes with no child classes and less than <?php echo MIN_ORPHAN_DIRECT_INST_CNT; ?> instances are excluded.</div><?php } ?>
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
        <div>Note: Some totals may not balance due to a class having the same super-parent class multiple times.</div>

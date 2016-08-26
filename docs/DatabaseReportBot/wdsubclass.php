@@ -20,6 +20,8 @@
 define('PROP_SUBCLASSOF', 'P279');
 define('PROP_INSTANCEOF', 'P31');
 
+define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
+
 $count = 0;
 $classes = array();
 
@@ -75,7 +77,7 @@ fclose($whndl);
 
 // Calc totals
 foreach ($classes as $classqid => $class) {
-	if (! $class['classfound']) {
+	if (! $class['classfound'] && $class['directinstcnt'] < MIN_ORPHAN_DIRECT_INST_CNT) {
 		unset($classes[$classqid]); // No need to report because other report catches these.
 		continue;
 	}
