@@ -403,7 +403,9 @@ function get_params()
 
 	$params = array();
 
-	$params['id'] = (isset($_REQUEST['id']) && ! empty($_REQUEST['id'])) ? $_REQUEST['id'] : '0';
+	$params['id'] = '0';
+	if (isset($_REQUEST['id'])) $params['id'] = trim($_REQUEST['id']);
+	if (empty($params['id'])) $params['id'] = '0';
 	if (! is_numeric($params['id'][0])) $params['id'] = substr($params['id'], 1);
 	if (empty($params['id'])) $params['id'] = '0';
 	$params['id'] = intval($params['id']);

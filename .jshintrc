@@ -1,0 +1,27 @@
+{
+	// Enforcing
+	"bitwise": true,
+	"eqeqeq": true,
+	"freeze": true,
+	"latedef": "nofunc",
+	"futurehostile": true,
+	"noarg": true,
+	"nonew": true,
+	"undef": true,
+	"unused": "vars",
+
+	"strict": false,
+
+	// Relaxing
+
+	// Environment
+	"browser": true,
+	"jquery": true,
+
+	"globals": {
+		"mw": false,
+		"OO": false,
+		"Bamyers99_ClassSuggester_testmode": true,
+		"Bamyers99": true
+	}
+}
