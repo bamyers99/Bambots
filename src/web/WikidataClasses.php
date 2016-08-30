@@ -18,6 +18,8 @@
 use com_brucemyers\Util\HttpUtil;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\MediaWiki\WikidataItem;
+use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 
 $webdir = dirname(__FILE__);
@@ -28,6 +30,9 @@ define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i')
 define('CACHE_PREFIX_WDCLS', 'WDCLS:');
 define('MAX_CHILD_CLASSES', 500);
 define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
+define('PROP_INSTANCEOF', 'P31');
+
+$instanceofIgnores = array('Q13406463');
 
 //error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 //ini_set("display_errors", 1);
@@ -35,6 +40,18 @@ define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 $params = array();
+
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
+switch ($action) {
+	case 'suggest':
+		$lang = isset($_REQUEST['lang']) ? $_REQUEST['lang'] : '';
+		$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
+		$callback = isset($_REQUEST['callback']) ? $_REQUEST['callback'] : '';
+		$userlang = isset($_REQUEST['userlang']) ? $_REQUEST['userlang'] : '';
+		if ($lang && $page && $callback) perform_suggest($lang, $page, $callback, $userlang);
+		exit;
+}
 
 get_params();
 
@@ -127,7 +144,8 @@ function display_form($subclasses)
 			// Display class info
 			if ($params['id'] == 0) {
 				echo "Data as of<sup>[1]</sup>: {$subclasses['dataasof']}<br />\n";
-				echo "Class count<sup>[2]</sup>: " . intl_num_format($subclasses['classcnt']) . "<br />\n";
+				echo "Class count: " . intl_num_format($subclasses['classcnt']) . "<br />\n";
+				echo "Root count<sup>[2]</sup>: " . intl_num_format($subclasses['rootcnt']) . "<br />\n";
 
 			} else {
 				echo "<table><tbody>\n";
@@ -230,8 +248,7 @@ function display_form($subclasses)
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
        <div>Note: Some totals may not balance due to a class having the same super-parent class multiple times.</div>
-       <div>Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
-
+       <div>Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
 /**
@@ -267,11 +284,9 @@ function get_subclasses()
 	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.subclasstotals WHERE qid = 0");
 
 	$row = $sth->fetch(PDO::FETCH_NUM);
-	$year = $row[2];
-	$month = $row[3]; if ($month < 10) $month = "0$month";
-	$day = $row[4]; if ($day < 10) $day = "0$day";
-	$classcnt = $row[5];
-	$dataasof = "$year-$month-$day";
+	$classcnt = $row[2];
+	$rootcnt = $row[3];
+	$dataasof = $row[6];
 
 	// Retrieve the class
 	if ($params['id'] != 0) {
@@ -318,8 +333,10 @@ function get_subclasses()
 		$sql .= " FROM s51454__wikidata.subclassclasses scc ";
 		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.parent_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
 		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-		if ($params['lang'] != 'en') $sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.parent_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-		if ($params['lang'] != 'en') $sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		if ($params['lang'] != 'en') {
+			$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.parent_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+			$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		}
 		$sql .= " WHERE scc.child_qid = ? ";
 
 		$sth = $dbh_wiki->prepare($sql);
@@ -347,8 +364,10 @@ function get_subclasses()
 		$sql .= " FROM s51454__wikidata.subclasstotals sct ";
 		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON sct.qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
 		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-		if ($params['lang'] != 'en') $sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON sct.qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-		if ($params['lang'] != 'en') $sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		if ($params['lang'] != 'en') {
+			$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON sct.qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+			$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		}
 		$sql .= " WHERE sct.root = 'Y' ";
 		$sql .= " ORDER BY sct.directchildcnt + sct.indirectchildcnt + sct.directinstcnt + sct.indirectinstcnt DESC LIMIT 200";
 
@@ -365,8 +384,10 @@ function get_subclasses()
 		$sql .= " JOIN s51454__wikidata.subclasstotals sct ON sct.qid = scc.child_qid ";
 		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.child_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
 		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-		if ($params['lang'] != 'en') $sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.child_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-		if ($params['lang'] != 'en') $sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		if ($params['lang'] != 'en') {
+			$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.child_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+			$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		}
 		$sql .= " WHERE scc.parent_qid = ?";
 
 		$sth = $dbh_wiki->prepare($sql);
@@ -385,7 +406,8 @@ function get_subclasses()
 			$row['directinstcnt'], $row['indirectinstcnt']); // removes dup terms
 	}
 
-	$return = array('class' => $class, 'parents' => $parents, 'children' => $children, 'dataasof' => $dataasof, 'classcnt' => $classcnt);
+	$return = array('class' => $class, 'parents' => $parents, 'children' => $children, 'dataasof' => $dataasof,
+		'classcnt' => $classcnt, 'rootcnt' => $rootcnt);
 
 	$serialized = serialize($return);
 
@@ -431,4 +453,262 @@ function intl_num_format($number)
 	return number_format($number, 0, '', '&thinsp;');
 }
 
+/**
+ * Suggest a class for an items instanceOf property
+ *
+ * @param string $lang
+ * @param string $page
+ * @param string $callback
+ * @param string $userlang
+ * @return JSONP
+ */
+function perform_suggest($lang, $page, $callback, $userlang)
+{
+	global $instanceofIgnores;
+	header('content-type: application/json; charset=utf-8');
+	header('access-control-allow-origin: *');
+
+	$lang = preg_replace('!\W!', '', $lang);
+
+	$wikiname = "{$lang}wiki";
+	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
+	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+	$page = str_replace(' ', '_', $page);
+
+	// Retrieve the pages categories
+	$sql = 'SELECT cat_title, cat_pages - (cat_subcats + cat_files) AS pagecnt ' .
+		' FROM page ' .
+		' JOIN categorylinks cl ON page.page_id = cl_from ' .
+		' JOIN category cat ON cl_to = cat_title ' .
+		' LEFT JOIN page catpage ON cat_title = catpage.page_title ' .
+		" LEFT JOIN page_props ON pp_page = catpage.page_id AND pp_propname = 'hiddencat' " .
+		' WHERE page.page_namespace = 0 AND page.page_title = ? ' .
+		' AND catpage.page_namespace = 14 AND pp_value IS NULL ' .
+		' LIMIT 10 ';
+
+	$sth = $dbh_wiki->prepare($sql);
+	$sth->bindValue(1, $page);
+
+	$sth->execute();
+	$sth->setFetchMode(PDO::FETCH_NAMED);
+	$cat = '';
+	$minpages = PHP_INT_MAX;
+
+	// Choose the smallest category with at least 10 pages and no year in the title
+	while ($row = $sth->fetch()) {
+		$cattitle = $row['cat_title'];
+		$pagecnt = $row['pagecnt'];
+
+		if (preg_match('!\d{4}!', $cattitle)) continue;
+		if ($pagecnt < 10) continue;
+		if ($pagecnt < $minpages) {
+			$cat = $cattitle;
+			$minpages = $pagecnt;
+		}
+	}
+
+	$sth->closeCursor();
+
+	if (! $cat) {
+		echo "/**/$callback({});";
+		return;
+	}
+
+	// Retrieve the category member qids
+	$sql = 'SELECT pp_value ' .
+		' FROM categorylinks ' .
+		' JOIN page_props ON cl_from = pp_page ' .
+       	" WHERE cl_to = ? AND pp_propname = 'wikibase_item' AND cl_type = 'page' " .
+       	' ORDER BY cl_sortkey_prefix ' . // weed out * sort key etc
+		' LIMIT 10 ';
+
+	$sth = $dbh_wiki->prepare($sql);
+	$sth->bindValue(1, $cat);
+
+	$sth->execute();
+	$sth->setFetchMode(PDO::FETCH_NUM);
+	$qids = array();
+
+	while ($row = $sth->fetch()) {
+		$qids[] = $row[0];
+	}
+
+	$sth->closeCursor();
+
+	if (! $qids) {
+		echo "/**/$callback({});";
+		return;
+	}
+
+	// Retrieve the item claims and look for instance of
+	$wdwiki = new WikidataWiki();
+
+	$items = $wdwiki->getItemsNoCache($qids);
+
+	$instanceofs = array();
+
+	foreach ($items as $item) {
+		$propvalues = $item->getStatementsOfType(WikidataItem::TYPE_INSTANCE_OF);
+
+		foreach ($propvalues as $qid) {
+			if (in_array($qid, $instanceofIgnores)) continue;
+			$qid = substr($qid, 1);
+
+			if (! isset($instanceofs[$qid])) $instanceofs[$qid] = array('catcnt' => 0);
+			++$instanceofs[$qid]['catcnt'];
+		}
+	}
+
+	foreach ($instanceofs as $qid => $info) {
+		if ($info['catcnt'] == 1) unset($instanceofs[$qid]);
+	}
+
+	if (! $instanceofs) {
+		echo "/**/$callback({});";
+		return;
+	}
+
+	// Retrieve the name and description
+	$qids = array_keys($instanceofs);
+
+	$en_text = '';
+	$en_desc = '';
+	if ($userlang != 'en') {
+		$en_text = 'wbten.term_text AS en_text,';
+		$en_desc = 'wbden.term_text AS en_desc,';
+	}
+
+	$sql = "SELECT DISTINCT sct.qid, $en_text $en_desc wbt.term_text AS lang_text, wbd.term_text AS lang_desc, sct.allparents ";
+	$sql .= " FROM s51454__wikidata.subclasstotals sct ";
+	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON sct.qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
+	$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
+	if ($userlang != 'en') {
+		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON sct.qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+		$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+	}
+	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbd ON sct.qid = wbd.term_entity_id AND wbd.term_entity_type = 'item' ";
+	$sql .= " AND wbd.term_type = 'description' AND wbd.term_language = ? ";
+	if ($userlang != 'en') {
+		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbden ON sct.qid = wbden.term_entity_id AND wbden.term_entity_type = 'item' ";
+		$sql .= " AND wbden.term_type = 'description' AND wbden.term_language = 'en' ";
+	}
+	$sql .= " WHERE sct.qid IN (" . implode(',', $qids) . ") ";
+	$sql .= " LIMIT 10 ";
+
+	$sth = $dbh_wiki->prepare($sql);
+	$sth->bindValue(1, $userlang);
+	$sth->bindValue(2, $userlang);
+	$sth->execute();
+	$sth->setFetchMode(PDO::FETCH_NAMED);
+
+	while ($row = $sth->fetch()) {
+		$term_text = $row['lang_text'];
+		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
+		if (is_null($term_text)) $term_text = 'Q' . $row['qid'];
+
+		$term_desc = $row['lang_desc'];
+		if (is_null($term_desc) && $userlang != 'en') $term_desc = $row['en_desc'];
+		if (is_null($term_desc)) $term_desc = '';
+
+		$qid = $row['qid'];
+		$instanceofs[$qid]['label'] = $term_text;
+		$instanceofs[$qid]['desc'] = $term_desc;
+		$instanceofs[$qid]['allparents'] = explode('|', $row['allparents']);
+	}
+
+	$sth->closeCursor();
+
+	// Retrieve the child classes
+
+	$sql = "SELECT DISTINCT scc.child_qid AS qid, wbt.term_text AS lang_text, wbd.term_text AS lang_desc, $en_text $en_desc ";
+	$sql .= " sct.allparents ";
+	$sql .= " FROM s51454__wikidata.subclassclasses scc ";
+	$sql .= " JOIN s51454__wikidata.subclasstotals sct ON sct.qid = scc.child_qid ";
+	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.child_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
+	$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
+	if ($userlang != 'en') {
+		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.child_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+		$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+	}
+	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbd ON sct.qid = wbd.term_entity_id AND wbd.term_entity_type = 'item' ";
+	$sql .= " AND wbd.term_type = 'description' AND wbd.term_language = ? ";
+	if ($userlang != 'en') {
+		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbden ON sct.qid = wbden.term_entity_id AND wbden.term_entity_type = 'item' ";
+		$sql .= " AND wbden.term_type = 'description' AND wbden.term_language = 'en' ";
+	}
+	$sql .= " WHERE scc.parent_qid IN (" . implode(',', $qids) . ") AND sct.directinstcnt + sct.indirectinstcnt > 0 ";
+	$sql .= " ORDER BY sct.directinstcnt + sct.indirectinstcnt DESC ";
+	$sql .= " LIMIT 10 ";
+
+	$sth = $dbh_wiki->prepare($sql);
+	$sth->bindValue(1, $userlang);
+	$sth->bindValue(2, $userlang);
+	$sth->execute();
+	$sth->setFetchMode(PDO::FETCH_NAMED);
+
+	while ($row = $sth->fetch()) {
+		$qid = $row['qid'];
+		if (isset($instanceofs[$qid])) continue;
+
+		$term_text = $row['lang_text'];
+		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
+		if (is_null($term_text)) $term_text = 'Q' . $row['qid'];
+
+		$term_desc = $row['lang_desc'];
+		if (is_null($term_desc) && $userlang != 'en') $term_desc = $row['en_desc'];
+		if (is_null($term_desc)) $term_desc = '';
+
+		$instanceofs[$qid] = array('label' => $term_text, 'desc' => $term_desc, 'allparents' => explode('|', $row['allparents']));
+	}
+
+	$sth->closeCursor();
+
+	// Calc the class hierarchy
+
+	$parentchilds = array();
+
+	foreach ($instanceofs as $childqid => $info) {
+		foreach ($info['allparents'] as $parentqid) {
+			if (isset($instanceofs[$parentqid])) {
+				if (! isset($parentchilds[$parentqid])) $parentchilds[$parentqid] = array();
+				$parentchilds[$parentqid][] = $childqid;
+			}
+		}
+
+		unset($instanceofs[$childqid]['allparents']);
+	}
+
+	$sugs = array();
+
+	// Add each child to its parent
+	foreach ($parentchilds as $parentqid => $childqids) {
+		if (! isset($instanceofs[$parentqid])) continue;
+		$childs = array();
+
+		foreach ($childqids as $childqid) {
+			if (isset($instanceofs[$childqid])) {
+				$childs['Q' . $childqid] = $instanceofs[$childqid];
+				unset($instanceofs[$childqid]);
+			}
+		}
+
+		$sugs['Q' . $parentqid] = $instanceofs[$parentqid];
+		unset($instanceofs[$parentqid]);
+
+		if (! empty($childs)) $sugs['Q' . $parentqid]['childs'] = $childs;
+	}
+
+	// Add the parentless ones
+	foreach ($instanceofs as $qid => $info) {
+		$sugs['Q' . $qid] = $info;
+	}
+
+	echo "/**/$callback(" . json_encode($sugs) . ");";
+}
 ?>

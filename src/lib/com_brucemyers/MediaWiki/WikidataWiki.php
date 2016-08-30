@@ -49,7 +49,7 @@ class WikidataWiki extends MediaWiki
     }
 
     /**
-     * Get items without caching
+     * Get items with caching
      *
      * @param array $itemnames Item name Q... or Property:P...
      * @return array WikidataItem Item data

@@ -13,6 +13,7 @@ CREATE TABLE s51454__wikidata.`subclasstotals` (
   `indirectchildcnt` int(11) unsigned NOT NULL,
   `directinstcnt` int(11) unsigned NOT NULL,
   `indirectinstcnt` int(11) unsigned NOT NULL,
+  `allparents` varchar(1024) NOT NULL,
   PRIMARY KEY (`qid`),
   KEY `root` (`root`)
 ) ENGINE=Aria DEFAULT CHARSET=utf8
@@ -23,7 +24,13 @@ LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassclasses.tsv
 
 TRUNCATE s51454__wikidata.subclasstotals;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclasstotals.tsv' INTO TABLE s51454__wikidata.subclasstotals CHARACTER SET binary;
-INSERT INTO s51454__wikidata.subclasstotals VALUES (0,'N',2016,8,1,5000); year,month,day,class_count  wc wdsubclasstotals.tsv
+SELECT COUNT(*) FROM s51454__wikidata.subclasstotals WHERE root = 'Y';
+INSERT INTO s51454__wikidata.subclasstotals VALUES (0,'N',5000,100,0,0,'2016-xx-xx'); class_count,root_cnt  wc wdsubclasstotals.tsv
 
 cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
 rm *
+
+
+ClassSuggester Gadget
+=====================
+cp *.js /data/project/bambots/Bambots/src/web

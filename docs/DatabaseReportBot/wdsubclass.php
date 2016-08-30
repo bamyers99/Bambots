@@ -21,6 +21,12 @@ define('PROP_SUBCLASSOF', 'P279');
 define('PROP_INSTANCEOF', 'P31');
 
 define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
+define('DIRECT_INSTANCE_CNT', 'dic');
+define('INDIRECT_INSTANCE_CNT', 'indic');
+define('DIRECT_CHILD_COUNT', 'dcc');
+define('INDIRECT_CHILD_COUNT', 'indcc');
+define('CLASS_FOUND', 'cf');
+define('PARENTS', 'p');
 
 $count = 0;
 $classes = array();
@@ -48,12 +54,12 @@ while (! feof($hndl)) {
 	    	$parentqid = (int)$parent['mainsnak']['datavalue']['value']['numeric-id'];
 
 	    	if (! isset($classes[$qid])) $classes[$qid] = init_class();
-	    	$classes[$qid]['classfound'] = true;
-	    	$classes[$qid]['parents'][] = $parentqid;
+	    	$classes[$qid][CLASS_FOUND] = true;
+	    	$classes[$qid][PARENTS][] = $parentqid;
 
 	    	if (! isset($classes[$parentqid])) $classes[$parentqid] = init_class();
-	    	++$classes[$parentqid]['directchildcnt'];
-	    	$classes[$parentqid]['classfound'] = true;
+	    	++$classes[$parentqid][DIRECT_CHILD_COUNT];
+	    	$classes[$parentqid][CLASS_FOUND] = true;
 
 	    	fwrite($whndl, "$parentqid\t$qid\n");
 		}
@@ -65,7 +71,7 @@ while (! feof($hndl)) {
 			$instanceqid = (int)$instanceof['mainsnak']['datavalue']['value']['numeric-id'];
 
 	    	if (! isset($classes[$instanceqid])) $classes[$instanceqid] = init_class();
-	    	++$classes[$instanceqid]['directinstcnt'];
+	    	++$classes[$instanceqid][DIRECT_INSTANCE_CNT];
 		}
 	}
 }
@@ -77,19 +83,19 @@ fclose($whndl);
 
 // Calc totals
 foreach ($classes as $classqid => $class) {
-	if (! $class['classfound'] && $class['directinstcnt'] < MIN_ORPHAN_DIRECT_INST_CNT) {
+	if (! $class[CLASS_FOUND] && $class[DIRECT_INSTANCE_CNT] < MIN_ORPHAN_DIRECT_INST_CNT) {
 		unset($classes[$classqid]); // No need to report because other report catches these.
 		continue;
 	}
 
 	$parents = array();
-	foreach ($class['parents'] as $parentqid) {
+	foreach ($class[PARENTS] as $parentqid) {
 		recurse_parents($parentqid, $parents, $classes, 0);
 	}
 
 	foreach ($parents as $parentqid => $dummy) {
-		$classes[$parentqid]['indirectchildcnt'] += $class['directchildcnt'];
-		$classes[$parentqid]['indirectinstcnt'] += $class['directinstcnt'];
+		$classes[$parentqid][INDIRECT_CHILD_COUNT] += $class[DIRECT_CHILD_COUNT];
+		$classes[$parentqid][INDIRECT_INSTANCE_CNT] += $class[DIRECT_INSTANCE_CNT];
 	}
 }
 
@@ -97,12 +103,21 @@ foreach ($classes as $classqid => $class) {
 $whndl = fopen('wdsubclasstotals.tsv', 'w');
 
 foreach ($classes as $classqid => $class) {
-	$isroot = count($class['parents']) ? 'N' : 'Y';
+	$isroot = count($class[PARENTS]) ? 'N' : 'Y';
 
-    fwrite($whndl, "$classqid\t$isroot\t{$class['directchildcnt']}\t{$class['indirectchildcnt']}\t{$class['directinstcnt']}\t{$class['indirectinstcnt']}\n");
+	// recalcing because run out of memory if store them above
+	$allparents = array();
+	foreach ($class[PARENTS] as $parentqid) {
+		recurse_parents($parentqid, $allparents, $classes, 0);
+	}
+
+	$allparents = implode('|', array_keys($allparents));
+
+    fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$class[INDIRECT_CHILD_COUNT]}\t{$class[DIRECT_INSTANCE_CNT]}\t{$class[INDIRECT_INSTANCE_CNT]}\t$allparents\n");
 }
 
 fclose($whndl);
+echo "Finished\n";
 
 /**
  * Recurse class parents collecting qids
@@ -121,7 +136,7 @@ function recurse_parents($parentqid, &$parents, &$classes, $depth)
 
 	$parent = $classes[$parentqid];
 
-	foreach ($parent['parents'] as $parentqid) {
+	foreach ($parent[PARENTS] as $parentqid) {
 		recurse_parents($parentqid, $parents, $classes, $depth);
 	}
 }
@@ -131,6 +146,6 @@ function recurse_parents($parentqid, &$parents, &$classes, $depth)
  */
 function init_class()
 {
-	return array('directchildcnt' => 0,  'indirectchildcnt' => 0, 'parents' => array(), 'directinstcnt' => 0,
-		'indirectinstcnt' => 0, 'classfound' => false);
+	return array(DIRECT_CHILD_COUNT => 0,  INDIRECT_CHILD_COUNT => 0, PARENTS => array(), DIRECT_INSTANCE_CNT => 0,
+		INDIRECT_INSTANCE_CNT => 0, CLASS_FOUND => false);
 }

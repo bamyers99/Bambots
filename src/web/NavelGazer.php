@@ -169,7 +169,7 @@ function display_form($navels)
 ?>
         <br /><div><sup>1</sup><a href='http://www.merriam-webster.com/dictionary/navel-gazing'>navel–gazing</a> (Merriam-Webster)</div>
         <div><sup>2</sup>Data derived from database dump wikidatawiki-stub-meta-history.xml revision comments</div>
-        <div>Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
+        <div>Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
 function get_navels()

@@ -34,7 +34,7 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 		delete opts.lang;
 		opts.format = 'json';
 
-        if (! 'continue' in opts) {
+        if (! ('continue' in opts)) {
         	opts['continue'] = '';
         } else if ( typeof opts['continue'] === 'object' ){
         	var continueval = opts['continue'];
@@ -50,5 +50,71 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
         }
 
 		$.getJSON( protocalDomain + '/w/api.php?' + jsonp, opts, callback );
+	},
+
+	/**
+	 * Create a claim with an entity type value
+	 *
+	 * @param entityId
+	 * @param propId
+	 * @param propValueEntityId
+	 * @param callback(bool success, string errormsg) (optional)
+	 */
+	wdCreateClaimEntityValue: function( entityId, propId, propValueEntityId, callback ) {
+		var self = this;
+
+		var opts = {
+			lang: 'wikidata',
+			action: 'wbgetentities',
+			ids: entityId,
+			props: 'claims'
+		};
+
+		// See if it already has the property
+		self.mwApiQuery( opts, function( result ) {
+			$.each( result.entities, function( id, itemdata ) {
+				if ( itemdata.claims &&  itemdata.claims[propId] ) {
+					if ( callback ) callback( false, 'Already has property' );
+					return;
+				}
+
+				var opts = {
+					lang: 'wikidata',
+					prop: 'info',
+					intoken : 'edit',
+					titles : entityId
+				};
+
+				// Get an edit token and lastrevid
+				self.mwApiQuery( opts, function( data ) {
+					var token , lastrevid ;
+					$.each ( (data.query.pages||[]) , function ( k , v ) {
+						token = v.edittoken ;
+						lastrevid = v.lastrevid ;
+					} ) ;
+
+					if ( token === undefined ) {
+						if ( callback ) callback( false, 'Editing not allowed' );
+						return ;
+					}
+
+					var opts = {
+						lang: 'wikidata',
+						action: 'wbcreateclaim',
+						entity : entityId,
+						snaktype : 'value',
+						property : propId,
+						value : '{"entity-type":"item","numeric-id":' + propValueEntityId.substring(1) + '}',
+						token : token,
+						baserevid : lastrevid
+					};
+
+					// Create the claim
+					self.mwApiQuery( opts, function( data ) {
+						if ( callback ) callback( true, '' );
+					} );
+				} );
+			} );
+		} );
 	}
 };
