@@ -50,7 +50,7 @@ Bamyers99.ClassSuggester = {
 		var self = this ;
 
 		$.when(
-			$.ajax( { url: self.commonjs, dataType: "script", cache: true } ),
+			$.ajax( { url: self.commonjs, dataType: 'script', cache: true } ),
 			mw.loader.using( 'jquery.ui.dialog' )
 		).done( function() {
 			self.gc = Bamyers99.GadgetCommon;
@@ -72,21 +72,16 @@ Bamyers99.ClassSuggester = {
 					.find( '.wikibase-snakview-value' )
 					.each( function () {
 						var qid = $( this ).find( 'a' ).attr( 'title' );
-						if (qid) instanceOfQids.push(qid);
+						if ( qid ) instanceOfQids.push(qid);
 					} );
 				}
 			} );
 
-			// Ignore if subclass item
-			if (subclassFound) return;
+			// Ignore if subclass or has instanceof
+			if ( subclassFound || instanceOfQids.length ) return;
 
 			var qid = mw.config.get( 'wgPageName' ).toUpperCase();
 			self.qid = qid;
-
-			if (instanceOfQids.length) {
-				self.showAnalysis( instanceOfQids );
-				return;
-			}
 
 			self.showSuggestions();
 		} );
@@ -306,19 +301,10 @@ Bamyers99.ClassSuggester = {
 	},
 
 	/**
-	 * Show potentially more specific classes and check if redundant parent classes are specified
-	 *
-	 * @param instanceofQids
-	 */
-	showAnalysis: function( instanceOfQids ) {
-		var self = this;
-	},
-
-	/**
 	 * Display the dialog
 	 *
 	 * @param object params
-	 * 		type: string - 'suggestions', 'analysis'
+	 * 		type: string - 'suggestions', 'suggestionsToolLabs'
 	 * 		data: array of data
 	 * 		reason: string - fail reason
 	 */
@@ -329,6 +315,7 @@ Bamyers99.ClassSuggester = {
 		var h = '<div id="Bamyers99_ClassSuggester_dialog">';
 
 		h += '<div id="Bamyers99_ClassSuggester_suggestions">';
+		h += '<div id="Bamyers99_ClassSuggester_msg"></div>';
 
 		if ( type === 'suggestions' ) {
 			data = params.data || [];
@@ -352,43 +339,45 @@ Bamyers99.ClassSuggester = {
 				var lang = mw.config.get('wgUserLanguage');
 
 				$.each( data, function ( qid, v ) {
-					star = v.catcnt ? ' <span style="#00f">&starf;</span>' : '';
-					h += '<div title="' + v.desc + '">' + v.label + star +
+					qid = 'Q' + qid;
+					star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
+					var label = '<span title="' + v.desc + '">' + v.label + '</span>';
+					h += '<div>' + label + star +
 						' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
-						qid + '&lang=' + lang + '">&telrec;</a> <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
+						qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> ' +
+						'<a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
 						'data-qid="' + qid + '">Create claim</a></div>';
 
-					childs = data.childs || {};
+					childs = v.childs || {};
 					$.each( childs, function( qid, v ) {
-						star = v.catcnt ? ' <span style="#00f">&starf;</span>' : '';
-						h += '<div title="' + v.desc + '">&boxur;' + v.label + star +
+						qid = 'Q' + qid;
+						star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
+						var label = '<span title="' + v.desc + '">' + v.label + '</span>';
+						h += '<div>&boxur;&thinsp;' + label + star +
 							' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
-							qid + '&lang=' + lang + '">&telrec;</a> <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
+							qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> ' +
+							'<a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
 							'data-qid="' + qid + '">Create claim</a></div>';
 					} );
 				} );
 
-				$('a.Bamyers99_ClassSuggester_createClaim').click( function() {
-					self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, $(this).attr('data-qid'), function( success, msg ) {
-						msg = success ? 'Property added' : msg;
-						$( '#Bamyers99_ClassSuggester_msg' ).html( msg );
-					} );
-					return false;
-				} ) ;
-
 				h += '<br /><div><span style="color: #00f">&starf;</span> = used by related items</div>';
-				h += '<div>&telrec; = view in class browser</div>';
-				h += '<div id="Bamyers99_ClassSuggester_msg"></div>';
+				h += '<div><span style="font-size: 16pt">&telrec;</span> = view in class browser</div>';
 			}
-
-		} else {
-
 		}
 
 		h += '</div></div>';
 		$( '#mw-content-text' ).append( h );
 
-		var main = $( '#wb-item-' + self.qid );
+		$( 'a.Bamyers99_ClassSuggester_createClaim' ).click( function() {
+			self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, $(this).attr('data-qid'), function( success, msg ) {
+				msg = success ? 'Claim created. <a href="/wiki/' + self.qid + '">Reload page</a>' : msg;
+				$( '#Bamyers99_ClassSuggester_msg' ).html( msg );
+			} );
+			return false;
+		} );
+
+		var main = $( '#searchInput' );
 		$( '#Bamyers99_ClassSuggester_dialog' ).dialog( {
 			title : 'Class Suggester',
 			width : 'auto',

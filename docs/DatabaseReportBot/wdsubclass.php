@@ -105,15 +105,7 @@ $whndl = fopen('wdsubclasstotals.tsv', 'w');
 foreach ($classes as $classqid => $class) {
 	$isroot = count($class[PARENTS]) ? 'N' : 'Y';
 
-	// recalcing because run out of memory if store them above
-	$allparents = array();
-	foreach ($class[PARENTS] as $parentqid) {
-		recurse_parents($parentqid, $allparents, $classes, 0);
-	}
-
-	$allparents = implode('|', array_keys($allparents));
-
-    fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$class[INDIRECT_CHILD_COUNT]}\t{$class[DIRECT_INSTANCE_CNT]}\t{$class[INDIRECT_INSTANCE_CNT]}\t$allparents\n");
+    fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$class[INDIRECT_CHILD_COUNT]}\t{$class[DIRECT_INSTANCE_CNT]}\t{$class[INDIRECT_INSTANCE_CNT]}\n");
 }
 
 fclose($whndl);

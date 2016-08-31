@@ -35,7 +35,7 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 		opts.format = 'json';
 
         if (! ('continue' in opts)) {
-        	opts['continue'] = '';
+        	if ( opts.action === 'query' ) opts['continue'] = '';
         } else if ( typeof opts['continue'] === 'object' ){
         	var continueval = opts['continue'];
         	delete opts['continue'];
@@ -49,7 +49,13 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
         	jsonp = 'callback=?';
         }
 
-		$.getJSON( protocalDomain + '/w/api.php?' + jsonp, opts, callback );
+        $.ajax({
+        	  type: 'POST',
+        	  dataType: "json",
+        	  url: protocalDomain + '/w/api.php?' + jsonp,
+        	  data: opts,
+        	  success: callback
+        	});
 	},
 
 	/**
@@ -81,37 +87,51 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 				var opts = {
 					lang: 'wikidata',
 					prop: 'info',
-					intoken : 'edit',
 					titles : entityId
 				};
 
-				// Get an edit token and lastrevid
+				// Get lastrevid
 				self.mwApiQuery( opts, function( data ) {
-					var token , lastrevid ;
-					$.each ( (data.query.pages||[]) , function ( k , v ) {
-						token = v.edittoken ;
-						lastrevid = v.lastrevid ;
-					} ) ;
+					var lastrevid;
+					$.each ( ( data.query.pages || []) , function ( k , v ) {
+						lastrevid = v.lastrevid;
+					} );
 
-					if ( token === undefined ) {
-						if ( callback ) callback( false, 'Editing not allowed' );
-						return ;
-					}
+					// Get the csrf token
 
 					var opts = {
 						lang: 'wikidata',
-						action: 'wbcreateclaim',
-						entity : entityId,
-						snaktype : 'value',
-						property : propId,
-						value : '{"entity-type":"item","numeric-id":' + propValueEntityId.substring(1) + '}',
-						token : token,
-						baserevid : lastrevid
+						meta: 'tokens'
 					};
 
-					// Create the claim
 					self.mwApiQuery( opts, function( data ) {
-						if ( callback ) callback( true, '' );
+						var csrftoken;
+						if ( data.query && data.query.tokens && data.query.tokens.csrftoken ) {
+							csrftoken = data.query.tokens.csrftoken ;
+						} else {
+							if ( callback ) callback( false, 'Editing not allowed' );
+							return;
+						}
+
+						var opts = {
+							lang: 'wikidata',
+							action: 'wbcreateclaim',
+							entity : entityId,
+							snaktype : 'value',
+							property : propId,
+							value : '{"entity-type":"item","numeric-id":' + propValueEntityId.substring(1) + '}',
+							token : csrftoken,
+							baserevid : lastrevid
+						};
+
+						// Create the claim
+						self.mwApiQuery( opts, function( data ) {
+							if ( data.success ) {
+								if ( callback ) callback( true, '' );
+							} else {
+								if ( callback ) callback( false, 'Error: "' + data.error.code + '": ' + data.error.info );
+							}
+						} );
 					} );
 				} );
 			} );

@@ -286,7 +286,13 @@ function get_subclasses()
 	$row = $sth->fetch(PDO::FETCH_NUM);
 	$classcnt = $row[2];
 	$rootcnt = $row[3];
-	$dataasof = $row[6];
+	$year = $row[4];
+	$month_day = $row[5];
+	$month = floor($month_day / 100);
+	if ($month < 10) $month = "0$month";
+	$day = $month_day % 100;
+	if ($day < 10) $day = "0$day";
+	$dataasof = "$year-$month-$day";
 
 	// Retrieve the class
 	if ($params['id'] != 0) {
@@ -574,6 +580,15 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		return;
 	}
 
+	// Reverse sort on catcnt
+	uasort($instanceofs, function($a, $b) {
+		$acatcnt = $a['catcnt'];
+		$bcatcnt = $b['catcnt'];
+		if ($acatcnt > $bcatcnt) return -1;
+		if ($acatcnt < $bcatcnt) return 1;
+		return 0;
+	});
+
 	// Retrieve the name and description
 	$qids = array_keys($instanceofs);
 
@@ -584,7 +599,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		$en_desc = 'wbden.term_text AS en_desc,';
 	}
 
-	$sql = "SELECT DISTINCT sct.qid, $en_text $en_desc wbt.term_text AS lang_text, wbd.term_text AS lang_desc, sct.allparents ";
+	$sql = "SELECT DISTINCT sct.qid, $en_text $en_desc wbt.term_text AS lang_text, wbd.term_text AS lang_desc ";
 	$sql .= " FROM s51454__wikidata.subclasstotals sct ";
 	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON sct.qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
 	$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
@@ -608,26 +623,25 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	$sth->setFetchMode(PDO::FETCH_NAMED);
 
 	while ($row = $sth->fetch()) {
+		$qid = $row['qid'];
 		$term_text = $row['lang_text'];
 		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
-		if (is_null($term_text)) $term_text = 'Q' . $row['qid'];
+		if (is_null($term_text)) $term_text = 'Q' . $qid;
 
 		$term_desc = $row['lang_desc'];
 		if (is_null($term_desc) && $userlang != 'en') $term_desc = $row['en_desc'];
 		if (is_null($term_desc)) $term_desc = '';
 
-		$qid = $row['qid'];
 		$instanceofs[$qid]['label'] = $term_text;
 		$instanceofs[$qid]['desc'] = $term_desc;
-		$instanceofs[$qid]['allparents'] = explode('|', $row['allparents']);
 	}
 
 	$sth->closeCursor();
 
 	// Retrieve the child classes
 
-	$sql = "SELECT DISTINCT scc.child_qid AS qid, wbt.term_text AS lang_text, wbd.term_text AS lang_desc, $en_text $en_desc ";
-	$sql .= " sct.allparents ";
+	$sql = "SELECT DISTINCT scc.child_qid AS child_qid, scc.parent_qid AS parent_qid, ";
+	$sql .= " $en_text $en_desc wbt.term_text AS lang_text, wbd.term_text AS lang_desc ";
 	$sql .= " FROM s51454__wikidata.subclassclasses scc ";
 	$sql .= " JOIN s51454__wikidata.subclasstotals sct ON sct.qid = scc.child_qid ";
 	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.child_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
@@ -653,62 +667,23 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	$sth->setFetchMode(PDO::FETCH_NAMED);
 
 	while ($row = $sth->fetch()) {
-		$qid = $row['qid'];
-		if (isset($instanceofs[$qid])) continue;
+		$child_qid = $row['child_qid'];
+		$parent_qid = $row['parent_qid'];
 
 		$term_text = $row['lang_text'];
 		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
-		if (is_null($term_text)) $term_text = 'Q' . $row['qid'];
+		if (is_null($term_text)) $term_text = 'Q' . $child_qid;
 
 		$term_desc = $row['lang_desc'];
 		if (is_null($term_desc) && $userlang != 'en') $term_desc = $row['en_desc'];
 		if (is_null($term_desc)) $term_desc = '';
 
-		$instanceofs[$qid] = array('label' => $term_text, 'desc' => $term_desc, 'allparents' => explode('|', $row['allparents']));
+		if (! isset($instanceofs[$parent_qid]['childs'])) $instanceofs[$parent_qid]['childs'] = array();
+		$instanceofs[$parent_qid]['childs'][$child_qid] = array('label' => $term_text, 'desc' => $term_desc);
 	}
 
 	$sth->closeCursor();
 
-	// Calc the class hierarchy
-
-	$parentchilds = array();
-
-	foreach ($instanceofs as $childqid => $info) {
-		foreach ($info['allparents'] as $parentqid) {
-			if (isset($instanceofs[$parentqid])) {
-				if (! isset($parentchilds[$parentqid])) $parentchilds[$parentqid] = array();
-				$parentchilds[$parentqid][] = $childqid;
-			}
-		}
-
-		unset($instanceofs[$childqid]['allparents']);
-	}
-
-	$sugs = array();
-
-	// Add each child to its parent
-	foreach ($parentchilds as $parentqid => $childqids) {
-		if (! isset($instanceofs[$parentqid])) continue;
-		$childs = array();
-
-		foreach ($childqids as $childqid) {
-			if (isset($instanceofs[$childqid])) {
-				$childs['Q' . $childqid] = $instanceofs[$childqid];
-				unset($instanceofs[$childqid]);
-			}
-		}
-
-		$sugs['Q' . $parentqid] = $instanceofs[$parentqid];
-		unset($instanceofs[$parentqid]);
-
-		if (! empty($childs)) $sugs['Q' . $parentqid]['childs'] = $childs;
-	}
-
-	// Add the parentless ones
-	foreach ($instanceofs as $qid => $info) {
-		$sugs['Q' . $qid] = $info;
-	}
-
-	echo "/**/$callback(" . json_encode($sugs) . ");";
+	echo "/**/$callback(" . json_encode($instanceofs) . ");";
 }
 ?>
