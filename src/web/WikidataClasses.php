@@ -487,8 +487,8 @@ function perform_suggest($lang, $page, $callback, $userlang)
 
 	$page = str_replace(' ', '_', $page);
 
-	// Retrieve the pages categories
-	$sql = 'SELECT cat_title, cat_pages - (cat_subcats + cat_files) AS pagecnt ' .
+	// Retrieve the pages 3 smallest categories with min 10 pages and no year in cat name
+	$sql = 'SELECT cat_title ' .
 		' FROM page ' .
 		' JOIN categorylinks cl ON page.page_id = cl_from ' .
 		' JOIN category cat ON cl_to = cat_title ' .
@@ -496,56 +496,54 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		" LEFT JOIN page_props ON pp_page = catpage.page_id AND pp_propname = 'hiddencat' " .
 		' WHERE page.page_namespace = 0 AND page.page_title = ? ' .
 		' AND catpage.page_namespace = 14 AND pp_value IS NULL ' .
-		' LIMIT 10 ';
+		' AND cat_pages - (cat_subcats + cat_files) >= 10 ' .
+		" AND cat_title NOT REGEXP '[[:digit:]]{4}' " .
+		' ORDER BY cat_pages - (cat_subcats + cat_files) ' .
+		' LIMIT 3 ';
 
 	$sth = $dbh_wiki->prepare($sql);
 	$sth->bindValue(1, $page);
 
 	$sth->execute();
 	$sth->setFetchMode(PDO::FETCH_NAMED);
-	$cat = '';
-	$minpages = PHP_INT_MAX;
+	$cats = array();
 
-	// Choose the smallest category with at least 10 pages and no year in the title
 	while ($row = $sth->fetch()) {
-		$cattitle = $row['cat_title'];
-		$pagecnt = $row['pagecnt'];
-
-		if (preg_match('!\d{4}!', $cattitle)) continue;
-		if ($pagecnt < 10) continue;
-		if ($pagecnt < $minpages) {
-			$cat = $cattitle;
-			$minpages = $pagecnt;
-		}
+		$cats[$row['cat_title']] = array('qids' => array(), 'instanceofs' => array());
 	}
 
 	$sth->closeCursor();
 
-	if (! $cat) {
+	if (! $cats) {
 		echo "/**/$callback({});";
 		return;
 	}
 
 	// Retrieve the category member qids
-	$sql = 'SELECT pp_value ' .
-		' FROM categorylinks ' .
-		' JOIN page_props ON cl_from = pp_page ' .
-       	" WHERE cl_to = ? AND pp_propname = 'wikibase_item' AND cl_type = 'page' " .
-       	' ORDER BY cl_sortkey_prefix ' . // weed out * sort key etc
-		' LIMIT 10 ';
-
-	$sth = $dbh_wiki->prepare($sql);
-	$sth->bindValue(1, $cat);
-
-	$sth->execute();
-	$sth->setFetchMode(PDO::FETCH_NUM);
 	$qids = array();
 
-	while ($row = $sth->fetch()) {
-		$qids[] = $row[0];
-	}
+	foreach ($cats as $cat => $dummy) {
+		$sql = 'SELECT pp_value ' .
+			' FROM categorylinks ' .
+			' JOIN page_props ON cl_from = pp_page ' .
+	       	" WHERE cl_to = ? AND pp_propname = 'wikibase_item' AND cl_type = 'page' " .
+	       	' ORDER BY cl_sortkey_prefix ' . // weed out * sort key etc
+			' LIMIT 10 ';
 
-	$sth->closeCursor();
+		$sth = $dbh_wiki->prepare($sql);
+		$sth->bindValue(1, $cat);
+
+		$sth->execute();
+		$sth->setFetchMode(PDO::FETCH_NUM);
+
+		while ($row = $sth->fetch()) {
+			$qid = $row[0];
+			$qids[$qid] = true; // removes dups
+			$cats[$cat]['qids'][] = $qid;
+		}
+
+		$sth->closeCursor();
+	}
 
 	if (! $qids) {
 		echo "/**/$callback({});";
@@ -555,39 +553,61 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	// Retrieve the item claims and look for instance of
 	$wdwiki = new WikidataWiki();
 
-	$items = $wdwiki->getItemsNoCache($qids);
-
-	$instanceofs = array();
+	$items = $wdwiki->getItemsNoCache(array_keys($qids));
 
 	foreach ($items as $item) {
 		$propvalues = $item->getStatementsOfType(WikidataItem::TYPE_INSTANCE_OF);
+		$itemqid = $item->getId();
 
 		foreach ($propvalues as $qid) {
 			if (in_array($qid, $instanceofIgnores)) continue;
-			$qid = substr($qid, 1);
 
-			if (! isset($instanceofs[$qid])) $instanceofs[$qid] = array('catcnt' => 0);
-			++$instanceofs[$qid]['catcnt'];
+			foreach ($cats as $cat => $data) {
+				if (in_array($itemqid, $data['qids'])) {
+					if (! isset($cats[$cat]['instanceofs'][$qid])) $cats[$cat]['instanceofs'][$qid] = array('qid' => $qid, 'catcnt' => 0);
+					++$cats[$cat]['instanceofs'][$qid]['catcnt'];
+				}
+			}
 		}
 	}
 
-	foreach ($instanceofs as $qid => $info) {
-		if ($info['catcnt'] == 1) unset($instanceofs[$qid]);
+	foreach ($cats as $cat => $data) {
+		foreach ($data['instanceofs'] as $qid => $info) {
+			if ($info['catcnt'] == 1) unset($cats[$cat]['instanceofs'][$qid]);
+		}
+		if (! $cats[$cat]['instanceofs']) unset($cats[$cat]);
 	}
 
-	if (! $instanceofs) {
+	if (! $cats) {
 		echo "/**/$callback({});";
 		return;
 	}
 
 	// Reverse sort on catcnt
-	uasort($instanceofs, function($a, $b) {
-		$acatcnt = $a['catcnt'];
-		$bcatcnt = $b['catcnt'];
-		if ($acatcnt > $bcatcnt) return -1;
-		if ($acatcnt < $bcatcnt) return 1;
-		return 0;
-	});
+	foreach ($cats as &$data) {
+		uasort($data['instanceofs'], function($a, $b) {
+			$acatcnt = $a['catcnt'];
+			$bcatcnt = $b['catcnt'];
+			if ($acatcnt > $bcatcnt) return -1;
+			if ($acatcnt < $bcatcnt) return 1;
+			return 0;
+		});
+	}
+	unset($data);
+
+	// Take the top 2 instanceofs per category
+
+	$instanceofs = array();
+
+	foreach ($cats as $data) {
+		$x = 0;
+
+		foreach ($data['instanceofs'] as $qid => $instanceof) {
+			$qid = substr($qid, 1);
+			$instanceofs[$qid] = $instanceof;
+			if (++$x == 2) break;
+		}
+	}
 
 	// Retrieve the name and description
 	$qids = array_keys($instanceofs);
@@ -672,15 +692,24 @@ function perform_suggest($lang, $page, $callback, $userlang)
 
 		$term_text = $row['lang_text'];
 		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
-		if (is_null($term_text)) $term_text = 'Q' . $child_qid;
+		if (is_null($term_text)) continue;
 
 		$term_desc = $row['lang_desc'];
 		if (is_null($term_desc) && $userlang != 'en') $term_desc = $row['en_desc'];
 		if (is_null($term_desc)) $term_desc = '';
 
 		if (! isset($instanceofs[$parent_qid]['childs'])) $instanceofs[$parent_qid]['childs'] = array();
-		$instanceofs[$parent_qid]['childs'][$child_qid] = array('label' => $term_text, 'desc' => $term_desc);
+		$instanceofs[$parent_qid]['childs'][] = array('qid' => "Q$child_qid", 'label' => $term_text, 'desc' => $term_desc);
 	}
+
+	// Reverse sort on catcnt
+	usort($instanceofs, function($a, $b) {
+		$acatcnt = $a['catcnt'];
+		$bcatcnt = $b['catcnt'];
+		if ($acatcnt > $bcatcnt) return -1;
+		if ($acatcnt < $bcatcnt) return 1;
+		return 0;
+	});
 
 	$sth->closeCursor();
 

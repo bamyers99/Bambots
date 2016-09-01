@@ -16,8 +16,8 @@
  Heuristic
  =========
  1) Get the item's categories from an interwiki page
- 2) Choose the category with the least number of pages (minimum: 10)
- 3) Get the instance of's for 10 items in the category
+ 2) Choose 3 categories with the least number of pages (minimum: 10)
+ 3) Get the instance of's for 10 items in each category
 
  Usage
  =====
@@ -338,26 +338,24 @@ Bamyers99.ClassSuggester = {
 			} else {
 				var lang = mw.config.get('wgUserLanguage');
 
-				$.each( data, function ( qid, v ) {
-					qid = 'Q' + qid;
+				$.each( data, function ( k, v ) {
 					star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
 					var label = '<span title="' + v.desc + '">' + v.label + '</span>';
 					h += '<div>' + label + star +
 						' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
-						qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> ' +
+						v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> | ' +
 						'<a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
-						'data-qid="' + qid + '">Create claim</a></div>';
+						'data-qid="' + v.qid + '">Create claim</a></div>';
 
 					childs = v.childs || {};
-					$.each( childs, function( qid, v ) {
-						qid = 'Q' + qid;
+					$.each( childs, function( k, v ) {
 						star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
 						var label = '<span title="' + v.desc + '">' + v.label + '</span>';
 						h += '<div>&boxur;&thinsp;' + label + star +
 							' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
-							qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> ' +
+							v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> | ' +
 							'<a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
-							'data-qid="' + qid + '">Create claim</a></div>';
+							'data-qid="' + v.qid + '">Create claim</a></div>';
 					} );
 				} );
 
