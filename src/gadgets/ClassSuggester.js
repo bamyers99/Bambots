@@ -13,18 +13,21 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Description
+ ===========
+ If an item does not have an 'instance of' property, displays a suggestion box.
+ Otherwise, adds a toolbox link to show the suggestion box and adds a link to
+ each 'instance of' to display the class browser.
+
  Heuristic
  =========
  1) Get the item's categories from an interwiki page
- 2) Choose 3 categories with the least number of pages (minimum: 10)
+ 2) Choose 3 categories with the least number of pages (minimum: 5)
  3) Get the instance of's for 10 items in each category
 
  Usage
  =====
  Add the following line(s) to your [[Special:Mypage/common.js]] page
-
- // Custom localization (optional)
-
 
  importScript("User:Bamyers99/ClassSuggester.js");
 
@@ -57,7 +60,7 @@ Bamyers99.ClassSuggester = {
 
 			// See if has instance of or subclass
 			var subclassFound = false;
-			var instanceOfQids = [];
+			var instanceOfQidFound = false;
 
 			$( '.wikibase-statementgroupview' ).each( function () {
 				var pid = $( this ).attr( 'id' );
@@ -68,29 +71,57 @@ Bamyers99.ClassSuggester = {
 				}
 
 				if (pid === self.propInstanceof) {
+					var lang = mw.config.get('wgUserLanguage');
+
 					$( this ).find( '.wikibase-statementview-mainsnak-container' )
 					.find( '.wikibase-snakview-value' )
 					.each( function () {
+						instanceOfQidFound = true;
 						var qid = $( this ).find( 'a' ).attr( 'title' );
-						if ( qid ) instanceOfQids.push(qid);
+						if ( qid ) {
+							var h = ' <a href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
+								qid + '&lang=' + lang +
+								'"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
+							$( this ).append( h );
+						}
 					} );
 				}
 			} );
 
-			// Ignore if subclass or has instanceof
-			if ( subclassFound || instanceOfQids.length ) return;
+			// Ignore if subclass
+			if ( subclassFound ) return;
 
 			var qid = mw.config.get( 'wgPageName' ).toUpperCase();
 			self.qid = qid;
 
-			self.showSuggestions();
+			// Add toolbox link if has instanceof
+			if ( instanceOfQidFound ) {
+				var link = mw.util.addPortletLink(
+					'p-tb',
+					'#',
+					'Class suggester',
+					't-Bamyers99.ClassSuggester',
+					"Suggest alternate 'instance of' classes"
+				);
+
+				$( link ).click( function( e ) {
+					e.preventDefault();
+					self.showSuggestions( true );
+				});
+
+				return;
+			}
+
+			self.showSuggestions( false );
 		} );
 	},
 
 	/**
 	 * Show class suggestions
+	 *
+	 * @param bool toolbar
 	 */
-	showSuggestions: function() {
+	showSuggestions: function( toolbar ) {
 		var self = this,
 			iws = {},
 			firstlang ='';
@@ -125,13 +156,13 @@ Bamyers99.ClassSuggester = {
 			page = iws[firstlang];
 		}
 
-		self.showSuggestionsToolLabs( lang, page );
+		self.showSuggestionsToolLabs( lang, page, toolbar );
 	},
 
 	/**
 	 * Show class suggestions using the Tool Labs WikidataClass.php API
 	 */
-	showSuggestionsToolLabs: function( lang, page ) {
+	showSuggestionsToolLabs: function( lang, page, toolbar ) {
 		var userLang = mw.config.get('wgUserLanguage');
 		var self = this,
 			opts = {
@@ -151,7 +182,7 @@ Bamyers99.ClassSuggester = {
 				self.showSuggestionsMwApi( lang, page );
 			} )
 			.done( function( data ) {
-				self.displayDialog( { type: 'suggestionsToolLabs', data: data } );
+				self.displayDialog( { type: 'suggestionsToolLabs', data: data , toolbar: toolbar } );
 			} );
 	},
 
@@ -332,9 +363,11 @@ Bamyers99.ClassSuggester = {
 
 		} else if ( type === 'suggestionsToolLabs' ) {
 			data = params.data || {};
+
 			if ( $.isEmptyObject( data ) ) {
 				reason = params.reason || '';
 				h += '<div>No suggestions</div><div>' + reason + '</div>';
+
 			} else {
 				var lang = mw.config.get('wgUserLanguage');
 
@@ -343,9 +376,10 @@ Bamyers99.ClassSuggester = {
 					var label = '<span title="' + v.desc + '">' + v.label + '</span>';
 					h += '<div>' + label + star +
 						' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
-						v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> | ' +
-						'<a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
-						'data-qid="' + v.qid + '">Create claim</a></div>';
+						v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
+					h += ' | <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
+						'data-qid="' + v.qid + '">Create claim</a>';
+					h += '</div>';
 
 					childs = v.childs || {};
 					$.each( childs, function( k, v ) {
@@ -353,9 +387,10 @@ Bamyers99.ClassSuggester = {
 						var label = '<span title="' + v.desc + '">' + v.label + '</span>';
 						h += '<div>&boxur;&thinsp;' + label + star +
 							' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
-							v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a> | ' +
-							'<a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
-							'data-qid="' + v.qid + '">Create claim</a></div>';
+							v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
+						h += ' | <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
+							'data-qid="' + v.qid + '">Create claim</a>';
+						h += '</div>';
 					} );
 				} );
 
@@ -368,14 +403,18 @@ Bamyers99.ClassSuggester = {
 		$( '#mw-content-text' ).append( h );
 
 		$( 'a.Bamyers99_ClassSuggester_createClaim' ).click( function() {
-			self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, $(this).attr('data-qid'), function( success, msg ) {
+			var valueqid = $(this).attr('data-qid');
+			self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, valueqid, function( success, msg ) {
 				msg = success ? 'Claim created. <a href="/wiki/' + self.qid + '">Reload page</a>' : msg;
 				$( '#Bamyers99_ClassSuggester_msg' ).html( msg );
+
+				var h = '<div>' + self.propInstanceof + ' : ' + valueqid + '</div>';
+				$( $( 'div.wikibase-listview' ).get( 0 ) ).append( h );
 			} );
 			return false;
 		} );
 
-		var main = $( '#searchInput' );
+		var search = $( '#searchInput' );
 		$( '#Bamyers99_ClassSuggester_dialog' ).dialog( {
 			title : 'Class Suggester',
 			width : 'auto',
@@ -383,7 +422,10 @@ Bamyers99.ClassSuggester = {
 			open: function( event, ui ) {
 				$('#Bamyers99_ClassSuggester_dialog a').css ( { color: '#0b0080' } );
 				$('#Bamyers99_ClassSuggester_dialog').css ( { 'font-size': '12pt', 'font-family': 'Arial,Helvetica,sans-serif' } );
-				main.focus();
+				search.focus();
+			},
+			close: function( event, ui ) {
+				$( '#Bamyers99_ClassSuggester_dialog' ).remove();
 			}
 		} );
 	}

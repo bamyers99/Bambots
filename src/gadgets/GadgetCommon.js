@@ -78,11 +78,28 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 
 		// See if it already has the property
 		self.mwApiQuery( opts, function( result ) {
+			if ( result.error ) {
+				if ( callback ) callback( false, 'Error: "' + result.error.code + '": ' + result.error.info );
+				return;
+			}
+
 			$.each( result.entities, function( id, itemdata ) {
-				if ( itemdata.claims &&  itemdata.claims[propId] ) {
-					if ( callback ) callback( false, 'Already has property' );
-					return;
+				var exiting = false;
+
+				if ( itemdata.claims && itemdata.claims[propId] ) {
+					$.each( itemdata.claims[propId], function( k, propdata ) {
+
+						if ( propdata.mainsnak && propdata.mainsnak.datavalue && propdata.mainsnak.datavalue.value &&
+							propdata.mainsnak.datavalue.value['numeric-id'] &&
+							'Q' + propdata.mainsnak.datavalue.value['numeric-id'] === propValueEntityId ) {
+							if ( callback ) callback( false, 'Already has claim' );
+							exiting = true;
+							return false;
+						}
+					});
 				}
+
+				if ( exiting ) return;
 
 				var opts = {
 					lang: 'wikidata',
@@ -93,6 +110,12 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 				// Get lastrevid
 				self.mwApiQuery( opts, function( data ) {
 					var lastrevid;
+
+					if ( data.error ) {
+						if ( callback ) callback( false, 'Error: "' + data.error.code + '": ' + data.error.info );
+						return;
+					}
+
 					$.each ( ( data.query.pages || []) , function ( k , v ) {
 						lastrevid = v.lastrevid;
 					} );

@@ -487,7 +487,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 
 	$page = str_replace(' ', '_', $page);
 
-	// Retrieve the pages 3 smallest categories with min 10 pages and no year in cat name
+	// Retrieve the pages 3 smallest categories with min 5 pages and no year in cat name
 	$sql = 'SELECT cat_title ' .
 		' FROM page ' .
 		' JOIN categorylinks cl ON page.page_id = cl_from ' .
@@ -496,7 +496,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		" LEFT JOIN page_props ON pp_page = catpage.page_id AND pp_propname = 'hiddencat' " .
 		' WHERE page.page_namespace = 0 AND page.page_title = ? ' .
 		' AND catpage.page_namespace = 14 AND pp_value IS NULL ' .
-		' AND cat_pages - (cat_subcats + cat_files) >= 10 ' .
+		' AND cat_pages - (cat_subcats + cat_files) >= 5 ' .
 		" AND cat_title NOT REGEXP '[[:digit:]]{4}' " .
 		' ORDER BY cat_pages - (cat_subcats + cat_files) ' .
 		' LIMIT 3 ';
@@ -634,16 +634,17 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		$sql .= " AND wbden.term_type = 'description' AND wbden.term_language = 'en' ";
 	}
 	$sql .= " WHERE sct.qid IN (" . implode(',', $qids) . ") ";
-	$sql .= " LIMIT 10 ";
 
 	$sth = $dbh_wiki->prepare($sql);
 	$sth->bindValue(1, $userlang);
 	$sth->bindValue(2, $userlang);
 	$sth->execute();
 	$sth->setFetchMode(PDO::FETCH_NAMED);
+	$found_qids = array();
 
 	while ($row = $sth->fetch()) {
 		$qid = $row['qid'];
+		$found_qids[] = $qid;
 		$term_text = $row['lang_text'];
 		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
 		if (is_null($term_text)) $term_text = 'Q' . $qid;
@@ -654,6 +655,13 @@ function perform_suggest($lang, $page, $callback, $userlang)
 
 		$instanceofs[$qid]['label'] = $term_text;
 		$instanceofs[$qid]['desc'] = $term_desc;
+	}
+
+	foreach ($instanceofs as $qid => $dummy) {
+		if (! in_array($qid, $found_qids)) {
+			unset($instanceofs[$qid]); // not a class
+			$qids = array_keys($instanceofs);
+		}
 	}
 
 	$sth->closeCursor();
