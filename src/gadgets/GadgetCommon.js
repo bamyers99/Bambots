@@ -159,5 +159,21 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 				} );
 			} );
 		} );
-	}
+	},
+
+	/**
+	 * html encode a string
+	 *
+	 * @param str
+	 * @returns
+	 */
+	htmlEncode: function ( str ) {
+		return str
+		.replace( /&/g, '&amp;' )
+		.replace( /"/g, '&quot;' )
+		.replace( /'/g, '&#39;' )
+		.replace( /`/g, '&#39;' )
+		.replace( /</g, '&lt;' )
+		.replace( />/g, '&gt;' );
+ 	}
 };

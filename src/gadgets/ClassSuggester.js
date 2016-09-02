@@ -42,7 +42,7 @@ Bamyers99.ClassSuggester = {
 		'https://www.wikidata.org/w/index.php?title=User:Bamyers99/GadgetCommon.js&action=raw&ctype=text/javascript',
 	propInstanceof: 'P31',
 	propSubclass: 'P279',
-	instanceofIgnores: ['Q13406463'],
+	instanceofIgnores: ['Q13406463','Q11266439'], // list, template
 	langPriority: ['en','de','es','fr','it','pt'],
 	suggestTimeout: 30000, // 30 seconds
 
@@ -71,7 +71,7 @@ Bamyers99.ClassSuggester = {
 				}
 
 				if (pid === self.propInstanceof) {
-					var lang = mw.config.get('wgUserLanguage');
+					var lang = mw.config.get( 'wgUserLanguage' );
 
 					$( this ).find( '.wikibase-statementview-mainsnak-container' )
 					.find( '.wikibase-snakview-value' )
@@ -163,7 +163,7 @@ Bamyers99.ClassSuggester = {
 	 * Show class suggestions using the Tool Labs WikidataClass.php API
 	 */
 	showSuggestionsToolLabs: function( lang, page, toolbar ) {
-		var userLang = mw.config.get('wgUserLanguage');
+		var userLang = mw.config.get( 'wgUserLanguage' );
 		var self = this,
 			opts = {
 				action: 'suggest',
@@ -292,7 +292,7 @@ Bamyers99.ClassSuggester = {
 
 					self.gc.mwApiQuery( opts, function( data ) {
 						if ( data.entities ) {
-							var userLang = mw.config.get('wgUserLanguage') ;
+							var userLang = mw.config.get( 'wgUserLanguage' ) ;
 
 							$.each( data.entities, function( id, itemdata ) {
 								if ( itemdata.labels ) {
@@ -369,27 +369,27 @@ Bamyers99.ClassSuggester = {
 				h += '<div>No suggestions</div><div>' + reason + '</div>';
 
 			} else {
-				var lang = mw.config.get('wgUserLanguage');
+				var lang = mw.config.get( 'wgUserLanguage' );
 
 				$.each( data, function ( k, v ) {
 					star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
-					var label = '<span title="' + v.desc + '">' + v.label + '</span>';
+					var label = '<span title="' + self.gc.htmlEncode( v.desc ) + '">' + self.gc.htmlEncode( v.label ) + '</span>';
 					h += '<div>' + label + star +
 						' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
 						v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
 					h += ' | <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
-						'data-qid="' + v.qid + '">Create claim</a>';
+						'data-qid="' + v.qid + '" data-label="' + self.gc.htmlEncode( v.label ) + '">Create claim</a>';
 					h += '</div>';
 
 					childs = v.childs || {};
 					$.each( childs, function( k, v ) {
 						star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
-						var label = '<span title="' + v.desc + '">' + v.label + '</span>';
+						var label = '<span title="' + self.gc.htmlEncode( v.desc ) + '">' + self.gc.htmlEncode( v.label ) + '</span>';
 						h += '<div>&boxur;&thinsp;' + label + star +
 							' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
 							v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
 						h += ' | <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
-							'data-qid="' + v.qid + '">Create claim</a>';
+							'data-qid="' + v.qid + '" data-label="' + self.gc.htmlEncode( v.label ) + '">Create claim</a>';
 						h += '</div>';
 					} );
 				} );
@@ -403,13 +403,18 @@ Bamyers99.ClassSuggester = {
 		$( '#mw-content-text' ).append( h );
 
 		$( 'a.Bamyers99_ClassSuggester_createClaim' ).click( function() {
-			var valueqid = $(this).attr('data-qid');
+			var valueqid = $( this ).attr( 'data-qid' );
+			var valuelabel = $( this ).attr( 'data-label' );
+			var proplabel = ( mw.config.get( 'wgUserLanguage' ) === 'en' ) ? 'instance of' : self.propInstanceof;
+
 			self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, valueqid, function( success, msg ) {
 				msg = success ? 'Claim created. <a href="/wiki/' + self.qid + '">Reload page</a>' : msg;
 				$( '#Bamyers99_ClassSuggester_msg' ).html( msg );
 
-				var h = '<div>' + self.propInstanceof + ' : ' + valueqid + '</div>';
-				$( $( 'div.wikibase-listview' ).get( 0 ) ).append( h );
+				if ( success ) {
+					var h = '<div>' + proplabel + ' : ' + valuelabel + '</div>';
+					$( $( 'div.wikibase-listview' ).get( 0 ) ).append( h );
+				}
 			} );
 			return false;
 		} );

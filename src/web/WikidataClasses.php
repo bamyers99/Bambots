@@ -32,7 +32,7 @@ define('MAX_CHILD_CLASSES', 500);
 define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
 define('PROP_INSTANCEOF', 'P31');
 
-$instanceofIgnores = array('Q13406463');
+$instanceofIgnores = array('Q13406463','Q11266439');
 
 //error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 //ini_set("display_errors", 1);
@@ -48,7 +48,7 @@ switch ($action) {
 		$lang = isset($_REQUEST['lang']) ? $_REQUEST['lang'] : '';
 		$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
 		$callback = isset($_REQUEST['callback']) ? $_REQUEST['callback'] : '';
-		$userlang = isset($_REQUEST['userlang']) ? $_REQUEST['userlang'] : '';
+		$userlang = isset($_REQUEST['userLang']) ? $_REQUEST['userLang'] : '';
 		if ($lang && $page && $callback) perform_suggest($lang, $page, $callback, $userlang);
 		exit;
 }
@@ -475,6 +475,8 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	header('access-control-allow-origin: *');
 
 	$lang = preg_replace('!\W!', '', $lang);
+	if (! $userlang) $userlang = 'en';
+	$userlang = preg_replace('!\W!', '', $userlang);
 
 	$wikiname = "{$lang}wiki";
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
@@ -665,6 +667,11 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	}
 
 	$sth->closeCursor();
+
+	if (! $qids) {
+		echo "/**/$callback({});";
+		return;
+	}
 
 	// Retrieve the child classes
 
