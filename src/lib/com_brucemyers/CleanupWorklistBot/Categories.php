@@ -477,6 +477,10 @@ class Categories {
 					'subcats' => 'only',
 					'group' => 'References'
 			),
+			'External link templates with potential for greater use' => array (
+					'type' => 'no-date',
+					'group' => 'Template'
+			),
 			'Invalid conservation status' => array (
 					'type' => 'no-date'
 			),
@@ -503,6 +507,10 @@ class Categories {
 			),
 			'Taxoboxes with an unrecognised status system' => array (
 					'type' => 'no-date'
+			),
+			'Templates with missing or incorrect documentation' => array (
+					'type' => 'no-date',
+					'group' => 'Template'
 			),
 			'Tree of Life cleanup' => array (
 					'type' => 'no-date',

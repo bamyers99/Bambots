@@ -42,10 +42,10 @@ class TestCategories extends UnitTestCase
     	new CreateTables($dbh_enwiki, $dbh_tools);
     	$categories = new Categories($enwiki_host, $user, $pass, $tools_host);
     	$count = $categories->load(false);
-    	$this->assertEqual($count, 6, 'Wrong category count');
+    	$this->assertEqual($count, 7, 'Wrong category count');
 
     	$result = $dbh_tools->query('SELECT count(*) as linkcount FROM categorylinks', PDO::FETCH_ASSOC);
     	$row = $result->fetch();
-    	$this->assertEqual($row['linkcount'], 10, 'Wrong category link count');
+    	$this->assertEqual($row['linkcount'], 11, 'Wrong category link count');
     }
 }

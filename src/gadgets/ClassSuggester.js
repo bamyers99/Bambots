@@ -44,6 +44,14 @@ Bamyers99.ClassSuggester = {
 	propSubclass: 'P279',
 	instanceofIgnores: ['Q13406463','Q11266439'], // list, template
 	langPriority: ['en','de','es','fr','it','pt'],
+	instanceOfLabel: {
+		en: 'instance of',
+		de: 'ist ein(e)',
+		es: 'instancia de',
+		fr: "nature de l'élément",
+		it: 'istanza di',
+		pt: 'instância de'
+	},
 	suggestTimeout: 30000, // 30 seconds
 
 	/**
@@ -88,11 +96,14 @@ Bamyers99.ClassSuggester = {
 				}
 			} );
 
-			// Ignore if subclass
-			if ( subclassFound ) return;
-
 			var qid = mw.config.get( 'wgPageName' ).toUpperCase();
 			self.qid = qid;
+
+			// Popup for subclass
+			if ( subclassFound ) {
+				self.displayDialog( { type: 'subclass', qid: qid } );
+				return;
+			}
 
 			// Add toolbox link if has instanceof
 			if ( instanceOfQidFound ) {
@@ -343,16 +354,24 @@ Bamyers99.ClassSuggester = {
 		var reason, data, star, childs,
 			type = params.type,
 			self = this;
+		var lang = mw.config.get( 'wgUserLanguage' );
 		var h = '<div id="Bamyers99_ClassSuggester_dialog">';
 
 		h += '<div id="Bamyers99_ClassSuggester_suggestions">';
 		h += '<div id="Bamyers99_ClassSuggester_msg"></div>';
 
-		if ( type === 'suggestions' ) {
+		if ( type === 'subclass' ) {
+			var qid = params['qid'];
+			h += '<div><a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id= ' + qid +
+				'&lang=' + lang + '">Wikidata class browser</a></div>';
+
+		} else if ( type === 'suggestions' ) {
 			data = params.data || [];
 			if ( data.length === 0 ) {
 				reason = params.reason || '';
 				h += '<div>No suggestions</div><div>' + reason + '</div>';
+				h += '<div><a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?lang=' + lang +
+				'">Wikidata class browser</a></div>';
 			} else {
 				$.each( data, function ( k, v ) {
 					var label = v.info.label || v.info.qid;
@@ -367,9 +386,10 @@ Bamyers99.ClassSuggester = {
 			if ( $.isEmptyObject( data ) ) {
 				reason = params.reason || '';
 				h += '<div>No suggestions</div><div>' + reason + '</div>';
+				h += '<div><a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?lang=' + lang +
+					'">Wikidata class browser</a></div>';
 
 			} else {
-				var lang = mw.config.get( 'wgUserLanguage' );
 
 				$.each( data, function ( k, v ) {
 					star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
@@ -405,14 +425,15 @@ Bamyers99.ClassSuggester = {
 		$( 'a.Bamyers99_ClassSuggester_createClaim' ).click( function() {
 			var valueqid = $( this ).attr( 'data-qid' );
 			var valuelabel = $( this ).attr( 'data-label' );
-			var proplabel = ( mw.config.get( 'wgUserLanguage' ) === 'en' ) ? 'instance of' : self.propInstanceof;
+			var userlang = mw.config.get( 'wgUserLanguage' );
+			var proplabel = self.instanceOfLabel[userlang] ? self.instanceOfLabel[userlang] : self.propInstanceof;
 
 			self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, valueqid, function( success, msg ) {
 				msg = success ? 'Claim created. <a href="/wiki/' + self.qid + '">Reload page</a>' : msg;
 				$( '#Bamyers99_ClassSuggester_msg' ).html( msg );
 
 				if ( success ) {
-					var h = '<div>' + proplabel + ' : ' + valuelabel + '</div>';
+					var h = '<div>' + self.gc.htmlEncode( proplabel ) + ' : ' + valuelabel + '</div>';
 					$( $( 'div.wikibase-listview' ).get( 0 ) ).append( h );
 				}
 			} );

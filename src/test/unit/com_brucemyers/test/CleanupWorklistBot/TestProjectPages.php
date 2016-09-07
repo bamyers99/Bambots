@@ -49,18 +49,18 @@ class TestProjectPage extends UnitTestCase
 
     	$category = 'Michigan';
     	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 4, "Wrong page count for $category");
+    	$this->assertEqual($page_count, 5, "Wrong page count for $category $page_count != 4");
 
     	$category = 'India';
     	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 1, "Wrong page count for $category");
+    	$this->assertEqual($page_count, 1, "Wrong page count for $category $page_count != 1");
 
     	$category = 'Good_article_nominees';
     	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 1, "Wrong page count for $category");
+    	$this->assertEqual($page_count, 1, "Wrong page count for $category $page_count != 1");
 
     	$category = 'Featured articles';
     	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 2, "Wrong page count for $category");
+    	$this->assertEqual($page_count, 2, "Wrong page count for $category $page_count != 2");
     }
 }

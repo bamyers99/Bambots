@@ -19,6 +19,7 @@ namespace com_brucemyers\CleanupWorklistBot;
 
 use PDO;
 use com_brucemyers\Util\Logger;
+use com_brucemyers\MediaWiki\MediaWiki;
 
 class ProjectPages
 {
@@ -82,8 +83,8 @@ class ProjectPages
 			JOIN page AS cat ON cl1.cl_to = cat.page_title
 			JOIN categorylinks AS cl2 ON cat.page_id = cl2.cl_from
 			WHERE cl2.cl_to = ?
-			AND article.page_namespace = 0
-			AND talk.page_namespace = 1
+			AND article.page_namespace = ?
+			AND talk.page_namespace = ?
 			AND cat.page_namespace = 14';
 
     	$sth->closeCursor();
@@ -102,8 +103,8 @@ class ProjectPages
     			JOIN page AS talk ON article.page_title = talk.page_title
 				JOIN categorylinks AS cl ON talk.page_id = cl.cl_from
 				WHERE cl.cl_to = ?
-				AND article.page_namespace = 0
-				AND talk.page_namespace = 1';
+				AND article.page_namespace = ?
+				AND talk.page_namespace = ?';
 
     		$sth->closeCursor();
     		$sth = null;
@@ -122,8 +123,8 @@ class ProjectPages
 				JOIN page AS talk ON article.page_title = talk.page_title
 				JOIN categorylinks AS cl ON talk.page_id = cl.cl_from
 				WHERE cl.cl_to = ?
-				AND article.page_namespace = 0
-				AND talk.page_namespace = 1';
+				AND article.page_namespace = ?
+				AND talk.page_namespace = ?';
 
     		$sth->closeCursor();
     		$sth = null;
@@ -142,8 +143,8 @@ class ProjectPages
 				LEFT JOIN page AS talk ON article.page_title = talk.page_title
 				JOIN categorylinks AS cl ON article.page_id = cl.cl_from
 				WHERE cl.cl_to = ?
-				AND article.page_namespace = 0
-				AND talk.page_namespace = 1';
+				AND article.page_namespace = ?
+				AND talk.page_namespace = ?';
 
     		$sth->closeCursor();
     		$sth = null;
@@ -156,35 +157,48 @@ class ProjectPages
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->exec('TRUNCATE page');
     	$dbh_tools = null;
-   		$dbh_enwiki = null;
-   		$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
-   		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    	$sth = $dbh_enwiki->prepare($sql);
-    	$sth->bindParam(1, $param);
-    	$sth->setFetchMode(PDO::FETCH_ASSOC);
-    	$sth->execute();
-
-    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
-   		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$dbh_tools->beginTransaction();
-    	// IGNORE necessary because of replica database integrity issues
-    	$isth = $dbh_tools->prepare('INSERT IGNORE INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
     	$page_count = 0;
 
-    	while($row = $sth->fetch()) {
-			++$page_count;
-    		if ($page_count % 1000 == 0) {
-    			$dbh_tools->commit();
-    			$dbh_tools->beginTransaction();
-    		}
-			$isth->execute($row);
-    	}
+    	$namespaces = array(0, 10); // main, template
 
-    	$sth->closeCursor();
-    	$sth = null;
-    	$dbh_tools->commit();
-    	$isth = null;
+    	foreach ($namespaces as $namespace) {
+    		$talknamespace = $namespace + 1;
+    		$namspace_prefix = MediaWiki::getNamespacePrefix($namespace);
+
+	   		$dbh_enwiki = null;
+	   		$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
+	   		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+	    	$sth = $dbh_enwiki->prepare($sql);
+	    	$sth->bindParam(1, $param);
+	    	$sth->bindParam(2, $namespace);
+	    	$sth->bindParam(3, $talknamespace);
+	    	$sth->setFetchMode(PDO::FETCH_ASSOC);
+	    	$sth->execute();
+
+	    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+	   		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	    	$dbh_tools->beginTransaction();
+	    	// IGNORE necessary because of replica database integrity issues
+	    	$isth = $dbh_tools->prepare('INSERT IGNORE INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
+
+	    	while($row = $sth->fetch()) {
+				++$page_count;
+	    		if ($page_count % 1000 == 0) {
+	    			$dbh_tools->commit();
+	    			$dbh_tools->beginTransaction();
+	    		}
+
+	    		$row['title'] = $namspace_prefix . $row['title'];
+
+				$isth->execute($row);
+	    	}
+
+	    	$sth->closeCursor();
+	    	$sth = null;
+	    	$dbh_tools->commit();
+	    	$isth = null;
+    	}
 
     	// Delete the pages with no issues
     	$sql = 'DELETE FROM page

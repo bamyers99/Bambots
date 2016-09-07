@@ -30,8 +30,8 @@ class CreateTables
     public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
     {
     	// enwiki
-   		$dbh_enwiki->exec('DROP TABLE page');
-   		$dbh_enwiki->exec('DROP TABLE categorylinks');
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS page');
+   		$dbh_enwiki->exec('DROP TABLE IF EXISTS categorylinks');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `category` (
 		  `cat_id` int(10) unsigned NOT NULL,
@@ -83,6 +83,7 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO category VALUES (6,'All_articles_needing_coordinates',1,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (7,'Articles_needing_cleanup_from_May_2013',3,0,0)");
    		$dbh_enwiki->exec("INSERT INTO category VALUES (8,'Articles_needing_cleanup_from_March_2013',1,0,0)");
+   		$dbh_enwiki->exec("INSERT INTO category VALUES (9,'External_link_templates_with_potential_for_greater_use',1,0,0)");
 
    		$dbh_enwiki->exec("INSERT INTO page VALUES (1, 14, 'B-Class_Michigan_articles')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (2, 14, 'Unassessed_Michigan_articles')");
@@ -97,6 +98,9 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO page VALUES (11, 14, 'All_articles_needing_coordinates')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (12, 14, 'Articles_needing_cleanup_from_May_2013')");
    		$dbh_enwiki->exec("INSERT INTO page VALUES (13, 14, 'Articles_needing_cleanup_from_March_2013')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (14, 10, 'EFloras')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (15, 11, 'EFloras')");
+   		$dbh_enwiki->exec("INSERT INTO page VALUES (16, 14, 'External_link_templates_with_potential_for_greater_use')");
 
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat')");
@@ -112,6 +116,9 @@ class CreateTables
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (9, 'Articles_needing_cleanup_from_May_2013', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'Unassessed_Michigan_articles', 'page')");
    		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'NA-importance_Michigan_articles', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (14, 'External_link_templates_with_potential_for_greater_use', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (15, 'Unassessed_Michigan_articles', 'page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (15, 'NA-importance_Michigan_articles', 'page')");
 
    		$dbh_tools->exec("INSERT INTO history VALUES ('Michigan', '2014-05-14', 2, 1, 2, 1, 0)");
    		$dbh_tools->exec("INSERT INTO history VALUES ('Michigan', '2014-05-21', 3, 2, 3, 0, 1)");

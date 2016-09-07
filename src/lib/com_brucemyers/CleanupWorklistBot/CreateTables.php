@@ -73,6 +73,8 @@ class CreateTables
 		  `total_articles` int(8) unsigned NOT NULL,
 		  `cleanup_articles` int(8) unsigned NOT NULL,
 		  `issues` int(8) unsigned NOT NULL,
+  		  `added_articles` int(8) unsigned NOT NULL DEFAULT '0',
+  		  `removed_articles` int(8) unsigned NOT NULL DEFAULT '0',
     	  KEY `project` (`project`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);

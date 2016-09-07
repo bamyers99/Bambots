@@ -98,10 +98,7 @@ class CleanupWorklistBot
 	        		continue;
 	        	}
 
-	        	$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count, true);
-	        	//$wikiPageCreated = $repgen->generateReports($project, $isWikiProject, $page_count);
-	        	if (! $wikiPageCreated) $repgen->generateReports($project, $isWikiProject, $page_count, true,
-	        		MediaWiki::MAX_PAGE_SIZE, false);
+	        	$repgen->generateReports($project, $isWikiProject, $page_count);
         	} catch (CatTypeNotFoundException $ex) {
         		$errorrulsets[] = $project . ' (project category not found)';
         	}
