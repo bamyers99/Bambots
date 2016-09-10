@@ -91,9 +91,9 @@ class TestRecentCategoryChanges extends UnitTestCase
     		"0,1,0,58,2001,1001,0,'mw.edit',1,50,55)");
     	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (3,'20160910144000',0,'127.0.0.1',0,'Test_page','IP comment'," .
     		"0,0,0,59,2002,1002,0,'mw.edit',1,600,5)");
-    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (4,'20160910145000',1,'Test user',0,'Test_page','Revert [[User:127.0.0.1]]'," .
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (4,'20160910145000',1,'Test user',0,'Test_page','Undid revision 738620213 by [[Special:Contributions/166.137.99.31|166.137.99.31]] ([[User_talk:166.137.99.31|talk]])'," .
     		"0,0,0,60,2003,1003,0,'mw.edit',1,5,600)");
-    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (5,'20160910155000',1,'Test user',10,'Test_template','Test comment 2'," .
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (5,'20160910155000',1,'Test user',10,'Test_template','/* top */USA is deprecated, per [[MOS:NOTUSA]]'," .
     		"0,0,0,61,2004,1004,0,'mw.edit',1,600,550)");
     	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (6,'20160910165000',1,'Test user',0,'New_page','New comment'," .
     		"0,0,1,62,2005,0,1,'mw.new',1,0,700)");

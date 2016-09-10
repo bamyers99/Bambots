@@ -25,8 +25,8 @@ $webdir = dirname(__FILE__);
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
-error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-ini_set("display_errors", 1);
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -72,6 +72,9 @@ function display_form($changes)
 	    <meta name="robots" content="noindex, nofollow" />
 	    <title>WikiProject Recent Changes<?php echo $title ?></title>
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
+		<style>
+		  li {padding-bottom: 8px;}
+		</style>
 	</head>
 	<body>
 		<div style="display: table; margin: 0 auto;">
@@ -104,7 +107,7 @@ function display_form($changes)
 			if (! empty($params['tpcat1'])) echo 'No changes found for category';
 
 		} else {
-			echo "<div style='background-color:#FFF; padding:10px'>\n";
+			echo "<div style='background-color:#FFF; padding:10px; font-family:Arial,Helvetica,sans-serif'>\n";
 			$prevdate = '';
 
 			foreach ($changes['data'] as $row) {
@@ -136,7 +139,7 @@ function display_form($changes)
 					$linkuser = 'https://en.wikipedia.org/wiki/User:' . $urluser;
 					$linktalk = '(<a href="https://en.wikipedia.org/wiki/User_talk:' . $urluser .
 						'">talk</a> | <a href="https://en.wikipedia.org/wiki/Special:Contributions/' . $urluser .
-						'">contribs<a/>)';
+						'">contribs</a>)';
 				} else {
 					$linkuser = 'https://en.wikipedia.org/wiki/Special:Contributions/' . $urluser;
 					$linktalk = '(<a href="https://en.wikipedia.org/wiki/User_talk:' . $urluser .
@@ -144,8 +147,29 @@ function display_form($changes)
 				}
 
 				$comment = '';
-				if (! empty($row['rc_comment'])) $comment = ' <span style="font-style: italic">(' .
-					htmlentities(str_replace('_', ' ', $row['rc_comment']), ENT_COMPAT, 'UTF-8') . ')</span>';
+				if (! empty($row['rc_comment'])) {
+					$comment = $row['rc_comment'];
+
+					// [[...|...]]
+					if (preg_match_all('!\[\[([^|\]]+)\|([^\]]+)\]\]!', $comment, $matches, PREG_SET_ORDER)) {
+						foreach ($matches as $match) {
+							$extra = urlencode(str_replace(' ', '_', $match[1]));
+							$label = htmlentities($match[2], ENT_COMPAT, 'UTF-8');
+							$comment = str_replace($match[0], "<a href='https://en.wikipedia.org/wiki/$extra'>$label</a>", $comment);
+						}
+					}
+
+					// [[...]]
+					if (preg_match_all('!\[\[([^\]]+)\]\]!', $comment, $matches, PREG_SET_ORDER)) {
+						foreach ($matches as $match) {
+							$extra = urlencode(str_replace(' ', '_', $match[1]));
+							$label = htmlentities($match[1], ENT_COMPAT, 'UTF-8');
+							$comment = str_replace($match[0], "<a href='https://en.wikipedia.org/wiki/$extra'>$label</a>", $comment);
+						}
+					}
+
+					$comment = ' <span style="font-style: italic">(' . $comment . ')</span>';
+				}
 
 				$sizediff = intval($row['rc_new_len']) - intval($row['rc_old_len']);
 				if ($sizediff < -500) $sizediff = "<span style='color:DarkRed ; font-weight: bold'>($sizediff)</span>";
@@ -162,8 +186,8 @@ function display_form($changes)
 				}
 				if (! empty($flags)) $flags .= ' ';
 
-				echo "<li>($linkdiff | <a href='$linkhist'>hist</a>)..$flags<a href='$linkart'>$displaytitle</a>; " .
-					"$time..$sizediff..<a href='$linkuser'>$displayuser</a> $linktalk$comment</li>\n";
+				echo "<li>($linkdiff | <a href='$linkhist'>hist</a>) . . $flags<a href='$linkart'>$displaytitle</a>; " .
+					"$time . . $sizediff . . <a href='$linkuser'>$displayuser</a> $linktalk$comment</li>\n";
 
 				$nextid = $row['rc_id'];
 			}
@@ -184,7 +208,7 @@ function display_form($changes)
 		}
 	}
 ?>
-        <br /><div>Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
+        <br /><div>Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
 function get_changes()

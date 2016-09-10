@@ -33,6 +33,7 @@
     <li><a href="TemplateParam.php">Template parameter usage viewer</a></li>
     <li><a href="NavelGazer.php">Wikidata users statement addition counts (Navel gazer)</a></li>
     <li><a href="WikidataClasses.php">Wikidata class browser (includes subclass and instance counts)</a></li>
+    <li><a href="WikiProjectRecentChanges.php">WikiProject article recent changes</a></li>
     </ul>
 </body>
 </html>

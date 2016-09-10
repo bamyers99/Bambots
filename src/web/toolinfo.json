@@ -88,4 +88,14 @@
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
+,
+	{
+	    "name" : "WikiProjectRecentChanges",
+	    "title" : "English WikiProject article recent changes",
+	    "description" : "Displays recent changes for WikiProject articles",
+	    "url" : "https://tools.wmflabs.org/bambots/WikiProjectRecentChanges.php",
+	    "keywords" : "enwiki,recent changes,wikiproject",
+	    "author" : "bamyers99",
+	    "repository" : "https://github.com/bamyers99/Bambots"
+	}
 ]
