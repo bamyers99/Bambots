@@ -577,7 +577,10 @@ function checkLoadStatus($info)
 
 	$label = $l10n->get('loadstatus', true);
 
-	echo "<div>$label: <span id='loadStatus'>&nbsp;</span></div>";
+	echo "<div><b>$label: <span id='loadStatus'>&nbsp;</span></b></div>";
+	echo "<div><b>The template data is being loaded into the database.</b></div>";
+	echo "<div><b>This is a one-time event that only happens the first time that someone accesses the template.</b></div>";
+	echo "<div><b>The page will automatically refresh when done.</b></div>";
 
 	$script = <<< EOT
 <script>
@@ -601,7 +604,7 @@ function checkLoadStatus($info)
 
 	setTimeout(getLoadStatus, 0);
 </script>
-<noscript><div>Refresh the page to see if loading is complete.</div></noscript>
+<noscript><div><b>Refresh the page to see if loading is complete.</b></div></noscript>
 EOT;
 
 	echo $script;
