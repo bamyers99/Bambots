@@ -74,28 +74,45 @@ class TestRecentCategoryChanges extends UnitTestCase
 			  rc_source varchar(16) binary not null default '',
 			  rc_patrolled tinyint unsigned NOT NULL default 0,
 			  rc_old_len int,
-			  rc_new_len int
+			  rc_new_len int,
+    		  rc_params blob NULL
    			) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_enwiki->exec($sql);
 
     	$dbh_enwiki->exec("INSERT INTO page VALUES (1,1,'Test_page')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (2,1,'New_page')");
     	$dbh_enwiki->exec("INSERT INTO page VALUES (3,11,'Test_template')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (4,15,'Other_category')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (5,0,'Test_page')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (6,10,'Test_template')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (7,14,'Other_category')");
+
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1,'Test_category','page')");
     	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2,'Test_category','page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (3,'Test_category','page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (3,'Test_category','page')");
+   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4,'Test_category','page')");
 
     	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (1,'20160909142000',1,'Test user',0,'Test_page','Test comment 1'," .
-    		"0,0,0,57,2000,1000,0,'mw.edit',1,50,50)");
+    		"0,0,0,5,2000,1000,0,'mw.edit',1,50,50,'')");
     	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (2,'20160910143000',2,'Test bot',0,'Test_page','Bot comment'," .
-    		"0,1,0,58,2001,1001,0,'mw.edit',1,50,55)");
+    		"0,1,0,5,2001,1001,0,'mw.edit',1,50,55,'')");
     	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (3,'20160910144000',0,'127.0.0.1',0,'Test_page','IP comment'," .
-    		"0,0,0,59,2002,1002,0,'mw.edit',1,600,5)");
-    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (4,'20160910145000',1,'Test user',0,'Test_page','Undid revision 738620213 by [[Special:Contributions/166.137.99.31|166.137.99.31]] ([[User_talk:166.137.99.31|talk]])'," .
-    		"0,0,0,60,2003,1003,0,'mw.edit',1,5,600)");
+    		"0,0,0,5,2002,1002,0,'mw.edit',1,600,5,'')");
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (4,'20160910145000',1,'Test user',0,'Test_page','Undid revision 2002 by [[Special:Contributions/127.0.0.1|127.0.0.1]] ([[User_talk:127.0.0.1|talk]])'," .
+    		"0,0,0,5,2003,1003,0,'mw.edit',1,5,600,'')");
     	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (5,'20160910155000',1,'Test user',10,'Test_template','/* top */USA is deprecated, per [[MOS:NOTUSA]]'," .
-    		"0,0,0,61,2004,1004,0,'mw.edit',1,600,550)");
+    		"0,0,0,6,2004,1004,0,'mw.edit',1,600,550,'')");
     	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (6,'20160910165000',1,'Test user',0,'New_page','New comment'," .
-    		"0,0,1,62,2005,0,1,'mw.new',1,0,700)");
+    		"0,0,1,2,2005,0,1,'mw.new',1,0,700,'')");
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (7,'20160910172000',0,'0000:0000:0000:0000:0000:0000:0000:0001',0,'Test_page','/* wbcreateclaim-create:1| */ [[Property:P18]]'," .
+    		"0,0,0,5,2006,1005,5,'wb',1,50,50,'a:1:{s:20:\"wikibase-repo-change\";a:1:{s:9:\"object_id\";s:8:\"q5658313\";}}')");
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (8,'20160910182000',0,'Test user',0,'Test_page','/* wbeditclaim-edit:1| */ [[Property:P18]]'," .
+    		"0,0,0,5,2007,1006,5,'wb',1,50,50,'a:1:{s:20:\"wikibase-repo-change\";a:1:{s:9:\"object_id\";s:8:\"q5658313\";}}')");
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (9,'20160910192000',1,'Test user',14,'Other_category','[[:Test page]] added to category'," .
+    		"0,0,0,7,2008,1007,6,'mw.categorize',1,50,50,'')");
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (10,'20160910202000',1,'Test user',1,'Test_page','Talk comment 1'," .
+    		"0,0,0,1,2009,1008,0,'mw.edit',1,50,50,'')");
+    	$dbh_enwiki->exec("INSERT INTO recentchanges VALUES (11,'20160910215000',1,'Test user',11,'Test_template','Talk comment 2'," .
+    		"0,0,0,3,2010,1009,0,'mw.edit',1,600,550,'')");
     }
 }

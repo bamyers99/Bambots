@@ -19,17 +19,20 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\HttpUtil;
+use com_brucemyers\Util\HTMLForm;
+use com_brucemyers\PageTools\UIHelper;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-//ini_set("display_errors", 1);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
+$uihelper = new UIHelper();
 $params = array();
 
 get_params();
@@ -41,8 +44,12 @@ if (isset($_POST['tpcat1']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_matc
 	$extra = 'WikiProjectRecentChanges.php?tpcat1=' . urlencode($params['tpcat1']);
 	if (! empty($params['tpcat2'])) $extra .= '&tpcat2=' . urlencode($params['tpcat2']);
 	if ($params['bots'] == '1') $extra .= '&bots=1';
-	if ($params['anonymous'] == '0') $extra .= '&anonymous=0';
-	if ($params['registered'] == '0') $extra .= '&registered=0';
+	if ($params['anon'] == '0') $extra .= '&anon=0';
+	if ($params['liu'] == '0') $extra .= '&liu=0';
+	if ($params['pagens'] != -100) $extra .= '&pagens=' . $params['pagens'];
+	if ($params['talkns'] != -101) $extra .= '&talkns=' . $params['talkns'];
+	if ($params['wd'] == '1') $extra .= '&wd=1';
+	if ($params['catmemb'] == '1') $extra .= '&catmemb=1';
 
 	$protocol = HttpUtil::getProtocol();
 	header("Location: $protocol://$host$uri/$extra", true, 302);
@@ -63,6 +70,26 @@ function display_form($changes)
 	$title = '';
 	if (! empty($params['tpcat1'])) $title .= ' - ' . $params['tpcat1'];
 	if (! empty($params['tpcat2'])) $title .= ', ' . $params['tpcat2'];
+	$pagens = array(
+		-100 => 'all',
+		-102 => 'none',
+		0 => '(Article)',
+		108 => 'Book',
+		14 => 'Category',
+		6 => 'File',
+		10 => 'Template',
+		4 => 'Wikipedia'
+	);
+	$talkns = array(
+		-101 => 'all',
+		-103 => 'none',
+		1 => '(Article)',
+		109 => 'Book',
+		15 => 'Category',
+		7 => 'File',
+		11 => 'Template',
+		5 => 'Wikipedia'
+	);
 
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -74,6 +101,8 @@ function display_form($changes)
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
 		<style>
 		  li {padding-bottom: 8px;}
+		  a:link {color: #0645ad;}
+		  a:visited {color: #0b0080;}
 		</style>
 	</head>
 	<body>
@@ -83,13 +112,25 @@ function display_form($changes)
         <table class="form">
         <tr><td><b>Talk page category 1</b></td><td><input id="tpcat1" name="tpcat1" type="text" size="20" value="<?php echo $params['tpcat1'] ?>" /></td></tr>
         <tr><td><b>Talk page category 2 (optional)</b></td><td><input id="tpcat2" name="tpcat2" type="text" size="20" value="<?php echo $params['tpcat2'] ?>" /></td></tr>
-        <tr><td colspan='2'>
+        <tr><td colspan='2' style='padding-left: 0'>
+        <table>
+        <tr><td style="padding-left: 0"><b>Editor type:</b></td><td>
         <input type="hidden" name="bots" value="0" />
-        <input type="hidden" name="anonymous" value="0" />
-        <input type="hidden" name="registered" value="0" />
-        <b>Show bots</b><input id="bots" name="bots" type="checkbox" value="1"<?php if (! empty($params['bots'])) echo ' CHECKED' ?> />&nbsp;&nbsp;
-        <b>Show anonymous users</b><input id="anonymous" name="anonymous" type="checkbox" value="1"<?php if (! empty($params['anonymous'])) echo ' CHECKED' ?> />&nbsp;&nbsp;
-        <b>Show registered users</b><input id="registered" name="registered" type="checkbox" value="1"<?php if (! empty($params['registered'])) echo ' CHECKED' ?> />
+        <input type="hidden" name="anon" value="0" />
+        <input type="hidden" name="liu" value="0" />
+        <b>Bot</b><input id="bots" name="bots" type="checkbox" value="1"<?php if (! empty($params['bots'])) echo ' CHECKED' ?> />&nbsp;&nbsp;
+        <b>Anonymous user</b><input id="anon" name="anon" type="checkbox" value="1"<?php if (! empty($params['anon'])) echo ' CHECKED' ?> />&nbsp;&nbsp;
+        <b>Registered user</b><input id="liu" name="liu" type="checkbox" value="1"<?php if (! empty($params['liu'])) echo ' CHECKED' ?> />
+        </td></tr>
+        <tr><td><b>Edit type:</b></td><td>
+        <input type="hidden" name="wd" value="0" />
+        <input type="hidden" name="catmemb" value="0" />
+        <b>Page</b>&thinsp;<?php echo HTMLForm::generateSelect('pagens', $pagens, $params['pagens']) ?>&nbsp;&nbsp;
+        <b>Talk page</b>&thinsp;<?php echo HTMLForm::generateSelect('talkns', $talkns, $params['talkns']) ?>&nbsp;&nbsp;
+        <b>Wikidata</b><input id="wd" name="wd" type="checkbox" value="1"<?php if (! empty($params['wd'])) echo ' CHECKED' ?> />&nbsp;&nbsp;
+        <b>Categorization</b><input id="catmemb" name="catmemb" type="checkbox" value="1"<?php if (! empty($params['catmemb'])) echo ' CHECKED' ?> />
+        </td></tr>
+        </table>
         </td></tr>
         <tr><td colspan='2'><input type="submit" value="Submit" /></td></tr>
         </table>
@@ -100,13 +141,15 @@ function display_form($changes)
                 e.focus();
             }
         </script>
-        <br />
 <?php
-	if (! empty($changes)) {
+	if (empty($changes)) {
+		echo '<div>No Category or Editor type or Edit type specified</div>';
+	} else {
 		if (empty($changes['data'])) {
-			if (! empty($params['tpcat1'])) echo 'No changes found for category';
+			if (! empty($params['tpcat1'])) echo '<div>No changes found for category</div>';
 
 		} else {
+			echo $changes['replag'];
 			echo "<div style='background-color:#FFF; padding:10px; font-family:Arial,Helvetica,sans-serif'>\n";
 			$prevdate = '';
 
@@ -131,19 +174,23 @@ function display_form($changes)
 				$linkdiff = "<a href='https://en.wikipedia.org/w/index.php?title=" . $urltitle .
 					'&curid=' . $row['rc_cur_id'] . '&diff=' . $row['rc_this_oldid'] .
 					'&oldid=' . $row['rc_last_oldid'] . "'>diff</a>";
-				$linkhist = 'https://en.wikipedia.org/w/index.php?title=' . $urltitle .
-					'&curid=' . $row['rc_cur_id'] . '&action=history';
+				$linkhist = "<a href='https://en.wikipedia.org/w/index.php?title=" . $urltitle .
+					'&curid=' . $row['rc_cur_id'] . "&action=history'>hist</a>";
 				$linkart = 'https://en.wikipedia.org/wiki/' . $urltitle;
 
-				if ($row['rc_user']) {
-					$linkuser = 'https://en.wikipedia.org/wiki/User:' . $urluser;
-					$linktalk = '(<a href="https://en.wikipedia.org/wiki/User_talk:' . $urluser .
-						'">talk</a> | <a href="https://en.wikipedia.org/wiki/Special:Contributions/' . $urluser .
-						'">contribs</a>)';
-				} else {
-					$linkuser = 'https://en.wikipedia.org/wiki/Special:Contributions/' . $urluser;
-					$linktalk = '(<a href="https://en.wikipedia.org/wiki/User_talk:' . $urluser .
-						'">talk</a>)';
+				if (! preg_match('!^([0-9.]+$|[0-9A-F]{4}:[0-9A-F]{4}:)!', $row['rc_user_text'])) {
+					if ($row['rc_type'] == 5 && $row['rc_source'] == 'wb') $url = 'https://www.wikidata.org/wiki/';
+					else $url = 'https://en.wikipedia.org/wiki/';
+					$linkuser = "{$url}User:" . $urluser;
+					$linktalk = "(<a href='{$url}User_talk:" . $urluser .
+						"'>talk</a> | <a href='{$url}Special:Contributions/" . $urluser .
+						"'>contribs</a>)";
+				} else { // anon
+					if ($row['rc_type'] == 5 && $row['rc_source'] == 'wb') $url = 'https://www.wikidata.org/wiki/';
+					else $url = 'https://en.wikipedia.org/wiki/';
+					$linkuser = "{$url}Special:Contributions/" . $urluser;
+					$linktalk = "(<a href='{$url}User_talk:" . $urluser .
+						"'>talk</a>)";
 				}
 
 				$comment = '';
@@ -153,18 +200,26 @@ function display_form($changes)
 					// [[...|...]]
 					if (preg_match_all('!\[\[([^|\]]+)\|([^\]]+)\]\]!', $comment, $matches, PREG_SET_ORDER)) {
 						foreach ($matches as $match) {
-							$extra = urlencode(str_replace(' ', '_', $match[1]));
+							$wikipage = $match[1];
+							if ($wikipage[0] == ':') $wikipage = substr($wikipage, 1);
+							$extra = urlencode(str_replace(' ', '_', $wikipage));
 							$label = htmlentities($match[2], ENT_COMPAT, 'UTF-8');
-							$comment = str_replace($match[0], "<a href='https://en.wikipedia.org/wiki/$extra'>$label</a>", $comment);
+							if ($row['rc_type'] == 5 && $row['rc_source'] == 'wb') $url = 'https://www.wikidata.org/wiki/';
+							else $url = 'https://en.wikipedia.org/wiki/';
+							$comment = str_replace($match[0], "<a href='$url$extra'>$label</a>", $comment);
 						}
 					}
 
 					// [[...]]
 					if (preg_match_all('!\[\[([^\]]+)\]\]!', $comment, $matches, PREG_SET_ORDER)) {
 						foreach ($matches as $match) {
-							$extra = urlencode(str_replace(' ', '_', $match[1]));
-							$label = htmlentities($match[1], ENT_COMPAT, 'UTF-8');
-							$comment = str_replace($match[0], "<a href='https://en.wikipedia.org/wiki/$extra'>$label</a>", $comment);
+							$wikipage = $match[1];
+							if ($wikipage[0] == ':') $wikipage = substr($wikipage, 1);
+							$extra = urlencode(str_replace(' ', '_', $wikipage));
+							$label = htmlentities($wikipage, ENT_COMPAT, 'UTF-8');
+							if ($row['rc_type'] == 5 && $row['rc_source'] == 'wb') $url = 'https://www.wikidata.org/wiki/';
+							else $url = 'https://en.wikipedia.org/wiki/';
+							$comment = str_replace($match[0], "<a href='$url$extra'>$label</a>", $comment);
 						}
 					}
 
@@ -180,13 +235,28 @@ function display_form($changes)
 
 				$flags = '';
 				if ($row['rc_bot']) $flags .= '<abbr title="This edit was performed by a bot" style="font-weight: bold">b</abbr>';
+				if ($row['rc_type'] == 5 && $row['rc_source'] == 'wb') $flags .= '<abbr title="This edit was made at Wikidata" style="font-weight: bold">D</abbr>';
 				if ($row['rc_new']) {
 					$flags .= '<abbr title="This edit created a new page" style="font-weight: bold">N</abbr>';
 					$linkdiff = 'diff';
 				}
 				if (! empty($flags)) $flags .= ' ';
 
-				echo "<li>($linkdiff | <a href='$linkhist'>hist</a>) . . $flags<a href='$linkart'>$displaytitle</a>; " .
+				$wikidatalink = '';
+				if ($row['rc_type'] == 5 && $row['rc_source'] == 'wb' && ! empty($row['rc_params'])) {
+					$rc_params = unserialize($row['rc_params']);
+					if (isset($rc_params['wikibase-repo-change']['object_id'])) {
+						$qid = strtoupper($rc_params['wikibase-repo-change']['object_id']);
+						$wikidatalink = " (<a href='https://www.wikidata.org/wiki/$qid'>$qid</a>)";
+					}
+				}
+
+				if ($row['rc_type'] == 5 || $row['rc_type'] == 6) {
+					$linkdiff = 'diff';
+					$linkhist = 'hist';
+				}
+
+				echo "<li>($linkdiff | $linkhist) . . $flags<a href='$linkart'>$displaytitle</a>$wikidatalink; " .
 					"$time . . $sizediff . . <a href='$linkuser'>$displayuser</a> $linktalk$comment</li>\n";
 
 				$nextid = $row['rc_id'];
@@ -199,8 +269,12 @@ function display_form($changes)
 			$extra = 'WikiProjectRecentChanges.php?tpcat1=' . urlencode($params['tpcat1']);
 			if (! empty($params['tpcat2'])) $extra .= '&tpcat2=' . urlencode($params['tpcat2']);
 			if ($params['bots'] == '1') $extra .= '&bots=1';
-			if ($params['anonymous'] == '0') $extra .= '&anonymous=0';
-			if ($params['registered'] == '0') $extra .= '&registered=0';
+			if ($params['anon'] == '0') $extra .= '&anon=0';
+			if ($params['liu'] == '0') $extra .= '&liu=0';
+			if ($params['pagens'] != -100) $extra .= '&pagens=' . $params['pagens'];
+			if ($params['talkns'] != -101) $extra .= '&talkns=' . $params['talkns'];
+			if ($params['wd'] == '1') $extra .= '&wd=1';
+			if ($params['catmemb'] == '1') $extra .= '&catmemb=1';
 			$extra .= "&nextid=$nextid";
 
 			$protocol = HttpUtil::getProtocol();
@@ -213,7 +287,7 @@ function display_form($changes)
 
 function get_changes()
 {
-	global $params;
+	global $params, $uihelper;
 	$return = array();
 	$data = array();
 	$property_label = '';
@@ -223,6 +297,13 @@ function get_changes()
 	}
 
 	if (empty($params['tpcat1'])) return $return;
+	if (! $params['bots'] && ! $params['anon'] && ! $params['liu']) return $return;
+
+	$sqltypes = array();
+	if ($params['pagens'] != -102) $sqltypes[] = 'page';
+	if ($params['talkns'] != -103) $sqltypes[] = 'talk';
+
+	if (empty($sqltypes)) return $return;
 
 	$wikiname = 'enwiki';
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
@@ -233,24 +314,59 @@ function get_changes()
 	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-	$sql = 'SELECT recentchanges.* ';
-	$sql .= ' FROM  categorylinks ';
-	$sql .= ' JOIN `page` ON cl_from = page_id ';
-	$sql .= ' JOIN recentchanges ON rc_title = page_title AND rc_namespace = page_namespace - 1 ';
+	$sql = '';
+	$sqlparams = array();
 
-	if (empty($params['tpcat2'])) {
-		$sql .= " WHERE cl_to = ? AND cl_type = 'page' ";
-		$sqlparams = array(str_replace(' ', '_', $params['tpcat1']));
-	} else {
-		$sql .= " WHERE cl_to IN (?, ?) AND cl_type = 'page' ";
-		$sqlparams = array(str_replace(' ', '_', $params['tpcat1']), str_replace(' ', '_', $params['tpcat2']));
+	foreach ($sqltypes as $sqlnum => $sqltype) {
+		if (count($sqltypes) == 2) {
+			if ($sqlnum == 1) $sql .= ' UNION ';
+			$sql .= '(';
+		}
+
+		$sql .= ' SELECT recentchanges.* ';
+		$sql .= ' FROM categorylinks ';
+
+		if ($sqltype == 'page') {
+			$sql .= ' JOIN `page` ON cl_from = page_id ';
+			$sql .= ' JOIN recentchanges ON rc_title = page_title AND rc_namespace = page_namespace - 1 ';
+		} else {
+			$sql .= ' JOIN recentchanges ON rc_cur_id = cl_from ';
+		}
+
+		if (empty($params['tpcat2'])) {
+			$sql .= " WHERE cl_to = ? AND cl_type = 'page' ";
+			$sqlparams[] = str_replace(' ', '_', $params['tpcat1']);
+		} else {
+			$sql .= " WHERE cl_to IN (?, ?) AND cl_type = 'page' ";
+			$sqlparams[] = str_replace(' ', '_', $params['tpcat1']);
+			$sqlparams[] = str_replace(' ', '_', $params['tpcat2']);
+		}
+
+		if ($sqltype == 'page') {
+			$rctypes = array();
+			if ($params['pagens'] != -102) $rctypes = array_merge($rctypes, array(0, 1));
+			if ($params['catmemb']) $rctypes[] = 6;
+			if ($params['wd']) {
+				$rctypes[] = 5;
+				$sql .= " AND (rc_type <> 5 OR rc_source = 'wb') ";
+			}
+			if ($params['pagens'] != -100 && $params['pagens'] != -102) $sql .= ' AND rc_namespace = ' . $params['pagens'];
+
+			$rctypes = implode(',', $rctypes);
+			$sql .= " AND rc_type IN ($rctypes) ";
+		} else {
+			$sql .= ' AND rc_type = 0 ';
+			if ($params['talkns'] != -101) $sql .= ' AND rc_namespace = ' . $params['talkns'];
+		}
+
+		if (! empty($params['nextid'])) $sql .= ' AND rc_id < ' . $params['nextid'];
+		if (! $params['bots']) $sql .= ' AND rc_bot = 0 ';
+		if (! $params['anon']) $sql .= " AND rc_user_text NOT REGEXP '^([0-9.]+$|[0-9A-F]{4}:[0-9A-F]{4}:)' "; // rc_user != 0
+		if (! $params['liu']) $sql .= " AND (rc_user_text REGEXP '^([0-9.]+$|[0-9A-F]{4}:[0-9A-F]{4}:)' OR rc_bot = 1) "; // rc_user = 0
+
+		if (count($sqltypes) == 2) $sql .= ')';
 	}
 
-	$sql .= ' AND rc_type IN (0,1) ';
-	if (! empty($params['nextid'])) $sql .= ' AND rc_id < ' . $params['nextid'];
-	if (! $params['bots']) $sql .= ' AND rc_bot = 0 ';
-	if (! $params['anonymous']) $sql .= ' AND rc_user != 0 ';
-	if (! $params['registered']) $sql .= ' AND (rc_user = 0 OR rc_bot = 1) ';
 	$sql .= ' ORDER BY rc_id DESC ';
 	$sql .= ' LIMIT 100 ';
 
@@ -262,7 +378,12 @@ function get_changes()
 		$data[] = $row;
 	}
 
-	$return = array('data' => $data);
+	// replication lag > 1 minute
+	$replag = $uihelper->getReplicationLag('enwiki');
+	if (strlen($replag['replag']) > 10) $replag = "<div><b>Note</b>: The labs database copy is lagging {$replag['replag']} behind the main database.</div>";
+	else $replag = '';
+
+	$return = array('data' => $data, 'replag' => $replag);
 
 	return $return;
 }
@@ -287,8 +408,12 @@ function get_params()
 	if (strpos($params['tpcat2'], 'Category:') === 0) $params['tpcat2'] = ucfirst(substr($params['tpcat2'], 9));
 
 	$params['bots'] = isset($_REQUEST['bots']) ? $_REQUEST['bots'] : '0';
-	$params['anonymous'] = isset($_REQUEST['anonymous']) ? $_REQUEST['anonymous'] : '1';
-	$params['registered'] = isset($_REQUEST['registered']) ? $_REQUEST['registered'] : '1';
+	$params['anon'] = isset($_REQUEST['anon']) ? $_REQUEST['anon'] : '1';
+	$params['liu'] = isset($_REQUEST['liu']) ? $_REQUEST['liu'] : '1';
+	$params['pagens'] = isset($_REQUEST['pagens']) ? intval($_REQUEST['pagens']) : -100;
+	$params['talkns'] = isset($_REQUEST['talkns']) ? intval($_REQUEST['talkns']) : -101;
+	$params['wd'] = isset($_REQUEST['wd']) ? $_REQUEST['wd'] : '0';
+	$params['catmemb'] = isset($_REQUEST['catmemb']) ? $_REQUEST['catmemb'] : '0';
 	$params['nextid'] = isset($_REQUEST['nextid']) ? intval($_REQUEST['nextid']) : 0;
 }
 
