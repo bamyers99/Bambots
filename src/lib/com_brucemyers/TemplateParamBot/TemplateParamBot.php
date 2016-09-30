@@ -1002,7 +1002,7 @@ class TemplateParamBot
     	$hndl = fopen($outpath, 'w');
         $dbh_tools = $this->serviceMgr->getDBConnection($wikiname);
 
-    	$sql = "SELECT p1.page_id, p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|') FROM page_props
+    	$sql = "SELECT p1.page_id, p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|'), pp_value FROM page_props
     		STRAIGHT_JOIN page p1 ON pp_page = p1.page_id
     		LEFT JOIN redirect ON rd_namespace = p1.page_namespace AND rd_title = p1.page_title
     		LEFT JOIN page p2 ON rd_from = p2.page_id
@@ -1018,13 +1018,35 @@ class TemplateParamBot
     	    $templid = $row[0];
     		$templname = str_replace('_', ' ', $row[1]);
     		if (strpos($templname, '/doc') !== false) continue;
+    		if (strpos($templname, '/sandbox') !== false) continue;
+    		if (strpos($templname, '/testcases') !== false) continue;
     		$redirtmpls = explode('|', $row[2]);
 
-    		fwrite($hndl, "$templname\t$templid\n");
+    		$templatedata = new TemplateData($row[3]);
+    		$paramdef = $templatedata->getParams();
+
+    		fwrite($hndl, "$templname\t$templid");
+
+    		foreach ($paramdef as $paramname => $config) {
+    			if (isset($config['deprecated'])) $validparamname = 'D';
+				else {
+					$validparamname = 'Y';
+					if (isset($config['required'])) $validparamname = 'R';
+					elseif (isset($config['suggested'])) $validparamname = 'S';
+				}
+
+    			fwrite($hndl, "\t$paramname\t$validparamname");
+    		}
+
+    		fwrite($hndl, "\n");
 
     		foreach ($redirtmpls as $templname) {
     			if (empty($templname)) continue;
-    			$templname = str_replace('_', ' ', $templname);
+	    		if (strpos($templname, '/doc') !== false) continue;
+	    		if (strpos($templname, '/sandbox') !== false) continue;
+	    		if (strpos($templname, '/testcases') !== false) continue;
+
+	    		$templname = str_replace('_', ' ', $templname);
     			fwrite($hndl, "$templname\t$templid\n");
      		}
     	}
