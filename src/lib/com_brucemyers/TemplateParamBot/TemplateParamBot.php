@@ -174,10 +174,22 @@ class TemplateParamBot
 
         	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
         	$template = $sth->fetch(PDO::FETCH_ASSOC);
-        	$offset = $template['file_offset'];
+        	$offset = intval($template['file_offset']);
         	$dumpdate = date('Ymd', strtotime($template['last_update']));
         	$instancecnt = $template['instance_count'];
         	$template = $template['name'];
+
+        	if ($offset < 0) {
+        		if ($offset == -1) {
+			    	$sth = $dbh_tools->prepare("UPDATE loads SET status = 'C' WHERE wikiname = ? AND template_id = $templid");
+			    	$sth->execute(array($wikiname));
+		        	$dbh_tools->exec("UPDATE `{$wikiname}_templates` SET loaded = 'Y' WHERE id = $templid");
+        			return '';
+        		}
+
+        		$offset = -$offset;
+        		$instancecnt = '?';
+        	}
 
         	$sth = $dbh_tools->prepare("UPDATE loads SET status = 'R', progress = ? WHERE wikiname = ? AND template_id = $templid");
         	$sth->execute(array("Loading $instancecnt instances for $template", $wikiname));

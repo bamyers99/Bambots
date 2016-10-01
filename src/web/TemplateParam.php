@@ -222,6 +222,8 @@ function display_template()
 
 	if (empty($results['info'])) return;
 
+	$isblacklisted = ($results['info']['file_offset'] < -1);
+
 	echo <<< EOT
 	<script type='text/javascript'>
 		$(document).ready(function()
@@ -297,10 +299,12 @@ EOT;
 
 		$parmpageslink = '';
 		if ($pagelinks) {
-			$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
-				"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
-			$parmpageslink = " <a href='$protocol://$host$uri/$extra'>(" .
-				str_replace(' ', '&nbsp;', htmlentities($l10n->get('pagelinks'), ENT_COMPAT, 'UTF-8')) . ")</a>";
+			if (! $isblacklisted || $validparamname[0] != 'Y') {
+				$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
+					"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
+				$parmpageslink .= " <a href='$protocol://$host$uri/$extra'>(" .
+					str_replace(' ', '&nbsp;', htmlentities($l10n->get('pagelinks'), ENT_COMPAT, 'UTF-8')) . ")</a>";
+			}
 
 			if ($missinglink) {
 				$extra = "TemplateParam.php?action=missing&wiki=" . urlencode($params['wiki']) .
@@ -320,7 +324,7 @@ EOT;
 				$count = $uniques[$x + 1];
 
 				$valuepageslink = '';
-				if ($pagelinks) {
+				if ($pagelinks && ! $isblacklisted) {
 					$extra = 'TemplateParam.php?action=valuelinks&wiki=' . urlencode($params['wiki']) .
 						'&template=' . urlencode($tmplname) . '&param=' . urlencode($param['param_name']).
 						'&value=' . urlencode($uniques[$x]);
