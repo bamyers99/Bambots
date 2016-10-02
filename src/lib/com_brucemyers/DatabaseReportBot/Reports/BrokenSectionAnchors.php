@@ -139,6 +139,7 @@ class BrokenSectionAnchors extends DatabaseReport
     	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$sth = $dbh_enwiki->prepare($sql);
+		$readcount = 0;
 
 		while (! feof($hndl)) {
 			$buffer = fgets($hndl);
@@ -155,6 +156,12 @@ class BrokenSectionAnchors extends DatabaseReport
 			//echo 'found=' . $found . ' regex=' . "!id\s*=\s*['\"]{$escfragment}['\"]!u\n";
 
 			if (! $found) {
+				$sth = null;
+				$dbh_enwiki = null;
+				$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+				$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+				$sth = $dbh_enwiki->prepare($sql);
+
 				$sth->bindParam(1, $source);
 				$sth->execute();
 				$row = $sth->fetch(PDO::FETCH_NUM);
