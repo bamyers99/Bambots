@@ -26,6 +26,7 @@ class TemplateParamParser
 {
 	static $regexs = array(
 		'passed_param' => '!\{\{\{(?P<content>[^{}]*?\}\}\})!', // Highest priority
+		'htmlstub' => '!<\s*(?P<content>[\w]+(?:(?:\s+\w+(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\'">\s]+))?)+\s*|\s*)/>)!',
 		'html' => '!<\s*(?P<content>(?P<tag>[\w]+)[^>]*>[^<]*?<\s*/\s*(?P=tag)\s*>)!',
 		'template' => '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?))?\}\})!',
 		'table' => '!\{\|(?P<content>[^{]*?\|\})!',
@@ -76,7 +77,7 @@ class TemplateParamParser
 						}
 
 						// Replace the match with a marker
-						$marker_id = "\v" . count($markers) . "\f";
+						$marker_id = "\x02" . count($markers) . "\x03";
 						$content = $match[0][0];
 						$content_len = strlen($content);
 						$offset = $match[0][1] - $offset_adjust;
@@ -87,7 +88,7 @@ class TemplateParamParser
 						if ($type == 'template') $templates[] = $content;
 
 						// Replace any markers in the content
-						preg_match_all("!\v\\d+\f!", $content, $marker_matches);
+						preg_match_all("!\\x02\\d+\\x03!", $content, $marker_matches);
 						foreach ($marker_matches[0] as $marker_match) {
 							$content = str_replace($marker_match, $markers[$marker_match], $content);
 						}
@@ -106,7 +107,7 @@ class TemplateParamParser
 			$tmpl_name = $matches['name'];
 
 			// Replace any markers in the name
-			preg_match_all("!\v\\d+\f!", $tmpl_name, $marker_matches);
+			preg_match_all("!\\x02\\d+\\x03!", $tmpl_name, $marker_matches);
 			foreach ($marker_matches[0] as $marker_match) {
 				$tmpl_name = str_replace($marker_match, $markers[$marker_match], $tmpl_name);
 			}
@@ -126,7 +127,7 @@ class TemplateParamParser
 						list($param_name, $param_value) = explode('=', $param, 2);
 
 						// Replace any markers in the name
-						preg_match_all("!\v\\d+\f!", $param_name, $marker_matches);
+						preg_match_all("!\\x02\\d+\\x03!", $param_name, $marker_matches);
 						foreach ($marker_matches[0] as $marker_match) {
 							$param_name = str_replace($marker_match, $markers[$marker_match], $param_name);
 						}
@@ -137,7 +138,7 @@ class TemplateParamParser
 					}
 
 					// Replace any markers in the content
-					preg_match_all("!\v\\d+\f!", $param_value, $marker_matches);
+					preg_match_all("!\\x02\\d+\\x03!", $param_value, $marker_matches);
 					foreach ($marker_matches[0] as $marker_match) {
 						$param_value = str_replace($marker_match, $markers[$marker_match], $param_value);
 					}

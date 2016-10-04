@@ -24,7 +24,7 @@ use UnitTestCase;
 class TestTemplateParamParser extends UnitTestCase
 {
 
-    public function notestGetTemplates()
+    public function testGetTemplates()
     {
     	// Test basic
     	$testname = 'Test basic';
@@ -44,7 +44,9 @@ class TestTemplateParamParser extends UnitTestCase
 
     	// Test complex
     	$testname = 'Test complex';
-    	$data = '{{Template:navbox<!-- comment -->
+    	$data = '
+    			{{Nihongo|Cindy Aurum|シドニー・オールム|Shidonī Ōrumu|"Cidney"<ref name= "SilMoogle"/>}}
+    			{{Template:navbox<!-- comment -->
     			| name	= Retail {{{year}}}
     			| title	=	[[Retail stores|Retail Stores]] {{resolve|{{{year}}}}}
     			| cost = <math>{x*2} | <i>5</i></math>
@@ -61,6 +63,11 @@ class TestTemplateParamParser extends UnitTestCase
     			|}
     			}}';
     	$expected_templates = array(
+    		array('name' => 'Nihongo',
+    			'params' => array('1' => 'Cindy Aurum',
+    					'2' => 'シドニー・オールム',
+    				'3' => 'Shidonī Ōrumu',
+    				'4' => '"Cidney"<ref name= "SilMoogle"/>')),
     		array('name' => 'Navbox',
     			'params' => array('name' => 'Retail {{{year}}}',
     				'title' => '[[Retail stores|Retail Stores]] {{resolve|year={{{year}}}}}',
@@ -116,7 +123,7 @@ EOT;
     	}
     }
 
-    function testReflist()
+    function notestReflist()
     {
     	$data = <<<EOT
 {{sections|date=October 2014}}
@@ -229,7 +236,7 @@ EOT;
     	print_r($templatedata);
     }
 
-	function testInfoboxSettlement()
+	function notestInfoboxSettlement()
     {
     	$data = <<<EOT
 {{Infobox settlement
