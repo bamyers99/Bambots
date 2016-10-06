@@ -77,12 +77,17 @@ while (! feof($hndl)) {
 }
 
 echo "Processed $count\n";
+echo "Class count " . count($classes) . "\n";
 
 fclose($hndl);
 fclose($whndl);
 
 // Calc totals
+$count = 0;
+
 foreach ($classes as $classqid => $class) {
+	if (++$count % 100000 == 0) echo "Processed $count\n";
+
 	if (! $class[CLASS_FOUND] && $class[DIRECT_INSTANCE_CNT] < MIN_ORPHAN_DIRECT_INST_CNT) {
 		unset($classes[$classqid]); // No need to report because other report catches these.
 		continue;
@@ -124,6 +129,7 @@ function recurse_parents($parentqid, &$parents, &$classes, $depth)
 	++$depth;
 	if ($depth > 100) return;
 
+	if (isset($parents[$parentqid])) return;
 	$parents[$parentqid] = true; // Prevents dups
 
 	$parent = $classes[$parentqid];
