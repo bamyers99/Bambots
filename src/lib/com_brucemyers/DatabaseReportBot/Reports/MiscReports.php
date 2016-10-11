@@ -858,7 +858,7 @@ class MiscReports extends DatabaseReport
 
 		// Body
 
-		$wikitext = "{{anchor|Authority control}}\n<translate>\n==Authority control== <!--T:1-->\n</translate>\n{{List of properties/Header}}\n";
+		$wikitext = "<noinclude><languages/></noinclude>\n\n{{anchor|Authority control}}\n<translate>\n==Authority control== <!--T:1-->\n</translate>\n{{List of properties/Header}}\n";
 		$nonpeople = array();
 
 		foreach ($props as $propid => $prop) {
