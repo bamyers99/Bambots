@@ -21,7 +21,7 @@ use com_brucemyers\Util\TemplateParamParser;
 
 class TemplateParamConfig
 {
-	protected $templates;
+	protected $templates = array();
 
 	public function __construct(ServiceManager $serviceMgr)
 	{
@@ -30,7 +30,7 @@ class TemplateParamConfig
 		$templates = TemplateParamParser::getTemplates($text);
 
 		foreach ($templates as $template) {
-			if ($template['name'] != 'tlp') continue;
+			if ($template['name'] != 'Tlp') continue;
 			if (empty($template['params'])) continue;
 			$templname = $template['params']['1'];
 			$this->templates[$templname] = array();
