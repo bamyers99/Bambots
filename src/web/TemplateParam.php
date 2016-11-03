@@ -105,8 +105,6 @@ function display_form()
             }
         </script>
     <?php
-	echo '<div>' . htmlentities($l10n->get('bottomnote1'), ENT_COMPAT, 'UTF-8') . '<br />' .
-		htmlentities($l10n->get('bottomnote2'), ENT_COMPAT, 'UTF-8') . '</div>';
 	$asof = $wikis[$params['wiki']]['lastdumpdate'];
 	echo '<div>' . htmlentities($l10n->get('asofdate', true), ENT_COMPAT, 'UTF-8') . ' ' . substr($asof, 0, 4) . "-" . substr($asof, 4, 2) .
 		"-" . substr($asof, 6) . '</div>';
@@ -136,6 +134,9 @@ function display_form()
     }
 
     ?></div><br /><div style="display: table; margin: 0 auto;">
+	<?php echo '<div>' . htmlentities($l10n->get('bottomnote1'), ENT_COMPAT, 'UTF-8') . '<br />' .
+		htmlentities($l10n->get('bottomnote2'), ENT_COMPAT, 'UTF-8') . '</div>'; ?>
+    <a href="https://en.wikipedia.org/wiki/User:Bamyers99/TemplateParametersTool" class='novisited'>Documentation</a> <b>&bull;</b>
     <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
 
@@ -249,7 +250,7 @@ EOT;
 	else $paramdef = false;
 
 	echo '<div><b>' . htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') .
-			"</b>: <a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $tmplname)) . "\">" .
+			"</b>: <a class=\"external\" href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $tmplname)) . "\">" .
 			htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a>";
 	echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['page_count'] . '</div>';
 	echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['instance_count'] . '</div>';

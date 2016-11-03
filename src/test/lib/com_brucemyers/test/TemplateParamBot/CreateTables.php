@@ -105,7 +105,8 @@ class CreateTables
                         "description": "The honorific, ie. Mr, Dr, etc",
                         "type": "string",
                         "required": false,
-                        "suggested": true
+                        "suggested": true,
+   						"values": ["Mr","Dr","Mrs"]
     }
         }
 }
@@ -124,32 +125,35 @@ EOT;
                         "description": "The year in which the person was born",
                         "type": "number",
                         "required": true,
-   						"aliases" : ["year"]
+   						"aliases" : ["year"],
+   						"regex": "\\\\d{4}"
                 },
                 "2": {
                         "label": "Month of birth",
                         "description": "The month (number) in which the person was born",
                         "type": "number",
                         "required": true,
-   						"aliases" : ["month"]
+   						"aliases" : ["month"],
+   						"regex" : "\\\\d{1,2}"
     			},
                 "3": {
                         "label": "Day of birth",
                         "description": "The day (number) in which the person was born",
                         "type": "number",
                         "required": true,
-   						"aliases" : ["day"]
+   						"aliases" : ["day"],
+   						"regex": "\\\\d{1,2}"
     			},
                 "df": {
                         "label": "Day first",
                         "description": "When set to 'y' or 'yes', the date of birth is output in a DMY format",
-                        "type": "string",
+                        "type": "yesno",
                         "required": false
                 },
                 "mf": {
                         "label": "Month first",
                         "description": "When set to 'y' or 'yes', stresses that the default MDY date format is intended for the date of birth",
-                        "type": "string",
+                        "type": "yesno",
                         "required": false
                 }
         }

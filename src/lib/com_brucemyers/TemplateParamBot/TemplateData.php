@@ -67,6 +67,36 @@ class TemplateData
 		}
 	}
 
+	public function enhanceConfig($configData)
+	{
+		foreach ($configData as $paramName => $config) {
+			if (! isset($this->data['params'][$paramName])) continue;
+
+			switch ($config['type']) {
+				case 'yesno':
+					$this->data['params'][$paramName]['type'] = 'yesno';
+					break;
+
+				case 'regex':
+					if (isset($this->data['params'][$paramName]['regex'])) break;
+					$this->data['params'][$paramName]['regex'] = $config['regex'];
+					break;
+
+				case 'values':
+					if (isset($this->data['params'][$paramName]['values'])) break;
+					$this->data['params'][$paramName]['values'] = $config['values'];
+					break;
+
+				case 'wikidata':
+					if (isset($this->data['maps']['wikidata'][$config['wikidata']])) break;
+					if (! isset($this->data['maps'])) $this->data['maps'] = array();
+					if (! isset($this->data['maps']['wikidata'])) $this->data['maps']['wikidata'] = array();
+					$this->data['maps']['wikidata'][$config['wikidata']] = $paramName;
+					break;
+			}
+		}
+	}
+
 	public function getParams()
 	{
 		if (isset($this->data['params'])) return $this->data['params'];

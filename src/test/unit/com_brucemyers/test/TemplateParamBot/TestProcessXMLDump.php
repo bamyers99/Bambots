@@ -52,24 +52,25 @@ class TestProcessXMLDump extends UnitTestCase
 	{
 		$text = <<<EOT
 T3382507	12	13
-Pbirth_date	13	{{Birth date         |1976         |12         |11}}	1	{{Birth date|1976|12|10}}	2	{{Birth date|1976|12|12|df=y}}	1	{{Birth date|1976|12|1}}	1	{{Birth date|1976|12|2}}	1	{{Birth date|1976|12|3}}	1	{{Birth date|1976|12|4}}	1	{{Birth date|1976|12|5}}	1	{{Birth date|1976|12|6}}	1	{{Birth date|1976|12|8}}	1	{{Birth date|year=1976|month=12|day=9}}	1
+Pbirth_date	13	{{Birth date         |1976         |12         |11}}	1	{{Birth date|1976|12|10}}	1	{{Birth date|1976|12|1O}}	1	{{Birth date|1976|12|12|df=y}}	1	{{Birth date|1976|12|1|mf=X}}	1	{{Birth date|1976|12|2}}	1	{{Birth date|1976|12|3}}	1	{{Birth date|1976|12|4}}	1	{{Birth date|1976|12|5}}	1	{{Birth date|1976|12|6}}	1	{{Birth date|1976|12|8}}	1	{{Birth date|year=1976|month=12|day=9}}	1
 Phonorific	12	Dr	2	Miss	1	Mr	8	Mrs	1
 Ptitle	13	Person 101	1	Person 102	1	Person 103	1	Person 104	1	Person 105	1	Person 106	1	Person 107	1	Person 108	1	Person 109	1	Person 110a	1	Person 110b	1	Person 111	1	Person 112	1
 T6594285	12	13
 P1	12	1976	12
 P2	12	12	12
-P3	11	1	1	10	2	11	1	12	1	2	1	3	1	4	1	5	1	6	1	8	1
+P3	11	1	1	10	1	11	1	12	1	2	1	3	1	4	1	5	1	6	1	8	1	1O	1
 Pyear	1	1976	1
 Pmonth	1	12	1
 Pday	1	9	1
 Pdf	1	y	1
+Pmf	1	X	1
 EOT;
 
 		file_put_contents($totalsfilepath, $text);
 
 		$text = <<<EOT
 3382507	0
-6594285	1055
+6594285	1060
 EOT;
 
 		file_put_contents($offsetsfilepath, $text);
@@ -102,7 +103,7 @@ EOT;
 	protected function _createInstanceFile($instancefilepath)
 	{
 		$text = <<<EOT
-3382507	101	birth_date	{{Birth date|1976|12|1}}	honorific	Mr	title	Person 101
+3382507	101	birth_date	{{Birth date|1976|12|1|mf=X}}	honorific	Mr	title	Person 101
 3382507	102	birth_date	{{Birth date|1976|12|2}}	honorific	Dr	title	Person 102
 3382507	103	birth_date	{{Birth date|1976|12|3}}	honorific	Mrs	title	Person 103
 3382507	104	birth_date	{{Birth date|1976|12|4}}	honorific	Miss	title	Person 104
@@ -111,11 +112,11 @@ EOT;
 3382507	107	birth_date	{{Birth date|1976|12}}	honorific	Mr	title	Person 107
 3382507	108	birth_date	{{Birth date|1976|12|8}}	honorific	Mr	title	Person 108
 3382507	109	birth_date	{{Birth date|year=1976|month=12|day=9}}	honorific	Mr	title	Person 109
-3382507	110	birth_date	{{Birth date|1976|12|10}}	honorific	Mr	title	Person 110a
+3382507	110	birth_date	{{Birth date|1976|12|1O}}	honorific	Mr	title	Person 110a
 3382507	110	birth_date	{{Birth date|1976|12|10}}	honorific	Dr	title	Person 110b
 3382507	111	birth_date	{{Birth date         |1976         |12         |11}}	title	Person 111
 3382507	112	birth_date	{{Birth date|1976|12|12|df=y}}	honorific	Mr	title	Person 112
-6594285	101	1	1976	2	12	3	1
+6594285	101	1	1976	2	12	3	1	mf	X
 6594285	102	1	1976	2	12	3	2
 6594285	103	1	1976	2	12	3	3
 6594285	104	1	1976	2	12	3	4
@@ -124,7 +125,7 @@ EOT;
 6594285	107	1	1976	2	12
 6594285	108	1	1976	2	12	3	8
 6594285	109	year	1976	month	12	day	9
-6594285	110	1	1976	2	12	3	10
+6594285	110	1	1976	2	12	3	1O
 6594285	110	1	1976	2	12	3	10
 6594285	111	1	1976	2	12	3	11
 6594285	112	1	1976	2	12	3	12	df	y

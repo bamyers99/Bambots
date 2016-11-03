@@ -50,6 +50,8 @@ class TemplateParamBot
     protected $highest_revision_id;
     protected $outputdir;
     protected $wikiname;
+    static $yesno = array('yes', 'y', 'true', '1',
+		'no', 'n', 'false', '0');
 
     public function __construct(&$ruleconfigs)
     {
@@ -130,6 +132,7 @@ class TemplateParamBot
         $datadir = preg_replace('!(/|\\\\)$!', '', $datadir); // Drop trailing slash
         $datadir .= DIRECTORY_SEPARATOR;
         $rowsfound = true;
+        $templateParamConfig = new TemplateParamConfig($this->serviceMgr);
 
     while ($rowsfound) {
 
@@ -146,11 +149,13 @@ class TemplateParamBot
         	$templid = $row['template_id'];
 
         	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-        	$sql = "SELECT pp_value FROM page_props WHERE pp_page = $templid AND pp_propname = 'templatedata'";
+        	$sql = "SELECT pp_value, page_title FROM page_props, page WHERE pp_page = $templid AND pp_propname = 'templatedata' AND pp_page = page_id";
         	$sth = $dbh_wiki->query($sql);
         	if ($td = $sth->fetch(PDO::FETCH_NUM)) {
         		$templatedata = new TemplateData($td[0]);
-				$paramdefs = $templatedata->getParams();
+        		$templname = str_replace('_', ' ', $td[1]);
+    			$templatedata->enhanceConfig($templateParamConfig->getTemplate($templname));
+        		$paramdefs = $templatedata->getParams();
         	} else {
         		$ts = $timer->stop();
         		$lastrun = MySQLDate::toMySQLDatetime(time());
@@ -162,14 +167,20 @@ class TemplateParamBot
         		continue;
         	}
 
-        	// Calc aliases
+        	// Calc aliases and validations
         	$aliases = array();
+        	$validations = array();
+
         	foreach ($paramdefs as $param_name => $paramdef) {
         		if (isset($paramdef['aliases'])) {
 					foreach ($paramdef['aliases'] as $alias) {
 						$aliases[$alias] = $param_name;
 					}
         		}
+
+	        	if ($paramdef['type'] == 'yesno') $validations[$param_name] = array('type' => 'yesno');
+	        	elseif (isset($paramdef['regex'])) $validations[$param_name] = array('type' => 'regex', 'regex' => "!^{$paramdef['regex']}$!u");
+	        	elseif (isset($paramdef['values'])) $validations[$param_name] = array('type' => 'values', 'values' => $paramdef['values']);
         	}
 
         	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
@@ -209,6 +220,7 @@ class TemplateParamBot
 	    	$sth = $dbh_tools->prepare("INSERT INTO `{$wikiname}_values` VALUES (?,?,?,?,?)");
 			$sthprogress = $dbh_tools->prepare("UPDATE loads SET progress = ? WHERE wikiname = ? AND template_id = $templid");
 			$sthmissing = $dbh_tools->prepare("INSERT INTO `{$wikiname}_missings` VALUES (?,?,?)");
+			$sthinvalid = $dbh_tools->prepare("INSERT INTO `{$wikiname}_invalids` VALUES (?,?,?)");
 			$dbh_tools->beginTransaction();
 
 	    	while (! feof($hndl)) {
@@ -247,6 +259,30 @@ class TemplateParamBot
 					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
 					if (isset($params_used[$unaliased])) $params_used[$unaliased] = true;
 
+					// Value validation
+
+					if (isset($validations[$param_name]) && ! empty($param_value)) {
+						$writeinvalid = false;
+						$validation = $validations[$param_name];
+
+						switch ($validation['type']) {
+							case 'yesno':
+								$lparam_value = strtolower($param_value);
+								if (! in_array($lparam_value, self::$yesno)) $writeinvalid = true;
+								break;
+
+							case 'regex':
+								if (! preg_match($validation['regex'], $param_value)) $writeinvalid = true;
+								break;
+
+							case 'values':
+								if (! in_array($param_value, $validation['values'])) $writeinvalid = true;
+								break;
+						}
+
+						if ($writeinvalid) $sthinvalid->execute(array($templid, $param_name, $pageid));
+					}
+
 					++$valuecnt;
 					if ($valuecnt % 2000 == 0) {
 						$sthprogress->execute(array("Loaded $loadedcnt of $instancecnt instances for $template", $wikiname));
@@ -259,7 +295,6 @@ class TemplateParamBot
 				foreach ($params_used as $param_name => $param_used) {
 					$unaliased = $param_name;
 					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
-
 
 					if (! $param_used && ! isset($missing_written[$unaliased])) {
 						$sthmissing->execute(array($templid, $unaliased, $pageid));
@@ -667,10 +702,19 @@ class TemplateParamBot
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
+    	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_invalids` (
+    	`template_id` int unsigned NOT NULL,
+    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`page_id` int unsigned NOT NULL,
+    	KEY `template_id` (`template_id`, `param_name`)
+    	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
+
     	$dbh_tools->exec("TRUNCATE `{$wikiname}_templates`");
     	$dbh_tools->exec("TRUNCATE `{$wikiname}_values`");
     	$dbh_tools->exec("TRUNCATE `{$wikiname}_totals`");
     	$dbh_tools->exec("TRUNCATE `{$wikiname}_missings`");
+    	$dbh_tools->exec("TRUNCATE `{$wikiname}_invalids`");
     	$sth = $dbh_tools->prepare('DELETE FROM loads WHERE wikiname = ?');
     	$sth->execute(array($wikiname));
 
@@ -1012,6 +1056,7 @@ class TemplateParamBot
     {
     	$outpath = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . $wikiname . 'TemplateIds.tsv';
     	$hndl = fopen($outpath, 'w');
+    	$templateParamConfig = new TemplateParamConfig($this->serviceMgr);
         $dbh_tools = $this->serviceMgr->getDBConnection($wikiname);
 
     	$sql = "SELECT p1.page_id, p1.page_title, GROUP_CONCAT(p2.page_title SEPARATOR '|'), pp_value FROM page_props
@@ -1035,6 +1080,7 @@ class TemplateParamBot
     		$redirtmpls = explode('|', $row[2]);
 
     		$templatedata = new TemplateData($row[3]);
+    		$templatedata->enhanceConfig($templateParamConfig->getTemplate($templname));
     		$paramdef = $templatedata->getParams();
 
     		fwrite($hndl, "$templname\t$templid");
@@ -1047,7 +1093,12 @@ class TemplateParamBot
 					elseif (isset($config['suggested'])) $validparamname = 'S';
 				}
 
-    			fwrite($hndl, "\t$paramname\t$validparamname");
+    			fwrite($hndl, "\t$paramname\t$validparamname\t");
+
+				if ($config['type'] == 'yesno') fwrite($hndl, 'Y');
+				elseif (isset($config['regex'])) fwrite($hndl, "R\t" . $config['regex']);
+				elseif (isset($config['values'])) fwrite($hndl, "V\t" . implode(';', $config['values']));
+				else fwrite($hndl, '-');
     		}
 
     		fwrite($hndl, "\n");

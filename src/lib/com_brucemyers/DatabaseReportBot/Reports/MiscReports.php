@@ -484,7 +484,9 @@ class MiscReports extends DatabaseReport
 				36286513,26501900,15776396,39753940,21308617,32062007,33468662,25575648,12255705,20755930,18048964,24351991,
 				9545191,24211762,18928421,38684243,584368,38676683,38659124,38655048,38643903,38632860,38619056,38619050,
 				38619045,853159,36509372,36509341,36509226,20396608,44457462,45040011,34169594,44818111,44918849,43574713,
-				45206896,44868847,5820690,12255259,5631166,43716686,44210847,3253032,49673186,50729227,12119190);
+				45206896,44868847,5820690,12255259,5631166,43716686,44210847,3253032,49673186,50729227,12119190,9939398,
+				51410097
+		);
 
 		$badages = array();
 
@@ -801,8 +803,8 @@ class MiscReports extends DatabaseReport
 			'P1280' => array('label' => 'CONOR ID', 'exampleid' => 'Q1031', 'people' => false),
 			'P863' => array('label' => 'INPHO ID', 'exampleid' => 'Q219368', 'people' => false),
 			'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false),
-			'P2267' => array('label' => 'POLITIFACT PERSONALITY ID', 'exampleid' => 'Q76', 'people' => false)
-
+			'P2267' => array('label' => 'POLITIFACT PERSONALITY ID', 'exampleid' => 'Q76', 'people' => false),
+			'P1225' => array('label' => 'NATIONAL ARCHIVES IDENTIFIER', 'exampleid' => 'Q1387214', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
