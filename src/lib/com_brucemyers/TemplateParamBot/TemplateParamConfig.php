@@ -26,7 +26,7 @@ class TemplateParamConfig
 	public function __construct(ServiceManager $serviceMgr)
 	{
 		$wiki = $serviceMgr->getMediaWiki('en.wikipedia.org');
-		$text = $wiki->getpage('User:Bamyers99/TemplateParametersTool');
+		$text = $wiki->getPageWithCache('User:Bamyers99/TemplateParametersTool');
 		$templates = TemplateParamParser::getTemplates($text);
 
 		foreach ($templates as $template) {

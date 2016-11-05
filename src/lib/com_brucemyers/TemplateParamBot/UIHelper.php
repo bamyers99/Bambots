@@ -219,9 +219,10 @@ class UIHelper
 	 *
 	 * @param array $params
 	 * @param int $max_rows
+	 * @param string $type - missing or errors
 	 * @return array Results, keys = errors - array(), results - array()
 	 */
-	public function getMissing($params, $max_rows)
+	public function getMissing($params, $max_rows, $type)
 	{
 		$results = array();
 		$errors = array();
@@ -238,7 +239,10 @@ class UIHelper
 		$row = $sth->fetch(PDO::FETCH_NUM);
 		$templid = $row[0];
 
-		$sql = "SELECT page_title FROM `{$wikiname}_missings` miss " .
+		if ($type == 'missing') $tablename = 'missings';
+		else $tablename = 'invalids';
+
+		$sql = "SELECT page_title FROM `{$wikiname}_$tablename` miss " .
 			" STRAIGHT_JOIN `{$wikiname}_p`.page wp ON wp.page_id = miss.page_id " .
 			" WHERE miss.template_id = ? AND miss.param_name = ? " .
 			" ORDER BY page_title LIMIT $offset,$max_rows";
@@ -249,5 +253,15 @@ class UIHelper
 		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
 
 		return array('errors' => $errors, 'results' => $results);
+	}
+
+	/**
+	 * Get the TemplateParamConfig
+	 *
+	 * @return TemplateParamConfig
+	 */
+	public function getTemplateParamConfig()
+	{
+		return new TemplateParamConfig($this->serviceMgr);
 	}
 }

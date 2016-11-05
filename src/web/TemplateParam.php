@@ -16,6 +16,7 @@
  */
 
 use com_brucemyers\TemplateParamBot\UIHelper;
+use com_brucemyers\TemplateParamBot\TemplateParamConfig;
 use com_brucemyers\Util\HttpUtil;
 use com_brucemyers\Util\L10N;
 
@@ -69,6 +70,7 @@ function display_form()
 	if (! empty($params['template'])) $title .= ' : ' . $params['template'];
 	if (! empty($params['param'])) $title .= ' : ' . $params['param'];
 	if ($action == 'missing') $title .= ' (' . $l10n->get('missing') . ')';
+	elseif ($action == 'errors') $title .= ' (' . $l10n->get('errors') . ')';
 	if (! empty($params['value'])) $title .= ' : ' . $params['value'];
 	$title = htmlentities($title, ENT_COMPAT, 'UTF-8');
     ?>
@@ -124,7 +126,11 @@ function display_form()
         		break;
 
         	case 'missing':
-        		display_missing();
+        		display_missing_errors('missing');
+        		break;
+
+        	case 'errors':
+        		display_missing_errors('errors');
         		break;
 
         	default:
@@ -246,7 +252,11 @@ EOT;
 	if (isset($results['info']['TemplateData'])) $templatedata = $results['info']['TemplateData'];
 	else $templatedata = false;
 
-	if ($templatedata) $paramdef = $templatedata->getParams();
+	if ($templatedata) {
+    	$templateParamConfig = $uihelper->getTemplateParamConfig();
+    	$templatedata->enhanceConfig($templateParamConfig->getTemplate($tmplname));
+    	$paramdef = $templatedata->getParams();
+	}
 	else $paramdef = false;
 
 	echo '<div><b>' . htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') .
@@ -279,6 +289,7 @@ EOT;
 		$paramname = htmlentities($param['param_name'], ENT_COMPAT, 'UTF-8');
 		$validparamname = '&nbsp;';
 		$missinglink = false;
+		$errorslink = false;
 
 		if ($paramdef) {
 			if (isset($paramdef[$paramname])) {
@@ -293,6 +304,11 @@ EOT;
 						$validparamname .= ' (S)';
 					}
 				}
+
+				if ($paramdef[$paramname]['type'] == 'yesno' ||
+					isset($paramdef[$paramname]['regex']) ||
+					isset($paramdef[$paramname]['values'])) $errorslink = true;
+
 			} else {
 				$validparamname = 'N';
 			}
@@ -309,9 +325,16 @@ EOT;
 
 			if ($missinglink) {
 				$extra = "TemplateParam.php?action=missing&wiki=" . urlencode($params['wiki']) .
+				"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
+				$parmpageslink .= " <a href='$protocol://$host$uri/$extra'>(" .
+				str_replace(' ', '&nbsp;', htmlentities($l10n->get('missing'), ENT_COMPAT, 'UTF-8')) . ")</a>";
+			}
+
+			if ($errorslink) {
+				$extra = "TemplateParam.php?action=errors&wiki=" . urlencode($params['wiki']) .
 					"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
 				$parmpageslink .= " <a href='$protocol://$host$uri/$extra'>(" .
-					str_replace(' ', '&nbsp;', htmlentities($l10n->get('missing'), ENT_COMPAT, 'UTF-8')) . ")</a>";
+					str_replace(' ', '&nbsp;', htmlentities($l10n->get('errors'), ENT_COMPAT, 'UTF-8')) . ")</a>";
 			}
 		}
 
@@ -424,9 +447,9 @@ function display_paramlinks()
 }
 
 /**
- * Display missing a parameter
+ * Display missing/error a parameter
  */
-function display_missing()
+function display_missing_errors($type)
 {
 	global $uihelper, $params, $wikis, $l10n;
 
@@ -458,7 +481,7 @@ function display_missing()
 	$loaded = checkLoadStatus($results['info']);
 	if ($loaded['status'] != 'C') return;
 
-	$results = $uihelper->getMissing($params, 100);
+	$results = $uihelper->getMissing($params, 100, $type);
 
 	if (empty($results['results'])) {
 		echo '<div><b>No more results</b></div>';
@@ -483,7 +506,7 @@ function display_missing()
 	echo '<tbody></table>';
 
 	if (count($results['results']) == 100) {
-		$extra = "TemplateParam.php?action=missing&wiki=" . urlencode($params['wiki']) .
+		$extra = "TemplateParam.php?action=$type&wiki=" . urlencode($params['wiki']) .
 		"&template=" . urlencode($params['template']) . "&param=" . urlencode($params['param']) . "&page=" . ($params['page'] + 1);
 		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
 		htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";

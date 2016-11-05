@@ -208,11 +208,19 @@ class InvalidNavbarLinks extends DatabaseReport
 			),
 
 			'Routemap' => array(
-				'children' => array('Routemap'),
-				'name_param' => 'navbar',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
+					'children' => array('Routemap'),
+					'name_param' => 'navbar',
+					'exclude_empty' => array(),
+					'exclude_values' => array(),
+					'exclude_templates' => array()
+			),
+
+			'Navbar-collapsible' => array(
+					'children' => array('Navbar-collapsible', 'Tnavbar-collapsible'),
+					'name_param' => 2,
+					'exclude_empty' => array(),
+					'exclude_values' => array(),
+					'exclude_templates' => array()
 			),
 
 			'Navbox' => array( // Must be last because 'MySQL server has gone away' happens after this is run
