@@ -804,7 +804,8 @@ class MiscReports extends DatabaseReport
 			'P863' => array('label' => 'INPHO ID', 'exampleid' => 'Q219368', 'people' => false),
 			'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false),
 			'P2267' => array('label' => 'POLITIFACT PERSONALITY ID', 'exampleid' => 'Q76', 'people' => false),
-			'P1225' => array('label' => 'NATIONAL ARCHIVES IDENTIFIER', 'exampleid' => 'Q1387214', 'people' => false)
+			'P1225' => array('label' => 'NATIONAL ARCHIVES IDENTIFIER', 'exampleid' => 'Q1387214', 'people' => false),
+			'P3338' => array('label' => 'ENCYCLOPEDIA OF SURFING ID', 'exampleid' => 'Q3190749', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
