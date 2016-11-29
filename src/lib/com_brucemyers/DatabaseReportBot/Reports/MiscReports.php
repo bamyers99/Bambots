@@ -786,7 +786,7 @@ class MiscReports extends DatabaseReport
 			'P2163' => array('label' => 'FAST-ID', 'exampleid' => 'Q307', 'people' => false),
 			'P865' => array('label' => 'BMLO', 'exampleid' => 'Q11933906', 'people' => false),
 			'P998' => array('label' => 'DMOZ ID', 'exampleid' => 'Q255', 'people' => false),
-			'P1248' => array('label' => 'KULTURNAV-id', 'exampleid' => 'Q959698', 'people' => false),
+			'P1248' => array('label' => 'KULTURNAV-ID', 'exampleid' => 'Q959698', 'people' => false),
 			'P1902' => array('label' => 'SPOTIFY ARTIST ID', 'exampleid' => 'Q2757867', 'people' => false),
 			'P1430' => array('label' => 'OPENPLAQUES SUBJECT ID', 'exampleid' => 'Q207', 'people' => false),
 			'P1284' => array('label' => 'MUNZINGER IBA', 'exampleid' => 'Q1684721', 'people' => false),
@@ -805,7 +805,11 @@ class MiscReports extends DatabaseReport
 			'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false),
 			'P2267' => array('label' => 'POLITIFACT PERSONALITY ID', 'exampleid' => 'Q76', 'people' => false),
 			'P1225' => array('label' => 'NATIONAL ARCHIVES IDENTIFIER', 'exampleid' => 'Q1387214', 'people' => false),
-			'P3338' => array('label' => 'ENCYCLOPEDIA OF SURFING ID', 'exampleid' => 'Q3190749', 'people' => false)
+			'P3338' => array('label' => 'ENCYCLOPEDIA OF SURFING ID', 'exampleid' => 'Q3190749', 'people' => false),
+			'P1615' => array('label' => 'CLARA-ID', 'exampleid' => 'Q6781930', 'people' => false),
+			'P951' => array('label' => 'NSZL ID', 'exampleid' => 'Q763890', 'people' => false),
+			'P3368' => array('label' => 'PRABOOK ID', 'exampleid' => 'Q4495505', 'people' => false),
+			'P3385' => array('label' => 'JAPAN SUMO ASSOCIATION ID', 'exampleid' => 'Q448054', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
