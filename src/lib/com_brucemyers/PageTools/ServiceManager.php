@@ -81,7 +81,7 @@ class ServiceManager
 	    $wiki = new MediaWiki($url);
 	    $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
 	    $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
-	    $wiki->login($username, $password);
+	    //$wiki->login($username, $password);
 
 		return $wiki;
 	}
