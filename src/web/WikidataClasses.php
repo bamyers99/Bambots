@@ -143,9 +143,9 @@ function display_form($subclasses)
 
 			// Display class info
 			if ($params['id'] == 0) {
-				echo "Data as of<sup>[1]</sup>: {$subclasses['dataasof']}<br />\n";
+				echo "Data as of: {$subclasses['dataasof']}<br />\n";
 				echo "Class count: " . intl_num_format($subclasses['classcnt']) . "<br />\n";
-				echo "Root count<sup>[2]</sup>: " . intl_num_format($subclasses['rootcnt']) . "<br />\n";
+				echo "Root count<sup>[1]</sup>: " . intl_num_format($subclasses['rootcnt']) . "<br />\n";
 
 			} else {
 				echo "<table><tbody>\n";
@@ -157,6 +157,30 @@ function display_form($subclasses)
 				if (! empty($subclasses['class'][1])) {
 					$term_desc = htmlentities($subclasses['class'][1], ENT_COMPAT, 'UTF-8');
 					echo "<tr><td>Description:</td><td>$term_desc</td></tr>\n";
+				}
+
+				// Display parents
+				if (! empty($subclasses['parents'])) {
+					usort($subclasses['parents'], function($a, $b) {
+						return strcmp(strtolower($a[1]), strtolower($b[1]));
+					});
+
+						$parents = array();
+
+						foreach ($subclasses['parents'] as $row) {
+							$extra = "WikidataClasses.php?id=Q" . $row[0] . "&amp;lang=" . urlencode($params['lang']);
+							$term_text = htmlentities($row[1], ENT_COMPAT, 'UTF-8');
+							if ($term_text != "Q{$row[0]}") $term_text = "$term_text (Q{$row[0]})";
+							$parents[] = "<a href=\"$protocol://$host$uri/$extra\">$term_text</a>";
+						}
+
+						$parents = implode(', ', $parents);
+
+						$parent_label = (count($subclasses['parents']) == 1) ? 'Parent class' : 'Parent classes';
+
+						echo "<tr><td>$parent_label:</td><td>$parents</td></tr>\n";
+				} else {
+					echo "<tr><td>Parent class:</td><td>root class</td></tr>\n";
 				}
 
 				$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
@@ -179,32 +203,17 @@ function display_form($subclasses)
 				echo "<tr><td>Direct instances:</td><td>" . intl_num_format($subclasses['class'][4]) . "$sparql</td></tr>\n";
 				echo "<tr><td>Indirect instances:</td><td>" . intl_num_format($subclasses['class'][5]) . "</td></tr>\n";
 
-				// Display parents
-				if (! empty($subclasses['parents'])) {
-					usort($subclasses['parents'], function($a, $b) {
-						return strcmp(strtolower($a[1]), strtolower($b[1]));
-					});
+				if ($subclasses['class'][6] != 0) {
+					$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
+						"  ?s wdt:P360 wd:Q{$params['id']} .\n" .
+						"  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
+						"}\nORDER BY ?sLabel");
 
-					$parents = array();
+					$sparql = "&nbsp;&nbsp;&nbsp;(<a href='$sparql' class='external'>SPARQL query</a>)";
 
-					foreach ($subclasses['parents'] as $row) {
-						$extra = "WikidataClasses.php?id=Q" . $row[0] . "&amp;lang=" . urlencode($params['lang']);
-						$term_text = htmlentities($row[1], ENT_COMPAT, 'UTF-8');
-						if ($term_text != "Q{$row[0]}") $term_text = "$term_text (Q{$row[0]})";
-						$parents[] = "<a href=\"$protocol://$host$uri/$extra\">$term_text</a>";
-					}
-
-					$parents = implode(', ', $parents);
-
-					$parent_label = (count($subclasses['parents']) == 1) ? 'Parent class' : 'Parent classes';
-
-					echo "<tr><td>$parent_label:</td><td>$parents</td></tr>\n";
-				} else {
-					echo "<tr><td>Parent class:</td><td>root class</td></tr>\n";
+					echo "<tr><td>Lists of:</td><td>" . intl_num_format($subclasses['class'][6]) . "$sparql</td></tr>\n";
 				}
 
-
-				echo "<tr><td>Data as of<sup>[1]</sup>:</td><td>{$subclasses['dataasof']}</td></tr>\n";
 				echo "</tbody></table>\n";
 			}
 
@@ -240,11 +249,13 @@ function display_form($subclasses)
 			} elseif ($subclasses['class'][2] > MAX_CHILD_CLASSES) {
 				echo "<h2>&gt; " . MAX_CHILD_CLASSES . " subclasses</h2>\n";
 			}
+
+			echo "<br /><div>Data as of: {$subclasses['dataasof']}</div>";
 		}
 	}
 ?>
-       <br /><div><sup>1</sup>Data derived from database dump wikidatawiki-pages-articles.xml</div>
-       <?php if ($params['id'] == 0) {?><div><sup>2</sup>Root classes with no child classes and less than <?php echo MIN_ORPHAN_DIRECT_INST_CNT; ?> instances are excluded.</div><?php } ?>
+       <div>Data derived from database dump wikidatawiki-pages-articles.xml</div>
+       <?php if ($params['id'] == 0) {?><div><sup>1</sup>Root classes with no child classes and less than <?php echo MIN_ORPHAN_DIRECT_INST_CNT; ?> instances are excluded.</div><?php } ?>
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
        <div>Note: Some totals may not balance due to a class having the same super-parent class multiple times.</div>
@@ -297,7 +308,7 @@ function get_subclasses()
 	// Retrieve the class
 	if ($params['id'] != 0) {
 		$sql = "SELECT wbt.term_text AS lang_text, wbten.term_text AS en_text, wbd.term_text AS lang_desc, wbden.term_text AS en_desc, " .
-				" sct.directchildcnt, sct.indirectchildcnt, sct.directinstcnt, sct.indirectinstcnt " .
+				" sct.directchildcnt, sct.indirectchildcnt, sct.directinstcnt, sct.indirectinstcnt, sct.islistofcnt " .
 				" FROM s51454__wikidata.subclasstotals sct " .
 				" LEFT JOIN wikidatawiki_p.wb_terms wbt ON sct.qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' " .
 				" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
@@ -326,7 +337,7 @@ function get_subclasses()
 			if (is_null($term_desc)) $term_desc = '';
 
 			$class = array($term_text, $term_desc, $row['directchildcnt'], $row['indirectchildcnt'],
-					$row['directinstcnt'], $row['indirectinstcnt']);
+					$row['directinstcnt'], $row['indirectinstcnt'], $row['islistofcnt']);
 		}
 	}
 

@@ -19,13 +19,15 @@
 
 define('PROP_SUBCLASSOF', 'P279');
 define('PROP_INSTANCEOF', 'P31');
+define('PROP_ISLISTOF', 'P360');
 
 define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
-define('DIRECT_INSTANCE_CNT', 'dic');
-define('INDIRECT_INSTANCE_CNT', 'indic');
-define('DIRECT_CHILD_COUNT', 'dcc');
-define('INDIRECT_CHILD_COUNT', 'indcc');
-define('CLASS_FOUND', 'cf');
+define('DIRECT_INSTANCE_CNT', 'a');
+define('INDIRECT_INSTANCE_CNT', 'b');
+define('DIRECT_CHILD_COUNT', 'c');
+define('INDIRECT_CHILD_COUNT', 'd');
+define('ISLISTOF_COUNT', 'e');
+define('CLASS_FOUND', 'f');
 define('PARENTS', 'p');
 
 $count = 0;
@@ -46,7 +48,8 @@ while (! feof($hndl)) {
 	if (empty($qid)) continue;
 	$qid = (int)substr($qid, 1);
 
-	if (! isset($data['claims']) || (! isset($data['claims'][PROP_SUBCLASSOF]) && ! isset($data['claims'][PROP_INSTANCEOF]))) continue;
+	if (! isset($data['claims']) || (! isset($data['claims'][PROP_SUBCLASSOF]) && ! isset($data['claims'][PROP_INSTANCEOF]) &&
+		! isset($data['claims'][PROP_ISLISTOF]))) continue;
 
 	if (isset($data['claims'][PROP_SUBCLASSOF])) {
 		foreach ($data['claims'][PROP_SUBCLASSOF] as $parent) {
@@ -70,8 +73,18 @@ while (! feof($hndl)) {
 			if (! isset($instanceof['mainsnak']['datavalue']['value']['numeric-id'])) continue;
 			$instanceqid = (int)$instanceof['mainsnak']['datavalue']['value']['numeric-id'];
 
-	    	if (! isset($classes[$instanceqid])) $classes[$instanceqid] = init_class();
-	    	++$classes[$instanceqid][DIRECT_INSTANCE_CNT];
+			if (! isset($classes[$instanceqid])) $classes[$instanceqid] = init_class();
+			++$classes[$instanceqid][DIRECT_INSTANCE_CNT];
+		}
+	}
+
+	if (isset($data['claims'][PROP_ISLISTOF])) {
+		foreach ($data['claims'][PROP_ISLISTOF] as $islistof) {
+			if (! isset($islistof['mainsnak']['datavalue']['value']['numeric-id'])) continue;
+			$classqid = (int)$islistof['mainsnak']['datavalue']['value']['numeric-id'];
+
+	    	if (! isset($classes[$classqid])) $classes[$classqid] = init_class();
+	    	++$classes[$classqid][ISLISTOF_COUNT];
 		}
 	}
 }
@@ -110,7 +123,7 @@ $whndl = fopen('wdsubclasstotals.tsv', 'w');
 foreach ($classes as $classqid => $class) {
 	$isroot = count($class[PARENTS]) ? 'N' : 'Y';
 
-    fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$class[INDIRECT_CHILD_COUNT]}\t{$class[DIRECT_INSTANCE_CNT]}\t{$class[INDIRECT_INSTANCE_CNT]}\n");
+    fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$class[INDIRECT_CHILD_COUNT]}\t{$class[DIRECT_INSTANCE_CNT]}\t{$class[INDIRECT_INSTANCE_CNT]}\t{$class[ISLISTOF_COUNT]}\n");
 }
 
 fclose($whndl);
@@ -145,5 +158,5 @@ function recurse_parents($parentqid, &$parents, &$classes, $depth)
 function init_class()
 {
 	return array(DIRECT_CHILD_COUNT => 0,  INDIRECT_CHILD_COUNT => 0, PARENTS => array(), DIRECT_INSTANCE_CNT => 0,
-		INDIRECT_INSTANCE_CNT => 0, CLASS_FOUND => false);
+		INDIRECT_INSTANCE_CNT => 0, ISLISTOF_COUNT => 0, CLASS_FOUND => false);
 }

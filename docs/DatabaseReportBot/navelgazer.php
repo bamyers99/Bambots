@@ -28,6 +28,8 @@ $edittypes = array(
 	'wbmergeitems-from' => -5
 );
 
+$prevmonth = date('Y-m', strtotime('-1 month'));
+
 $hndl = fopen('php://stdin', 'r');
 while (! feof($hndl)) {
 	if (++$count % 1000000 == 0) echo "Processed $count\n";
@@ -39,6 +41,8 @@ while (! feof($hndl)) {
 		$username = false;
 	} elseif (preg_match('!^/contributor/username=([^\n]+)!', $buffer, $matches)) {
 		$username = $matches[1];
+	} elseif (preg_match('!^/timestamp=(\d{4}-\d{2})!', $buffer, $matches)) {
+		$timestamp = $matches[1];
 	} elseif (preg_match('!^/comment=([^\n]+)!', $buffer, $matches)) {
 		if ($username === false) continue;
 		$comment = $matches[1];
@@ -53,8 +57,9 @@ while (! feof($hndl)) {
 				$key = "a$typevalue"; // don't want a numeric key
 
 				if (! isset($edits[$username])) $edits[$username] = array();
-				if (! isset($edits[$username][$key])) $edits[$username][$key] = 0;
-				++$edits[$username][$key];
+				if (! isset($edits[$username][$key])) $edits[$username][$key] = array('t' => 0, 'm' => 0);
+				++$edits[$username][$key]['t'];
+				if ($timestamp == $prevmonth) ++$edits[$username][$key]['m'];
 				break;
 			}
 		}
@@ -70,7 +75,7 @@ $hndl = fopen('navelgazer.tsv', 'w');
 foreach ($edits as $username => $totals) {
 	foreach ($totals as $key => $total) {
 		$key = substr($key, 1);
-		fwrite($hndl, "$username\t$key\t$total\n");
+		fwrite($hndl, "$username\t$key\t{$total['t']}\t{$total['m']}\n");
 	}
 }
 
