@@ -120,7 +120,7 @@ function display_form($navels)
 
 			foreach ($navels['data'] as $key => $row) {
 				if ($row[0] < 0) {
-					$misc[] = $edit_types[$row[0]] . ": {$row[2]}<br />\n";
+					$misc[] = $edit_types[$row[0]] . ": {$row[2]} (last month: {$row[3]})<br />\n";
 					unset($navels['data'][$key]);
 				}
 			}
@@ -132,7 +132,7 @@ function display_form($navels)
 				}
 			}
 
-			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Count</th></tr></thead><tbody>\n";
+			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			usort($navels['data'], function($a, $b) {
 				return strcmp(strtolower($a[1]), strtolower($b[1]));
@@ -141,7 +141,7 @@ function display_form($navels)
 			foreach ($navels['data'] as $row) {
 				$url = "https://www.wikidata.org/wiki/Property:P" . $row[0];
 				$term_text = htmlentities($row[1], ENT_COMPAT, 'UTF-8');
-				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td>{$row[2]}</td></tr>\n";
+				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td>{$row[2]}</td><td>{$row[3]}</td></tr>\n";
 			}
 
 			echo "</tbody></table>\n";
@@ -157,10 +157,10 @@ function display_form($navels)
 			}
 			if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
-			echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Count</th></tr></thead><tbody>\n";
+			echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			foreach ($navels['data'] as $row) {
-				echo "<tr><td>{$row[0]}</td><td>{$row[1]}</td></tr>\n";
+				echo "<tr><td>{$row[0]}</td><td>{$row[1]}</td><td>{$row[2]}</td></tr>\n";
 			}
 
 			echo "</tbody></table>\n";
@@ -201,7 +201,7 @@ function get_navels()
 		$params['username'] = ucfirst($params['username']);
 		$params['username'] = str_replace('_', ' ', $params['username']);
 
-		$sql = "SELECT ng.property_id, ng.create_count, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
+		$sql = "SELECT ng.property_id, ng.create_count, ng.month_count, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
 			" FROM s51454__wikidata.navelgazer ng " .
 			" LEFT JOIN wikidatawiki_p.wb_terms wbt ON ng.property_id = wbt.term_entity_id AND wbt.term_entity_type = 'property' " .
 			" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
@@ -219,7 +219,7 @@ function get_navels()
 			$term_text = $row['lang_text'];
 			if (is_null($term_text)) $term_text = $row['en_text'];
 
-			$data[$row['property_id']] = array($row['property_id'], $term_text, $row['create_count']); // removes dups
+			$data[$row['property_id']] = array($row['property_id'], $term_text, $row['create_count'], $row['month_count']); // removes dups
 		}
 
 	} else { // property
@@ -241,7 +241,7 @@ function get_navels()
 			if (is_null($property_label)) $property_label = $row['en_text'];
 		}
 
-		$sql = "SELECT user_name, create_count " .
+		$sql = "SELECT user_name, create_count, month_count " .
 				" FROM s51454__wikidata.navelgazer " .
 				" WHERE property_id = ? ORDER by create_count DESC LIMIT 100";
 
@@ -251,7 +251,7 @@ function get_navels()
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$data[] = array($row['user_name'], $row['create_count']);
+			$data[] = array($row['user_name'], $row['create_count'], $row['month_count']);
 		}
 	}
 
