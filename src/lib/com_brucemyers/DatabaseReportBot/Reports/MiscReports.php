@@ -809,7 +809,11 @@ class MiscReports extends DatabaseReport
 			'P1615' => array('label' => 'CLARA-ID', 'exampleid' => 'Q6781930', 'people' => false),
 			'P951' => array('label' => 'NSZL ID', 'exampleid' => 'Q763890', 'people' => false),
 			'P3368' => array('label' => 'PRABOOK ID', 'exampleid' => 'Q4495505', 'people' => false),
-			'P3385' => array('label' => 'JAPAN SUMO ASSOCIATION ID', 'exampleid' => 'Q448054', 'people' => false)
+			'P3385' => array('label' => 'JAPAN SUMO ASSOCIATION ID', 'exampleid' => 'Q448054', 'people' => false),
+			'P3478' => array('label' => 'SONGKICK ARTIST ID', 'exampleid' => 'Q26695', 'people' => false),
+			'P3476' => array('label' => 'PSA WORLDTOUR ID', 'exampleid' => 'Q2935075', 'people' => false),
+			'P3475' => array('label' => 'SANU MEMBER ID', 'exampleid' => 'Q9036', 'people' => false),
+			'P3468' => array('label' => 'NATIONAL INVENTORS HALL OF FAME ID', 'exampleid' => 'Q4273363', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
