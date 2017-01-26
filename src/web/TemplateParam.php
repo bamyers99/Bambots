@@ -431,9 +431,9 @@ function display_paramlinks()
 	'</th></tr></thead><tbody>';
 
 	foreach ($results['results'] as $page) {
-		$page = $page['page_title'];
-		echo "<tr><td><a href=\"$wikiprefix$page\">" .
-		htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
+		$urlpage = urlencode($page['page_title']);
+		echo "<tr><td><a href=\"$wikiprefix$urlpage\">" .
+		htmlentities(str_replace('_', ' ', $page['page_title']), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
 	}
 
 	echo '<tbody></table>';
@@ -498,9 +498,9 @@ function display_missing_errors($type)
 	'</th></tr></thead><tbody>';
 
 	foreach ($results['results'] as $page) {
-		$page = $page['page_title'];
-		echo "<tr><td><a href=\"$wikiprefix$page\">" .
-		htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
+		$urlpage = urlencode($page['page_title']);
+		echo "<tr><td><a href=\"$wikiprefix$urlpage\">" .
+		htmlentities(str_replace('_', ' ', $page['page_title']), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
 	}
 
 	echo '<tbody></table>';
@@ -565,9 +565,9 @@ function display_valuelinks()
 		'</th></tr></thead><tbody>';
 
 	foreach ($results['results'] as $page) {
-		$page = $page['page_title'];
-		echo "<tr><td><a href=\"$wikiprefix$page\">" .
-			htmlentities(str_replace('_', ' ', $page), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
+		$urlpage = urlencode($page['page_title']);
+		echo "<tr><td><a href=\"$wikiprefix$urlpage\">" .
+			htmlentities(str_replace('_', ' ', $page['page_title']), ENT_COMPAT, 'UTF-8') . "</a></td></tr>";
 	}
 
 	echo '<tbody></table>';
