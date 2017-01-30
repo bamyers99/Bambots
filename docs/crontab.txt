@@ -4,4 +4,4 @@
 45 * * * * jsub -N CategoryWatchlistBot -wd /data/project/bambots/Bambots/src/cli -mem 768m php CategoryWatchlistBot.php >/data/project/bambots/Bambots/logs/CategoryWatchlistBot.cron
 10 1 * * * jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DataflowBot.php >/dev/null
 17 2 * * tue jsub -N CleanupWorklistBot -wd /data/project/bambots/Bambots/src/cli -mem 768m php CleanupWorklistBot.php
-17 3 * * tue jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 768m php DataflowBot.php PopularLowQuality
+17 3 * * tue jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 850m php DataflowBot.php PopularLowQuality

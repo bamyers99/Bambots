@@ -813,7 +813,19 @@ class MiscReports extends DatabaseReport
 			'P3478' => array('label' => 'SONGKICK ARTIST ID', 'exampleid' => 'Q26695', 'people' => false),
 			'P3476' => array('label' => 'PSA WORLDTOUR ID', 'exampleid' => 'Q2935075', 'people' => false),
 			'P3475' => array('label' => 'SANU MEMBER ID', 'exampleid' => 'Q9036', 'people' => false),
-			'P3468' => array('label' => 'NATIONAL INVENTORS HALL OF FAME ID', 'exampleid' => 'Q4273363', 'people' => false)
+			'P3468' => array('label' => 'NATIONAL INVENTORS HALL OF FAME ID', 'exampleid' => 'Q4273363', 'people' => false),
+			'P3539' => array('label' => 'NFL.COM ID', 'exampleid' => 'Q24810030', 'people' => false),
+			'P3538' => array('label' => 'FUSSBALLDATEN.DE ID', 'exampleid' => 'Q1081201', 'people' => false),
+			'P3536' => array('label' => 'EUROLEAGUE.NET ID', 'exampleid' => 'Q3849644', 'people' => false),
+			'P3533' => array('label' => 'DRAFTEXPRESS.COM ID', 'exampleid' => 'Q3849644', 'people' => false),
+			'P3532' => array('label' => 'DATABASEFOOTBALL.COM ID', 'exampleid' => 'Q5672702', 'people' => false),
+			'P3531' => array('label' => 'AZBILLIARDS ID', 'exampleid' => 'Q1162866', 'people' => false),
+			'P3527' => array('label' => 'EUROBASKET.COM ID', 'exampleid' => 'Q4721816', 'people' => false),
+			'P3526' => array('label' => 'WISDENINDIA.COM ID', 'exampleid' => 'Q6080718', 'people' => false),
+			'P3525' => array('label' => 'ACB.COM ID', 'exampleid' => 'Q3849644', 'people' => false),
+			'P3506' => array('label' => 'LUDING DESIGNER ID', 'exampleid' => 'Q61088', 'people' => false),
+			'P3505' => array('label' => 'BOARDGAMEGEEK DESIGNER ID', 'exampleid' => 'Q61088', 'people' => false),
+			'P3502' => array('label' => 'AMEBLO USERNAME', 'exampleid' => 'Q50025', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
