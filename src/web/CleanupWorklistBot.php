@@ -67,7 +67,7 @@ function cat_display($project, $category, $results = null)
 	<body>
         <h2>CleanupWorklistBot Category Test</h2>
         <form action="CleanupWorklistBot.php" ><table class="form">
-        <tr><td><b>Project name</b> <input name="action" type="hidden" value="test" /><input name="project" type="text" size="20" id="testfield1" value="<?php echo $project ?>" /> ex. Pinball</td></tr>
+        <tr><td><b>Project name</b> <input name="action" type="hidden" value="test" /><input name="project" type="text" size="20" id="testfield1" value="<?php echo $project ?>" /> ex. Pinball (do not include WikiProject prefix)</td></tr>
         <tr><td><b>Category override (optional)</b> <input name="category" type="text" size="25" value="<?php echo $category ?>" /> ex. amphibian_and_reptile</td></tr>
         <tr><td><input type="submit" value="Submit" /></td></tr>
         </table></form>

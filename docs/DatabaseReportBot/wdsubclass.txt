@@ -25,7 +25,7 @@ LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassclasses.tsv
 TRUNCATE s51454__wikidata.subclasstotals;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclasstotals.tsv' INTO TABLE s51454__wikidata.subclasstotals CHARACTER SET binary;
 SELECT COUNT(*) FROM s51454__wikidata.subclasstotals WHERE root = 'Y';
-INSERT INTO s51454__wikidata.subclasstotals VALUES (0,'N',5000,100,2016,0820,0); class_count,root_cnt,year,month/day
+INSERT INTO s51454__wikidata.subclasstotals VALUES (0,'N',5000,100,2017,0820,0); class_count,root_cnt,year,month/day
 
 cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
 rm *
