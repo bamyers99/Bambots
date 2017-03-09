@@ -264,6 +264,13 @@ EOT;
 						)
 				),
 				array (
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
+						'params' => array (
+							'filtercol' => '1',
+							'excluderegex' => '^-$'
+						)
+				),
+				array (
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\ResolveRedirectColumn',
 						'params' => array (
 							'linkcol' => '1'
