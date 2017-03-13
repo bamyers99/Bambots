@@ -863,6 +863,14 @@ class MiscReports extends DatabaseReport
 			else $propertyitems[$id] = $item;
 		}
 
+		// Get the usage counts
+		$counts = $wdwiki->getPageWithCache('Template:Property_uses');
+		preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
+		$counts = array();
+		foreach ($matches as $match) {
+			$counts['P' . $match[1]] = $match[2];
+		}
+
 		$asof_date = getdate();
 		$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
 		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPeopleAuthCtrl.html';
@@ -882,7 +890,8 @@ class MiscReports extends DatabaseReport
 
 		// Body
 
-		$wikitext = "<noinclude><languages/></noinclude>\n\n{{anchor|Authority control}}\n<translate>\n==Authority control== <!--T:1-->\n</translate>\n{{List of properties/Header}}\n";
+		$wikitext = "<noinclude><languages/></noinclude>\n\n{{anchor|Authority control}}\n<translate>\n==Authority control== <!--T:1-->\n</translate>\n";
+		$wikitext .= "<table class='wikitable sortable'><tr><th scope='col'>{{int:wm-license-artwork-title}}</th><th scope='col'>ID</th><th scope='col'>{{int:wikibase-propertypage-datatype}}</th><th scope='col'>{{int:listfiles_description}}</th><th scope='col'>{{int:apisandbox-examples}}</th><th scope='col'>&nbsp;Count&nbsp;</th></tr>\n";
 		$nonpeople = array();
 
 		foreach ($props as $propid => $prop) {
@@ -930,8 +939,9 @@ class MiscReports extends DatabaseReport
 				$nonpeople[] = "[[Property:$propid|$label&nbsp;($propid)]]";
 			}
 
-			$wikitext .= "<tr><td>{{label|$propid}}</td><td>[[Property:$propid|$propid]]</td><td>$datatype</td><td>{{autodescription|$propid}}</td><td>$example_object</td><td>-</td></tr>\n";
-			//$wikitext .= "{{List of properties/Row|id=$intid|example-subject=$example_subject|example-object=$example_object}}\n"; // Too many expensive function calls
+			$wikitext .= "<tr><td>{{label|$propid}}</td><td>[[Property:$propid|$propid]]</td><td>$datatype</td><td>{{autodescription|$propid}}</td><td>$example_object</td>";
+			$wikitext .= "<td style='text-align:right' data-sort-value='{$counts[$propid]}'>" . number_format($counts[$propid], 0, '', '&thinsp;');
+			$wikitext .= "</td></tr>\n";
 		}
 
 		$nonpeople = implode(', ', $nonpeople);
