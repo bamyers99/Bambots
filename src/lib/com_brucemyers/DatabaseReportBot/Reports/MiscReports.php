@@ -829,7 +829,10 @@ class MiscReports extends DatabaseReport
 			'P3603' => array('label' => 'MINNEAPOLIS INSTITUTE OF ART CONSTITUENT ID', 'exampleid' => 'Q1383354', 'people' => false),
 			'P3751' => array('label' => 'SHOFTIM BEISRAEL JUDGE ID', 'exampleid' => 'Q18097436', 'people' => false),
 			'P3817' => array('label' => 'FI WARSAMPO PERSON ID', 'exampleid' => 'Q2632168', 'people' => false),
-			'P3788' => array('label' => 'BNA AUTHOR ID', 'exampleid' => 'Q832085', 'people' => false)
+			'P3788' => array('label' => 'BNA AUTHOR ID', 'exampleid' => 'Q832085', 'people' => false),
+			'P3845' => array('label' => 'TV GUIDE PERSON ID', 'exampleid' => 'Q106126', 'people' => false),
+			'P3857' => array('label' => 'CINENACIONAL.COM PERSON ID', 'exampleid' => 'Q4888833', 'people' => false),
+			'P3847' => array('label' => 'OPEN LIBRARY SUBJECT ID', 'exampleid' => 'Q152384', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
