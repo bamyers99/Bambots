@@ -1,0 +1,1 @@
+gunzip -c /public/dumps/public/enwiki/20170420/enwiki-20170420-all-titles.gz | grep '/' | awk '{if ($1 != "0" && index($2, "/") != 1) print $1, substr($2, 1, index($2, "/") - 1)}' | uniq > /data/project/bambots/Bambots/data/subpagetitles
