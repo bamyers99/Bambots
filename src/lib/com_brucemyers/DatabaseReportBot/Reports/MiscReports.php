@@ -832,7 +832,14 @@ class MiscReports extends DatabaseReport
 			'P3788' => array('label' => 'BNA AUTHOR ID', 'exampleid' => 'Q832085', 'people' => false),
 			'P3845' => array('label' => 'TV GUIDE PERSON ID', 'exampleid' => 'Q106126', 'people' => false),
 			'P3857' => array('label' => 'CINENACIONAL.COM PERSON ID', 'exampleid' => 'Q4888833', 'people' => false),
-			'P3847' => array('label' => 'OPEN LIBRARY SUBJECT ID', 'exampleid' => 'Q152384', 'people' => false)
+			'P3847' => array('label' => 'OPEN LIBRARY SUBJECT ID', 'exampleid' => 'Q152384', 'people' => false),
+			'P3955' => array('label' => 'NLL PLAYER ID', 'exampleid' => 'Q6374142', 'people' => false),
+			'P3953' => array('label' => 'ALPG GOLFER ID', 'exampleid' => 'Q25936013', 'people' => false),
+			'P3949' => array('label' => 'JUWRA.COM ID', 'exampleid' => 'Q7855', 'people' => false),
+			'P3948' => array('label' => 'MLL PLAYER ID', 'exampleid' => 'Q24259938', 'people' => false),
+			'P3946' => array('label' => 'DIRECTORIO GRIERSON ID', 'exampleid' => 'Q233985', 'people' => false),
+			'P3943' => array('label' => 'TUMBLR ID', 'exampleid' => 'Q3013276', 'people' => false),
+			'P3942' => array('label' => 'BMX-RESULTS.COM RIDER ID', 'exampleid' => 'Q3183914', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
