@@ -43,8 +43,7 @@ DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
     	'MiscReports',
     	'MisspelledRedLinks',
     	'SimilarRedLinks',
-    	'StubTypeSizes',
-    	'WikidataPotentialUnlinked'
+    	'StubTypeSizes'
     );
 
 try {

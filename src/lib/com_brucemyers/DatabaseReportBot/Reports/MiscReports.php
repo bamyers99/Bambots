@@ -839,7 +839,13 @@ class MiscReports extends DatabaseReport
 			'P3948' => array('label' => 'MLL PLAYER ID', 'exampleid' => 'Q24259938', 'people' => false),
 			'P3946' => array('label' => 'DIRECTORIO GRIERSON ID', 'exampleid' => 'Q233985', 'people' => false),
 			'P3943' => array('label' => 'TUMBLR ID', 'exampleid' => 'Q3013276', 'people' => false),
-			'P3942' => array('label' => 'BMX-RESULTS.COM RIDER ID', 'exampleid' => 'Q3183914', 'people' => false)
+			'P3942' => array('label' => 'BMX-RESULTS.COM RIDER ID', 'exampleid' => 'Q3183914', 'people' => false),
+			'P3965' => array('label' => 'BRIDGEMAN ARTIST ID', 'exampleid' => 'Q1282413', 'people' => false),
+			'P3960' => array('label' => 'BASE BIOGRAPHIQUE AUTOR ID', 'exampleid' => 'Q3438834', 'people' => false),
+			'P3365' => array('label' => 'ENCICLOPEDIA TRECCANI ID', 'exampleid' => 'Q7317', 'people' => false),
+			'P3995' => array('label' => 'FILMWEB.PL ID', 'exampleid' => 'Q68537', 'people' => false),
+			'P3988' => array('label' => 'NATIONAL LIBRARY BOARD SINGAPORE ID', 'exampleid' => 'Q5052793', 'people' => false),
+			'P3987' => array('label' => 'SHARE CATALOGUE AUTHOR ID', 'exampleid' => 'Q2755854', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
