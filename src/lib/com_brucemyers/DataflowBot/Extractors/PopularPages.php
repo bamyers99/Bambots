@@ -28,8 +28,8 @@ class PopularPages extends Extractor
 
 	const HEADING_POS_RANK = 0;
 	const HEADING_POS_ARTICLE = 1;
-	const HEADING_POS_VIEWS = 12;
-	const HEADING_POS_MOBILEPCT = 13;
+	const HEADING_POS_VIEWS = 14;
+	const HEADING_POS_MOBILEPCT = 15;
 
 	/**
 	 * Get the component title.
