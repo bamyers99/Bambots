@@ -961,8 +961,11 @@ class MiscReports extends DatabaseReport
 				$nonpeople[] = "[[Property:$propid|$label&nbsp;($propid)]]";
 			}
 
+			if (isset($counts[$propid])) $count = $counts[$propid];
+			else $count = 0;
+
 			$wikitext .= "<tr><td>{{label|$propid}}</td><td>[[Property:$propid|$propid]]</td><td>$datatype</td><td>{{autodescription|$propid}}</td><td>$example_object</td>";
-			$wikitext .= "<td style='text-align:right' data-sort-value='{$counts[$propid]}'>" . number_format($counts[$propid], 0, '', '&thinsp;');
+			$wikitext .= "<td style='text-align:right' data-sort-value='$count'>" . number_format($count, 0, '', '&thinsp;');
 			$wikitext .= "</td></tr>\n";
 		}
 

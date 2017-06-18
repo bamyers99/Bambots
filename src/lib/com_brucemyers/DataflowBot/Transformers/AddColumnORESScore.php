@@ -141,7 +141,7 @@ class AddColumnORESScore extends AddColumn
 				$revids[] = $row[$column];
 			}
 
-			$URL = "https://ores.wmflabs.org/v2/scores/$wiki/$model/?revids=" . implode('|', $revids);
+			$URL = "https://ores.wikimedia.org/v2/scores/$wiki/$model/?revids=" . implode('|', $revids);
 			//Logger::log($URL);
 
 			$trys = 0;
