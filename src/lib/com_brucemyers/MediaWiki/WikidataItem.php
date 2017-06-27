@@ -136,6 +136,8 @@ class WikidataItem
 					$bce = ' BCE';
 				}
 
+				while (strlen($date) && $date[0] == '0') $date = substr($date, 1);
+
 				$precision = $value['precision'];
 				switch ($precision) {
 					case '14': // second
@@ -164,10 +166,12 @@ class WikidataItem
 						break;
 					case '7': // century
 						$parts = explode('-', $date);
+						$parts[0] = str_pad($parts[0], 4, '0', STR_PAD_LEFT);
 						$value = substr($parts[0], 0, 2) . ' century' . $bce;
 						break;
 					case '6': // millennium
 						$parts = explode('-', $date);
+						$parts[0] = str_pad($parts[0], 4, '0', STR_PAD_LEFT);
 						$value = substr($parts[0], 0, 1) . ' millenium' . $bce;
 						break;
 					default:
