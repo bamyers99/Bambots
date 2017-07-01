@@ -35,51 +35,46 @@ if (typeof Bamyers99_UnitsConverter_currency === 'undefined') Bamyers99_UnitsCon
 Bamyers99.UnitsConverter = {
 	commonjs: Bamyers99_UnitsConverter_testmode ? 'https://tools.wmflabs.org/bambots/GadgetCommon.js' :
 		'https://www.wikidata.org/w/index.php?title=User:Bamyers99/GadgetCommon.js&action=raw&ctype=text/javascript',
-	// ?s wdt:P2876 wd:Q8142,Q3647172; ?s wdt:P31 wd:Q21077852
-	propQuantities: {'P2121':'cur', 'P2769':'cur', 'P2130':'cur', 'P2630':'cur', 'P2555':'cur', 'P3087':'cur', 'P2836':'cur',
-		'P2220':'cur', 'P2835':'cur', 'P2295':'cur', 'P2218':'cur', 'P2284': 'cur', 'P2133':'cur',
-		'P2137':'cur', 'P2139':'cur', 'P2067':'mass', 'P2050':'dim', 'P2046':'area', 'P2102':'temp', 'P2793':'dim',
-		'P2217':'speed', 'P2386':'dim', 'P2148':'dim', 'P2262':'dim', 'P2044':'dim', 'P3157':'dim', 'P2128':'temp',
-		'P2923':'dim', 'P2151':'dim', 'P2565':'mass', 'P2048':'dim', 'P2043':'dim', 'P2254':'dim', 'P3252':'temp',
-		'P2101':'temp', 'P3251':'temp', 'P3253':'temp', 'P2547':'dim', 'P2120':'dim', 'P2052':'speed', 'P2113':'temp',
-		'P2430':'dim', 'P2076':'temp', 'P2073':'dim', 'P2053':'area', 'P3039':'dim', 'P2049':'dim', 'P2112':'area'},
-	unitConverts: {'mass': {
-			'Q41803': {'mult':0.0353, 'unit': 'Q48013'}, // gram -> ounce
-			'Q48013': {'mult':28.35, 'unit': 'Q41803'}, // ounce -> gram
-			'Q11570': {'mult':2.205, 'unit': 'Q100995'}, // kilogram -> pound
-			'Q100995': {'mult':0.454, 'unit': 'Q11570'} // pound -> kilogram
-		}, 'dim': {
-			'Q174789': {'mult':0.0394, 'unit': 'Q218593'}, // millimeter -> inch
-			'Q174728': {'mult':0.394, 'unit': 'Q218593'}, // centimetre -> inch
-			'Q218593': {'mult':2.54, 'unit': 'Q174728'}, // inch -> centimetre
-			'Q11573': {'mult':3.28, 'unit': 'Q3710'}, // metre -> foot
-			'Q3710': {'mult':0.305, 'unit': 'Q11573'}, // foot -> metre
-			'Q482798': {'mult':0.914, 'unit': 'Q11573'}, // yard -> metre
-			'Q828224': {'mult':0.621, 'unit': 'Q253276'}, // kilometre -> mile
-			'Q253276': {'mult':1.609, 'unit': 'Q828224'} // mile -> kilometre
-		}, 'area': {
-			'Q2489298': {'mult':0.155, 'unit': 'Q1063786'}, // sq centimetre -> sq inch
-			'Q1063786': {'mult':6.452, 'unit': 'Q2489298'}, // sq inch -> sq centimetre
-			'Q25343': {'mult':10.764, 'unit': 'Q857027'}, // sq metre -> sq foot
-			'Q857027': {'mult':0.0929, 'unit': 'Q25343'}, // sq foot -> sq metre
-			'Q1550511': {'mult':0.836, 'unit': 'Q11573'}, // sq yard -> sq metre
-			'Q35852': {'mult':2.471, 'unit': 'Q81292'}, // hectare -> acre
-			'Q81292': {'mult':0.405, 'unit': 'Q35852'}, // acre -> hectare
-			'Q712226': {'mult':0.386, 'unit': 'Q232291'}, // sq kilometre -> sq mile
-			'Q232291': {'mult':2.59, 'unit': 'Q712226'} // sq mile -> sq kilometre
-		}, 'temp': {
-			'Q25267': {'mult':1.8, 'add':32, 'unit': 'Q42289'}, // C -> F
-			'Q42289': {'minus': 32, 'mult':0.556, 'unit': 'Q25267'} // F -> C
-		}, 'speed': {
-			'Q182429': {'mult':3.281, 'unit': 'Q748716'}, // meter / second -> foot / second
-			'Q748716': {'mult':0.305, 'unit': 'Q182429'}, // foot / second -> meter / second
-			'Q180154': {'mult':0.621, 'unit': 'Q211256'}, // kilometer / hour -> mile / hour
-			'Q211256': {'mult':1.609, 'unit': 'Q180154'} // mile / hour -> kilometer / hour
-		}
+	unitCurrencies: ['Q1104069','Q122922','Q123213','Q131473','Q132643','Q1472704','Q172872','Q173117','Q181907',
+	                 'Q25224','Q25344','Q25417','Q259502','Q39099','Q41044','Q4730','Q4916','Q4917','Q80524','Q8146'],
+	unitConverts: {
+		// mass
+		'Q41803': [{'mult':0.0353, 'unit': 'Q48013'}], // gram -> ounce
+		'Q48013': [{'mult':28.35, 'unit': 'Q41803'}], // ounce -> gram
+		'Q11570': [{'mult':2.205, 'unit': 'Q100995'}], // kilogram -> pound
+		'Q100995': [{'mult':0.454, 'unit': 'Q11570'}], // pound -> kilogram
+		// dimensions
+		'Q174789': [{'mult':0.0394, 'unit': 'Q218593'}], // millimeter -> inch
+		'Q174728': [{'mult':0.394, 'unit': 'Q218593'}], // centimetre -> inch
+		'Q218593': [{'mult':2.54, 'unit': 'Q174728'}], // inch -> centimetre
+		'Q11573': [{'mult':3.28, 'unit': 'Q3710'}], // metre -> foot
+		'Q3710': [{'mult':0.305, 'unit': 'Q11573'}], // foot -> metre
+		'Q482798': [{'mult':0.914, 'unit': 'Q11573'}], // yard -> metre
+		'Q828224': [{'mult':0.621, 'unit': 'Q253276'}], // kilometre -> mile
+		'Q253276': [{'mult':1.609, 'unit': 'Q828224'}], // mile -> kilometre
+		// area
+		'Q2489298': [{'mult':0.155, 'unit': 'Q1063786'}], // sq centimetre -> sq inch
+		'Q1063786': [{'mult':6.452, 'unit': 'Q2489298'}], // sq inch -> sq centimetre
+		'Q25343': [{'mult':10.764, 'unit': 'Q857027'}], // sq metre -> sq foot
+		'Q857027': [{'mult':0.0929, 'unit': 'Q25343'}], // sq foot -> sq metre
+		'Q1550511': [{'mult':0.836, 'unit': 'Q11573'}], // sq yard -> sq metre
+		'Q35852': [{'mult':2.471, 'unit': 'Q81292'}], // hectare -> acre
+		'Q81292': [{'mult':0.405, 'unit': 'Q35852'}], // acre -> hectare
+		'Q712226': [{'mult':0.386, 'unit': 'Q232291'}], // sq kilometre -> sq mile
+		'Q232291': [{'mult':2.59, 'unit': 'Q712226'}], // sq mile -> sq kilometre
+		// temperature
+		'Q25267': [{'mult':1.8, 'addafter':32, 'unit': 'Q42289'}], // C -> F
+		'Q42289': [{'subbefore': 32, 'mult':0.556, 'unit': 'Q25267'}], // F -> C
+		'Q11579': [{'mult':1, 'subafter': 273.15, 'unit': 'Q25267'}, //K -> C
+		           {'mult':1.8, 'subafter': 459.67, 'unit': 'Q42289'}], // K -> F
+		// speed
+		'Q182429': [{'mult':3.281, 'unit': 'Q748716'}], // meter / second -> foot / second
+		'Q748716': [{'mult':0.305, 'unit': 'Q182429'}], // foot / second -> meter / second
+		'Q180154': [{'mult':0.621, 'unit': 'Q211256'}], // kilometer / hour -> mile / hour
+		'Q211256': [{'mult':1.609, 'unit': 'Q180154'}] // mile / hour -> kilometer / hour
 	},
 	propPointInTime: 'P585',
 	defaultCurISO: 'EUR',
-	langPriority: ['en','de','es','fr','it','pt'],
 
 	/**
 	 * Init
@@ -88,7 +83,8 @@ Bamyers99.UnitsConverter = {
 		var self = this ;
 
 		$.when(
-			$.ajax( { url: self.commonjs, dataType: 'script', cache: true } )
+			$.ajax( { url: self.commonjs, dataType: 'script', cache: true } ),
+			mw.loader.using( 'mediawiki.language' )
 		).done( function() {
 			self.gc = Bamyers99.GadgetCommon;
 
@@ -101,40 +97,61 @@ Bamyers99.UnitsConverter = {
 
 			var data = JSON.parse( mw.config.get( 'wbEntity' ) );
 			$.each( data.claims || {}, function ( prop, claims ) {
-				if ( prop === self.propPointInTime ) {
-					var dv = claims[0].mainsnak.datavalue;
-					pointInTimeYear = self.parseDateToYear( dv );
-					return true;
-				}
 
 				$.each( claims, function ( index, claim ) {
 					var pointInTimeYear = null;
 					var qualOffset = 0;
 					var qualifierHits = [];
 
-					$.each( claim.qualifiers || {}, function ( prop, qualifiers) {
+					if ( ! claim.mainsnak || ! claim.mainsnak.datavalue ) return true;
+
+					var dv = claim.mainsnak.datavalue;
+
+					if ( prop === self.propPointInTime ) {
+						pointInTimeYear = self.parseDateToYear( dv );
+						if ( pointInTimeYear ) return false;
+						return true;
+					}
+
+					var claimQualifiers = {};
+
+					if ( claim['qualifiers-order'] && claim.qualifiers ) {
+						$.each( claim['qualifiers-order'], function ( i, prop ){
+							claimQualifiers[prop] = claim.qualifiers[prop];
+						});
+					} else if ( claim.qualifiers ) {
+						claimQualifiers = claim.qualifiers;
+					}
+
+					$.each( claimQualifiers, function ( prop, qualifiers) {
 
 						$.each( qualifiers, function ( index, qualifier ) {
-							if ( prop === self.propPointInTime ) {
-								var dv = qualifiers[0].mainsnak.datavalue;
-								pointInTimeYear = self.parseDateToYear( dv );
+							if ( ! qualifier.datavalue ) {
 								++qualOffset;
 								return true;
 							}
 
-							if ( ! self.propQuantities.hasOwnProperty( prop ) ) {
+							if ( prop === self.propPointInTime ) {
+								pointInTimeYear = self.parseDateToYear( qualifier.datavalue );
+								++qualOffset;
+								if ( pointInTimeYear ) return false;
+								return true;
+							}
+
+							if ( qualifier.datavalue.type !== 'quantity' ) {
 								++qualOffset;
 								return true;
 							}
 
 							var quantity = self.parseQuantity( qualifier.datavalue );
-							if ( quantity === null ) {
+							if ( quantity === null || ( ! self.unitConverts.hasOwnProperty( quantity.unit ) &&
+									self.unitCurrencies.indexOf( quantity.unit ) === -1 )) {
 								++qualOffset;
 								return true;
 							}
 
-							qualifierHits.push( {'type': self.propQuantities[prop], 'cid': claim.id,
-								'qoffset': qualOffset, 'unit': quantity.unit, 'amount': quantity.amount} );
+							qualifierHits.push( {'cid': claim.id, 'qoffset': qualOffset,
+								'unit': quantity.unit, 'amount': quantity.amount} );
 							++qualOffset;
 						});
 					});
@@ -144,17 +161,18 @@ Bamyers99.UnitsConverter = {
 						propHits.push( qualifierHits[i] );
 					}
 
-					if ( ! self.propQuantities.hasOwnProperty( prop ) ) {
+					if ( dv.type !== 'quantity' ) {
 						return true;
 					}
 
-					var quantity = self.parseQuantity( claim.datavalue );
-					if ( quantity === null ) {
+					var quantity = self.parseQuantity( dv );
+					if ( quantity === null || ( ! self.unitConverts.hasOwnProperty( quantity.unit ) &&
+							self.unitCurrencies.indexOf( quantity.unit ) === -1 )) {
 						return true;
 					}
 
-					propHits.push( {'type': self.propQuantities[prop], 'cid': claim.id,
-						'unit': quantity.unit, 'amount': quantity.amount} );
+					propHits.push( {'cid': claim.id, 'unit': quantity.unit,
+						'amount': quantity.amount} );
 				});
 			});
 
@@ -162,11 +180,11 @@ Bamyers99.UnitsConverter = {
 
 			for ( var i = 0, al = propHits.length; i < al; ++i ) {
 				if (pointInTimeYear && ! propHits[i].hasOwnProperty( 'pity' ) ) propHits[i].pity = pointInTimeYear;
-				if (propHits[i].type === 'cur') currencyFound = true;
+				if ( ! currencyFound && self.unitCurrencies.indexOf( propHits[i].unit ) !== -1 ) currencyFound = true;
 			}
 
 			if ( currencyFound ) {
-				$.getJSON( '/wiki/User:Bamyers99/currency.json', function( data ) {
+				$.getJSON( '/w/index.php?title=User:Bamyers99/currency.json&action=raw&ctype=application/json', function( data ) {
 					self.displayUnits( propHits, data );
 				});
 			} else {
@@ -183,9 +201,129 @@ Bamyers99.UnitsConverter = {
 	 */
 	displayUnits: function ( propHits, currencies ) {
 		var self = this;
+		var toUnits = {};
+		var toCurUnit = null;
 
-		$.each( propHits, function( idx, hit ) {
+		// Get the 'to unit' language labels
+		if ( currencies ) {
+			if ( ! currencies.ISOs.hasOwnProperty( Bamyers99_UnitsConverter_currency ) )
+				Bamyers99_UnitsConverter_currency = self.defaultCurISO;
+			toCurUnit = currencies.ISOs[Bamyers99_UnitsConverter_currency];
+			toUnits[toCurUnit] = '';
+		}
 
+		for ( var i = 0, al = propHits.length; i < al; ++i ) {
+			if ( self.unitConverts.hasOwnProperty( propHits[i].unit ) ) {
+				for ( var x = 0, cl = self.unitConverts[propHits[i].unit].length; x < cl; ++x )
+					toUnits[self.unitConverts[propHits[i].unit][x].unit] = '';
+			}
+		}
+
+		var opts = {
+			action: 'wbgetentities',
+			props: 'labels',
+			ids: $.map( toUnits, function( v, k ) {
+					return k;
+				} ).join( '|' ),
+			lang: 'wikidata'
+		};
+
+		self.gc.mwApiQuery( opts, function( data ) {
+			if ( data.entities ) {
+				var userLang = mw.config.get( 'wgUserLanguage' ) ;
+
+				$.each( data.entities, function( id, itemdata ) {
+					if ( itemdata.labels ) {
+						var label = ( itemdata.labels[userLang] && itemdata.labels[userLang].value ) ||
+							( itemdata.labels.en && itemdata.labels.en.value ) || false;
+						if ( label ) toUnits[id] = label;
+					}
+				});
+			}
+
+			$.each( propHits, function( i, hit ) {
+				var $claimview = $( '.wikibase-statementview' )
+					.filter( function () {
+						return $( this ).hasClass( 'wikibase-statement-' + hit.cid );
+					});
+
+				if ( hit.hasOwnProperty( 'qoffset' ) ) {
+					$claimview = $claimview.find( '.wikibase-statementview-qualifiers .wikibase-snakview' ).eq( hit.qoffset );
+				} else {
+					$claimview = $claimview.find( '.wikibase-statementview-mainsnak' );
+				}
+
+				var h = '';
+				var toLabel, val;
+
+				if ( self.unitConverts.hasOwnProperty( hit.unit ) ) {
+					$.each( self.unitConverts[hit.unit], function ( i, convert) {
+						toLabel = toUnits[convert.unit];
+						val = hit.amount;
+						if ( convert.subbefore ) val -= convert.subbefore;
+						val *= convert.mult;
+						if ( convert.addafter ) val += convert.addafter;
+						if ( convert.subafter ) val -= convert.subafter;
+
+						if ( val < 5 ) val = val.toFixed(1);
+						else val = Math.round(val);
+
+						val = mw.language.commafy( val, '#,##0.#' );
+
+						h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>)';
+					})
+				} else {
+					var fromCurUnit = hit.unit;
+					toLabel = toUnits[toCurUnit];
+					var mults = [0,0];
+					var fromYear, toYear;
+					var currentYear = '' + currencies.current_year;
+
+					if ( hit.pity ) {
+						fromYear = hit.pity;
+						if ( currencies[fromCurUnit].cpis[fromYear] ) toYear = currentYear;
+						else toYear = fromYear;
+					} else {
+						fromYear = toYear = currentYear;
+					}
+
+					if ( fromCurUnit === toCurUnit && fromYear === toYear ) return true;
+
+					if ( ! currencies[fromCurUnit].rates[fromYear] ||
+						! currencies[toCurUnit].rates[toYear] ) return true;
+
+					$.each( [fromYear, toYear], function( x, year ) {
+						var multToCheck = ( x === 0 ) ? currencies[fromCurUnit].multipliers : currencies[toCurUnit].multipliers;
+						year = parseInt(year, 10);
+
+						$.each( multToCheck , function( y, multRange ) {
+							if ( year >= multRange.start && year <= multRange.end ) {
+								mults[x] = multRange.mult;
+								return false;
+							}
+						});
+					});
+
+					if (mults[0] === 0 || mults[1] === 0 ) return true;
+
+					var startCPI = currencies[fromCurUnit].cpis[fromYear];
+					var endCPI = currencies[fromCurUnit].cpis[toYear];
+					var fromRate = currencies[fromCurUnit].rates[fromYear];
+					var toRate = currencies[toCurUnit].rates[toYear];
+
+					// Inflate 'from currency' amount
+					val = hit.amount / mults[0] / fromRate * endCPI / startCPI * toRate * mults[1];
+					val = Math.round(val);
+					val = mw.language.commafy( val, '#,##0' );
+
+					h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
+					if ( hit.pity ) h += ' (' + toYear + ')';
+					h += ')';
+				}
+
+				$claimview.find( '.wikibase-snakview-value' ).append( h );
+
+			});
 		});
 	},
 
@@ -196,7 +334,7 @@ Bamyers99.UnitsConverter = {
 	 * @return { 'unit': unit, 'amount': amount } or null
 	 */
 	parseQuantity: function ( dv ) {
-		if ( dv.type !== 'quantity' ) return null;
+		if ( dv === undefined || dv.type !== 'quantity' ) return null;
 
 		var unit = dv.value.unit;
 		if ( unit === '1' ) return null;
@@ -238,7 +376,8 @@ Bamyers99.UnitsConverter = {
 };
 
 $( function() {
-	if (mw.config.get( 'wgNamespaceNumber' ) !== 0) return;
+	var ns = mw.config.get( 'wgNamespaceNumber' );
+	if ( ns !== 0 && ns !== 120 ) return;
 	if (mw.config.get( 'wgAction' ) !== 'view') return;
 	if (mw.config.get( 'wbIsEditView' ) === false) return;
 	if (mw.config.get( 'wgIsRedirect' ) === true) return;
