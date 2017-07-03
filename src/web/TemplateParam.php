@@ -668,7 +668,7 @@ function get_params()
 	if (! isset($wikis[$params['wiki']])) $params['wiki'] = 'enwiki';
 
 	$params['template'] = isset($_REQUEST['template']) ? $_REQUEST['template'] : '';
-	if (! empty($params['template'])) {
+	if ($params['template'] != '') {
 		if (empty($action)) $action = 'template';
 		$params['template'] = ucfirst(trim(str_replace('_', ' ', $params['template'])));
 	}
