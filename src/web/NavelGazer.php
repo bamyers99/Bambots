@@ -139,9 +139,10 @@ function display_form($navels)
 			});
 
 			foreach ($navels['data'] as $row) {
-				$url = "https://www.wikidata.org/wiki/Property:P" . $row[0];
+				$url = "/bambots/NavelGazer.php?property=P" . $row[0];
 				$term_text = htmlentities($row[1], ENT_COMPAT, 'UTF-8');
-				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td>{$row[2]}</td><td>{$row[3]}</td></tr>\n";
+				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) .
+					"</td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . "</td></tr>\n";
 			}
 
 			echo "</tbody></table>\n";
@@ -153,14 +154,17 @@ function display_form($navels)
 			} else {
 				$url = "https://www.wikidata.org/wiki/Property:P" . $params['property'];
 				$term_text = htmlentities($navels['property_label'], ENT_COMPAT, 'UTF-8');
-				echo "Property: <a href='$url'>$term_text (P{$params['property']})</a><br />\n";
+				echo "Property: <a href='$url' class='external'>$term_text (P{$params['property']})</a><br />\n";
 			}
 			if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
 			echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			foreach ($navels['data'] as $row) {
-				echo "<tr><td>{$row[0]}</td><td>{$row[1]}</td><td>{$row[2]}</td></tr>\n";
+				$user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+				$url = "/bambots/NavelGazer.php?username=" . urlencode($row[0]);
+				echo "<tr><td><a href='$url'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+					"</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 			}
 
 			echo "</tbody></table>\n";
@@ -283,6 +287,16 @@ function get_params()
 	}
 	if (empty($params['lang'])) $params['lang'] = 'en';
 
+}
+
+/**
+ * Format an integer
+ *
+ * @param int $number
+ */
+function intl_num_format($number)
+{
+	return number_format($number, 0, '', '&thinsp;');
 }
 
 ?>
