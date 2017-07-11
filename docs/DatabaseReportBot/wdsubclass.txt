@@ -29,8 +29,3 @@ INSERT INTO s51454__wikidata.subclasstotals VALUES (0,'N',5000,100,2017,0820,0);
 
 cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
 rm *
-
-
-ClassSuggester Gadget
-=====================
-cp *.js /data/project/bambots/Bambots/src/web
