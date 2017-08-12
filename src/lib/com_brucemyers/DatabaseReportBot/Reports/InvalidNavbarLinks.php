@@ -244,10 +244,32 @@ class InvalidNavbarLinks extends DatabaseReport
 
 		foreach ($template_types as $type_name => $template_type) {
 			$groupname = "{{tlp|$type_name|{$template_type['name_param']}&#61;}}";
-			echo "==$groupname==\n";
+			//echo "==$groupname==\n";
+
+			// Get the redirects to this navbar
+			$navbar_types = $template_type['children'];
+
+			$sql = "SELECT page_title FROM redirect, page " .
+				" WHERE rd_namespace = 10 AND rd_title = ? " .
+				" AND page_id = rd_from";
+			$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$sth = $dbh_enwiki->prepare($sql);
+			$sth->bindValue(1, str_replace(' ', '_', $type_name));
+			$sth->execute();
+			$sth->setFetchMode(PDO::FETCH_NUM);
+			$titles = array();
+
+			while ($row = $sth->fetch()) {
+				$redir_title = str_replace('_', ' ', $row[0]);
+				if (! in_array($redir_title, $navbar_types)) $navbar_types[] = $redir_title;
+			}
+
+			$sth->closeCursor();
+			$sth = null;
+			$dbh_enwiki = null;
 
 			// Retrieve the target navbars
-			$navbar_types = $template_type['children'];
 
 			$sql = "SELECT page_title FROM templatelinks, page " .
 				" WHERE tl_from_namespace = 10 AND tl_namespace = 10 AND tl_title = ? " .
@@ -275,7 +297,7 @@ class InvalidNavbarLinks extends DatabaseReport
 			$mediawiki->cachePages($titles);
 
 			foreach ($titles as $template) {
-				echo "$template\n";
+				//echo "$template\n";
 				$data = $mediawiki->getPageWithCache($template);
 
 				$parsed_templates = TemplateParamParser::getTemplates($data);
@@ -308,7 +330,7 @@ class InvalidNavbarLinks extends DatabaseReport
 						}
 					}
 
-		    		if (preg_match('!/(archive|child|doc|drafts|main|more|sandbox|shell|testcase|table|box)!i', $template)) continue;
+		    		if (preg_match('!/(archive|child|doc|drafts|main|more|sandbox|shell|testcase|table|box|lua)!i', $template)) continue;
 
 		    		$name = str_replace('_', ' ', $params[$name_param]);
 		    		$name = preg_replace('!\s+!', ' ', $name);

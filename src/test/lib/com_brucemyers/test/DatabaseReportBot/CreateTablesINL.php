@@ -49,10 +49,20 @@ class CreateTablesINL
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_enwiki->exec($sql);
 
+    	$sql = "CREATE TABLE IF NOT EXISTS `redirect` (
+ 			`rd_from` int unsigned NOT NULL default 0 PRIMARY KEY,
+ 			`rd_namespace` int NOT NULL default 0,
+ 			`rd_title` varchar(255) binary NOT NULL default '',
+ 			`rd_interwiki` varchar(32) default NULL,
+ 			`rd_fragment` varchar(255) binary default NULL
+ 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_enwiki->exec($sql);
+
     	// load enwiki
 
    		$dbh_enwiki->exec('TRUNCATE page');
-   		$dbh_enwiki->exec('TRUNCATE templatelinks');
+  		$dbh_enwiki->exec('TRUNCATE templatelinks');
+  		$dbh_enwiki->exec('TRUNCATE redirect');
 
     	// Navbox - No navbar
     	$dbh_enwiki->exec("INSERT INTO page VALUES (1,10,'NavboxNoNavbar')");
@@ -81,5 +91,11 @@ class CreateTablesINL
     	// SidebarNavbarOff
     	$dbh_enwiki->exec("INSERT INTO page VALUES (7,10,'SidebarNavbarOff')");
     	$dbh_enwiki->exec("INSERT INTO templatelinks VALUES (7,10,10,'Sidebar')");
+
+    	// Navbox - Redirect bad
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (8,10,'NavboxRedirectBad')");
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (9,10,'Navbox_redirect')");
+    	$dbh_enwiki->exec("INSERT INTO templatelinks VALUES (8,10,10,'Navbox')");
+    	$dbh_enwiki->exec("INSERT INTO redirect VALUES (9,10,'Navbox','','')");
     }
 }

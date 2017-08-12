@@ -55,7 +55,8 @@ class TestInvalidNavbarLinks extends UnitTestCase
     		'Template:NavboxBadName' => '{{Navbox|name = Navboxbadname|title = test 4}}',
     		'Template:BS-headerBadName' => '{{BS-header|BS-header title|BS-headerbadname}}',
     		'Template:BS-mapNoTitle' => '{{BS-map|navbar=BS-mapBadTitle}}',
-    		'Template:SidebarNavbarOff' => '{{Sidebar|name=SidebarBadName|navbar=off}}');
+    		'Template:SidebarNavbarOff' => '{{Sidebar|name=SidebarBadName|navbar=off}}',
+    		'Template:NavboxRedirectBad' => '{{Navbox redirect|name=NavboxRedirectbad|title = test 5}}');
 
     	Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
         $wiki = &new \MockMediaWiki();
@@ -87,11 +88,15 @@ class TestInvalidNavbarLinks extends UnitTestCase
 		$rows = $report->getRows($apis);
 		$errors = $rows['groups']['{{tlp|Navbox|name&#61;}}'];
 
-		$this->assertEqual(count($errors), 1, 'Wrong number of invalid Navbox links');
+		$this->assertEqual(count($errors), 2, 'Wrong number of invalid Navbox links');
 
 		$row = $errors[0];
 		$this->assertEqual($row[0], '[[Template:NavboxBadName|NavboxBadName]]', 'Wrong Navbox template');
 		$this->assertEqual($row[1], 'Navboxbadname', 'Wrong Navbox invalid name');
+
+		$row = $errors[1];
+		$this->assertEqual($row[0], '[[Template:NavboxRedirectBad|NavboxRedirectBad]]', 'Wrong Navbox template 2');
+		$this->assertEqual($row[1], 'NavboxRedirectbad', 'Wrong Navbox invalid name 2');
 
 		$errors = $rows['groups']['{{tlp|BS-header|2&#61;}}'];
 

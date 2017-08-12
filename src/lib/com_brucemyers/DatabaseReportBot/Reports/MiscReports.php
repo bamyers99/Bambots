@@ -510,7 +510,7 @@ class MiscReports extends DatabaseReport
 		$sth = $dbh_wiki->query($sql);
 		$sth->setFetchMode(PDO::FETCH_NUM);
 
-		$skip_ids = array(32816757,21213768,32992276,1855946,13981330,7268384,1801200);
+		$skip_ids = array(32816757,21213768,32992276,1855946,13981330,7268384,1801200,35801372);
 
 		$livingdead = array();
 
@@ -851,7 +851,8 @@ class MiscReports extends DatabaseReport
 			'P4034' => array('label' => 'SHIRONET ARTIST ID', 'exampleid' => 'Q258991', 'people' => false),
 			'P4114' => array('label' => 'ADK MEMBER ID', 'exampleid' => 'Q25973', 'people' => false),
 			'P4112' => array('label' => 'DANSKFILMOGTV PERSON', 'exampleid' => 'Q232404', 'people' => false),
-			'P4104' => array('label' => 'CARNEGIE HALL AGENT ID', 'exampleid' => 'Q131861', 'people' => false)
+			'P4104' => array('label' => 'CARNEGIE HALL AGENT ID', 'exampleid' => 'Q131861', 'people' => false),
+			'P4130' => array('label' => 'USHMM PERSON ID', 'exampleid' => 'Q7336', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
