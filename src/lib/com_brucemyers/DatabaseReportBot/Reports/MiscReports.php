@@ -485,7 +485,7 @@ class MiscReports extends DatabaseReport
 				9545191,24211762,18928421,38684243,584368,38676683,38659124,38655048,38643903,38632860,38619056,38619050,
 				38619045,853159,36509372,36509341,36509226,20396608,44457462,45040011,34169594,44818111,44918849,43574713,
 				45206896,44868847,5820690,12255259,5631166,43716686,44210847,3253032,49673186,50729227,12119190,9939398,
-				51410097,1214420,30387944,40245763,51435709,53296694
+				51410097,1214420,30387944,40245763,51435709,53296694,4293277,54749940,54835048
 		);
 
 		$badages = array();
@@ -510,7 +510,7 @@ class MiscReports extends DatabaseReport
 		$sth = $dbh_wiki->query($sql);
 		$sth->setFetchMode(PDO::FETCH_NUM);
 
-		$skip_ids = array(32816757,21213768,32992276,1855946,13981330,7268384,1801200,35801372);
+		$skip_ids = array(32816757,21213768,32992276,1855946,13981330,7268384,1801200,35801372,44838496);
 
 		$livingdead = array();
 
@@ -854,7 +854,12 @@ class MiscReports extends DatabaseReport
 			'P4104' => array('label' => 'CARNEGIE HALL AGENT ID', 'exampleid' => 'Q131861', 'people' => false),
 			'P4130' => array('label' => 'USHMM PERSON ID', 'exampleid' => 'Q7336', 'people' => false),
 			'P4169' => array('label' => 'YCBA AGENT ID', 'exampleid' => 'Q18826502', 'people' => false),
-			'P4180' => array('label' => 'GUJLIT PERSON ID', 'exampleid' => 'Q2724598', 'people' => false)
+			'P4180' => array('label' => 'GUJLIT PERSON ID', 'exampleid' => 'Q2724598', 'people' => false),
+			'P4186' => array('label' => 'AUSTRALIAN WOMEN\'S REGISTER ID', 'exampleid' => 'Q5271387', 'people' => false),
+			'P4208' => array('label' => 'BILLBOARD ARTIST ID', 'exampleid' => 'Q2067434', 'people' => false),
+			'P4206' => array('label' => 'FLEMISH ORGANIZATION FOR IMMOVABLE HERITAGE PERSON ID', 'exampleid' => 'Q154083', 'people' => false),
+			'P4198' => array('label' => 'GOOGLE PLAY MUSIC ARTIST ID', 'exampleid' => 'Q4276848', 'people' => false),
+			'P4193' => array('label' => 'FAMILYPEDIA PERSON ID', 'exampleid' => 'Q5335826', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
