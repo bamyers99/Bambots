@@ -505,7 +505,7 @@ class InceptionBot
         $newestpagecnt = number_format($newestpagecnt);
         $updatedpagecnt = number_format($updatedpagecnt);
         $output = <<<EOT
-<noinclude>__NOINDEX__</noinclude>
+<noinclude>{{log}}\n__NOINDEX__</noinclude>
 '''Last run:''' {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />
 '''Processing time:''' $totaltime<br />
 '''Project count:''' $rulesetcnt<br />
@@ -538,7 +538,7 @@ EOT;
         $etmonth = $matches[2];
         $etday = $matches[3];
 
-        $output = "<noinclude>__NOINDEX__</noinclude>\nNew page creators (10+ pages) since $etyear-$etmonth-$etday.\n\n{| class=\"wikitable sortable\"\n|-\n!User !! Page count\n";
+        $output = "<noinclude>{{log}}\n__NOINDEX__</noinclude>\nNew page creators (10+ pages) since $etyear-$etmonth-$etday.\n\n{| class=\"wikitable sortable\"\n|-\n!User !! Page count\n";
 
         foreach ($creators as $displayuser => $pagecnt) {
             if ($pagecnt < 10) continue;
