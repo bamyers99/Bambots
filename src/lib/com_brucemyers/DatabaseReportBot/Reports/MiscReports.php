@@ -859,7 +859,8 @@ class MiscReports extends DatabaseReport
 			'P4208' => array('label' => 'BILLBOARD ARTIST ID', 'exampleid' => 'Q2067434', 'people' => false),
 			'P4206' => array('label' => 'FLEMISH ORGANIZATION FOR IMMOVABLE HERITAGE PERSON ID', 'exampleid' => 'Q154083', 'people' => false),
 			'P4198' => array('label' => 'GOOGLE PLAY MUSIC ARTIST ID', 'exampleid' => 'Q4276848', 'people' => false),
-			'P4193' => array('label' => 'FAMILYPEDIA PERSON ID', 'exampleid' => 'Q5335826', 'people' => false)
+			'P4193' => array('label' => 'FAMILYPEDIA PERSON ID', 'exampleid' => 'Q5335826', 'people' => false),
+			'P4228' => array('label' => 'ENCYCLOPEDIA OF AUSTRALIAN SCIENCE ID', 'exampleid' => 'Q38734568', 'people' => false)
 		);
 
 		foreach ($rows as $row) {

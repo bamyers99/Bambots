@@ -17,6 +17,7 @@
 
 use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
+use com_brucemyers\Util\CSVString;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -29,7 +30,15 @@ require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 $params = array();
 
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
 get_params();
+
+switch ($action) {
+	case 'getCSV':
+		getCSV();
+		exit;
+}
 
 $navels = get_navels();
 
@@ -168,6 +177,12 @@ function display_form($navels)
 			}
 
 			echo "</tbody></table>\n";
+
+			$host  = $_SERVER['HTTP_HOST'];
+			$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+			$extra = "NavelGazer.php?action=getCSV&property=P" . urlencode($params['property']);
+
+			echo "<a href='//$host$uri/$extra'>Download all users in CSV format</a>\n<br />";
 		}
 	}
 ?>
@@ -297,6 +312,49 @@ function get_params()
 function intl_num_format($number)
 {
 	return number_format($number, 0, '', '&thinsp;');
+}
+
+/**
+ * Return CSV of property user counts
+ */
+function getCSV()
+{
+	global $params;
+	$wikiname = 'enwiki';
+	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
+	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+	$sth = $dbh_wiki->query("SELECT user_name FROM s51454__wikidata.navelgazer WHERE user_name LIKE 'Data as of:%'");
+
+	$row = $sth->fetch(PDO::FETCH_NUM);
+	$dataasof = substr($row[0], 12);
+
+	$filename = "NavelGazer_P{$params['property']}_$dataasof.csv";
+
+	header('Content-Type: text/csv');
+	header('Content-Disposition: attachment; filename="'.$filename.'";');
+
+	echo CSVString::format(array('Username', 'Total count', 'Last month'));
+	echo "\n";
+
+	$sql = "SELECT user_name, create_count, month_count " .
+			" FROM s51454__wikidata.navelgazer " .
+			" WHERE property_id = ? ORDER by create_count DESC";
+
+	$sth = $dbh_wiki->prepare($sql);
+	$sth->bindValue(1, (int)$params['property']);
+
+	$sth->execute();
+
+	while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		echo CSVString::format(array($row['user_name'], $row['create_count'], $row['month_count']));
+		echo "\n";
+	}
 }
 
 ?>
