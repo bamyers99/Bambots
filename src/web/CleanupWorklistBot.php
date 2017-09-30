@@ -15,7 +15,6 @@
  limitations under the License.
  */
 
-use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\CleanupWorklistBot\CreateTables;
@@ -122,10 +121,13 @@ function cat_test($project, $category_override)
     $output = '';
 
 	if (! empty($result['project_members'])) {
-		$output .= "Master project list configuration line: WikiProject_$project";
-		if (! empty($category_override)) $output .= " => $category_override";
+		$project_html = htmlspecialchars($project);
+		$output .= "Master project list configuration line: WikiProject_{$project_html}";
+		if (! empty($category_override)) $output .= ' => ' . htmlspecialchars($category_override);
 		$output .= '<br />';
-		$output .= "Project articles category: <a href='https://en.wikipedia.org/wiki/Category:{$result['project_cat']}'>{$result['project_members']}</a><br />";
+		$project_cat = urlencode($result['project_cat']);
+		$project_members = htmlspecialchars($result['project_members']);
+		$output .= "Project articles category: <a href='https://en.wikipedia.org/wiki/Category:$project_cat'>$project_members</a><br />";
 		$output .= 'Project class categories found: ' . (($result['found_class']) ? 'Yes' : 'No') . '<br />';
 		$output .= 'Project importance categories found: ' . (($result['found_importance']) ? 'Yes' : 'No') . '<br />';
 	} else {
