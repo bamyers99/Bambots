@@ -283,14 +283,16 @@ function get_subclasses()
 	$children = array();
 	$class = array();
 
-	$wikiname = 'enwiki';
+	$wikiname = 'tools';
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
 
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$dbh_wikidata = new PDO("mysql:host=wikidatawiki.web.db.svc.eqiad.wmflabs;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+	$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.subclasstotals WHERE qid = 0");
 
@@ -307,58 +309,61 @@ function get_subclasses()
 
 	// Retrieve the class
 	if ($params['id'] != 0) {
-		$sql = "SELECT wbt.term_text AS lang_text, wbten.term_text AS en_text, wbd.term_text AS lang_desc, wbden.term_text AS en_desc, " .
-				" sct.directchildcnt, sct.indirectchildcnt, sct.directinstcnt, sct.indirectinstcnt, sct.islistofcnt " .
-				" FROM s51454__wikidata.subclasstotals sct " .
-				" LEFT JOIN wikidatawiki_p.wb_terms wbt ON sct.qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' " .
-				" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
-				" LEFT JOIN wikidatawiki_p.wb_terms wbten ON sct.qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' " .
-				" AND wbten.term_type = 'label' AND wbten.term_language = 'en' " .
-				" LEFT JOIN wikidatawiki_p.wb_terms wbd ON sct.qid = wbd.term_entity_id AND wbd.term_entity_type = 'item' " .
-				" AND wbd.term_type = 'description' AND wbd.term_language = ? " .
-				" LEFT JOIN wikidatawiki_p.wb_terms wbden ON sct.qid = wbden.term_entity_id AND wbden.term_entity_type = 'item' " .
-				" AND wbden.term_type = 'description' AND wbden.term_language = 'en' " .
-				" WHERE sct.qid = ? LIMIT 1";
+		$sql = "SELECT directchildcnt, indirectchildcnt, directinstcnt, indirectinstcnt, islistofcnt " .
+				" FROM s51454__wikidata.subclasstotals " .
+				" WHERE qid = ? LIMIT 1";
 
 		$sth = $dbh_wiki->prepare($sql);
-		$sth->bindValue(1, $params['lang']);
-		$sth->bindValue(2, $params['lang']);
-		$sth->bindValue(3, $params['id']);
+		$sth->bindValue(1, $params['id']);
 
 		$sth->execute();
 
 		if ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$term_text = $row['lang_text'];
-			if (is_null($term_text)) $term_text = $row['en_text'];
-			if (is_null($term_text)) $term_text = 'Q' . $params['id'];
-
-			$term_desc = $row['lang_desc'];
-			if (is_null($term_desc)) $term_desc = $row['en_desc'];
-			if (is_null($term_desc)) $term_desc = '';
-
-			$class = array($term_text, $term_desc, $row['directchildcnt'], $row['indirectchildcnt'],
+			$class = array('Q' . $params['id'], '', $row['directchildcnt'], $row['indirectchildcnt'],
 					$row['directinstcnt'], $row['indirectinstcnt'], $row['islistofcnt']);
+
+			$sql = "SELECT wbt.term_text AS lang_text, wbten.term_text AS en_text, wbd.term_text AS lang_desc, wbden.term_text AS en_desc " .
+					" FROM wikidatawiki_p.wb_terms wbten " .
+					" LEFT JOIN wikidatawiki_p.wb_terms wbt ON wbten.term_entity_id = wbt.term_entity_id AND wbt.term_entity_type = 'item' " .
+					" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
+					" LEFT JOIN wikidatawiki_p.wb_terms wbd ON wbten.term_entity_id = wbd.term_entity_id AND wbd.term_entity_type = 'item' " .
+					" AND wbd.term_type = 'description' AND wbd.term_language = ? " .
+					" LEFT JOIN wikidatawiki_p.wb_terms wbden ON wbten.term_entity_id = wbden.term_entity_id AND wbden.term_entity_type = 'item' " .
+					" AND wbden.term_type = 'description' AND wbden.term_language = 'en' " .
+					" WHERE wbten.term_entity_id = ? AND wbten.term_entity_type = 'item' " .
+					" AND wbten.term_type = 'label' AND wbten.term_language = 'en' " .
+					" LIMIT 1";
+
+			$sth = $dbh_wikidata->prepare($sql);
+			$sth->bindValue(1, $params['lang']);
+			$sth->bindValue(2, $params['lang']);
+			$sth->bindValue(3, $params['id']);
+
+			$sth->execute();
+
+			if ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+				$term_text = $row['lang_text'];
+				if (is_null($term_text)) $term_text = $row['en_text'];
+				if (is_null($term_text)) $term_text = 'Q' . $params['id'];
+
+				$term_desc = $row['lang_desc'];
+				if (is_null($term_desc)) $term_desc = $row['en_desc'];
+				if (is_null($term_desc)) $term_desc = '';
+
+				$class[0] = $term_text;
+				$class[1] = $term_desc;
+			}
 		}
 	}
 
 	// Retrieve the parent classes
 	if ($params['id'] != 0) {
-		$en_text = '';
-		if ($params['lang'] != 'en') $en_text = ', wbten.term_text AS en_text';
-
-		$sql = "SELECT scc.parent_qid, wbt.term_text AS lang_text $en_text ";
-		$sql .= " FROM s51454__wikidata.subclassclasses scc ";
-		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.parent_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
-		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-		if ($params['lang'] != 'en') {
-			$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.parent_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-			$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
-		}
-		$sql .= " WHERE scc.child_qid = ? ";
+		$sql = "SELECT parent_qid ";
+		$sql .= " FROM s51454__wikidata.subclassclasses ";
+		$sql .= " WHERE child_qid = ? ";
 
 		$sth = $dbh_wiki->prepare($sql);
-		$sth->bindValue(1, $params['lang']);
-		$sth->bindValue(2, $params['id']);
+		$sth->bindValue(1, $params['id']);
 
 		$sth->execute();
 
@@ -367,60 +372,90 @@ function get_subclasses()
 			if (is_null($term_text) && $params['lang'] != 'en') $term_text = $row['en_text'];
 			if (is_null($term_text)) $term_text = 'Q' . $row['parent_qid'];
 
-			$parents[$row['parent_qid']] = array($row['parent_qid'], $term_text); // removes dup terms
+			$parents[$row['parent_qid']] = array($row['parent_qid'], 'Q' . $row['parent_qid']); // removes dup terms
+		}
+
+		if (! empty($parents)) {
+			$en_text = '';
+			if ($params['lang'] != 'en') $en_text = ', wbten.term_text AS en_text';
+			$parent_ids = implode(',', array_keys($parents));
+
+			$sql = "SELECT wbt.term_entity_id AS parent_qid, wbt.term_text AS lang_text $en_text ";
+			$sql .= " FROM wikidatawiki_p.wb_terms wbt ";
+			if ($params['lang'] != 'en') {
+				$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON wbt.term_entity_id = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+				$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+			}
+			$sql .= " WHERE wbt.term_entity_id IN (" . $parent_ids . ") AND wbt.term_entity_type = 'item' ";
+			$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
+
+			$sth = $dbh_wikidata->prepare($sql);
+			$sth->bindValue(1, $params['lang']);
+
+			$sth->execute();
+
+			while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+				$term_text = $row['lang_text'];
+				if (is_null($term_text) && $params['lang'] != 'en') $term_text = $row['en_text'];
+				if (is_null($term_text)) $term_text = 'Q' . $row['parent_qid'];
+
+				$parents[$row['parent_qid']][1] = $term_text;
+			}
 		}
 	}
 
 	// Retrieve the child classes
 	if ($params['id'] == 0) {
-		$en_text = '';
-		if ($params['lang'] != 'en') $en_text = 'wbten.term_text AS en_text,';
-
-		$sql = "SELECT sct.qid, wbt.term_text AS lang_text, $en_text ";
-		$sql .= " sct.directchildcnt, sct.indirectchildcnt, sct.directinstcnt, sct.indirectinstcnt ";
-		$sql .= " FROM s51454__wikidata.subclasstotals sct ";
-		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON sct.qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
-		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-		if ($params['lang'] != 'en') {
-			$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON sct.qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-			$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
-		}
-		$sql .= " WHERE sct.root = 'Y' ";
-		$sql .= " ORDER BY sct.directchildcnt + sct.indirectchildcnt + sct.directinstcnt + sct.indirectinstcnt DESC LIMIT 200";
+		$sql = "SELECT qid, directchildcnt, indirectchildcnt, directinstcnt, indirectinstcnt ";
+		$sql .= " FROM s51454__wikidata.subclasstotals ";
+		$sql .= " WHERE root = 'Y' ";
+		$sql .= " ORDER BY directchildcnt + indirectchildcnt + directinstcnt + indirectinstcnt DESC LIMIT 200";
 
 		$sth = $dbh_wiki->prepare($sql);
-		$sth->bindValue(1, $params['lang']);
 
 	} elseif (! empty($class) && $class[2] <= MAX_CHILD_CLASSES) { // directchildcnt
-		$en_text = '';
-		if ($params['lang'] != 'en') $en_text = 'wbten.term_text AS en_text,';
-
-		$sql = "SELECT scc.child_qid AS qid, wbt.term_text AS lang_text, $en_text ";
-		$sql .= " sct.directchildcnt, sct.indirectchildcnt, sct.directinstcnt, sct.indirectinstcnt ";
+		$sql = "SELECT scc.child_qid AS qid, sct.directchildcnt, sct.indirectchildcnt, sct.directinstcnt, sct.indirectinstcnt ";
 		$sql .= " FROM s51454__wikidata.subclassclasses scc ";
 		$sql .= " JOIN s51454__wikidata.subclasstotals sct ON sct.qid = scc.child_qid ";
-		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.child_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
-		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-		if ($params['lang'] != 'en') {
-			$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.child_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-			$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
-		}
 		$sql .= " WHERE scc.parent_qid = ?";
 
 		$sth = $dbh_wiki->prepare($sql);
-		$sth->bindValue(1, $params['lang']);
-		$sth->bindValue(2, $params['id']);
+		$sth->bindValue(1, $params['id']);
 	}
 
 	$sth->execute();
 
 	while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-		$term_text = $row['lang_text'];
-		if (is_null($term_text) && $params['lang'] != 'en') $term_text = $row['en_text'];
-		if (is_null($term_text)) $term_text = 'Q' . $row['qid'];
-
-		$children[$row['qid']] = array($row['qid'], $term_text, $row['directchildcnt'], $row['indirectchildcnt'],
+		$children[$row['qid']] = array($row['qid'], 'Q' . $row['qid'], $row['directchildcnt'], $row['indirectchildcnt'],
 			$row['directinstcnt'], $row['indirectinstcnt']); // removes dup terms
+	}
+
+	if (! empty($children)) {
+		$en_text = '';
+		if ($params['lang'] != 'en') $en_text = ', wbten.term_text AS en_text';
+		$child_ids = implode(',', array_keys($children));
+
+		$sql = "SELECT wbt.term_entity_id AS child_qid, wbt.term_text AS lang_text $en_text ";
+		$sql .= " FROM wikidatawiki_p.wb_terms wbt ";
+		if ($params['lang'] != 'en') {
+			$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON wbt.term_entity_id = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
+			$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+		}
+		$sql .= " WHERE wbt.term_entity_id IN (" . $child_ids . ") AND wbt.term_entity_type = 'item' ";
+		$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
+
+		$sth = $dbh_wikidata->prepare($sql);
+		$sth->bindValue(1, $params['lang']);
+
+		$sth->execute();
+
+		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+			$term_text = $row['lang_text'];
+			if (is_null($term_text) && $params['lang'] != 'en') $term_text = $row['en_text'];
+			if (is_null($term_text)) $term_text = 'Q' . $row['child_qid'];
+
+			$children[$row['child_qid']][1] = $term_text;
+		}
 	}
 
 	$return = array('class' => $class, 'parents' => $parents, 'children' => $children, 'dataasof' => $dataasof,
@@ -493,7 +528,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
-	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+	if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
 
 	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

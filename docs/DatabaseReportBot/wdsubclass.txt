@@ -18,7 +18,7 @@ CREATE TABLE s51454__wikidata.`subclasstotals` (
   KEY `root` (`root`)
 ) ENGINE=Aria DEFAULT CHARSET=utf8
 
-sql enwiki
+sql tools
 TRUNCATE s51454__wikidata.subclassclasses;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassclasses.tsv' INTO TABLE s51454__wikidata.subclassclasses CHARACTER SET binary;
 

@@ -129,7 +129,7 @@ function display_form($navels)
 
 			foreach ($navels['data'] as $key => $row) {
 				if ($row[0] < 0) {
-					$misc[] = $edit_types[$row[0]] . ": {$row[2]} (last month: {$row[3]})<br />\n";
+					$misc[] = $edit_types[$row[0]] . ": {$row[1]} (last month: {$row[2]})<br />\n";
 					unset($navels['data'][$key]);
 				}
 			}
@@ -144,14 +144,14 @@ function display_form($navels)
 			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			usort($navels['data'], function($a, $b) {
-				return strcmp(strtolower($a[1]), strtolower($b[1]));
+				return strcmp(strtolower($a[3]), strtolower($b[3]));
 			});
 
 			foreach ($navels['data'] as $row) {
 				$url = "/bambots/NavelGazer.php?property=P" . $row[0];
-				$term_text = htmlentities($row[1], ENT_COMPAT, 'UTF-8');
-				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) .
-					"</td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . "</td></tr>\n";
+				$term_text = htmlentities($row[3], ENT_COMPAT, 'UTF-8');
+				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+					"</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 			}
 
 			echo "</tbody></table>\n";
@@ -200,13 +200,13 @@ function get_navels()
 
 	if (empty($params['username']) && empty($params['property'])) return $return;
 
-	$wikiname = 'enwiki';
+	$wikiname = 'tools';
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
 
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$sth = $dbh_wiki->query("SELECT user_name FROM s51454__wikidata.navelgazer WHERE user_name LIKE 'Data as of:%'");
@@ -220,28 +220,49 @@ function get_navels()
 		$params['username'] = ucfirst($params['username']);
 		$params['username'] = str_replace('_', ' ', $params['username']);
 
-		$sql = "SELECT ng.property_id, ng.create_count, ng.month_count, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
-			" FROM s51454__wikidata.navelgazer ng " .
-			" LEFT JOIN wikidatawiki_p.wb_terms wbt ON ng.property_id = wbt.term_entity_id AND wbt.term_entity_type = 'property' " .
-			" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
-			" LEFT JOIN wikidatawiki_p.wb_terms wbten ON ng.property_id = wbten.term_entity_id AND wbten.term_entity_type = 'property' " .
-			" AND wbten.term_type = 'label' AND wbten.term_language = 'en' " .
-			" WHERE ng.user_name = ? ";
+		$sql = "SELECT property_id, create_count, month_count " .
+				" FROM s51454__wikidata.navelgazer " .
+				" WHERE user_name = ? ";
 
 		$sth = $dbh_wiki->prepare($sql);
-		$sth->bindValue(1, $params['lang']);
-		$sth->bindValue(2, $params['username']);
+		$sth->bindValue(1, $params['username']);
 
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$term_text = $row['lang_text'];
-			if (is_null($term_text)) $term_text = $row['en_text'];
+			$data[$row['property_id']] = array($row['property_id'], $row['create_count'], $row['month_count'], ''); // removes dups
+		}
 
-			$data[$row['property_id']] = array($row['property_id'], $term_text, $row['create_count'], $row['month_count']); // removes dups
+		if (! empty($data)) {
+			$dbh_wikidata = new PDO("mysql:host=wikidatawiki.web.db.svc.eqiad.wmflabs;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+			$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+			$prop_ids = implode(',', array_keys($data));
+
+			$sql = "SELECT wbt.term_entity_id AS property_id, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
+					" FROM wikidatawiki_p.wb_terms wbten " .
+					" LEFT JOIN wikidatawiki_p.wb_terms wbt ON wbten.term_entity_id = wbt.term_entity_id AND wbt.term_entity_type = 'property' " .
+					" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
+					" WHERE wbten.term_entity_id IN (" . $prop_ids . ") AND wbten.term_entity_type = 'property' " .
+					" AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+
+			$sth = $dbh_wikidata->prepare($sql);
+			$sth->bindValue(1, $params['lang']);
+
+			$sth->execute();
+
+			while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+				$term_text = $row['lang_text'];
+				if (is_null($term_text)) $term_text = $row['en_text'];
+
+				$data[$row['property_id']][3] = $term_text;
+			}
 		}
 
 	} else { // property
+		$dbh_wikidata = new PDO("mysql:host=wikidatawiki.web.db.svc.eqiad.wmflabs;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 		$sql = "SELECT wbt.term_text AS lang_text, wbten.term_text AS en_text " .
 			" FROM wikidatawiki_p.wb_terms wbten " .
 			" LEFT JOIN wikidatawiki_p.wb_terms wbt ON wbten.term_entity_id = wbt.term_entity_id AND wbt.term_entity_type = 'property' " .
@@ -249,7 +270,7 @@ function get_navels()
 			" WHERE wbten.term_entity_id = ? AND wbten.term_entity_type = 'property' " .
 			" AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
 
-		$sth = $dbh_wiki->prepare($sql);
+		$sth = $dbh_wikidata->prepare($sql);
 		$sth->bindValue(1, $params['lang']);
 		$sth->bindValue(2, (int)$params['property']);
 
@@ -320,13 +341,13 @@ function intl_num_format($number)
 function getCSV()
 {
 	global $params;
-	$wikiname = 'enwiki';
+	$wikiname = 'tools';
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
 
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$sth = $dbh_wiki->query("SELECT user_name FROM s51454__wikidata.navelgazer WHERE user_name LIKE 'Data as of:%'");
