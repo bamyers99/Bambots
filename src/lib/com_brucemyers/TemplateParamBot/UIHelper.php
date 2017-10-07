@@ -198,18 +198,34 @@ class UIHelper
 		$templid = $row[0];
 
 		if ($type == 'paramlinks') {
-			$where = 'pv.template_id = ? AND wp.page_id = pv.page_id AND pv.param_name = ?';
+			$where = 'template_id = ? AND param_name = ?';
 			$values = array($templid, $params['param']);
 		} else { // valuelinks
-			$where = 'pv.template_id = ? AND wp.page_id = pv.page_id AND pv.param_name = ? AND pv.param_value = ?';
+			$where = 'template_id = ? AND param_name = ? AND param_value = ?';
 			$values = array($templid, $params['param'], $params['value']);
 		}
 
-		$sql = "SELECT DISTINCT page_title FROM `{$wikiname}_p`.page wp, `{$wikiname}_values` pv WHERE $where ORDER BY page_title LIMIT $offset,$max_rows";
+		$sql = "SELECT DISTINCT page_id FROM `{$wikiname}_values` WHERE $where LIMIT $offset,$max_rows";
 		$sth = $this->dbh_tools->prepare($sql);
 		$sth->execute($values);
 
-		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+		$results = $sth->fetchAll(PDO::FETCH_NUM);
+
+		if (! empty($results)) {
+			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+			$page_ids = array();
+			foreach ($results as $row) {
+				$page_ids[] = $row[0];
+			}
+
+			$page_ids = implode(',', $page_ids);
+
+			$sql = "SELECT page_title FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
+			$sth = $dbh_wiki->prepare($sql);
+			$sth->execute();
+
+			$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+		}
 
 		return array('errors' => $errors, 'results' => $results);
 	}
@@ -242,15 +258,30 @@ class UIHelper
 		if ($type == 'missing') $tablename = 'missings';
 		else $tablename = 'invalids';
 
-		$sql = "SELECT page_title FROM `{$wikiname}_$tablename` miss " .
-			" STRAIGHT_JOIN `{$wikiname}_p`.page wp ON wp.page_id = miss.page_id " .
-			" WHERE miss.template_id = ? AND miss.param_name = ? " .
-			" ORDER BY page_title LIMIT $offset,$max_rows";
+		$sql = "SELECT page_id FROM `{$wikiname}_$tablename` " .
+			" WHERE template_id = ? AND param_name = ? " .
+			" LIMIT $offset,$max_rows";
 
 		$sth = $this->dbh_tools->prepare($sql);
 		$sth->execute(array($templid, $params['param']));
 
-		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+		$results = $sth->fetchAll(PDO::FETCH_NUM);
+
+		if (! empty($results)) {
+			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+			$page_ids = array();
+			foreach ($results as $row) {
+				$page_ids[] = $row[0];
+			}
+
+			$page_ids = implode(',', $page_ids);
+
+			$sql = "SELECT page_title FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
+			$sth = $dbh_wiki->prepare($sql);
+			$sth->execute();
+
+			$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+		}
 
 		return array('errors' => $errors, 'results' => $results);
 	}
