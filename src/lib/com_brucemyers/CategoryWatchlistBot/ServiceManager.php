@@ -59,7 +59,7 @@ class ServiceManager
 
 		} else {
     		$wiki_host = $this->wiki_host;
-    		if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+    		if (empty($wiki_host)) $wiki_host = "$wikiname.analytics.db.svc.eqiad.wmflabs";
     		$dbh = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $this->dbuser, $this->dbpass);
 		}
 
