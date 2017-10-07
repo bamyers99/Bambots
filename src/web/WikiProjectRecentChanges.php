@@ -309,7 +309,7 @@ function get_changes()
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
-	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+	if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
 
 	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

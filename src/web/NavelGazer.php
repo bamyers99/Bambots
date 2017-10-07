@@ -239,7 +239,7 @@ function get_navels()
 
 			$prop_ids = implode(',', array_keys($data));
 
-			$sql = "SELECT wbt.term_entity_id AS property_id, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
+			$sql = "SELECT wbten.term_entity_id AS property_id, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
 					" FROM wikidatawiki_p.wb_terms wbten " .
 					" LEFT JOIN wikidatawiki_p.wb_terms wbt ON wbten.term_entity_id = wbt.term_entity_id AND wbt.term_entity_type = 'property' " .
 					" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
