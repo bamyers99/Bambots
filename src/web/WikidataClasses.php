@@ -368,10 +368,6 @@ function get_subclasses()
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$term_text = $row['lang_text'];
-			if (is_null($term_text) && $params['lang'] != 'en') $term_text = $row['en_text'];
-			if (is_null($term_text)) $term_text = 'Q' . $row['parent_qid'];
-
 			$parents[$row['parent_qid']] = array($row['parent_qid'], 'Q' . $row['parent_qid']); // removes dup terms
 		}
 
