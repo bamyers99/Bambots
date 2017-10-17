@@ -184,7 +184,11 @@ class AddColumnORESScore extends AddColumn
 					}
 				}
 
-				$value = $data['scores'][$wiki][$model]['scores'][$row[$column]]['prediction'];
+				if (! isset($data['scores'][$wiki][$model]['scores'][$row[$column]]['prediction'])) {
+					$value = 'GA';
+				} else {
+					$value = $data['scores'][$wiki][$model]['scores'][$row[$column]]['prediction'];
+				}
 
 				$retval = $this->insertColumn($rows[$key], $value);
 				if ($retval !== true) return $retval;
