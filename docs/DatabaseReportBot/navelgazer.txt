@@ -10,5 +10,5 @@ CREATE TABLE s51454__wikidata.`navelgazer` (
 
 sql tools
 TRUNCATE s51454__wikidata.navelgazer;
-LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/navelgazer.tsv' INTO TABLE s51454__wikidata.navelgazer CHARACTER SET binary;
+LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazer.tsv' INTO TABLE s51454__wikidata.navelgazer CHARACTER SET binary;
 INSERT INTO s51454__wikidata.navelgazer VALUES ('Data as of: 2017-xx-xx', -99, 0, 0);

@@ -66,6 +66,11 @@ class MiscReports extends DatabaseReport
     			$this->WikidataPeopleAuthCtrl($apis['dbh_wiki']);
     			return false;
     			break;
+
+    		case 'WikidataPropertyCounts':
+    			$this->WikidataPropertyCounts($apis['dbh_wiki'], $apis['mediawiki'], $apis['dbh_wikidata']);
+    			return false;
+    			break;
     	}
 
     	return true;
@@ -753,119 +758,119 @@ class MiscReports extends DatabaseReport
 		$rows = $sparql->query($query);
 
 		$props = array(
-			'P213' => array('label' => 'ISNI', 'exampleid' => 'Q21930050', 'people' => false),
-			'P269' => array('label' => 'SUDOC AUTHORITIES', 'exampleid' => 'Q535', 'people' => false),
-			'P906' => array('label' => 'SELIBR', 'exampleid' => 'Q762', 'people' => false),
-			'P349' => array('label' => 'NDL ID', 'exampleid' => 'Q307', 'people' => false),
-			'P244' => array('label' => 'LCAUTH ID', 'exampleid' => 'Q5582', 'people' => false),
-			'P227' => array('label' => 'GND ID', 'exampleid' => 'Q212190', 'people' => false),
-			'P396' => array('label' => 'SBN ID', 'exampleid' => 'Q307', 'people' => false),
-			'P950' => array('label' => 'BNE ID', 'exampleid' => 'Q79822', 'people' => false),
-			'P214' => array('label' => 'VIAF ID', 'exampleid' => 'Q447070', 'people' => false),
-			'P268' => array('label' => 'BNF ID', 'exampleid' => 'Q7836', 'people' => false),
-			'P549' => array('label' => 'MATHEMATICS GENEALOGY PROJECT ID', 'exampleid' => 'Q7604', 'people' => false),
-			'P949' => array('label' => 'NATIONAL LIBRARY OF ISRAEL ID', 'exampleid' => 'Q42', 'people' => false),
-			'P409' => array('label' => 'NLA (AUSTRALIA) ID', 'exampleid' => 'Q436699', 'people' => false),
-			'P691' => array('label' => 'NKCR AUT ID', 'exampleid' => 'Q57434', 'people' => false),
-			'P1005' => array('label' => 'PTBNP ID', 'exampleid' => 'Q134461', 'people' => false),
-			'P1017' => array('label' => 'BAV ID', 'exampleid' => 'Q551550', 'people' => false),
-			'P646' => array('label' => 'FREEBASE ID', 'exampleid' => 'Q307', 'people' => false),
-			'P1273' => array('label' => 'CANTIC-ID', 'exampleid' => 'Q561147', 'people' => false),
-			'P1207' => array('label' => 'NUKAT (WARSAWU) AUTHORITIES', 'exampleid' => 'Q42552', 'people' => false),
-			'P1309' => array('label' => 'EGAXA ID', 'exampleid' => 'Q307', 'people' => false),
-			'P1422' => array('label' => 'SANDRART.NET PERSON ID', 'exampleid' => 'Q312304', 'people' => false),
-			'P866' => array('label' => 'PERLENTAUCHER ID', 'exampleid' => 'Q307', 'people' => false),
-			'P1670' => array('label' => 'LAC ID', 'exampleid' => 'Q307', 'people' => false),
-			'P1368' => array('label' => 'LNB ID', 'exampleid' => 'Q615419', 'people' => false),
-			'P1695' => array('label' => 'NLP ID', 'exampleid' => 'Q12904', 'people' => false),
-			'P1375' => array('label' => 'NSK ID', 'exampleid' => 'Q336571', 'people' => false),
-			'P723' => array('label' => 'DBNL ID', 'exampleid' => 'Q2359791', 'people' => false),
-			'P1741' => array('label' => 'GTAA ID', 'exampleid' => 'Q523644', 'people' => false),
-			'P648' => array('label' => 'OPEN LIBRARY ID', 'exampleid' => 'Q5685', 'people' => false),
-			'P1871' => array('label' => 'CERL ID', 'exampleid' => 'Q307', 'people' => false),
-			'P2163' => array('label' => 'FAST-ID', 'exampleid' => 'Q307', 'people' => false),
-			'P865' => array('label' => 'BMLO', 'exampleid' => 'Q11933906', 'people' => false),
-			'P998' => array('label' => 'DMOZ ID', 'exampleid' => 'Q255', 'people' => false),
-			'P1248' => array('label' => 'KULTURNAV-ID', 'exampleid' => 'Q959698', 'people' => false),
-			'P1902' => array('label' => 'SPOTIFY ARTIST ID', 'exampleid' => 'Q2757867', 'people' => false),
-			'P1430' => array('label' => 'OPENPLAQUES SUBJECT ID', 'exampleid' => 'Q207', 'people' => false),
-			'P1284' => array('label' => 'MUNZINGER IBA', 'exampleid' => 'Q1684721', 'people' => false),
-			'P1839' => array('label' => 'US FEDERAL ELECTION COMMISSION ID', 'exampleid' => 'Q516515', 'people' => false),
-			'P1296' => array('label' => 'GRAN ENCICLOPEDIA CATALANA ID', 'exampleid' => 'Q207', 'people' => false),
-			'P1749' => array('label' => 'PARLEMENT & POLITIEK ID', 'exampleid' => 'Q57792', 'people' => false),
-			'P1048' => array('label' => 'NCL ID', 'exampleid' => 'Q228889', 'people' => false),
-			'P2390' => array('label' => 'BALLOTPEDIA ID', 'exampleid' => 'Q76', 'people' => false),
-			'P1417' => array('label' => 'ENCYCLOPEDIA BRITANNICA ONLINE ID', 'exampleid' => 'Q7374', 'people' => false),
-			'P1003' => array('label' => 'NLR (ROMANIA) ID', 'exampleid' => 'Q77177', 'people' => false),
-			'P651' => array('label' => 'BIOGRAFISH PORTAAL NUMBER', 'exampleid' => 'Q2929721', 'people' => false),
-			'P902' => array('label' => 'HDS ID', 'exampleid' => 'Q435456', 'people' => false),
-			'P1286' => array('label' => 'MUNZINGER POP ID', 'exampleid' => 'Q272203', 'people' => false),
-			'P1280' => array('label' => 'CONOR ID', 'exampleid' => 'Q1031', 'people' => false),
-			'P863' => array('label' => 'INPHO ID', 'exampleid' => 'Q219368', 'people' => false),
-			'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false),
-			'P2267' => array('label' => 'POLITIFACT PERSONALITY ID', 'exampleid' => 'Q76', 'people' => false),
-			'P1225' => array('label' => 'NATIONAL ARCHIVES IDENTIFIER', 'exampleid' => 'Q1387214', 'people' => false),
-			'P3338' => array('label' => 'ENCYCLOPEDIA OF SURFING ID', 'exampleid' => 'Q3190749', 'people' => false),
-			'P1615' => array('label' => 'CLARA-ID', 'exampleid' => 'Q6781930', 'people' => false),
-			'P951' => array('label' => 'NSZL ID', 'exampleid' => 'Q763890', 'people' => false),
-			'P3368' => array('label' => 'PRABOOK ID', 'exampleid' => 'Q4495505', 'people' => false),
-			'P3385' => array('label' => 'JAPAN SUMO ASSOCIATION ID', 'exampleid' => 'Q448054', 'people' => false),
-			'P3478' => array('label' => 'SONGKICK ARTIST ID', 'exampleid' => 'Q26695', 'people' => false),
-			'P3476' => array('label' => 'PSA WORLDTOUR ID', 'exampleid' => 'Q2935075', 'people' => false),
-			'P3475' => array('label' => 'SANU MEMBER ID', 'exampleid' => 'Q9036', 'people' => false),
-			'P3468' => array('label' => 'NATIONAL INVENTORS HALL OF FAME ID', 'exampleid' => 'Q4273363', 'people' => false),
-			'P3539' => array('label' => 'NFL.COM ID', 'exampleid' => 'Q24810030', 'people' => false),
-			'P3538' => array('label' => 'FUSSBALLDATEN.DE ID', 'exampleid' => 'Q1081201', 'people' => false),
-			'P3536' => array('label' => 'EUROLEAGUE.NET ID', 'exampleid' => 'Q3849644', 'people' => false),
-			'P3533' => array('label' => 'DRAFTEXPRESS.COM ID', 'exampleid' => 'Q3849644', 'people' => false),
-			'P3532' => array('label' => 'DATABASEFOOTBALL.COM ID', 'exampleid' => 'Q5672702', 'people' => false),
-			'P3531' => array('label' => 'AZBILLIARDS ID', 'exampleid' => 'Q1162866', 'people' => false),
-			'P3527' => array('label' => 'EUROBASKET.COM ID', 'exampleid' => 'Q4721816', 'people' => false),
-			'P3526' => array('label' => 'WISDENINDIA.COM ID', 'exampleid' => 'Q6080718', 'people' => false),
-			'P3525' => array('label' => 'ACB.COM ID', 'exampleid' => 'Q3849644', 'people' => false),
-			'P3506' => array('label' => 'LUDING DESIGNER ID', 'exampleid' => 'Q61088', 'people' => false),
-			'P3505' => array('label' => 'BOARDGAMEGEEK DESIGNER ID', 'exampleid' => 'Q61088', 'people' => false),
-			'P3502' => array('label' => 'AMEBLO USERNAME', 'exampleid' => 'Q50025', 'people' => false),
-			'P3603' => array('label' => 'MINNEAPOLIS INSTITUTE OF ART CONSTITUENT ID', 'exampleid' => 'Q1383354', 'people' => false),
-			'P3751' => array('label' => 'SHOFTIM BEISRAEL JUDGE ID', 'exampleid' => 'Q18097436', 'people' => false),
-			'P3817' => array('label' => 'FI WARSAMPO PERSON ID', 'exampleid' => 'Q2632168', 'people' => false),
-			'P3788' => array('label' => 'BNA AUTHOR ID', 'exampleid' => 'Q832085', 'people' => false),
-			'P3845' => array('label' => 'TV GUIDE PERSON ID', 'exampleid' => 'Q106126', 'people' => false),
-			'P3857' => array('label' => 'CINENACIONAL.COM PERSON ID', 'exampleid' => 'Q4888833', 'people' => false),
-			'P3847' => array('label' => 'OPEN LIBRARY SUBJECT ID', 'exampleid' => 'Q152384', 'people' => false),
-			'P3955' => array('label' => 'NLL PLAYER ID', 'exampleid' => 'Q6374142', 'people' => false),
-			'P3953' => array('label' => 'ALPG GOLFER ID', 'exampleid' => 'Q25936013', 'people' => false),
-			'P3949' => array('label' => 'JUWRA.COM ID', 'exampleid' => 'Q7855', 'people' => false),
-			'P3948' => array('label' => 'MLL PLAYER ID', 'exampleid' => 'Q24259938', 'people' => false),
-			'P3946' => array('label' => 'DIRECTORIO GRIERSON ID', 'exampleid' => 'Q233985', 'people' => false),
-			'P3943' => array('label' => 'TUMBLR ID', 'exampleid' => 'Q3013276', 'people' => false),
-			'P3942' => array('label' => 'BMX-RESULTS.COM RIDER ID', 'exampleid' => 'Q3183914', 'people' => false),
-			'P3965' => array('label' => 'BRIDGEMAN ARTIST ID', 'exampleid' => 'Q1282413', 'people' => false),
-			'P3960' => array('label' => 'BASE BIOGRAPHIQUE AUTOR ID', 'exampleid' => 'Q3438834', 'people' => false),
-			'P3365' => array('label' => 'ENCICLOPEDIA TRECCANI ID', 'exampleid' => 'Q7317', 'people' => false),
-			'P3995' => array('label' => 'FILMWEB.PL ID', 'exampleid' => 'Q68537', 'people' => false),
-			'P3988' => array('label' => 'NATIONAL LIBRARY BOARD SINGAPORE ID', 'exampleid' => 'Q5052793', 'people' => false),
-			'P3987' => array('label' => 'SHARE CATALOGUE AUTHOR ID', 'exampleid' => 'Q2755854', 'people' => false),
-			'P4008' => array('label' => 'EARLY AVIATORS PEOPLE ID', 'exampleid' => 'Q436102', 'people' => false),
-			'P4040' => array('label' => 'ROCK.COM.AR ARTIST ID', 'exampleid' => 'Q957627', 'people' => false),
-			'P4034' => array('label' => 'SHIRONET ARTIST ID', 'exampleid' => 'Q258991', 'people' => false),
-			'P4114' => array('label' => 'ADK MEMBER ID', 'exampleid' => 'Q25973', 'people' => false),
-			'P4112' => array('label' => 'DANSKFILMOGTV PERSON', 'exampleid' => 'Q232404', 'people' => false),
-			'P4104' => array('label' => 'CARNEGIE HALL AGENT ID', 'exampleid' => 'Q131861', 'people' => false),
-			'P4130' => array('label' => 'USHMM PERSON ID', 'exampleid' => 'Q7336', 'people' => false),
-			'P4169' => array('label' => 'YCBA AGENT ID', 'exampleid' => 'Q18826502', 'people' => false),
-			'P4180' => array('label' => 'GUJLIT PERSON ID', 'exampleid' => 'Q2724598', 'people' => false),
-			'P4186' => array('label' => 'AUSTRALIAN WOMEN\'S REGISTER ID', 'exampleid' => 'Q5271387', 'people' => false),
-			'P4208' => array('label' => 'BILLBOARD ARTIST ID', 'exampleid' => 'Q2067434', 'people' => false),
-			'P4206' => array('label' => 'FLEMISH ORGANIZATION FOR IMMOVABLE HERITAGE PERSON ID', 'exampleid' => 'Q154083', 'people' => false),
-			'P4198' => array('label' => 'GOOGLE PLAY MUSIC ARTIST ID', 'exampleid' => 'Q4276848', 'people' => false),
-			'P4193' => array('label' => 'FAMILYPEDIA PERSON ID', 'exampleid' => 'Q5335826', 'people' => false),
-			'P4228' => array('label' => 'ENCYCLOPEDIA OF AUSTRALIAN SCIENCE ID', 'exampleid' => 'Q38734568', 'people' => false),
-			'P4287' => array('label' => 'RIIGIKOGU ID', 'exampleid' => 'Q3785077', 'people' => false),
-			'P4357' => array('label' => 'MUSIKVERKET PERSON ID', 'exampleid' => 'Q4945718', 'people' => false),
-			'P4351' => array('label' => 'CRAVO ALBIN ARTIST ID', 'exampleid' => 'Q200131', 'people' => false),
-			'P4349' => array('label' => 'LOTSAWA HOUSE INDIAN AUTHOR ID', 'exampleid' => 'Q320150', 'people' => false),
-			'P4348' => array('label' => 'LOTSAWA HOUSE TIBETAN AUTHOR ID', 'exampleid' => 'Q25252', 'people' => false)
+				'P213' => array('label' => 'ISNI', 'exampleid' => 'Q21930050', 'people' => false),
+				'P269' => array('label' => 'SUDOC AUTHORITIES', 'exampleid' => 'Q535', 'people' => false),
+				'P906' => array('label' => 'SELIBR', 'exampleid' => 'Q762', 'people' => false),
+				'P349' => array('label' => 'NDL ID', 'exampleid' => 'Q307', 'people' => false),
+				'P244' => array('label' => 'LCAUTH ID', 'exampleid' => 'Q5582', 'people' => false),
+				'P227' => array('label' => 'GND ID', 'exampleid' => 'Q212190', 'people' => false),
+				'P396' => array('label' => 'SBN ID', 'exampleid' => 'Q307', 'people' => false),
+				'P950' => array('label' => 'BNE ID', 'exampleid' => 'Q79822', 'people' => false),
+				'P214' => array('label' => 'VIAF ID', 'exampleid' => 'Q447070', 'people' => false),
+				'P268' => array('label' => 'BNF ID', 'exampleid' => 'Q7836', 'people' => false),
+				'P549' => array('label' => 'MATHEMATICS GENEALOGY PROJECT ID', 'exampleid' => 'Q7604', 'people' => false),
+				'P949' => array('label' => 'NATIONAL LIBRARY OF ISRAEL ID', 'exampleid' => 'Q42', 'people' => false),
+				'P409' => array('label' => 'NLA (AUSTRALIA) ID', 'exampleid' => 'Q436699', 'people' => false),
+				'P691' => array('label' => 'NKCR AUT ID', 'exampleid' => 'Q57434', 'people' => false),
+				'P1005' => array('label' => 'PTBNP ID', 'exampleid' => 'Q134461', 'people' => false),
+				'P1017' => array('label' => 'BAV ID', 'exampleid' => 'Q551550', 'people' => false),
+				'P646' => array('label' => 'FREEBASE ID', 'exampleid' => 'Q307', 'people' => false),
+				'P1273' => array('label' => 'CANTIC-ID', 'exampleid' => 'Q561147', 'people' => false),
+				'P1207' => array('label' => 'NUKAT (WARSAWU) AUTHORITIES', 'exampleid' => 'Q42552', 'people' => false),
+				'P1309' => array('label' => 'EGAXA ID', 'exampleid' => 'Q307', 'people' => false),
+				'P1422' => array('label' => 'SANDRART.NET PERSON ID', 'exampleid' => 'Q312304', 'people' => false),
+				'P866' => array('label' => 'PERLENTAUCHER ID', 'exampleid' => 'Q307', 'people' => false),
+				'P1670' => array('label' => 'LAC ID', 'exampleid' => 'Q307', 'people' => false),
+				'P1368' => array('label' => 'LNB ID', 'exampleid' => 'Q615419', 'people' => false),
+				'P1695' => array('label' => 'NLP ID', 'exampleid' => 'Q12904', 'people' => false),
+				'P1375' => array('label' => 'NSK ID', 'exampleid' => 'Q336571', 'people' => false),
+				'P723' => array('label' => 'DBNL ID', 'exampleid' => 'Q2359791', 'people' => false),
+				'P1741' => array('label' => 'GTAA ID', 'exampleid' => 'Q523644', 'people' => false),
+				'P648' => array('label' => 'OPEN LIBRARY ID', 'exampleid' => 'Q5685', 'people' => false),
+				'P1871' => array('label' => 'CERL ID', 'exampleid' => 'Q307', 'people' => false),
+				'P2163' => array('label' => 'FAST-ID', 'exampleid' => 'Q307', 'people' => false),
+				'P865' => array('label' => 'BMLO', 'exampleid' => 'Q11933906', 'people' => false),
+				'P998' => array('label' => 'DMOZ ID', 'exampleid' => 'Q255', 'people' => false),
+				'P1248' => array('label' => 'KULTURNAV-ID', 'exampleid' => 'Q959698', 'people' => false),
+				'P1902' => array('label' => 'SPOTIFY ARTIST ID', 'exampleid' => 'Q2757867', 'people' => false),
+				'P1430' => array('label' => 'OPENPLAQUES SUBJECT ID', 'exampleid' => 'Q207', 'people' => false),
+				'P1284' => array('label' => 'MUNZINGER IBA', 'exampleid' => 'Q1684721', 'people' => false),
+				'P1839' => array('label' => 'US FEDERAL ELECTION COMMISSION ID', 'exampleid' => 'Q516515', 'people' => false),
+				'P1296' => array('label' => 'GRAN ENCICLOPEDIA CATALANA ID', 'exampleid' => 'Q207', 'people' => false),
+				'P1749' => array('label' => 'PARLEMENT & POLITIEK ID', 'exampleid' => 'Q57792', 'people' => false),
+				'P1048' => array('label' => 'NCL ID', 'exampleid' => 'Q228889', 'people' => false),
+				'P2390' => array('label' => 'BALLOTPEDIA ID', 'exampleid' => 'Q76', 'people' => false),
+				'P1417' => array('label' => 'ENCYCLOPEDIA BRITANNICA ONLINE ID', 'exampleid' => 'Q7374', 'people' => false),
+				'P1003' => array('label' => 'NLR (ROMANIA) ID', 'exampleid' => 'Q77177', 'people' => false),
+				'P651' => array('label' => 'BIOGRAFISH PORTAAL NUMBER', 'exampleid' => 'Q2929721', 'people' => false),
+				'P902' => array('label' => 'HDS ID', 'exampleid' => 'Q435456', 'people' => false),
+				'P1286' => array('label' => 'MUNZINGER POP ID', 'exampleid' => 'Q272203', 'people' => false),
+				'P1280' => array('label' => 'CONOR ID', 'exampleid' => 'Q1031', 'people' => false),
+				'P863' => array('label' => 'INPHO ID', 'exampleid' => 'Q219368', 'people' => false),
+				'P1565' => array('label' => 'ENCICLOPEDIA DE LA LITERATURA EN MEXICO ID', 'exampleid' => 'Q8962435', 'people' => false),
+				'P2267' => array('label' => 'POLITIFACT PERSONALITY ID', 'exampleid' => 'Q76', 'people' => false),
+				'P1225' => array('label' => 'NATIONAL ARCHIVES IDENTIFIER', 'exampleid' => 'Q1387214', 'people' => false),
+				'P3338' => array('label' => 'ENCYCLOPEDIA OF SURFING ID', 'exampleid' => 'Q3190749', 'people' => false),
+				'P1615' => array('label' => 'CLARA-ID', 'exampleid' => 'Q6781930', 'people' => false),
+				'P951' => array('label' => 'NSZL ID', 'exampleid' => 'Q763890', 'people' => false),
+				'P3368' => array('label' => 'PRABOOK ID', 'exampleid' => 'Q4495505', 'people' => false),
+				'P3385' => array('label' => 'JAPAN SUMO ASSOCIATION ID', 'exampleid' => 'Q448054', 'people' => false),
+				'P3478' => array('label' => 'SONGKICK ARTIST ID', 'exampleid' => 'Q26695', 'people' => false),
+				'P3476' => array('label' => 'PSA WORLDTOUR ID', 'exampleid' => 'Q2935075', 'people' => false),
+				'P3475' => array('label' => 'SANU MEMBER ID', 'exampleid' => 'Q9036', 'people' => false),
+				'P3468' => array('label' => 'NATIONAL INVENTORS HALL OF FAME ID', 'exampleid' => 'Q4273363', 'people' => false),
+				'P3539' => array('label' => 'NFL.COM ID', 'exampleid' => 'Q24810030', 'people' => false),
+				'P3538' => array('label' => 'FUSSBALLDATEN.DE ID', 'exampleid' => 'Q1081201', 'people' => false),
+				'P3536' => array('label' => 'EUROLEAGUE.NET ID', 'exampleid' => 'Q3849644', 'people' => false),
+				'P3533' => array('label' => 'DRAFTEXPRESS.COM ID', 'exampleid' => 'Q3849644', 'people' => false),
+				'P3532' => array('label' => 'DATABASEFOOTBALL.COM ID', 'exampleid' => 'Q5672702', 'people' => false),
+				'P3531' => array('label' => 'AZBILLIARDS ID', 'exampleid' => 'Q1162866', 'people' => false),
+				'P3527' => array('label' => 'EUROBASKET.COM ID', 'exampleid' => 'Q4721816', 'people' => false),
+				'P3526' => array('label' => 'WISDENINDIA.COM ID', 'exampleid' => 'Q6080718', 'people' => false),
+				'P3525' => array('label' => 'ACB.COM ID', 'exampleid' => 'Q3849644', 'people' => false),
+				'P3506' => array('label' => 'LUDING DESIGNER ID', 'exampleid' => 'Q61088', 'people' => false),
+				'P3505' => array('label' => 'BOARDGAMEGEEK DESIGNER ID', 'exampleid' => 'Q61088', 'people' => false),
+				'P3502' => array('label' => 'AMEBLO USERNAME', 'exampleid' => 'Q50025', 'people' => false),
+				'P3603' => array('label' => 'MINNEAPOLIS INSTITUTE OF ART CONSTITUENT ID', 'exampleid' => 'Q1383354', 'people' => false),
+				'P3751' => array('label' => 'SHOFTIM BEISRAEL JUDGE ID', 'exampleid' => 'Q18097436', 'people' => false),
+				'P3817' => array('label' => 'FI WARSAMPO PERSON ID', 'exampleid' => 'Q2632168', 'people' => false),
+				'P3788' => array('label' => 'BNA AUTHOR ID', 'exampleid' => 'Q832085', 'people' => false),
+				'P3845' => array('label' => 'TV GUIDE PERSON ID', 'exampleid' => 'Q106126', 'people' => false),
+				'P3857' => array('label' => 'CINENACIONAL.COM PERSON ID', 'exampleid' => 'Q4888833', 'people' => false),
+				'P3847' => array('label' => 'OPEN LIBRARY SUBJECT ID', 'exampleid' => 'Q152384', 'people' => false),
+				'P3955' => array('label' => 'NLL PLAYER ID', 'exampleid' => 'Q6374142', 'people' => false),
+				'P3953' => array('label' => 'ALPG GOLFER ID', 'exampleid' => 'Q25936013', 'people' => false),
+				'P3949' => array('label' => 'JUWRA.COM ID', 'exampleid' => 'Q7855', 'people' => false),
+				'P3948' => array('label' => 'MLL PLAYER ID', 'exampleid' => 'Q24259938', 'people' => false),
+				'P3946' => array('label' => 'DIRECTORIO GRIERSON ID', 'exampleid' => 'Q233985', 'people' => false),
+				'P3943' => array('label' => 'TUMBLR ID', 'exampleid' => 'Q3013276', 'people' => false),
+				'P3942' => array('label' => 'BMX-RESULTS.COM RIDER ID', 'exampleid' => 'Q3183914', 'people' => false),
+				'P3965' => array('label' => 'BRIDGEMAN ARTIST ID', 'exampleid' => 'Q1282413', 'people' => false),
+				'P3960' => array('label' => 'BASE BIOGRAPHIQUE AUTOR ID', 'exampleid' => 'Q3438834', 'people' => false),
+				'P3365' => array('label' => 'ENCICLOPEDIA TRECCANI ID', 'exampleid' => 'Q7317', 'people' => false),
+				'P3995' => array('label' => 'FILMWEB.PL ID', 'exampleid' => 'Q68537', 'people' => false),
+				'P3988' => array('label' => 'NATIONAL LIBRARY BOARD SINGAPORE ID', 'exampleid' => 'Q5052793', 'people' => false),
+				'P3987' => array('label' => 'SHARE CATALOGUE AUTHOR ID', 'exampleid' => 'Q2755854', 'people' => false),
+				'P4008' => array('label' => 'EARLY AVIATORS PEOPLE ID', 'exampleid' => 'Q436102', 'people' => false),
+				'P4040' => array('label' => 'ROCK.COM.AR ARTIST ID', 'exampleid' => 'Q957627', 'people' => false),
+				'P4034' => array('label' => 'SHIRONET ARTIST ID', 'exampleid' => 'Q258991', 'people' => false),
+				'P4114' => array('label' => 'ADK MEMBER ID', 'exampleid' => 'Q25973', 'people' => false),
+				'P4112' => array('label' => 'DANSKFILMOGTV PERSON', 'exampleid' => 'Q232404', 'people' => false),
+				'P4104' => array('label' => 'CARNEGIE HALL AGENT ID', 'exampleid' => 'Q131861', 'people' => false),
+				'P4130' => array('label' => 'USHMM PERSON ID', 'exampleid' => 'Q7336', 'people' => false),
+				'P4169' => array('label' => 'YCBA AGENT ID', 'exampleid' => 'Q18826502', 'people' => false),
+				'P4180' => array('label' => 'GUJLIT PERSON ID', 'exampleid' => 'Q2724598', 'people' => false),
+				'P4186' => array('label' => 'AUSTRALIAN WOMEN\'S REGISTER ID', 'exampleid' => 'Q5271387', 'people' => false),
+				'P4208' => array('label' => 'BILLBOARD ARTIST ID', 'exampleid' => 'Q2067434', 'people' => false),
+				'P4206' => array('label' => 'FLEMISH ORGANIZATION FOR IMMOVABLE HERITAGE PERSON ID', 'exampleid' => 'Q154083', 'people' => false),
+				'P4198' => array('label' => 'GOOGLE PLAY MUSIC ARTIST ID', 'exampleid' => 'Q4276848', 'people' => false),
+				'P4193' => array('label' => 'FAMILYPEDIA PERSON ID', 'exampleid' => 'Q5335826', 'people' => false),
+				'P4228' => array('label' => 'ENCYCLOPEDIA OF AUSTRALIAN SCIENCE ID', 'exampleid' => 'Q38734568', 'people' => false),
+				'P4287' => array('label' => 'RIIGIKOGU ID', 'exampleid' => 'Q3785077', 'people' => false),
+				'P4357' => array('label' => 'MUSIKVERKET PERSON ID', 'exampleid' => 'Q4945718', 'people' => false),
+				'P4351' => array('label' => 'CRAVO ALBIN ARTIST ID', 'exampleid' => 'Q200131', 'people' => false),
+				'P4349' => array('label' => 'LOTSAWA HOUSE INDIAN AUTHOR ID', 'exampleid' => 'Q320150', 'people' => false),
+				'P4348' => array('label' => 'LOTSAWA HOUSE TIBETAN AUTHOR ID', 'exampleid' => 'Q25252', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
@@ -882,113 +887,113 @@ class MiscReports extends DatabaseReport
 			return strcmp($a['label'], $b['label']);
 		});
 
-		// Get the properties and example items
-		$items = array();
+			// Get the properties and example items
+			$items = array();
 
-		foreach ($props as $propid => $prop) {
-			$items[] = "Property:$propid";
-			if (! empty($prop['exampleid'])) $items[] = $prop['exampleid'];
-		}
+			foreach ($props as $propid => $prop) {
+				$items[] = "Property:$propid";
+				if (! empty($prop['exampleid'])) $items[] = $prop['exampleid'];
+			}
 
-		$items = $wdwiki->getItemsWithCache($items);
+			$items = $wdwiki->getItemsWithCache($items);
 
-		$propertyitems = array();
-		$exampleitems = array();
+			$propertyitems = array();
+			$exampleitems = array();
 
-		foreach ($items as $item) {
-			$id = $item->getId();
-			if (empty($id)) continue;
-			if ($id[0] == 'Q') $exampleitems[$id] = $item;
-			else $propertyitems[$id] = $item;
-		}
+			foreach ($items as $item) {
+				$id = $item->getId();
+				if (empty($id)) continue;
+				if ($id[0] == 'Q') $exampleitems[$id] = $item;
+				else $propertyitems[$id] = $item;
+			}
 
-		// Get the usage counts
-		$counts = $wdwiki->getPageWithCache('Template:Property_uses');
-		preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
-		$counts = array();
-		foreach ($matches as $match) {
-			$counts['P' . $match[1]] = $match[2];
-		}
+			// Get the usage counts
+			$counts = $wdwiki->getPageWithCache('Template:Property_uses');
+			preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
+			$counts = array();
+			foreach ($matches as $match) {
+				$counts['P' . $match[1]] = $match[2];
+			}
 
-		$asof_date = getdate();
-		$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
-		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPeopleAuthCtrl.html';
-		$hndl = fopen($path, 'wb');
+			$asof_date = getdate();
+			$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+			$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPeopleAuthCtrl.html';
+			$hndl = fopen($path, 'wb');
 
-		// Header
-		fwrite($hndl, "<!DOCTYPE html>
-		<html><head>
-		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-		<title>Wikidata people authority control properties</title>
-		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
-		</head><body>
-		<div style='display: table; margin: 0 auto;'>
-		<h1>Wikidata people authority control properties</h1>
-		<h3>As of $asof_date</h3>
-		");
+			// Header
+			fwrite($hndl, "<!DOCTYPE html>
+					<html><head>
+					<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+					<title>Wikidata people authority control properties</title>
+					<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+					</head><body>
+					<div style='display: table; margin: 0 auto;'>
+					<h1>Wikidata people authority control properties</h1>
+					<h3>As of $asof_date</h3>
+					");
 
-		// Body
+			// Body
 
-		$wikitext = "<noinclude><languages/></noinclude>\n\n{{anchor|Authority control}}\n<translate>\n==Authority control== <!--T:1-->\n</translate>\n";
-		$wikitext .= "<table class='wikitable sortable'><tr><th scope='col'>{{int:wm-license-artwork-title}}</th><th scope='col'>ID</th><th scope='col'>{{int:wikibase-propertypage-datatype}}</th><th scope='col'>{{int:listfiles_description}}</th><th scope='col'>{{int:apisandbox-examples}}</th><th scope='col'>&nbsp;Count&nbsp;</th></tr>\n";
-		$nonpeople = array();
+			$wikitext = "<noinclude><languages/></noinclude>\n\n{{anchor|Authority control}}\n<translate>\n==Authority control== <!--T:1-->\n</translate>\n";
+			$wikitext .= "<table class='wikitable sortable'><tr><th scope='col'>{{int:wm-license-artwork-title}}</th><th scope='col'>ID</th><th scope='col'>{{int:wikibase-propertypage-datatype}}</th><th scope='col'>{{int:listfiles_description}}</th><th scope='col'>{{int:apisandbox-examples}}</th><th scope='col'>&nbsp;Count&nbsp;</th></tr>\n";
+			$nonpeople = array();
 
-		foreach ($props as $propid => $prop) {
-			$intid = substr($propid, 1);
-			$example_subject = $prop['exampleid'];
-			$example_object = '';
-			if (! isset($propertyitems[$propid])) continue;
-			$property = $propertyitems[$propid];
-			$datatype = $property->getDatatype();
+			foreach ($props as $propid => $prop) {
+				$intid = substr($propid, 1);
+				$example_subject = $prop['exampleid'];
+				$example_object = '';
+				if (! isset($propertyitems[$propid])) continue;
+				$property = $propertyitems[$propid];
+				$datatype = $property->getDatatype();
 
-			if (! empty($example_subject)) {
-				$examples = $property->getStatementsOfType('P1855');
-				$occurrence = false;
+				if (! empty($example_subject)) {
+					$examples = $property->getStatementsOfType('P1855');
+					$occurrence = false;
 
-				foreach ($examples as $key => $example) {
-					if ($example == $example_subject) {
-						$occurrence = $key;
-						break;
+					foreach ($examples as $key => $example) {
+						if ($example == $example_subject) {
+							$occurrence = $key;
+							break;
+						}
+					}
+
+					if ($occurrence === false) {
+						if (! empty($examples)) $occurrence = 0;
+					}
+
+					if ($occurrence === false) {
+						$propvalues = $exampleitems[$example_subject]->getStatementsOfType($propid);
+						if (! empty($propvalues)) $example_object = $propvalues[0];
+					} else {
+						$qualifiers = $property->getStatementQualifiers('P1855', $occurrence);
+						if (isset($qualifiers[$propid])) $example_object = $qualifiers[$propid][0];
+					}
+
+					if (! empty($example_object)) {
+						$urlformatter = $property->getStatementsOfType('P1630');
+						if (! empty($urlformatter)) {
+							$example_object = '[' . Sanitizer::escapeWikitextInUrl(str_replace('$1', $example_object, $urlformatter[0])) . ' ' .
+									Sanitizer::wfEscapeWikiText($example_object) . ']';
+						}
 					}
 				}
 
-				if ($occurrence === false) {
-					if (! empty($examples)) $occurrence = 0;
+				if (isset($prop['people'])) {
+					$label = str_replace(' ', '&nbsp;', $property->getLabelDescription('label', 'en'));
+					$nonpeople[] = "[[Property:$propid|$label&nbsp;($propid)]]";
 				}
 
-				if ($occurrence === false) {
-					$propvalues = $exampleitems[$example_subject]->getStatementsOfType($propid);
-					if (! empty($propvalues)) $example_object = $propvalues[0];
-				} else {
-					$qualifiers = $property->getStatementQualifiers('P1855', $occurrence);
-					if (isset($qualifiers[$propid])) $example_object = $qualifiers[$propid][0];
-				}
+				if (isset($counts[$propid])) $count = $counts[$propid];
+				else $count = 0;
 
-				if (! empty($example_object)) {
-					$urlformatter = $property->getStatementsOfType('P1630');
-					if (! empty($urlformatter)) {
-						$example_object = '[' . Sanitizer::escapeWikitextInUrl(str_replace('$1', $example_object, $urlformatter[0])) . ' ' .
-							Sanitizer::wfEscapeWikiText($example_object) . ']';
-					}
-				}
+				$wikitext .= "<tr><td>{{label|$propid}}</td><td>[[Property:$propid|$propid]]</td><td>$datatype</td><td>{{autodescription|$propid}}</td><td>$example_object</td>";
+				$wikitext .= "<td style='text-align:right' data-sort-value='$count'>" . number_format($count, 0, '', '&thinsp;');
+				$wikitext .= "</td></tr>\n";
 			}
 
-			if (isset($prop['people'])) {
-				$label = str_replace(' ', '&nbsp;', $property->getLabelDescription('label', 'en'));
-				$nonpeople[] = "[[Property:$propid|$label&nbsp;($propid)]]";
-			}
+			$nonpeople = implode(', ', $nonpeople);
 
-			if (isset($counts[$propid])) $count = $counts[$propid];
-			else $count = 0;
-
-			$wikitext .= "<tr><td>{{label|$propid}}</td><td>[[Property:$propid|$propid]]</td><td>$datatype</td><td>{{autodescription|$propid}}</td><td>$example_object</td>";
-			$wikitext .= "<td style='text-align:right' data-sort-value='$count'>" . number_format($count, 0, '', '&thinsp;');
-			$wikitext .= "</td></tr>\n";
-		}
-
-		$nonpeople = implode(', ', $nonpeople);
-
-		$wikitext .= <<<END
+			$wikitext .= <<<END
 </table>
 
 {{anchor|Query}}
@@ -1019,11 +1024,94 @@ The following additional properties are also included:
 :$nonpeople
 END;
 
-		fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
-			'</textarea></form>');
+			fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+					'</textarea></form>');
+
+			// Footer
+			fwrite($hndl, '<br />Property count: ' . count($props));
+			fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+			fclose($hndl);
+	}
+
+	/**
+	 * Wikidata property counts
+	 *
+	 * @param PDO $dbh_wiki
+	 */
+	public function WikidataPropertyCounts(PDO $dbh_wiki, MediaWiki $mediawiki, PDO $dbh_wikidata)
+	{
+		$wdwiki = new WikidataWiki();
+
+		// Get the usage counts
+		$counts = $wdwiki->getPageWithCache('Template:Property_uses');
+		preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
+		$counts = array();
+		foreach ($matches as $match) {
+			$counts[$match[1]] = array('count' => $match[2], 'label' => "P{$match[1]}", 'desc' => '');
+		}
+
+		// Get the labels and descriptions
+		$ids = implode(',', array_keys($counts));
+
+		$sql = "SELECT term_entity_id, term_type, term_text " .
+			" FROM wb_terms " .
+			" WHERE term_language = 'en' AND term_entity_id IN ($ids) AND term_entity_type = 'property' ";
+
+		$sth = $dbh_wikidata->prepare($sql);
+		$sth->execute();
+
+		while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+			$term_type = $row['term_type'];
+			$entity_id = $row['term_entity_id'];
+
+			if ($term_type == 'label') $counts[$entity_id]['label'] = $row['term_text'];
+			elseif ($term_type == 'description') $counts[$entity_id]['desc'] = $row['term_text'];
+		}
+
+		$asof_date = getdate();
+		$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyCounts.html';
+		$hndl = fopen($path, 'wb');
+
+		// Header
+		fwrite($hndl, "<!DOCTYPE html>
+		<html><head>
+		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+		<title>Wikidata property usage counts</title>
+		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+		<script type='text/javascript' src='../js/jquery-2.1.1.min.js'></script>
+		<script type='text/javascript' src='../js/jquery.tablesorter.min.js'></script>
+		<script type='text/javascript'>
+			$(document).ready(function()
+			    {
+			        $('#myTable').tablesorter({});
+			    }
+			);
+		</script>
+		</head><body>
+		<div style='display: table; margin: 0 auto;'>
+		<h1>Wikidata property usage counts</h1>
+		<h3>As of $asof_date</h3>
+		");
+
+		// Body
+
+		fwrite($hndl, "<table id='myTable' class='wikitable'><thead><tr><th>Title</th><th>ID</th><th>Description</th><th>Count</th></tr></thead><tbody>\n");
+
+		foreach ($counts as $id => $data) {
+			$url = "https://www.wikidata.org/wiki/Property:P$id";
+			$label = htmlspecialchars($data['label']);
+			$desc = htmlspecialchars($data['desc']);
+			$count = $data['count'];
+
+			fwrite($hndl, "<tr><td>$label</td><td data-sort-value='$id'><a href=\"$url\">P$id</a></td><td>$desc</td>" .
+				"<td style='text-align:right' data-sort-value='$count'>" . number_format($count, 0, '', '&thinsp;') . "</td></tr>\n");
+		}
+
+		fwrite($hndl, "</tbody></table>\n");
 
 		// Footer
-		fwrite($hndl, '<br />Property count: ' . count($props));
+		fwrite($hndl, '<br />Property count: ' . count($counts));
 		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
 		fclose($hndl);
 	}
