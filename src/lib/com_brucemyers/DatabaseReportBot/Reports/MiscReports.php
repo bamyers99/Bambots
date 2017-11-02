@@ -53,7 +53,7 @@ class MiscReports extends DatabaseReport
     			break;
 
     		case 'AgeAnomaly':
-    			$this->AgeAnomaly($apis['dbh_wiki']);
+    			$this->AgeAnomaly($apis['dbh_wiki'], $apis['dbh_tools']);
     			return false;
     			break;
 
@@ -451,40 +451,66 @@ class MiscReports extends DatabaseReport
 	 * Look for age anomolies
 	 *
 	 * @param PDO $dbh_wiki
+	 * @param PDO $dbh_tools
 	 */
-	public function AgeAnomaly(PDO $dbh_wiki)
+	public function AgeAnomaly(PDO $dbh_wiki, PDO $dbh_tools)
 	{
 		// Too old/young
-		$dbh_wiki->exec("DROP TABLE IF EXISTS s51454__wikidata.deathcats");
-		$dbh_wiki->exec("DROP TABLE IF EXISTS s51454__wikidata.deadpeople");
+		$dbh_tools->exec("DROP TABLE IF EXISTS s51454__wikidata.deadpeople");
 
-		$sql = "CREATE TABLE s51454__wikidata.deathcats SELECT cat_title FROM enwiki_p.category
+		// death cats
+
+		$deathcats = array();
+		$sql = "SELECT cat_title FROM enwiki_p.category
 			WHERE cat_title REGEXP '^(17|18|19|20|21)[[:digit:]]{2}_deaths$' AND cat_pages > 0";
-		$dbh_wiki->exec($sql);
 
-		$sql = "ALTER TABLE s51454__wikidata.deathcats ADD UNIQUE INDEX cat_title (cat_title)";
-		$dbh_wiki->exec($sql);
+		$sth = $dbh_wiki->prepare( $sql );
+		$sth->setFetchMode( PDO::FETCH_NUM );
+		$sth->execute();
 
-		$sql = "CREATE TABLE s51454__wikidata.deadpeople SELECT cldeath.cl_from AS page_id, LEFT(cldeath.cl_to, 4) AS year
-			FROM s51454__wikidata.deathcats deathcats
-			JOIN enwiki_p.categorylinks cldeath ON cldeath.cl_to = deathcats.cat_title";
-		$dbh_wiki->exec($sql);
+		while ( $row = $sth->fetch() ) {
+			$deathcats[] = $row[0];
+		}
+
+		$sth->closeCursor();
+		$sth = null;
+
+		// dead people
+
+		$sql = "CREATE TABLE s51454__wikidata.deadpeople (page_id int unsigned NOT NULL, deathyear int unsigned NOT NULL)";
+		$dbh_tools->exec($sql);
+
+		$sql = "SELECT cl_from, LEFT(cl_to, 4) AS year " .
+			" FROM enwiki_p.categorylinks WHERE cl_to = ?";
+		$sth = $dbh_wiki->prepare($sql);
+		$isth = $dbh_tools->prepare( 'INSERT INTO s51454__wikidata.deadpeople VALUES (?,?)' );
+
+		foreach ($deathcats as $deathcat) {
+			$sth->setFetchMode( PDO::FETCH_NUM );
+			$sth->execute(array($deathcat));
+			$dbh_tools->beginTransaction();
+			$count = 0;
+
+			while ( $row = $sth->fetch() ) {
+				++$count;
+				if ($count % 5000 == 0) {
+					$dbh_tools->commit();
+					$dbh_tools->beginTransaction();
+				}
+
+				$isth->execute( array($row[0], $row[1]) );
+			}
+
+			$sth->closeCursor();
+			$dbh_tools->commit();
+		}
 
 		$sql = "ALTER TABLE s51454__wikidata.deadpeople ADD INDEX page_id (page_id)";
-		$dbh_wiki->exec($sql);
+		$dbh_tools->exec($sql);
 
-		$sql = "SELECT DISTINCT deadpeople.page_id AS page_id,
-					CONVERT(LEFT(clbirth.cl_to, 4) USING utf8) as birthyear,
-					CONVERT(deadpeople.year USING utf8) as deathyear,
-					deadpeople.year - LEFT(clbirth.cl_to, 4) as age
-				FROM s51454__wikidata.deadpeople deadpeople
-				JOIN enwiki_p.categorylinks clbirth ON clbirth.cl_from = deadpeople.page_id
-				WHERE clbirth.cl_to REGEXP '^[[:digit:]]{4}_births$'
-				HAVING (age > 120 OR age < 1)";
-
-		$sth = $dbh_wiki->query($sql);
-		$sth->setFetchMode(PDO::FETCH_ASSOC);
-
+		$offset = 0;
+		$limit = 500;
+		$badages = array();
 		$skip_ids = array(325918,42433680,1302587,12761471,32578395,4140251,21204233,3795672,8628592,5862569,22177303,
 				36286513,26501900,15776396,39753940,21308617,32062007,33468662,25575648,12255705,20755930,18048964,24351991,
 				9545191,24211762,18928421,38684243,584368,38676683,38659124,38655048,38643903,38632860,38619056,38619050,
@@ -493,18 +519,43 @@ class MiscReports extends DatabaseReport
 				51410097,1214420,30387944,40245763,51435709,53296694,4293277,54749940,54835048
 		);
 
-		$badages = array();
+		while (1 == 1) {
+			$sql = "SELECT page_id, deathyear FROM s51454__wikidata.deadpeople ORDER BY page_id LIMIT $offset, $limit";
 
-		while ($row = $sth->fetch()) {
-			$id = (int)$row['page_id'];
-			if (in_array($id, $skip_ids)) continue;
-			$badages[$id] = $row;
-			$byear = $row['birthyear'];
-			$dyear = $row['deathyear'];
-			$age = $row['age'];
+			$result = $dbh_tools->query($sql);
+			$deads = $result->fetchAll( PDO::FETCH_NUM );
+			if (count($deads) == 0) break;
+
+			$pages = array();
+			foreach ($deads as $row) {
+				$pages[$row[0]] = $row[1];
+			}
+			$page_ids = implode(',', array_keys($pages));
+
+			$sql = "SELECT cl_from, LEFT(cl_to, 4) AS year " .
+					" FROM enwiki_p.categorylinks " .
+					" WHERE cl_from IN ($page_ids) AND cl_to REGEXP '^[[:digit:]]{4}_births$'";
+
+			$sth = $dbh_wiki->query($sql);
+
+			while ($row = $sth->fetch(PDO::FETCH_NUM)) {
+				$id = (int)$row[0];
+				if (in_array($id, $skip_ids) || ! isset($pages[$id])) continue;
+
+				$birth_year = (int)$row[1];
+				$death_year = $pages[$id];
+				$age = $death_year - $birth_year;
+
+				if ($age > 120 || $age < 1) {
+					$badages[$id] = array('birthyear' => $birth_year, 'deathyear' => $death_year, 'age' => $age);
+					unset($pages[$id]); // only want reported once
+				}
+			}
+
+			$offset += $limit;
+			if (count($deads) < $limit) break;
 		}
 
-		$sth->closeCursor();
 		ksort($badages);
 
 		// Living dead
@@ -549,17 +600,17 @@ class MiscReports extends DatabaseReport
 		fwrite($hndl, "<h2>Bad Ages</h2>\n");
 		if (empty($badages)) fwrite($hndl, "None\n");
 		else {
-		fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th><th>Birth</th><th>Death</th><th>Age</th></tr></thead><tbody>\n");
+			fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th><th>Birth</th><th>Death</th><th>Age</th></tr></thead><tbody>\n");
 
-				foreach ($badages as $id => $badage) {
+			foreach ($badages as $id => $badage) {
 				$byear = $badage['birthyear'];
-						$dyear = $badage['deathyear'];
-								$age = $badage['age'];
-								$url = "https://en.wikipedia.org/w/index.php?curid=$id";
-								fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td><td>$byear</td><td>$dyear</td><td>$age</td></tr>\n");
-				}
+				$dyear = $badage['deathyear'];
+				$age = $badage['age'];
+				$url = "https://en.wikipedia.org/w/index.php?curid=$id";
+				fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td><td>$byear</td><td>$dyear</td><td>$age</td></tr>\n");
+			}
 
-				fwrite($hndl, "</tbody></table>\n");
+			fwrite($hndl, "</tbody></table>\n");
 		}
 
 		fwrite($hndl, "<h2>Living Dead</h2>\n");
@@ -870,7 +921,21 @@ class MiscReports extends DatabaseReport
 				'P4357' => array('label' => 'MUSIKVERKET PERSON ID', 'exampleid' => 'Q4945718', 'people' => false),
 				'P4351' => array('label' => 'CRAVO ALBIN ARTIST ID', 'exampleid' => 'Q200131', 'people' => false),
 				'P4349' => array('label' => 'LOTSAWA HOUSE INDIAN AUTHOR ID', 'exampleid' => 'Q320150', 'people' => false),
-				'P4348' => array('label' => 'LOTSAWA HOUSE TIBETAN AUTHOR ID', 'exampleid' => 'Q25252', 'people' => false)
+				'P4348' => array('label' => 'LOTSAWA HOUSE TIBETAN AUTHOR ID', 'exampleid' => 'Q25252', 'people' => false),
+				'P4411' => array('label' => 'QUORA USERNAME', 'exampleid' => 'Q23034479', 'people' => false),
+				'P4389' => array('label' => 'SCIENCE MUSEUM PEOPLE ID', 'exampleid' => 'Q7186', 'people' => false),
+				'P4439' => array('label' => 'MNCARS ARTIST ID', 'exampleid' => 'Q450236', 'people' => false),
+				'P4438' => array('label' => 'BFI Film and TV ID', 'exampleid' => 'Q52392', 'people' => false),
+				'P4434' => array('label' => 'LESBIOGRAPHIES.COM ID', 'exampleid' => 'Q984375', 'people' => false),
+				'P4432' => array('label' => 'AKL ONLINE ARTIST ID', 'exampleid' => 'Q23469792', 'people' => false),
+				'P4429' => array('label' => 'PRO14 PLAYER ID', 'exampleid' => 'Q912889', 'people' => false),
+				'P4422' => array('label' => 'U.S. SKI AND SNOWBOARD HALL OF FAME ID', 'exampleid' => 'Q444809', 'people' => false),
+				'P4418' => array('label' => 'NEW ZEALAND SPORTS HALL OF FAME ID', 'exampleid' => 'Q551581', 'people' => false),
+				'P4417' => array('label' => 'RFPL.ORG PLAYER ID', 'exampleid' => 'Q4054222', 'people' => false),
+				'P4416' => array('label' => 'PANTHEON DES SPORTS DU QUEBEC ID', 'exampleid' => 'Q616056', 'people' => false),
+				'P4415' => array('label' => 'SPORT AUSTRALIA HALL OF FAME INDUCTEE ID', 'exampleid' => 'Q538855', 'people' => false),
+				'P4414' => array('label' => 'NEW BRUNSWICK SPORTS HALL OF FAME ATHLETE ID', 'exampleid' => 'Q6377273', 'people' => false),
+				'P4413' => array('label' => 'MANITOBA SPORTS HALL OF FAME ATHLETE ID', 'exampleid' => 'Q27063443', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
