@@ -88,108 +88,107 @@ Bamyers99.UnitsConverter = {
 		).done( function() {
 			self.gc = Bamyers99.GadgetCommon;
 
-			if ( ! mw.config.exists( 'wbEntity' )) {
-				return;
-			}
+			mw.hook( 'wikibase.entityPage.entityLoaded' ).add( function ( data ) {
+				'use strict';
 
-			var pointInTimeYear = null;
-			var propHits = [];
+				var pointInTimeYear = null;
+				var propHits = [];
 
-			var data = JSON.parse( mw.config.get( 'wbEntity' ) );
-			$.each( data.claims || {}, function ( prop, claims ) {
+				$.each( data.claims || {}, function ( prop, claims ) {
 
-				$.each( claims, function ( index, claim ) {
-					var pointInTimeYear = null;
-					var qualOffset = 0;
-					var qualifierHits = [];
+					$.each( claims, function ( index, claim ) {
+						var pointInTimeYear = null;
+						var qualOffset = 0;
+						var qualifierHits = [];
 
-					if ( ! claim.mainsnak || ! claim.mainsnak.datavalue ) return true;
+						if ( ! claim.mainsnak || ! claim.mainsnak.datavalue ) return true;
 
-					var dv = claim.mainsnak.datavalue;
+						var dv = claim.mainsnak.datavalue;
 
-					if ( prop === self.propPointInTime ) {
-						pointInTimeYear = self.parseDateToYear( dv );
-						if ( pointInTimeYear ) return false;
-						return true;
-					}
+						if ( prop === self.propPointInTime ) {
+							pointInTimeYear = self.parseDateToYear( dv );
+							if ( pointInTimeYear ) return false;
+							return true;
+						}
 
-					var claimQualifiers = {};
+						var claimQualifiers = {};
 
-					if ( claim['qualifiers-order'] && claim.qualifiers ) {
-						$.each( claim['qualifiers-order'], function ( i, prop ){
-							claimQualifiers[prop] = claim.qualifiers[prop];
+						if ( claim['qualifiers-order'] && claim.qualifiers ) {
+							$.each( claim['qualifiers-order'], function ( i, prop ){
+								claimQualifiers[prop] = claim.qualifiers[prop];
+							});
+						} else if ( claim.qualifiers ) {
+							claimQualifiers = claim.qualifiers;
+						}
+
+						$.each( claimQualifiers, function ( prop, qualifiers) {
+
+							$.each( qualifiers, function ( index, qualifier ) {
+								if ( ! qualifier.datavalue ) {
+									++qualOffset;
+									return true;
+								}
+
+								if ( prop === self.propPointInTime ) {
+									pointInTimeYear = self.parseDateToYear( qualifier.datavalue );
+									++qualOffset;
+									if ( pointInTimeYear ) return false;
+									return true;
+								}
+
+								if ( qualifier.datavalue.type !== 'quantity' ) {
+									++qualOffset;
+									return true;
+								}
+
+								var quantity = self.parseQuantity( qualifier.datavalue );
+								if ( quantity === null || ( ! self.unitConverts.hasOwnProperty( quantity.unit ) &&
+										self.unitCurrencies.indexOf( quantity.unit ) === -1 )) {
+									++qualOffset;
+									return true;
+								}
+
+								qualifierHits.push( {'cid': claim.id, 'qoffset': qualOffset,
+									'unit': quantity.unit, 'amount': quantity.amount} );
+								++qualOffset;
+							});
 						});
-					} else if ( claim.qualifiers ) {
-						claimQualifiers = claim.qualifiers;
-					}
 
-					$.each( claimQualifiers, function ( prop, qualifiers) {
+						for ( var i = 0, al = qualifierHits.length; i < al; ++i ) {
+							if ( pointInTimeYear ) qualifierHits[i].pity = pointInTimeYear;
+							propHits.push( qualifierHits[i] );
+						}
 
-						$.each( qualifiers, function ( index, qualifier ) {
-							if ( ! qualifier.datavalue ) {
-								++qualOffset;
-								return true;
-							}
+						if ( dv.type !== 'quantity' ) {
+							return true;
+						}
 
-							if ( prop === self.propPointInTime ) {
-								pointInTimeYear = self.parseDateToYear( qualifier.datavalue );
-								++qualOffset;
-								if ( pointInTimeYear ) return false;
-								return true;
-							}
+						var quantity = self.parseQuantity( dv );
+						if ( quantity === null || ( ! self.unitConverts.hasOwnProperty( quantity.unit ) &&
+								self.unitCurrencies.indexOf( quantity.unit ) === -1 )) {
+							return true;
+						}
 
-							if ( qualifier.datavalue.type !== 'quantity' ) {
-								++qualOffset;
-								return true;
-							}
-
-							var quantity = self.parseQuantity( qualifier.datavalue );
-							if ( quantity === null || ( ! self.unitConverts.hasOwnProperty( quantity.unit ) &&
-									self.unitCurrencies.indexOf( quantity.unit ) === -1 )) {
-								++qualOffset;
-								return true;
-							}
-
-							qualifierHits.push( {'cid': claim.id, 'qoffset': qualOffset,
-								'unit': quantity.unit, 'amount': quantity.amount} );
-							++qualOffset;
-						});
+						propHits.push( {'cid': claim.id, 'unit': quantity.unit,
+							'amount': quantity.amount} );
 					});
-
-					for ( var i = 0, al = qualifierHits.length; i < al; ++i ) {
-						if ( pointInTimeYear ) qualifierHits[i].pity = pointInTimeYear;
-						propHits.push( qualifierHits[i] );
-					}
-
-					if ( dv.type !== 'quantity' ) {
-						return true;
-					}
-
-					var quantity = self.parseQuantity( dv );
-					if ( quantity === null || ( ! self.unitConverts.hasOwnProperty( quantity.unit ) &&
-							self.unitCurrencies.indexOf( quantity.unit ) === -1 )) {
-						return true;
-					}
-
-					propHits.push( {'cid': claim.id, 'unit': quantity.unit,
-						'amount': quantity.amount} );
 				});
+
+				var currencyFound = false;
+
+				for ( var i = 0, al = propHits.length; i < al; ++i ) {
+					if (pointInTimeYear && ! propHits[i].hasOwnProperty( 'pity' ) ) propHits[i].pity = pointInTimeYear;
+					if ( ! currencyFound && self.unitCurrencies.indexOf( propHits[i].unit ) !== -1 ) currencyFound = true;
+				}
+
+				if ( currencyFound ) {
+					$.getJSON( '/w/index.php?title=User:Bamyers99/currency.json&action=raw&ctype=application/json', function( data ) {
+						self.displayUnits( propHits, data );
+					});
+				} else {
+					self.displayUnits( propHits, null );
+				}
 			});
-
-			var currencyFound = false;
-
-			for ( var i = 0, al = propHits.length; i < al; ++i ) {
-				if (pointInTimeYear && ! propHits[i].hasOwnProperty( 'pity' ) ) propHits[i].pity = pointInTimeYear;
-				if ( ! currencyFound && self.unitCurrencies.indexOf( propHits[i].unit ) !== -1 ) currencyFound = true;
-			}
-
-			if ( currencyFound ) {
-				$.getJSON( '/w/index.php?title=User:Bamyers99/currency.json&action=raw&ctype=application/json', function( data ) {
-					self.displayUnits( propHits, data );
-				});
-			} else {
-				self.displayUnits( propHits, null );
-			}
 		});
 	},
 
