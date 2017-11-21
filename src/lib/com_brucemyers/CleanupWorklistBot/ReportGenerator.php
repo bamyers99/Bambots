@@ -81,6 +81,8 @@ class ReportGenerator
 		$project_title = str_replace('_', ' ', $project);
 		$filesafe_project = str_replace('/', '_', $project);
 		$clquery = $dbh_tools->prepare('SELECT cat_id FROM categorylinks WHERE cl_from = ?');
+		$expiry = strtotime('+1 week');
+		$expiry = date('D, d M Y', $expiry) . ' 00:00:00 GMT';
 
 		$results = $dbh_tools->query('SELECT `article_id`, `page_title`, `importance`, `class` FROM `page` p');
 
@@ -167,7 +169,8 @@ class ReportGenerator
 		fwrite($alphahndl, "<!DOCTYPE html>
 			<html><head>
 			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-    		<title>Cleanup listing for {$wikiproject}{$project_title}</title>
+			<meta http-equiv='Expires' content='$expiry' />
+			<title>Cleanup listing for {$wikiproject}{$project_title}</title>
     		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
 			<script type='text/javascript' src='../../js/jquery-2.1.1.min.js'></script>
 			<script type='text/javascript' src='../../js/jquery.tablesorter.min.js'></script>
@@ -277,7 +280,8 @@ class ReportGenerator
 		fwrite($bycathndl, "<!DOCTYPE html>
 			<html><head>
 			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-    		<title>Cleanup listing for {$wikiproject}{$project_title}</title>
+			<meta http-equiv='Expires' content='$expiry' />
+			<title>Cleanup listing for {$wikiproject}{$project_title}</title>
     		<link rel='stylesheet' type='text/css' href='../../css/cwb.css' />
 			<script type='text/javascript' src='../../js/jquery-2.1.1.min.js'></script>
 			<script type='text/javascript' src='../../js/jquery.tablesorter.min.js'></script>

@@ -945,7 +945,8 @@ class MiscReports extends DatabaseReport
 				'P4454' => array('label' => 'ARGENTINE CHAMBER OF DEPUTIES ID', 'exampleid' => 'Q5668850', 'people' => false),
 				'P4453' => array('label' => 'ARGENTINE SENATE MEMBER ID', 'exampleid' => 'Q4678262', 'people' => false),
 				'P4451' => array('label' => 'SCORESWAY HANDBALL PERSON ID', 'exampleid' => 'Q12313923', 'people' => false),
-				'P4450' => array('label' => 'HAL AUTHOR ID', 'exampleid' => 'Q42308182', 'people' => false)
+				'P4450' => array('label' => 'HAL AUTHOR ID', 'exampleid' => 'Q42308182', 'people' => false),
+				'P4531' => array('label' => 'CHINESEPOSTERS ARTIST ID', 'exampleid' => 'Q42430450', 'people' => false)
 		);
 
 		foreach ($rows as $row) {
