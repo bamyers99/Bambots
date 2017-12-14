@@ -200,11 +200,10 @@ function get_navels()
 
 	if (empty($params['username']) && empty($params['property'])) return $return;
 
-	$wikiname = 'tools';
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
-	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+	if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
 
 	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

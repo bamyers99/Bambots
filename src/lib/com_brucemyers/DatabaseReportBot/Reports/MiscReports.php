@@ -516,7 +516,7 @@ class MiscReports extends DatabaseReport
 				9545191,24211762,18928421,38684243,584368,38676683,38659124,38655048,38643903,38632860,38619056,38619050,
 				38619045,853159,36509372,36509341,36509226,20396608,44457462,45040011,34169594,44818111,44918849,43574713,
 				45206896,44868847,5820690,12255259,5631166,43716686,44210847,3253032,49673186,50729227,12119190,9939398,
-				51410097,1214420,30387944,40245763,51435709,53296694,4293277,54749940,54835048
+				51410097,1214420,30387944,40245763,51435709,53296694,4293277,54749940,54835048,55914231
 		);
 
 		while (1 == 1) {
@@ -939,14 +939,16 @@ class MiscReports extends DatabaseReport
 				'P4470' => array('label' => 'BRITISH BOBSLEIGH & SKELETON ASSOCIATION ID', 'exampleid' => 'Q658596', 'people' => false),
 				'P4469' => array('label' => 'IGHOF ATHLETE ID', 'exampleid' => 'Q270400', 'people' => false),
 				'P4464' => array('label' => 'RUGBY LEAGUE PROJECT PLAYER ID', 'exampleid' => 'Q127618', 'people' => false),
-				'P4463' => array('label' => 'CANADIAN SKI HALL OF GAME INDUCTEE ID', 'exampleid' => 'Q1684883', 'people' => false),
-				'P4463' => array('label' => 'CANADIAN BASEBALL HALL OF FAME INDUCTEE ID', 'exampleid' => 'Q1134401', 'people' => false),
-				'P4463' => array('label' => 'WORLD GOLF HALL OF FAME PLAYER ID', 'exampleid' => 'Q5044549', 'people' => false),
+				'P4463' => array('label' => 'CANADIAN SKI HALL OF FAME INDUCTEE ID', 'exampleid' => 'Q1684883', 'people' => false),
+				'P4462' => array('label' => 'CANADIAN BASEBALL HALL OF FAME INDUCTEE ID', 'exampleid' => 'Q1134401', 'people' => false),
+				'P4461' => array('label' => 'WORLD GOLF HALL OF FAME PLAYER ID', 'exampleid' => 'Q5044549', 'people' => false),
 				'P4454' => array('label' => 'ARGENTINE CHAMBER OF DEPUTIES ID', 'exampleid' => 'Q5668850', 'people' => false),
 				'P4453' => array('label' => 'ARGENTINE SENATE MEMBER ID', 'exampleid' => 'Q4678262', 'people' => false),
 				'P4451' => array('label' => 'SCORESWAY HANDBALL PERSON ID', 'exampleid' => 'Q12313923', 'people' => false),
 				'P4450' => array('label' => 'HAL AUTHOR ID', 'exampleid' => 'Q42308182', 'people' => false),
-				'P4531' => array('label' => 'CHINESEPOSTERS ARTIST ID', 'exampleid' => 'Q42430450', 'people' => false)
+				'P4531' => array('label' => 'CHINESEPOSTERS ARTIST ID', 'exampleid' => 'Q42430450', 'people' => false),
+				'P4574' => array('label' => 'NORWEGIAN HISTORICAL REGISTER OF PERSONS ID', 'exampleid' => 'Q926', 'people' => false),
+				'P4598' => array('label' => 'FAPESP RESEARCHER ID', 'exampleid' => 'Q3891586', 'people' => false)
 		);
 
 		foreach ($rows as $row) {

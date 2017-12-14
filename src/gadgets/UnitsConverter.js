@@ -65,13 +65,15 @@ Bamyers99.UnitsConverter = {
 		// temperature
 		'Q25267': [{'mult':1.8, 'addafter':32, 'unit': 'Q42289'}], // C -> F
 		'Q42289': [{'subbefore': 32, 'mult':0.556, 'unit': 'Q25267'}], // F -> C
-		'Q11579': [{'mult':1, 'subafter': 273.15, 'unit': 'Q25267'}, //K -> C
+		'Q11579': [{'mult':1, 'subafter': 273.15, 'unit': 'Q25267'}, // K -> C
 		           {'mult':1.8, 'subafter': 459.67, 'unit': 'Q42289'}], // K -> F
 		// speed
 		'Q182429': [{'mult':3.281, 'unit': 'Q748716'}], // meter / second -> foot / second
 		'Q748716': [{'mult':0.305, 'unit': 'Q182429'}], // foot / second -> meter / second
 		'Q180154': [{'mult':0.621, 'unit': 'Q211256'}], // kilometer / hour -> mile / hour
-		'Q211256': [{'mult':1.609, 'unit': 'Q180154'}] // mile / hour -> kilometer / hour
+		'Q211256': [{'mult':1.609, 'unit': 'Q180154'}], // mile / hour -> kilometer / hour
+		'Q128822': [{'mult':1.151, 'unit': 'Q211256'}, // knot -> mile / hour
+		           {'mult':1.852, 'unit': 'Q180154'}], // knot -> kilometer / hour
 	},
 	propPointInTime: 'P585',
 	defaultCurISO: 'EUR',

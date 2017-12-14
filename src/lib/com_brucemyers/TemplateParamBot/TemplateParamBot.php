@@ -29,10 +29,10 @@ use Exception;
 /**
  * Sample usage:
  *
- * jsub curl http://website/enwikiTemplateParams -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20170101-TemplateParams
- * jsub curl http://website/enwikiTemplateTotals -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20170101-TemplateTotals
- * jsub curl http://website/enwikiTemplateOffsets -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20170101-TemplateOffsets
- * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php loadtotalsoffsets /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20170101-TemplateTotals /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20170101-TemplateOffsets
+ * jsub curl http://website/enwikiTemplateParams -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20180101-TemplateParams
+ * jsub curl http://website/enwikiTemplateTotals -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20180101-TemplateTotals
+ * jsub curl http://website/enwikiTemplateOffsets -o /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20180101-TemplateOffsets
+ * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php loadtotalsoffsets /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20180101-TemplateTotals /data/project/bambots/Bambots/data/TemplateParamBot/enwiki-20180101-TemplateOffsets
  * jsub -N TemplateParamBot -cwd -mem 768m php TemplateParamBot.php dumptemplateids enwiki
  */
 class TemplateParamBot
