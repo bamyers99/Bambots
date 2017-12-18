@@ -30,7 +30,7 @@ class TemplateParamParser
 		'html' => '!<\s*(?P<content>(?P<tag>[\w]+)[^>]*>[^<]*?<\s*/\s*(?P=tag)\s*>)!',
 		'template' => '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?))?\}\})!',
 		'table' => '!\{\|(?P<content>[^{]*?\|\})!',
-		'link' => '!\[\[(?P<content>[^\[\]]*?\]\])!'
+		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/'
 	);
 
 	const MAX_ITERATIONS = 100000;
@@ -70,8 +70,8 @@ class TemplateParamParser
 
 						foreach (self::$regexs as $regex2) {
 							if (preg_match($regex2, $content)) {
-//								echo "$regex2\n";
-//								echo "$content\n";
+								echo "$regex2\n";
+								echo "$content\n";
 								continue 2;
 							}
 						}

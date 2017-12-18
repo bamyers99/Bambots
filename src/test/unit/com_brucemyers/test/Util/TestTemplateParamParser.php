@@ -48,6 +48,7 @@ class TestTemplateParamParser extends UnitTestCase
     			{{Nihongo|Cindy Aurum|シドニー・オールム|Shidonī Ōrumu|"Cidney"<ref name= "SilMoogle"/>}}
     			{{Template:navbox<!-- comment -->
     			| name	= Retail {{{year}}}
+    			| image = [[File:test.jpg|[[covered bridge|Covered bridge]]]]
     			| title	=	[[Retail stores|Retail Stores]] {{resolve|{{{year}}}}}
     			| cost = <math>{x*2} | <i>5</i></math>
     			| {{{paramname}}} = {{{{{lefttmpl}}|{{righttmpl}}}}}
@@ -61,7 +62,8 @@ class TestTemplateParamParser extends UnitTestCase
     			|-
     			| a || b
     			|}
-    			}}';
+    			}}
+    			{{math|\'\'g\'\' : [[interval (mathematics)#Infinite endpoints|(−∞,+9] or [0,+∞)]] → ℝ}}';
     	$expected_templates = array(
     		array('name' => 'Nihongo',
     			'params' => array('1' => 'Cindy Aurum',
@@ -70,6 +72,7 @@ class TestTemplateParamParser extends UnitTestCase
     				'4' => '"Cidney"<ref name= "SilMoogle"/>')),
     		array('name' => 'Navbox',
     			'params' => array('name' => 'Retail {{{year}}}',
+    				'image' => '[[File:test.jpg|[[covered bridge|Covered bridge]]]]',
     				'title' => '[[Retail stores|Retail Stores]] {{resolve|year={{{year}}}}}',
     				'cost' => '<math>{x*2} | <i>5</i></math>',
     				'{{{paramname}}}' => '{{{{{lefttmpl}}|{{righttmpl}}}}}',
@@ -82,7 +85,8 @@ class TestTemplateParamParser extends UnitTestCase
     			'{|
     			|-
     			| a || b
-    			|}'))
+    			|}')),
+    		array('name' => 'Math', 'params' => array('1' => "''g'' : [[interval (mathematics)#Infinite endpoints|(−∞,+9] or [0,+∞)]] → ℝ"))
     	);
 		$this->_performMultipleTemplateTest($testname, $data, $expected_templates);
 
