@@ -83,10 +83,20 @@ class InceptionBot
 
         while (($triagepages = $lister->getNextBatch()) !== false) {
         	foreach ($triagepages as &$triagepage) {
-				if (! isset($allpages[$triagepage['title']])) $allpages[$triagepage['title']] = $triagepage;
+        		if (! isset($allpages[$triagepage['title']])) $allpages[$triagepage['title']] = $triagepage;
         	}
         }
         unset($triagepage);
+
+        // Retrieve removed redirects.
+        $lister = new RemovedRedirectPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
+
+        while (($rmredirectpages = $lister->getNextBatch()) !== false) {
+        	foreach ($rmredirectpages as &$rmredirect) {
+        		if (! isset($allpages[$rmredirect['title']])) $allpages[$rmredirect['title']] = $rmredirect;
+        	}
+        }
+        unset($rmredirect);
 
         Logger::log('New page count = ' . count($allpages));
 
