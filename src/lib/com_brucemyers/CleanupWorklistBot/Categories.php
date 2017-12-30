@@ -27,7 +27,8 @@ class Categories {
 			),
 			'Accuracy disputes' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality'
+					'group' => 'References',
+					'display' => 'Accuracy disputes or self-published'
 			),
 			'Article sections to be split' => array (
 					'type' => 'from-monthly',
@@ -362,7 +363,7 @@ class Categories {
 			),
 			'Wikipedia articles needing factual verification' => array (
 					'type' => 'from-monthly',
-					'group' => 'Neutrality',
+					'group' => 'References',
 					'display' => 'Factual verification needed'
 			),
 			'Wikipedia articles needing page number citations' => array (
