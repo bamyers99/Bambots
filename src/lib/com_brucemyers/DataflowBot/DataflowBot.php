@@ -234,8 +234,6 @@ class DataflowBot
      */
 	function _configPopularLowQuality() {
 		$header = <<<EOT
-{{Notice|The tool for detecting low quality articles which generates the list below is still in an experimental stage. '''You can help''' by notifying us of potential problems, apparent mislistings, and your suggestions [[User talk:DataflowBot/output/Popular low quality articles (id-2)|on the talk page]].}}
-
 ==Lowest quality high-popularity articles==
 Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Weekly page views as of: @@PopPg#year@@-@@PopPg#month@@-@@PopPg#day@@
 EOT;
@@ -260,7 +258,7 @@ EOT;
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
 						'params' => array (
 							'filtercol' => '1',
-							'excluderegex' => '^List_of'
+							'excluderegex' => '^(List_of|Lists_of)'
 						)
 				),
 				array (
