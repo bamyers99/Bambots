@@ -30,7 +30,7 @@ class TemplateParamParser
 		'html' => '!<\s*(?P<content>(?P<tag>[\w]+)[^>]*>[^<]*?<\s*/\s*(?P=tag)\s*>)!',
 		'template' => '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?))?\}\})!',
 		'table' => '!\{\|(?P<content>[^{]*?\|\})!',
-		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/'
+		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/s'
 	);
 
 	const MAX_ITERATIONS = 100000;
