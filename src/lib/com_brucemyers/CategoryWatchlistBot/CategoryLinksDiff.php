@@ -267,10 +267,6 @@ class CategoryLinksDiff
 		krsort($sortedrevs); // Reverse so that recent changes has articles first
 
 		foreach ($sortedrevs as $rev) {
-			// Prevent MySQL server has gone away
-	    	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
-	    	$dbh_tools->beginTransaction();
-			$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category, flags) VALUES (?,?,?,?,?,?)");
 			$insert_count = 0;
 
 			$pagetitle = $rev['t'];
@@ -325,6 +321,11 @@ class CategoryLinksDiff
 			// Detect if currently a redirect
 			$flags = 0;
 			if (preg_match(CommonRegex::REDIRECT_REGEX, $revtext1)) $flags |= 1;
+
+			// Prevent MySQL server has gone away
+			$dbh_tools = $this->serviceMgr->getDBConnection('tools');
+			$dbh_tools->beginTransaction();
+			$isth = $dbh_tools->prepare("INSERT INTO {$wikiname}_diffs (diffdate, plusminus, pagetitle, cat_template, category, flags) VALUES (?,?,?,?,?,?)");
 
 			foreach ($catchanges as $plusminus => $categories) {
 				list($plusminus, $watchtype) = explode('|', $plusminus);
