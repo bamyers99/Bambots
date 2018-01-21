@@ -5,4 +5,3 @@
 10 1 * * sun jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DataflowBot.php >/dev/null
 17 2 * * tue jsub -N CleanupWorklistBot -wd /data/project/bambots/Bambots/src/cli -mem 870m php CleanupWorklistBot.php >/dev/null
 17 3 * * tue jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 768m php DataflowBot.php PopularLowQuality >/dev/null
-17 4 2 * * jsub -N DatabaseReportBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DatabaseReportBot.php MiscReports WikidataPropertyCounts
