@@ -19,6 +19,7 @@ use com_brucemyers\TemplateParamBot\UIHelper;
 use com_brucemyers\TemplateParamBot\TemplateParamConfig;
 use com_brucemyers\Util\HttpUtil;
 use com_brucemyers\Util\L10N;
+use com_brucemyers\Util\CommonRegex;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -68,6 +69,7 @@ function display_form()
 	global $uihelper, $params, $wikis, $l10n, $action;
 	$title = '';
 	if (! empty($params['template'])) $title .= ' : ' . $params['template'];
+	if ($action == 'invalidlinks') $title .= ' : Invalid parameter names';
 	if (! empty($params['param'])) $title .= ' : ' . $params['param'];
 	if ($action == 'missing') $title .= ' (' . $l10n->get('missing') . ')';
 	elseif ($action == 'errors') $title .= ' (' . $l10n->get('errors') . ')';
@@ -131,6 +133,10 @@ function display_form()
 
         	case 'errors':
         		display_missing_errors('errors');
+        		break;
+
+        	case 'invalidlinks':
+        		display_invalidlinks();
         		break;
 
         	default:
@@ -372,11 +378,16 @@ EOT;
 	echo '</tbody></table>';
 	echo '<div>' . htmlentities($l10n->get('validnamekey', true), ENT_COMPAT, 'UTF-8') . '</div>';
 
+	$extra = "TemplateParam.php?action=invalidlinks&wiki=" . urlencode($params['wiki']) .
+		"&template=" . urlencode($tmplname);
+	$parmpageslink = "<a href='$protocol://$host$uri/$extra'>" .
+		str_replace(' ', '&nbsp;', htmlentities('Invalid parameter page list', ENT_COMPAT, 'UTF-8')) . "</a>";
+	echo "<div>$parmpageslink</div>";
+
 	$wikitext .= "|}\n" . $l10n->get('validnamekey', true);
 	echo '<br /><b>' . htmlentities($l10n->get('wikitext', true), ENT_COMPAT, 'UTF-8') .
 		'</b><form><textarea rows="20" cols="65" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
 		'</textarea></form>';
-
 }
 
 /**
@@ -579,6 +590,140 @@ function display_valuelinks()
 		echo "<div style='padding-bottom: 10px;' class='novisited'><a href='$protocol://$host$uri/$extra'>" .
 			htmlentities($l10n->get('nextpage', true), ENT_COMPAT, 'UTF-8') . "</a></div>";
 	}
+}
+
+/**
+ * Display all invalid parameter links
+ */
+function display_invalidlinks()
+{
+	global $uihelper, $params, $wikis, $l10n;
+
+	$results = $uihelper->getTemplate($params);
+	$pagelinks = true;
+	$tmplname = $params['template'];
+	$wikitext = '';
+
+	if (! empty($results['info'])) {
+		if ($results['info']['file_offset'] == -1) {
+			$results['errors'][] = htmlentities($l10n->get('pagelistsunavailable', true), ENT_COMPAT, 'UTF-8');
+			$pagelinks = false;
+		}
+	}
+
+	if (! empty($results['errors'])) {
+		echo '<h3>Messages</h3><ul>';
+		foreach ($results['errors'] as $msg) {
+			echo "<li>$msg</li>";
+		}
+		echo '</ul>';
+	}
+
+	if (empty($results['info']) || ! $pagelinks) return;
+
+	$loaded = checkLoadStatus($results['info']);
+	if ($loaded['status'] != 'C') return;
+
+	if (isset($results['info']['TemplateData'])) $templatedata = $results['info']['TemplateData'];
+	else $templatedata = false;
+
+	if ($templatedata) {
+		$templateParamConfig = $uihelper->getTemplateParamConfig();
+		$templatedata->enhanceConfig($templateParamConfig->getTemplate($tmplname));
+		$paramdef = $templatedata->getParams();
+	}
+	else $paramdef = false;
+
+	if (! $paramdef) {
+		echo '<h3>Messages</h3><ul><li>Parameter definition not found</li></ul>';
+		return;
+	}
+
+	$invalid_params = array();
+
+	foreach ($results['info']['params'] as $param) {
+		$paramname = $param['param_name'];
+
+		if (! isset($paramdef[$paramname])) {
+			$invalid_params[] = $paramname;
+		}
+	}
+
+	if (empty($invalid_params)) {
+		echo '<h3>Messages</h3><ul><li>No invalid parameters</li></ul>';
+		return;
+	}
+
+	$wikitext .= $l10n->get('template', true) . ": $tmplname<br />\n";
+	$asof = $wikis[$params['wiki']]['lastdumpdate'];
+	$wikitext .= $l10n->get('asofdate', true) . ": " . substr($asof, 0, 4) . "-" . substr($asof, 4, 2) .
+	"-" . substr($asof, 6) . "<br />\nInvalid parameter names<br />\n";
+
+	$results = $uihelper->getInvalids($invalid_params, $params, 10000);
+
+	usort($results['results'], function($a, $b) {
+		return strcmp($a['page_title'], $b['page_title']);
+	});
+
+	if (empty($results['results'])) {
+		echo '<div><b>No more results</b></div>';
+		return;
+	}
+
+	$protocol = HttpUtil::getProtocol();
+	$domain = $wikis[$params['wiki']]['domain'];
+	$wikiprefix = "$protocol://$domain/wiki/";
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+
+	echo '<table class="wikitable"><thead><tr><th>' . htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') .
+		'</th><th>Parameter</th></tr></thead><tbody>';
+
+	$headings = 'Page!!Parameter';
+
+	$wikitext .= "{| class=\"wikitable sortable\"\n|-\n!$headings\n";
+	$prevname = '';
+
+	foreach ($results['results'] as $page) {
+		if (empty($page['page_title'])) continue;
+		if ($page['page_title'] == $prevname) {
+			$title = '';
+		} else {
+			$title = $page['page_title'];
+			$prevname = $title;
+		}
+
+		// Strip comments, etc
+		$cleandata = str_replace(array('[[',']]'), '', $page['param_name']);
+		$cleandata = preg_replace(CommonRegex::REFERENCESTUB_REGEX, '', $cleandata); // Must be first
+		$cleandata = preg_replace(CommonRegex::REFERENCE_REGEX, '', $cleandata);
+		$cleandata = preg_replace(array(CommonRegex::COMMENT_REGEX, CommonRegex::NOWIKI_REGEX), '', $cleandata);
+		if (strlen($cleandata) > 50) $cleandata = substr($cleandata, 0, 50);
+
+		$urlpage = urlencode(str_replace(' ', '_', $page['page_title']));
+		$html_parameter = htmlentities($cleandata, ENT_COMPAT | ENT_SUBSTITUTE, 'UTF-8');
+
+		if (empty($title)) $html_title = '&nbsp;';
+		else $html_title = "<a href=\"$wikiprefix$urlpage\">" . htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>";
+
+		echo "<tr><td>$html_title</td><td>$html_parameter</td></tr>";
+
+		if (empty($title)) $csv_title = ' ';
+		else $csv_title = '[[' . $title . ']]';
+		$csvdata = implode('||', array($csv_title, $cleandata));
+		$wikitext .= "|-\n|$csvdata\n";
+	}
+
+	echo '<tbody></table>';
+
+	if (count($results['results']) == 10000) {
+		echo "<div style='padding-bottom: 10px;'>Only first 10000 results returned</div>";
+	}
+
+	$wikitext .= "|}\n";
+	echo '<br /><b>' . htmlentities($l10n->get('wikitext', true), ENT_COMPAT, 'UTF-8') .
+		'</b><form><textarea rows="20" cols="65" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext, ENT_SUBSTITUTE, 'UTF-8') .
+		'</textarea></form>';
 }
 
 /**

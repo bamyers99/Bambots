@@ -287,6 +287,72 @@ class UIHelper
 	}
 
 	/**
+	 * Get invalid parameter pages
+	 *
+	 * @param array $invalid_params
+	 * @param array $params
+	 * @param int $max_rows
+	 * @return array Results, keys = errors - array(), results - array()
+	 */
+	public function getInvalids($invalid_params, $params, $max_rows)
+	{
+		$results = array();
+		$errors = array();
+		$wikiname = $params['wiki'];
+
+		$sth = $this->dbh_tools->prepare("SELECT id FROM `{$wikiname}_templates` WHERE `name` = ?");
+		$sth->execute(array($params['template']));
+
+		$row = $sth->fetch(PDO::FETCH_NUM);
+		$templid = $row[0];
+
+		$questions = array_fill(0, count($invalid_params), '?');
+		$questions = implode(',', $questions);
+
+		$where = "template_id = ? AND param_name IN ($questions)";
+		$values = array($templid);
+
+		foreach ($invalid_params as $param) {
+			$values[] = $param;
+		}
+
+		$sql = "SELECT page_id, instance_num, param_name, param_value FROM `{$wikiname}_values` WHERE $where ORDER BY page_id LIMIT $max_rows";
+		$sth = $this->dbh_tools->prepare($sql);
+		$sth->execute($values);
+
+		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+		if (! empty($results)) {
+			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+			$page_ids = array();
+			foreach ($results as $row) {
+				$page_ids[$row['page_id']] = true; // removes dups
+			}
+
+			$page_ids = implode(',', array_keys($page_ids));
+
+			$sql = "SELECT page_id, page_title FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ")";
+			$sth = $dbh_wiki->prepare($sql);
+			$sth->execute();
+
+			$page_names = array();
+
+			$results2 = $sth->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($results2 as $result) {
+				$page_names[$result['page_id']] = str_replace('_', ' ', $result['page_title']);
+			}
+
+			foreach ($results as &$result) {
+				$result['page_title'] = $page_names[$result['page_id']];
+			}
+
+			unset($result);
+		}
+
+		return array('errors' => $errors, 'results' => $results);
+	}
+
+	/**
 	 * Get the TemplateParamConfig
 	 *
 	 * @return TemplateParamConfig
