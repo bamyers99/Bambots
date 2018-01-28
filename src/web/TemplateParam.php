@@ -69,7 +69,7 @@ function display_form()
 	global $uihelper, $params, $wikis, $l10n, $action;
 	$title = '';
 	if (! empty($params['template'])) $title .= ' : ' . $params['template'];
-	if ($action == 'invalidlinks') $title .= ' : Invalid parameter names';
+	if ($action == 'invalidlinks') $title .= ' : Invalid parameter names, < 50 unique values';
 	if (! empty($params['param'])) $title .= ' : ' . $params['param'];
 	if ($action == 'missing') $title .= ' (' . $l10n->get('missing') . ')';
 	elseif ($action == 'errors') $title .= ' (' . $l10n->get('errors') . ')';
@@ -643,6 +643,9 @@ function display_invalidlinks()
 
 	foreach ($results['info']['params'] as $param) {
 		$paramname = $param['param_name'];
+		$uniques = explode("\t", $param['unique_values']);
+		$cnt = count($uniques);
+		if ($cnt < 2) continue; // > 50 uniques
 
 		if (! isset($paramdef[$paramname])) {
 			$invalid_params[] = $paramname;
@@ -657,7 +660,7 @@ function display_invalidlinks()
 	$wikitext .= $l10n->get('template', true) . ": $tmplname<br />\n";
 	$asof = $wikis[$params['wiki']]['lastdumpdate'];
 	$wikitext .= $l10n->get('asofdate', true) . ": " . substr($asof, 0, 4) . "-" . substr($asof, 4, 2) .
-	"-" . substr($asof, 6) . "<br />\nInvalid parameter names<br />\n";
+	"-" . substr($asof, 6) . "<br />\nInvalid parameter names, &lt; 50 unique values<br />\n";
 
 	$results = $uihelper->getInvalids($invalid_params, $params, 10000);
 
