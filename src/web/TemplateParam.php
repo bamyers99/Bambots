@@ -306,7 +306,7 @@ EOT;
 						$missinglink = true;
 						$validparamname .= ' (R)';
 					} elseif (isset($paramdef[$paramname]['suggested'])) {
-						$missinglink = true;
+						if (! $isblacklisted) $missinglink = true;
 						$validparamname .= ' (S)';
 					}
 				}

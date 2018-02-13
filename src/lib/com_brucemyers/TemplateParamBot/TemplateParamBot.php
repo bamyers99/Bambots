@@ -167,17 +167,10 @@ class TemplateParamBot
         		continue;
         	}
 
-        	// Calc aliases and validations
-        	$aliases = array();
+        	// Calc validations
         	$validations = array();
 
         	foreach ($paramdefs as $param_name => $paramdef) {
-        		if (isset($paramdef['aliases'])) {
-					foreach ($paramdef['aliases'] as $alias) {
-						$aliases[$alias] = $param_name;
-					}
-        		}
-
 	        	if ($paramdef['type'] == 'yesno') $validations[$param_name] = array('type' => 'yesno');
 	        	elseif (isset($paramdef['regex'])) $validations[$param_name] = array('type' => 'regex', 'regex' => "!^{$paramdef['regex']}$!u");
 	        	elseif (isset($paramdef['values'])) $validations[$param_name] = array('type' => 'values', 'values' => $paramdef['values']);
@@ -242,10 +235,8 @@ class TemplateParamBot
 
 				$params_used = array();
 				foreach ($paramdefs as $param_name => $paramdef) {
-					$unaliased = $param_name;
-					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
 					if (isset($paramdef['required']) || isset($paramdef['suggested'])) {
-						$params_used[$unaliased] = false;
+						$params_used[$param_name] = false;
 					}
 				}
 
@@ -255,9 +246,7 @@ class TemplateParamBot
 					$param_value = $line[$x + 1];
 					$sth->execute(array($pageid, $templid, $instancenum, $param_name, $param_value));
 
-					$unaliased = $param_name;
-					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
-					if (isset($params_used[$unaliased])) $params_used[$unaliased] = true;
+					if (isset($params_used[$param_name])) $params_used[$param_name] = true;
 
 					// Value validation
 
@@ -293,12 +282,9 @@ class TemplateParamBot
 				}
 
 				foreach ($params_used as $param_name => $param_used) {
-					$unaliased = $param_name;
-					if (isset($aliases[$param_name])) $unaliased = $aliases[$param_name];
-
-					if (! $param_used && ! isset($missing_written[$unaliased])) {
-						$sthmissing->execute(array($templid, $unaliased, $pageid));
-						$missing_written[$unaliased] = true;
+					if (! $param_used && ! isset($missing_written[$param_name])) {
+						$sthmissing->execute(array($templid, $param_name, $pageid));
+						$missing_written[$param_name] = true;
 					}
 				}
 	    	}
@@ -1098,6 +1084,7 @@ class TemplateParamBot
     		if (strpos($templname, '/doc') !== false) continue;
     		if (strpos($templname, '/sandbox') !== false) continue;
     		if (strpos($templname, '/testcases') !== false) continue;
+    		if (strpos($templname, '/lua') !== false) continue;
     		$redirtmpls = explode('|', $row[2]);
 
     		$templatedata = new TemplateData($row[3]);
@@ -1114,7 +1101,12 @@ class TemplateParamBot
 					elseif (isset($config['suggested'])) $validparamname = 'S';
 				}
 
-    			fwrite($hndl, "\t$paramname\t$validparamname\t");
+				$aliases = '';
+				if (isset($config['aliases']) && ! empty($config['aliases'])) {
+					$aliases = '|' . implode('|', $config['aliases']);
+				}
+
+    			fwrite($hndl, "\t$paramname$aliases\t$validparamname\t");
 
 				if ($config['type'] == 'yesno') fwrite($hndl, 'Y');
 				elseif (isset($config['regex'])) fwrite($hndl, "R\t" . $config['regex']);
@@ -1129,6 +1121,7 @@ class TemplateParamBot
 	    		if (strpos($templname, '/doc') !== false) continue;
 	    		if (strpos($templname, '/sandbox') !== false) continue;
 	    		if (strpos($templname, '/testcases') !== false) continue;
+	    		if (strpos($templname, '/lua') !== false) continue;
 
 	    		$templname = str_replace('_', ' ', $templname);
     			fwrite($hndl, "$templname\t$templid\n");

@@ -37,6 +37,17 @@ class TemplateData
 
 		// Normalization
 		if (isset($this->data['params'])) {
+			// Trim the param names
+			$param_names = array_keys($this->data['params']);
+
+			foreach ($param_names as $param_name) {
+				$trimmed_name = trim($param_name);
+				if ($trimmed_name !== $param_name) {
+					$this->data['params'][$trimmed_name] = $this->data['params'][$param_name];
+					unset($this->data['params'][$param_name]);
+				}
+			}
+
 			foreach ($this->data['params'] as $name => $config) {
 				if (isset($config['inherits'])) {
 					$this->data['params'][$name] = array_merge($this->data['params'][$config['inherits']], $config);
@@ -58,9 +69,8 @@ class TemplateData
 				}
 
 				if (isset($config['aliases'])) {
-					foreach ($config['aliases'] as $alias) {
-						$this->data['params'][$alias] = $config;
-						unset($this->data['params'][$alias]['aliases']);
+					foreach ($config['aliases'] as $offset => $alias) {
+						$this->data['params'][$name]['aliases'][$offset] = trim($alias);
 					}
 				}
 			}
