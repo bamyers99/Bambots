@@ -42,7 +42,7 @@ class TemplateData
 
 			foreach ($param_names as $param_name) {
 				$trimmed_name = trim($param_name);
-				if ($trimmed_name !== $param_name) {
+				if ($trimmed_name != $param_name) { // don't use strict compare as numeric param type != trimmed string type
 					$this->data['params'][$trimmed_name] = $this->data['params'][$param_name];
 					unset($this->data['params'][$param_name]);
 				}
