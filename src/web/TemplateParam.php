@@ -296,6 +296,7 @@ EOT;
 		$validparamname = '&nbsp;';
 		$missinglink = false;
 		$errorslink = false;
+		$aliases = '';
 
 		if ($paramdef) {
 			if (isset($paramdef[$paramname])) {
@@ -314,6 +315,9 @@ EOT;
 				if ($paramdef[$paramname]['type'] == 'yesno' ||
 					isset($paramdef[$paramname]['regex']) ||
 					isset($paramdef[$paramname]['values'])) $errorslink = true;
+
+				if (isset($paramdef[$paramname]['aliases']) && ! empty($paramdef[$paramname]['aliases']))
+					$aliases = htmlentities(implode(', ', $paramdef[$paramname]['aliases']), ENT_COMPAT, 'UTF-8');
 
 			} else {
 				$validparamname = 'N';
@@ -370,7 +374,14 @@ EOT;
 			$wuniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
 		}
 
-		echo "<td>$paramname$parmpageslink</td><td style='text-align:center'>$validparamname</td><td style='text-align:right'>{$param['value_count']}&nbsp;</td><td>$uniquedata</td></tr>";
+		$preparam = $postparam = '';
+
+		if (! empty($aliases)) {
+			$preparam = '<span class="ultooltip" title="' . $aliases . '">';
+			$postparam = '</span>';
+		}
+
+		echo "<td>$preparam$paramname$postparam$parmpageslink</td><td style='text-align:center'>$validparamname</td><td style='text-align:right'>{$param['value_count']}&nbsp;</td><td>$uniquedata</td></tr>";
 		$csvdata = implode('||', array($paramname, $validparamname, $param['value_count'], $wuniquedata));
 		$wikitext .= "|-\n|$csvdata\n";
 	}
