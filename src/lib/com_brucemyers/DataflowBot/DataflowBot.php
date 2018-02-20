@@ -254,7 +254,7 @@ EOT;
 							'maxmobile' => '95'
 						)
 				),
-				array (
+				array ( // filter before redirects
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
 						'params' => array (
 							'filtercol' => '1',
@@ -272,6 +272,13 @@ EOT;
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\ResolveRedirectColumn',
 						'params' => array (
 							'linkcol' => '1'
+						)
+				),
+				array ( // filter after redirects
+						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
+						'params' => array (
+							'filtercol' => '1',
+							'excluderegex' => '^(List_of|Lists_of)'
 						)
 				),
 				array (
