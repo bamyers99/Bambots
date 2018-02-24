@@ -280,7 +280,7 @@ class DiacriticRedLinks extends DatabaseReport
 			if ($type == 'skip') continue;
 			$line .= "\n"; // Something for the .* to match
 
-			if (preg_match('!\[\[([^\]]+?)\]\]\\s*(?:\(\\d+ links\)|-\\s*\\d+|\(\\d+\))(.*)!s', $line, $matches)) {
+			if (preg_match('!\[\[([^\]]+?)\]\]\\s*(?:\(\\d+ links\)|(?:-|–)\\s*\\d+|\(\\d+\))(.*)!s', $line, $matches)) {
 				$title = str_replace(' ', '_', $matches[1]);
 				$extra = trim($matches[2]);
 				if ($type == 'old') $curlinks['old'][$title] = $extra;
@@ -359,11 +359,11 @@ class DiacriticRedLinks extends DatabaseReport
 
 		foreach ($chunks as $chunk) {
 			if ($startnum == 501) break;
-			fwrite($hndl, "====$startnum-$endnum====\n");
+			fwrite($hndl, "===={$startnum}–{$endnum}====\n");
 
 			foreach ($chunk as $row) {
 				$title = str_replace('_', ' ', $row[0]);
-				fwrite($hndl, "*[[$title]] - {$row[1]}\n");
+				fwrite($hndl, "*[[$title]] – {$row[1]}\n");
 			}
 
 			$startnum += 100;
@@ -385,13 +385,13 @@ class DiacriticRedLinks extends DatabaseReport
 		$endnum = 100;
 
 		foreach ($chunks as $chunk) {
-			fwrite($hndl, "====$startnum-$endnum====\n");
+			fwrite($hndl, "===={$startnum}–{$endnum}====\n");
 
 			foreach ($chunk as $row) {
 				$title = str_replace('_', ' ', $row[0]);
 				$extra = $row[2];
 				if (! empty($extra)) $extra = ' ' . $extra;
-				fwrite($hndl, "*[[$title]] - {$row[1]}$extra\n");
+				fwrite($hndl, "*[[$title]] – {$row[1]}$extra\n");
 			}
 
 			$startnum += 100;
