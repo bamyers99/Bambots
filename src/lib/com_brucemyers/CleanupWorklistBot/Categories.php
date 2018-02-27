@@ -640,7 +640,7 @@ class Categories {
 							FROM category c
 							JOIN page AS cat ON c.cat_title = cat.page_title
 							JOIN categorylinks AS cl ON cat.page_id = cl.cl_from
-							WHERE cl.cl_to = ? AND c.cat_pages - (c.cat_subcats + c.cat_files) > 0";
+							WHERE cl.cl_to = ? AND c.cat_pages - (c.cat_subcats + c.cat_files) > 0 AND cl_type = \"subcat\"";
 					} else {
 						$sqls [$param] = "SELECT cat_id as id, cat_title as title,
 							NULL as month,
