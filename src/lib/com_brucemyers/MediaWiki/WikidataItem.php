@@ -250,7 +250,8 @@ class WikidataItem
 			}
 		}
 
-		return $ret;
+		if (isset($ret)) return $ret;
+		return '';
 	}
 
 	/**
@@ -273,6 +274,7 @@ class WikidataItem
 		}
 
 		if (! empty($reten)) return $reten;
-		return $ret;
+		if (isset($ret)) return $ret;
+		return array();
 	}
 }
