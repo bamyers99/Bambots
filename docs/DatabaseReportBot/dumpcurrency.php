@@ -15,6 +15,12 @@
  limitations under the License.
 
  Dump CurrencyConverter wikidata gadget json files.
+
+ https://www.x-rates.com/table/?from=GBP&amount=1
+ INSERT INTO wikidatawiki_p.`currency_rates` VALUES (2018,1.837305,4.687543,1.819494,8.865283,8.525941,1.144069,91.731511,138.771977,150.393250,25.778737,1.952902,11.078723,4.809790,81.286671,16.579594,11.763961,1.347300,5.647245,1,1.408076,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+ https://data.oecd.org/price/inflation-cpi.htm yearly
+ mysqldump -u 'user' -p 'database' currency_curs currency_rates currency_mults >currency_rates.sql
+
  */
 
 $count = 0;
