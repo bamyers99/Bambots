@@ -89,7 +89,12 @@ try {
     $timer->start();
 
     if ($ruletype == 'active') $rules = $activerules;
-    elseif ($ruletype == 'custom') $rules = array(Config::get(CleanupWorklistBot::CUSTOMRULE) => '');
+    elseif ($ruletype == 'custom') {
+        $parts = explode('=>', Config::get(CleanupWorklistBot::CUSTOMRULE), 2);
+        $key = str_replace(' ', '_', trim($parts[0]));
+        $value = (count($parts) > 1) ? str_replace(' ', '_', trim($parts[1])) : '';
+    	$rules = array($key => $value);
+    }
     else {
         $data = $wiki->getpage('User:CleanupWorklistBot/Master');
         $masterconfig = new MasterRuleConfig($data);
