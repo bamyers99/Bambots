@@ -20,6 +20,7 @@ namespace com_brucemyers\TemplateParamBot;
 use com_brucemyers\Util\L10N;
 use com_brucemyers\Util\Config;
 use PDO;
+use com_brucemyers\MediaWiki\MediaWiki;
 
 class UIHelper
 {
@@ -220,11 +221,18 @@ class UIHelper
 
 			$page_ids = implode(',', $page_ids);
 
-			$sql = "SELECT page_title FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
+			$sql = "SELECT page_title, page_namespace FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
 			$sth = $dbh_wiki->prepare($sql);
 			$sth->execute();
 
 			$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+			foreach ($results as &$result) {
+				if ($result['page_namespace'] != 0)
+					$result['page_title'] = MediaWiki::getNamespacePrefix($result['page_namespace']) . $result['page_title'];
+			}
+
+			unset($result);
 		}
 
 		return array('errors' => $errors, 'results' => $results);
@@ -276,11 +284,18 @@ class UIHelper
 
 			$page_ids = implode(',', $page_ids);
 
-			$sql = "SELECT page_title FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
+			$sql = "SELECT page_title, page_namespace FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
 			$sth = $dbh_wiki->prepare($sql);
 			$sth->execute();
 
 			$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+			foreach ($results as &$result) {
+				if ($result['page_namespace'] != 0)
+					$result['page_title'] = MediaWiki::getNamespacePrefix($result['page_namespace']) . $result['page_title'];
+			}
+
+			unset($result);
 		}
 
 		return array('errors' => $errors, 'results' => $results);
@@ -331,15 +346,21 @@ class UIHelper
 
 			$page_ids = implode(',', array_keys($page_ids));
 
-			$sql = "SELECT page_id, page_title FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ")";
+			$sql = "SELECT page_id, page_title, page_namespace FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ")";
 			$sth = $dbh_wiki->prepare($sql);
 			$sth->execute();
 
 			$page_names = array();
 
 			$results2 = $sth->fetchAll(PDO::FETCH_ASSOC);
+
 			foreach ($results2 as $result) {
-				$page_names[$result['page_id']] = str_replace('_', ' ', $result['page_title']);
+				$page_title = str_replace('_', ' ', $result['page_title']);
+
+				if ($result['page_namespace'] != 0)
+					$page_title = MediaWiki::getNamespacePrefix($result['page_namespace']) . $page_title;
+
+				$page_names[$result['page_id']] = $page_title;
 			}
 
 			foreach ($results as &$result) {
