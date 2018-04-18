@@ -26,7 +26,7 @@ $GLOBALS['botname'] = 'TemplateParamBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
-//    	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'lang' => 'en'),
+    	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'templateNS' => 'Template', 'lang' => 'en'),
     	'enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en')
 //    	'svwiki' => array('title' => 'Svenska Wikipedia', 'domain' => 'sv.wikipedia.org'),
 //        'nlwiki' => array('title' => 'Nederlands Wikipedia', 'domain' => 'nl.wikipedia.org'),
