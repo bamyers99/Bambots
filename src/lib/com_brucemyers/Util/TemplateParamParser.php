@@ -49,6 +49,7 @@ class TemplateParamParser
 		$markers = array();
 		$templates = array();
 		$data = preg_replace(CommonRegex::COMMENT_REGEX, '', $origdata); // Strip comments
+		$data = preg_replace(CommonRegex::BR_REGEX, ' ', $data); // Strip BRs
 
 		while ($match_found) {
 			if (++$itercnt > self::MAX_ITERATIONS) {

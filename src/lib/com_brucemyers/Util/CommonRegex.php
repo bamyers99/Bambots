@@ -23,7 +23,8 @@ class CommonRegex
     // This uses possessive quantifier *+ which doesn't do any backtracking
     const REFERENCESTUB_REGEX = '!<ref(?:(?:\s+\w+(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\'">\s]+))?)+\s*|\s*)/>!usi';
     const REFERENCE_REGEX = '!<ref[^e].*?</ref>!usi'; // Ignore <reference/>
-    const NOWIKI_REGEX = '!<nowiki>.*?</nowiki>!usi';
-    const CATEGORY_REGEX = '/\\[\\[\\s*Category\\s*:([^\\]]*+)\\]\\]/usi';
+    const NOWIKI_REGEX = '!<\s*nowiki\s*>.*?<\s*/nowiki\s*>!usi';
+    const CATEGORY_REGEX = '/\\[\\[\s*Category\s*:([^\\]]*+)\\]\\]/usi';
     const REDIRECT_REGEX = '!#REDIRECT\s*:?\s*\\[\\[!usi';
+    const BR_REGEX = '!<\s*br\s*/?\s*>!usi';
 }
