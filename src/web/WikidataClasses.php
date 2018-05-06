@@ -400,6 +400,8 @@ function get_subclasses()
 	}
 
 	// Retrieve the child classes
+	$sql = '';
+
 	if ($params['id'] == 0) {
 		$sql = "SELECT qid, directchildcnt, indirectchildcnt, directinstcnt, indirectinstcnt ";
 		$sql .= " FROM s51454__wikidata.subclasstotals ";
@@ -418,11 +420,13 @@ function get_subclasses()
 		$sth->bindValue(1, $params['id']);
 	}
 
-	$sth->execute();
+	if (! empty($sql)) {
+		$sth->execute();
 
-	while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-		$children[$row['qid']] = array($row['qid'], 'Q' . $row['qid'], $row['directchildcnt'], $row['indirectchildcnt'],
-			$row['directinstcnt'], $row['indirectinstcnt']); // removes dup terms
+		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+			$children[$row['qid']] = array($row['qid'], 'Q' . $row['qid'], $row['directchildcnt'], $row['indirectchildcnt'],
+				$row['directinstcnt'], $row['indirectinstcnt']); // removes dup terms
+		}
 	}
 
 	if (! empty($children)) {
