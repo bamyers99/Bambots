@@ -170,7 +170,7 @@ class Categories {
 			'Articles with dead external links' => array (
 					'type' => 'from-monthly',
 					'group' => 'Links',
-					'display' => 'Dead external links'
+					'display' => 'Dead external links {{dead link}}'
 			),
 			'Articles with disproportional geographic scope' => array (
 					'type' => 'from-monthly',
@@ -404,7 +404,7 @@ class Categories {
 			'Wikipedia external links cleanup' => array (
 					'type' => 'from-monthly',
 					'group' => 'Links',
-					'display' => 'External link cleanup'
+					'display' => 'External link cleanup {{external links}}'
 			),
 			'Wikipedia introduction cleanup' => array (
 					'type' => 'from-monthly',
