@@ -299,4 +299,29 @@ EOT;
     	//echo $cleandata;
     	print_r($templatedata);
     }
+
+	function notestNavbox()
+    {
+    	$data = <<<EOT
+{{navbox
+|name  = Miss Mexico Pageant
+|title = [[Miss Mexico Pageant (disambiguation)|Miss Mexico Pageant]]
+|state = {{{state<includeonly>|autocollapse</includeonly>}}}
+|listclass = hlist
+
+|list1 =
+*[[Miss Mexico Organization]]
+*[[Nuestra Belleza México]]
+*[[Miss Earth México]]
+*[[Señorita México]]
+
+}}<noinclude>
+
+[[Category:Beauty pageant templates|Miss Mexico Pageant]]
+</noinclude>
+EOT;
+
+    	$templatedata = TemplateParamParser::getTemplates($data);
+    	print_r($templatedata);
+    }
 }

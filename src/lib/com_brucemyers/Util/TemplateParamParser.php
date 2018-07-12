@@ -64,6 +64,7 @@ class TemplateParamParser
 
 				if ($match_cnt) {
 					$match_found = true;
+					$replacement_made = false;
 
 					foreach ($matches as $match) {
 						// See if there are any containers inside
@@ -95,7 +96,10 @@ class TemplateParamParser
 						}
 
 						$markers[$marker_id] = $content;
+						$replacement_made = true;
 					}
+
+					if ($replacement_made) continue 2; // restart with the first regex
 				}
 			}
 		}
