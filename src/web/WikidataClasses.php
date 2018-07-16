@@ -389,7 +389,7 @@ function get_subclasses()
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$pop_props['Property:P' . $row['pid2']] = array('P' . $row['pid2'], $row['count'], round($row['probability'] * 100));
+			$pop_props['Property:P' . $row['pid2']] = array('P' . $row['pid2'], $row['count'], floor($row['probability'] * 100));
 		}
 
 		if (! empty($pop_props)) {
