@@ -259,7 +259,7 @@ function display_form($subclasses)
 				foreach ($subclasses['pop_props'] as $pid => $row) {
 					$wdurl = "https://www.wikidata.org/wiki/" . $pid;
 					$term_text = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
-					echo "<tr><td><a href='$wdurl'>$term_text</a></td>" .
+					echo "<tr><td><a class='external' href='$wdurl'>$term_text</a></td>" .
 						"<td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 						"</td><td style='text-align:right'>" . $row[2] . "</td></tr>\n";
 				}
@@ -271,7 +271,7 @@ function display_form($subclasses)
 		}
 	}
 ?>
-       <div>Data derived from database dump wikidatawiki-pages-articles.xml</div>
+       <div>Data derived from database dump wikidatawiki-pages-articles.xml and Wikibase table wbs_propertypairs.</div>
        <?php if ($params['id'] == 0) {?><div><sup>1</sup>Root classes with no child classes and less than <?php echo MIN_ORPHAN_DIRECT_INST_CNT; ?> instances are excluded.</div><?php } ?>
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
