@@ -18,15 +18,14 @@
 use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\Util\CSVString;
-use com_brucemyers\MediaWiki\WikidataItem;
 use com_brucemyers\MediaWiki\WikidataWiki;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-//ini_set("display_errors", 1);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -236,18 +235,16 @@ function get_navels()
 		}
 
 		if (! empty($data)) {
-			$dbh_wikidata = new PDO("mysql:host=wikidatawiki.web.db.svc.eqiad.wmflabs;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
-			$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
 			$prop_ids = array();
 			foreach (array_keys($data) as $key) {
-				$prop_ids[] = 'Property:P' . $key;
+				if ($key > 0) $prop_ids[] = 'Property:P' . $key;
 			}
 
 			$items = $wdwiki->getItemsNoCache($prop_ids);
 
 			foreach ($items as $item) {
 				$pid = $item->getId();
+				$pid = substr($pid, 1);
 				$property_label = $item->getLabelDescription('label', $params['lang']);
 
 				if (! empty($property_label)) $data[$pid][3] = $property_label;
