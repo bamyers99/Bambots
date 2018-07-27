@@ -18,6 +18,8 @@
 use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\Util\CSVString;
+use com_brucemyers\MediaWiki\WikidataItem;
+use com_brucemyers\MediaWiki\WikidataWiki;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -197,6 +199,7 @@ function get_navels()
 	$return = array();
 	$data = array();
 	$property_label = '';
+	$wdwiki = new WikidataWiki();
 
 	if (empty($params['username']) && empty($params['property'])) return $return;
 
@@ -236,48 +239,26 @@ function get_navels()
 			$dbh_wikidata = new PDO("mysql:host=wikidatawiki.web.db.svc.eqiad.wmflabs;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
 			$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-			$prop_ids = implode(',', array_keys($data));
+			$prop_ids = array();
+			foreach (array_keys($data) as $key) {
+				$prop_ids[] = 'Property:P' . $key;
+			}
 
-			$sql = "SELECT wbten.term_entity_id AS property_id, wbt.term_text AS lang_text, wbten.term_text AS en_text " .
-					" FROM wikidatawiki_p.wb_terms wbten " .
-					" LEFT JOIN wikidatawiki_p.wb_terms wbt ON wbten.term_entity_id = wbt.term_entity_id AND wbt.term_entity_type = 'property' " .
-					" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
-					" WHERE wbten.term_entity_id IN (" . $prop_ids . ") AND wbten.term_entity_type = 'property' " .
-					" AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
+			$items = $wdwiki->getItemsNoCache($prop_ids);
 
-			$sth = $dbh_wikidata->prepare($sql);
-			$sth->bindValue(1, $params['lang']);
+			foreach ($items as $item) {
+				$pid = $item->getId();
+				$property_label = $item->getLabelDescription('label', $params['lang']);
 
-			$sth->execute();
-
-			while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-				$term_text = $row['lang_text'];
-				if (is_null($term_text)) $term_text = $row['en_text'];
-
-				$data[$row['property_id']][3] = $term_text;
+				if (! empty($property_label)) $data[$pid][3] = $property_label;
 			}
 		}
 
 	} else { // property
-		$dbh_wikidata = new PDO("mysql:host=wikidatawiki.web.db.svc.eqiad.wmflabs;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
-		$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$items = $wdwiki->getItemsNoCache('Property:P' . $params['property']);
 
-		$sql = "SELECT wbt.term_text AS lang_text, wbten.term_text AS en_text " .
-			" FROM wikidatawiki_p.wb_terms wbten " .
-			" LEFT JOIN wikidatawiki_p.wb_terms wbt ON wbten.term_entity_id = wbt.term_entity_id AND wbt.term_entity_type = 'property' " .
-			" AND wbt.term_type = 'label' AND wbt.term_language = ? " .
-			" WHERE wbten.term_entity_id = ? AND wbten.term_entity_type = 'property' " .
-			" AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
-
-		$sth = $dbh_wikidata->prepare($sql);
-		$sth->bindValue(1, $params['lang']);
-		$sth->bindValue(2, (int)$params['property']);
-
-		$sth->execute();
-
-		if ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$property_label = $row['lang_text'];
-			if (is_null($property_label)) $property_label = $row['en_text'];
+		if (! empty($items)) {
+			$property_label = $items[0]->getLabelDescription('label', $params['lang']);
 		}
 
 		$sql = "SELECT user_name, create_count, month_count " .
