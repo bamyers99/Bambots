@@ -683,7 +683,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		$num_qids[] = substr($qid, 1);
 	}
 
-	$sql = "SELECT DISTINCT scc.child_qid AS child_qid, scc.parent_qid AS parent_qid, ";
+	$sql = "SELECT DISTINCT scc.child_qid AS child_qid, scc.parent_qid AS parent_qid ";
 	$sql .= " FROM s51454__wikidata.subclassclasses scc ";
 	$sql .= " JOIN s51454__wikidata.subclasstotals sct ON sct.qid = scc.child_qid ";
 	$sql .= " WHERE scc.parent_qid IN (" . implode(',', $num_qids) . ") AND sct.directinstcnt + sct.indirectinstcnt > 0 ";
