@@ -642,54 +642,22 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		$x = 0;
 
 		foreach ($data['instanceofs'] as $qid => $instanceof) {
-			$qid = substr($qid, 1);
 			$instanceofs[$qid] = $instanceof;
 			if (++$x == 2) break;
 		}
 	}
 
 	// Retrieve the name and description
-	$qids = array_keys($instanceofs);
-
-	$en_text = '';
-	$en_desc = '';
-	if ($userlang != 'en') {
-		$en_text = 'wbten.term_text AS en_text,';
-		$en_desc = 'wbden.term_text AS en_desc,';
-	}
-
-	$sql = "SELECT DISTINCT wbt.term_entity_id AS qid, $en_text $en_desc wbt.term_text AS lang_text, wbd.term_text AS lang_desc ";
-	$sql .= " FROM wikidatawiki_p.wb_terms wbt ";
-	if ($userlang != 'en') {
-		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON wbt.term_entity_id = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-		$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
-	}
-	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbd ON wbt.term_entity_id = wbd.term_entity_id AND wbd.term_entity_type = 'item' ";
-	$sql .= " AND wbd.term_type = 'description' AND wbd.term_language = ? ";
-	if ($userlang != 'en') {
-		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbden ON wbt.term_entity_id = wbden.term_entity_id AND wbden.term_entity_type = 'item' ";
-		$sql .= " AND wbden.term_type = 'description' AND wbden.term_language = 'en' ";
-	}
-	$sql .= " WHERE wbt.term_entity_id IN (" . implode(',', $qids) . ") AND wbt.term_entity_type = 'item' ";
-	$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-
-	$sth = $dbh_wiki->prepare($sql);
-	$sth->bindValue(1, $userlang);
-	$sth->bindValue(2, $userlang);
-	$sth->execute();
-	$sth->setFetchMode(PDO::FETCH_NAMED);
 	$found_qids = array();
+	$qids = array_keys($instanceofs);
+	$items = $wdwiki->getItemsNoCache($qids);
 
-	while ($row = $sth->fetch()) {
-		$qid = $row['qid'];
+	foreach ($items as $item) {
+		$qid = $item->getId();
 		$found_qids[] = $qid;
-		$term_text = $row['lang_text'];
-		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
-		if (is_null($term_text)) $term_text = 'Q' . $qid;
-
-		$term_desc = $row['lang_desc'];
-		if (is_null($term_desc) && $userlang != 'en') $term_desc = $row['en_desc'];
-		if (is_null($term_desc)) $term_desc = '';
+		$term_text = $item->getLabelDescription('label', $params['lang']);
+		if (empty($term_text)) $term_text = $qid;
+		$term_desc = $item->getLabelDescription('description', $params['lang']);
 
 		$instanceofs[$qid]['label'] = $term_text;
 		$instanceofs[$qid]['desc'] = $term_desc;
@@ -709,52 +677,40 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		return;
 	}
 
-// 	// Retrieve the child classes
-// TODO: make term lookup separate query
+	// Retrieve the child classes
+	$num_qids = array();
+	foreach ($qids as $qid) {
+		$num_qids[] = substr($qid, 1);
+	}
 
-// 	$sql = "SELECT DISTINCT scc.child_qid AS child_qid, scc.parent_qid AS parent_qid, ";
-// 	$sql .= " $en_text $en_desc wbt.term_text AS lang_text, wbd.term_text AS lang_desc ";
-// 	$sql .= " FROM s51454__wikidata.subclassclasses scc ";
-// 	$sql .= " JOIN s51454__wikidata.subclasstotals sct ON sct.qid = scc.child_qid ";
-// 	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbt ON scc.child_qid = wbt.term_entity_id AND wbt.term_entity_type = 'item' ";
-// 	$sql .= " AND wbt.term_type = 'label' AND wbt.term_language = ? ";
-// 	if ($userlang != 'en') {
-// 		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbten ON scc.child_qid = wbten.term_entity_id AND wbten.term_entity_type = 'item' ";
-// 		$sql .= " AND wbten.term_type = 'label' AND wbten.term_language = 'en' ";
-// 	}
-// 	$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbd ON sct.qid = wbd.term_entity_id AND wbd.term_entity_type = 'item' ";
-// 	$sql .= " AND wbd.term_type = 'description' AND wbd.term_language = ? ";
-// 	if ($userlang != 'en') {
-// 		$sql .= " LEFT JOIN wikidatawiki_p.wb_terms wbden ON sct.qid = wbden.term_entity_id AND wbden.term_entity_type = 'item' ";
-// 		$sql .= " AND wbden.term_type = 'description' AND wbden.term_language = 'en' ";
-// 	}
-// 	$sql .= " WHERE scc.parent_qid IN (" . implode(',', $qids) . ") AND sct.directinstcnt + sct.indirectinstcnt > 0 ";
-// 	$sql .= " ORDER BY sct.directinstcnt + sct.indirectinstcnt DESC ";
-// 	$sql .= " LIMIT 10 ";
+	$sql = "SELECT DISTINCT scc.child_qid AS child_qid, scc.parent_qid AS parent_qid, ";
+	$sql .= " FROM s51454__wikidata.subclassclasses scc ";
+	$sql .= " JOIN s51454__wikidata.subclasstotals sct ON sct.qid = scc.child_qid ";
+	$sql .= " WHERE scc.parent_qid IN (" . implode(',', $num_qids) . ") AND sct.directinstcnt + sct.indirectinstcnt > 0 ";
+	$sql .= " ORDER BY sct.directinstcnt + sct.indirectinstcnt DESC ";
+	$sql .= " LIMIT 10 ";
 
-// 	$sth = $dbh_wiki->prepare($sql);
-// 	$sth->bindValue(1, $userlang);
-// 	$sth->bindValue(2, $userlang);
-// 	$sth->execute();
-// 	$sth->setFetchMode(PDO::FETCH_NAMED);
+	$sth = $dbh_wiki->prepare($sql);
+	$sth->execute();
+	$sth->setFetchMode(PDO::FETCH_NAMED);
 
-// 	while ($row = $sth->fetch()) {
-// 		$child_qid = $row['child_qid'];
-// 		$parent_qid = $row['parent_qid'];
+	while ($row = $sth->fetch()) {
+		$child_qid = "Q{$row['child_qid']}";
+		$parent_qid = "Q{$row['parent_qid']}";
 
-// 		$term_text = $row['lang_text'];
-// 		if (is_null($term_text) && $userlang != 'en') $term_text = $row['en_text'];
-// 		if (is_null($term_text)) continue;
+		$item = $wdwiki->getItemWithCache($child_qid);
+		if ($item->getId() == '') continue;
 
-// 		$term_desc = $row['lang_desc'];
-// 		if (is_null($term_desc) && $userlang != 'en') $term_desc = $row['en_desc'];
-// 		if (is_null($term_desc)) $term_desc = '';
+		$term_text = $item->getLabelDescription('label', $params['lang']);
+		if (empty($term_text)) continue;
 
-// 		if (! isset($instanceofs[$parent_qid]['childs'])) $instanceofs[$parent_qid]['childs'] = array();
-// 		$instanceofs[$parent_qid]['childs'][] = array('qid' => "Q$child_qid", 'label' => $term_text, 'desc' => $term_desc);
-// 	}
+		$term_desc = $item->getLabelDescription('description', $params['lang']);
 
-// 	$sth->closeCursor();
+		if (! isset($instanceofs[$parent_qid]['childs'])) $instanceofs[$parent_qid]['childs'] = array();
+		$instanceofs[$parent_qid]['childs'][] = array('qid' => $child_qid, 'label' => $term_text, 'desc' => $term_desc);
+	}
+
+	$sth->closeCursor();
 
 	// Reverse sort on catcnt
 	usort($instanceofs, function($a, $b) {
