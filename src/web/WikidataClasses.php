@@ -650,7 +650,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	// Retrieve the name and description
 	$found_qids = array();
 	$qids = array_keys($instanceofs);
-	$items = $wdwiki->getItemsNoCache($qids);
+	$items = $wdwiki->getItemsWithCache($qids);
 
 	foreach ($items as $item) {
 		$qid = $item->getId();
