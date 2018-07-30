@@ -678,6 +678,12 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	}
 
 	// Retrieve the child classes
+	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
+	if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
+
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 	$num_qids = array();
 	foreach ($qids as $qid) {
 		$num_qids[] = substr($qid, 1);
