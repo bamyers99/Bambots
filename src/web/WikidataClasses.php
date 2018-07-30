@@ -655,9 +655,9 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	foreach ($items as $item) {
 		$qid = $item->getId();
 		$found_qids[] = $qid;
-		$term_text = $item->getLabelDescription('label', $params['lang']);
+		$term_text = $item->getLabelDescription('label', $userlang);
 		if (empty($term_text)) $term_text = $qid;
-		$term_desc = $item->getLabelDescription('description', $params['lang']);
+		$term_desc = $item->getLabelDescription('description', $userlang);
 
 		$instanceofs[$qid]['label'] = $term_text;
 		$instanceofs[$qid]['desc'] = $term_desc;
@@ -701,10 +701,10 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		$item = $wdwiki->getItemWithCache($child_qid);
 		if ($item->getId() == '') continue;
 
-		$term_text = $item->getLabelDescription('label', $params['lang']);
+		$term_text = $item->getLabelDescription('label', $userlang);
 		if (empty($term_text)) continue;
 
-		$term_desc = $item->getLabelDescription('description', $params['lang']);
+		$term_desc = $item->getLabelDescription('description', $userlang);
 
 		if (! isset($instanceofs[$parent_qid]['childs'])) $instanceofs[$parent_qid]['childs'] = array();
 		$instanceofs[$parent_qid]['childs'][] = array('qid' => $child_qid, 'label' => $term_text, 'desc' => $term_desc);
