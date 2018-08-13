@@ -260,7 +260,7 @@ class MediaWiki extends wikipedia
         foreach ($pageChunks as $pageChunk) {
         	$pagenames = implode('|', $pageChunk);
         	$ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) .
-        		'&rvprop=timestamp|flags|comment|user|ids&continue=');
+        		'&rvslots=main&rvprop=timestamp|flags|comment|user|ids&continue=');
 
         	if (isset($ret['error'])) {
         		throw new Exception('Query Error ' . $ret['error']['info']);
@@ -300,7 +300,7 @@ class MediaWiki extends wikipedia
 
         foreach ($revChunks as $revChunk) {
         	$revids = implode('|', $revChunk);
-        	$ret = $this->query('?action=query&format=php&prop=revisions&revids=' . $revids . '&rvprop=ids|content&continue=');
+        	$ret = $this->query('?action=query&format=php&prop=revisions&revids=' . $revids . '&rvslots=main&rvprop=ids|content&continue=');
 
         	if (isset($ret['error'])) {
         		throw new Exception('Query Error ' . $ret['error']['info']);
@@ -311,12 +311,12 @@ class MediaWiki extends wikipedia
        			$ns = $page['ns'];
        			if (! isset($page['revisions'])) continue;
 
-       			$pagetext = (isset($page['revisions'][0]['*'])) ? $page['revisions'][0]['*'] : '';
+       			$pagetext = (isset($page['revisions'][0]['slots']['main']['*'])) ? $page['revisions'][0]['slots']['main']['*'] : '';
          		$revs[$pagetitle] = array($ns, $page['revisions'][0]['revid'], $pagetext);
 
        			if (isset($page['revisions'][1])) {
          			$revs[$pagetitle][] = $page['revisions'][1]['revid'];
-       				$pagetext = (isset($page['revisions'][1]['*'])) ? $page['revisions'][1]['*'] : '';
+       				$pagetext = (isset($page['revisions'][1]['slots']['main']['*'])) ? $page['revisions'][1]['slots']['main']['*'] : '';
          			$revs[$pagetitle][] = $pagetext;
         		}
         	}
@@ -432,7 +432,7 @@ class MediaWiki extends wikipedia
 
         foreach ($pageChunks as $pageChunk) {
             $pagenames = implode('|', $pageChunk);
-            $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvprop=content&continue=');
+            $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvslots=main&rvprop=content&continue=');
 
             if (isset($ret['error'])) {
                 throw new Exception('Query Error ' . $ret['error']['info']);
@@ -447,10 +447,10 @@ class MediaWiki extends wikipedia
             }
 
             foreach ($ret['query']['pages'] as $page) {
-                if (isset($page['revisions'][0]['*'])) {
+                if (isset($page['revisions'][0]['slots']['main']['*'])) {
                     $pagename = $page['title'];
                     if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
-                    $pages[$pagename] = $page['revisions'][0]['*'];
+                    $pages[$pagename] = $page['revisions'][0]['slots']['main']['*'];
                 }
             }
         }

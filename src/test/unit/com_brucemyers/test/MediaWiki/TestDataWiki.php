@@ -32,7 +32,7 @@ class TestDataWiki extends UnitTestCase
         $this->wiki = new WikidataWiki();
     }
 
-    public function notestPageGet()
+    public function testPageGet()
     {
         // Make sure the page was retrieved
         FileCache::purgeAll();

@@ -107,12 +107,12 @@ class wikipedia {
         $append = '';
         if ($revid!=null)
             $append = '&rvstartid='.$revid;
-        $x = $this->query('?action=query&format=php&prop=revisions&titles='.urlencode($page).'&rvlimit=1&rvprop=content|timestamp'.$append);
+        $x = $this->query('?action=query&format=php&prop=revisions&titles='.urlencode($page).'&rvlimit=1&rvslots=main&rvprop=content|timestamp'.$append);
         foreach ($x['query']['pages'] as $ret) {
-            if (isset($ret['revisions'][0]['*'])) {
+            if (isset($ret['revisions'][0]['slots']['main']['*'])) {
                 if ($detectEditConflict)
                     $this->ecTimestamp = $ret['revisions'][0]['timestamp'];
-                return $ret['revisions'][0]['*'];
+                return $ret['revisions'][0]['slots']['main']['*'];
             } else
                 return false;
         }
@@ -124,7 +124,7 @@ class wikipedia {
      * @return The page id of the page.
      **/
     function getpageid ($page) {
-        $x = $this->query('?action=query&format=php&prop=revisions&titles='.urlencode($page).'&rvlimit=1&rvprop=content');
+        $x = $this->query('?action=query&format=php&prop=revisions&titles='.urlencode($page).'&rvslots=main&rvlimit=1&rvprop=content');
         foreach ($x['query']['pages'] as $ret) {
             return $ret['pageid'];
         }
