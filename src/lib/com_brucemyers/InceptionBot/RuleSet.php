@@ -28,6 +28,7 @@ class RuleSet
     const TEMPLATE_REGEX = '!^/\\s*\\$\\$(.*)\\$\\$\\s*/$!u';
     const SIZE_REGEX = '!^/\\s*\\$SIZE\\s*(<|>)\\s*(\\d+)\\s*/$!u';
     const TITLE_REGEX = '!^/\\s*\\$TITLE\\s*:(.+)/$!u';
+    const LEAD_REGEX = '!^/\\s*\\$LEAD\\s*:(.+)/$!u';
     const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!u';
     const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)[iI]s/';
     const OPTION_REGEX = '!^##(\w+\s*=?[^#]*)##$!';
@@ -145,6 +146,11 @@ class RuleSet
         if (preg_match(self::TITLE_REGEX, $regex, $titlematches)) {
         	$regex = '/' . $titlematches[1] . '/';
         	$type = 'title';
+        }
+
+        if (preg_match(self::LEAD_REGEX, $regex, $leadmatches)) {
+        	$regex = '/' . $leadmatches[1] . '/';
+        	$type = 'lead';
         }
 
         if (! $size) {

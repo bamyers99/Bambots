@@ -36,6 +36,7 @@ class TestRuleSet extends UnitTestCase
         20  /$SIZE>2500/
         -20  /$SIZE<2500/
         /$TITLE:National Park/
+        /$LEAD:\([^)]*(born|b\.)/ , /Borneo/
         5 /Bay\W*of\W*Plenty\P{M}\x{2460}\p{Greek}\p{isCyrillic}\P{IsArmenian}/ <!-- Tests Unicode -->
         /Northland\Wgeo\Wstub/
         6  /\WOtago\W/ , /Australia/ , /Tasmania/ , /Hobart/
@@ -56,7 +57,7 @@ EOT;
         foreach ($ruleset->rules as $rule) {
             $inhibitcnt += count($rule['inhibitors']);
         }
-        $this->assertEqual($inhibitcnt, 4, 'Missing inhibitors');
+        $this->assertEqual($inhibitcnt, 5, 'Missing inhibitors');
 
         //print_r($ruleset->rules);
     }

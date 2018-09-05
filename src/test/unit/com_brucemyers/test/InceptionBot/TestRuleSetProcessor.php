@@ -34,6 +34,7 @@ class TestRuleSetProcessor extends UnitTestCase
         9 /$SIZE<50000/
         -50 /$SIZE<10/
         /$TITLE:National Park/
+        /$LEAD:United States/
         100 /InComment/
         100 /Reference/
 EOT;
@@ -48,7 +49,7 @@ EOT;
 <!-- Shouldn't match rule InComment -->
 
 ==See also==
-* [[Michigan City, Indiana]]<ref>{{Cite web|url=http://indiana.gov|title=Indiana Reference}}</ref>
+* [[Michigan City, Indiana]], United States<ref>{{Cite web|url=http://indiana.gov|title=Indiana Reference}}</ref>
 
 {{Michigan-stub}}
 EOT2;
@@ -62,10 +63,10 @@ EOT2;
 
         $processor = new RuleSetProcessor($ruleset);
         $results = $processor->processData($data, $title);
-        $this->assertEqual(count($results), 6, 'Mismatched rule count');
+        $this->assertEqual(count($results), 7, 'Mismatched rule count');
 
         $totalScore = 0;
-        $realScore = 61; // Includes lede match
+        $realScore = 81; // Includes lede matches
         foreach ($results as $result) {
             $totalScore += $result['score'];
         }

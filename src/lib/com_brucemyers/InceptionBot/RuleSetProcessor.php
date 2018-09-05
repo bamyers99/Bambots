@@ -22,7 +22,8 @@ use Exception;
 
 class RuleSetProcessor
 {
-    protected $ruleSet;
+    const MAX_LEAD_SIZE = 1000;
+	protected $ruleSet;
     protected $ledeEnd = null;
 
     /**
@@ -80,15 +81,15 @@ class RuleSetProcessor
                     $score = $rule['score'];
 
                     if ($this->ledeEnd === null) {
-                        $this->ledeEnd = false;
                         if (preg_match('/^.*?\\n==/us', $data, $ledeMatches)){ // Look for first section
                             $this->ledeEnd = strlen($ledeMatches[0]) - 2;
                         } else {
                             $this->ledeEnd = strlen($data);
+                            if ($this->ledeEnd > self::MAX_LEAD_SIZE) $this->ledeEnd = self::MAX_LEAD_SIZE;
                         }
                     }
 
-                    if ($this->ledeEnd !== false && $matches[0][1] < $this->ledeEnd) $score *= 2;
+                    if ($matches[0][1] < $this->ledeEnd) $score *= 2;
                 }
                 break;
 
@@ -108,7 +109,24 @@ class RuleSetProcessor
 
             case 'title':
                 if (preg_match($rule['regex'], $title)) {
-                    $score = $rule['score'];
+                	$score = $rule['score'];
+                }
+                break;
+
+            case 'lead':
+                if (preg_match($rule['regex'], $data, $matches, PREG_OFFSET_CAPTURE)) {
+                    $score = $rule['score'] * 2;
+
+                    if ($this->ledeEnd === null) {
+                        if (preg_match('/^.*?\\n==/us', $data, $ledeMatches)){ // Look for first section
+                            $this->ledeEnd = strlen($ledeMatches[0]) - 2;
+                        } else {
+                            $this->ledeEnd = strlen($data);
+                            if ($this->ledeEnd > self::MAX_LEAD_SIZE) $this->ledeEnd = self::MAX_LEAD_SIZE;
+                        }
+                    }
+
+                    if ($matches[0][1] > $this->ledeEnd) $score = 0;
                 }
             	break;
 
