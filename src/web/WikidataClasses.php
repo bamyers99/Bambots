@@ -254,14 +254,25 @@ function display_form($subclasses)
 			if (! empty($subclasses['pop_props'])) {
 				echo "<h2>Most common properties for this class</h2>\n";
 
-				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Count</th><th>Percentage</th></tr></thead><tbody>\n";
+				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Count</th><th>Percentage</th><th>Missing property</th></tr></thead><tbody>\n";
 
 				foreach ($subclasses['pop_props'] as $pid => $row) {
 					$wdurl = "https://www.wikidata.org/wiki/" . $pid;
+					$pid = substr($pid, 9);
 					$term_text = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+
+					$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
+						"  ?s wdt:P31 wd:Q{$params['id']} .\n" .
+						"  OPTIONAL { ?s p:$pid ?prop }\n" .
+						"  FILTER ( !bound(?prop) )\n" .
+						"  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
+						"}\nORDER BY ?sLabel");
+
+					$sparql = "<a href='$sparql' class='external'>SPARQL query</a>";
+
 					echo "<tr><td><a class='external' href='$wdurl'>$term_text</a></td>" .
 						"<td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
-						"</td><td style='text-align:right'>" . $row[2] . "</td></tr>\n";
+						"</td><td style='text-align:right'>" . $row[2] . "</td><td style='text-align:center'>$sparql</td></tr>\n";
 				}
 
 				echo "</tbody></table>\n";
