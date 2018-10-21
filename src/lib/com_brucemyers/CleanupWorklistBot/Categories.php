@@ -47,22 +47,22 @@ class Categories {
 			'Articles lacking in-text citations' => array (
 					'type' => 'from-monthly',
 					'group' => 'References',
-					'display' => 'In-text citations lacking'
+					'display' => 'Has general references but lacks inline footnotes'
 			),
 			'Articles lacking page references' => array (
 					'type' => 'from-monthly',
 					'group' => 'References',
-					'display' => 'References lacking'
+					'display' => 'Footnotes need specific page numbers'
 			),
 			'Articles lacking reliable references' => array (
 					'type' => 'from-monthly',
 					'group' => 'References',
-					'display' => 'Reliable references lacking'
+					'display' => 'Cites unreliable sources'
 			),
 			'Articles lacking sources' => array (
 					'type' => 'from-monthly',
 					'group' => 'References',
-					'display' => 'Sources lacking'
+					'display' => 'Cites no sources'
 			),
 			'Articles needing additional categories' => array (
 					'type' => 'from-monthly',
@@ -71,7 +71,7 @@ class Categories {
 			'Articles needing additional references' => array (
 					'type' => 'from-monthly',
 					'group' => 'References',
-					'display' => 'References needed'
+					'display' => 'Unsourced passages need footnotes {{refimprove}}'
 			),
 			'Articles needing cleanup' => array (
 					'type' => 'from-monthly',
@@ -251,7 +251,7 @@ class Categories {
 			'Articles with unsourced statements' => array (
 					'type' => 'from-monthly',
 					'group' => 'References',
-					'display' => 'Unsourced statements'
+					'display' => 'Unsourced passages need footnotes {{citation needed}}'
 			),
 			'Articles with weasel words' => array (
 					'type' => 'from-monthly',
