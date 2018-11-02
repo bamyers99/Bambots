@@ -321,7 +321,7 @@ function display_data()
 				case 'ISNI':
 					$definition = 'International Standard Name Identifier';
 					$idurl = 'http://isni.org/isni/$1';
-					$searchurl= 'http://isni.oclc.nl/DB=1.2/CMD?ACT=SRCHA&IKT=8006&SRT=&TRM=$1';
+					$searchurl= 'http://isni.oclc.org/DB=1.2/CMD?ACT=SRCHA&IKT=8006&SRT=&TRM=$1';
 					break;
 
 				case 'ORCID':
