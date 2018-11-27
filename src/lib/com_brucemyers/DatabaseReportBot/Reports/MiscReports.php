@@ -1196,4 +1196,114 @@ END;
 		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
 		fclose($hndl);
 	}
+
+	/**
+	 * Get a list of template parameters
+	 *
+	 * @param PDO $dbh_wiki
+	 * @param MediaWiki $mediawiki
+	 * @param PDO $dbh_wikidata
+	 */
+	public function TemplateParams(PDO $dbh_wiki, MediaWiki $mediawiki, PDO $dbh_wikidata)
+	{
+	    $templates = array(
+	        'Infobox UK school',
+	        'Infobox English public school',
+	        'Infobox GB school',
+	        'Infobox School GB',
+	        'Infobox Scotland school',
+	        'Infobox UKschool'
+	    );
+
+	    $templist = array();
+	    foreach ($templates as $template) {
+	        $templist[] = "'" . str_replace(' ', '_', $template) . "'";
+	    }
+
+	    $templist = implode(',', $templist);
+
+	    $sql = "SELECT DISTINCT page_title FROM templatelinks, page " .
+	   	    " WHERE tl_from_namespace = 0 AND tl_namespace = 10 AND tl_title IN ($templist) " .
+	   	    " AND page_namespace = 0 AND page_id = tl_from";
+	    $sth = $dbh_wiki->prepare($sql);
+	    $sth->execute();
+	    $sth->setFetchMode(PDO::FETCH_NUM);
+	    $titles = array();
+
+	    while ($row = $sth->fetch()) {
+	        $titles[] = $row[0];
+	    }
+
+	    $sth->closeCursor();
+
+	    sort($titles);
+
+	    $mediawiki->cachePages($titles);
+
+	    foreach ($titles as $page) {
+	        //			echo "$page\n";
+	        $data = $mediawiki->getPageWithCache($page);
+
+	        $parsed_templates = TemplateParamParser::getTemplates($data);
+
+	        $page = str_replace('_', ' ', $page);
+	        $page = ucfirst($page);
+
+	        foreach ($parsed_templates as $parsed_template) {
+	            if (! isset($templates[$parsed_template['name']])) continue;
+	            $paramname = $templates[$parsed_template['name']];
+	            $params = $parsed_template['params'];
+	        }
+	    }
+	    $asof_date = getdate();
+	    $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+	    $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'AgeAnomaly.html';
+	    $hndl = fopen($path, 'wb');
+
+	    // Header
+	    fwrite($hndl, "<!DOCTYPE html>
+		<html><head>
+		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+		<title>Template Parameters</title>
+		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+		</head><body>
+		<div style='display: table; margin: 0 auto;'>
+		<h1>Template Parameters</h1>
+		<h3>As of $asof_date</h3>
+		");
+
+	    // Body
+	    fwrite($hndl, "<h2>Bad Ages</h2>\n");
+	    if (empty($badages)) fwrite($hndl, "None\n");
+	    else {
+	        fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th><th>Birth</th><th>Death</th><th>Age</th></tr></thead><tbody>\n");
+
+	        foreach ($badages as $id => $badage) {
+	            $byear = $badage['birthyear'];
+	            $dyear = $badage['deathyear'];
+	            $age = $badage['age'];
+	            $url = "https://en.wikipedia.org/w/index.php?curid=$id";
+	            fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td><td>$byear</td><td>$dyear</td><td>$age</td></tr>\n");
+	        }
+
+	        fwrite($hndl, "</tbody></table>\n");
+	    }
+
+	    fwrite($hndl, "<h2>Living Dead</h2>\n");
+	    if (empty($livingdead)) fwrite($hndl, "None\n");
+	    else {
+	        fwrite($hndl, "<table class='wikitable'><thead><tr><th>Article</th></tr></thead><tbody>\n");
+
+	        foreach ($livingdead as $id) {
+	            $url = "https://en.wikipedia.org/w/index.php?curid=$id";
+	            fwrite($hndl, "<tr><td><a href=\"$url\">$id</a></td></tr>\n");
+	        }
+
+	        fwrite($hndl, "</tbody></table>\n");
+	    }
+
+	    // Footer
+	    fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+	    fclose($hndl);
+	}
 }

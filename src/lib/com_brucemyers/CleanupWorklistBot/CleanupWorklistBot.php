@@ -17,7 +17,6 @@
 
 namespace com_brucemyers\CleanupWorklistBot;
 
-use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\ResultWriter;
 use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;

@@ -21,8 +21,6 @@ use PDO;
 use SplFixedArray;
 use com_brucemyers\Util\CSVString;
 use com_brucemyers\MediaWiki\ResultWriter;
-use com_brucemyers\CleanupWorklistBot\CreateTables;
-use com_brucemyers\CleanupWorklistBot\Categories;
 
 class ReportGenerator
 {

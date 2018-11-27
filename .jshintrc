@@ -22,6 +22,8 @@
 		"mw": false,
 		"OO": false,
 		"Bamyers99_ClassSuggester_testmode": true,
+		"Bamyers99_UnitsConverter_testmode": true,
+		"Bamyers99_UnitsConverter_currency": true,
 		"Bamyers99": true
 	}
 }
