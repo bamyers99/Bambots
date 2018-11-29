@@ -196,7 +196,7 @@ class MediaWiki extends wikipedia
      * @param $repeat int Retry start value, max = 5
      * @return api result
      **/
-    public function edit($page, &$data, $summary = '', $minor = false, $bot = true, $section = null, $detectEC=false, $maxlag='', $repeat = 0) {
+    public function edit($page, $data, $summary = '', $minor = false, $bot = true, $section = null, $detectEC=false, $maxlag='', $repeat = 0) {
     	if ($this->token==null) {
     		$this->token = $this->getedittoken();
     	}

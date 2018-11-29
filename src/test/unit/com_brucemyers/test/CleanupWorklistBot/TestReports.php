@@ -87,7 +87,6 @@ class TestReports extends UnitTestCase
     	fwrite($hndl, '""K" Brighton, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
     	fclose($hndl);
 
-    	$repgen->generateReports($category, true, $page_count, false, 1);
-    	$repgen->generateReports($category, true, $page_count, true);
+    	$repgen->generateReports($category, true, $page_count);
     }
 }
