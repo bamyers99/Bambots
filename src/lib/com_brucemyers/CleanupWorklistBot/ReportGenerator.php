@@ -319,6 +319,7 @@ class ReportGenerator
 
 		$bycatpath = $this->outputdir . 'bycat' . DIRECTORY_SEPARATOR . $filesafe_project . '.html';
 		$bycathndl = fopen($bycatpath, 'wb');
+		$page_number = 1;
 
 		$this->writeBycatHeader($bycathndl, $expiry, $wikiproject, $project_title, $projecturl, $asof_date, $project_pages,
 		    $cleanup_pages, $artcleanpct, $issue_count, $alphaurl, $csvurl, $histurl, $page_number);
@@ -411,7 +412,6 @@ class ReportGenerator
 
 		// Write the cats
 
-		$page_number = 1;
 		$page_size = 0;
 		$need_group_heading = true;
 		$need_cat_heading = true;
