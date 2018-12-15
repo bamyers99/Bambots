@@ -182,6 +182,9 @@ class InceptionBot
         $oresscores = $lister->getScores(array_merge($newestpages, $updatedpages));
         Logger::log('Ores scores = ' . count($oresscores));
 
+        // relogin - credentials may have expired
+        $mediawiki->login(null, null);
+
         $timer = new Timer();
 
         // Score new or updated pages
