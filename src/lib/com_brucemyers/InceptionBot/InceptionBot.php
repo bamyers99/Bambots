@@ -178,6 +178,10 @@ class InceptionBot
         $this->_dropRedirects($mediawiki, $updatedpages);
         Logger::log('Updated page count w/o redirects = ' . count($updatedpages));
 
+        $lister = new OresDraftTopicLister($mediawiki);
+        $oresscores = $lister->getScores(array_merge($newestpages, $updatedpages));
+        Logger::log('Ores scores = ' . count($oresscores));
+
         $timer = new Timer();
 
         // Score new or updated pages
@@ -206,7 +210,11 @@ class InceptionBot
 
                 if (in_array($title, $newestpages) || in_array($title, $updatedpages)) {
                     $data = $mediawiki->getPageWithCache($title);
-                    $results = $processor->processData($data, $title);
+
+                    if (isset($oresscores[$title])) $oresscore = $oresscores[$title];
+                    else $oresscore = array();
+
+                    $results = $processor->processData($data, $title, $oresscore);
 
                     $totalScore = 0;
                     foreach ($results as &$result) {

@@ -29,6 +29,7 @@ class RuleSet
     const SIZE_REGEX = '!^/\\s*\\$SIZE\\s*(<|>)\\s*(\\d+)\\s*/$!u';
     const TITLE_REGEX = '!^/\\s*\\$TITLE\\s*:(.+)/$!u';
     const LEAD_REGEX = '!^/\\s*\\$LEAD\\s*:(.+)/$!u';
+    const ORES_REGEX = '!^/\\s*\\$ORES\\s*:([^>]+)>\\s*([0-9.]+)\\s*/$!u';
     const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!u';
     const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)[iI]s/';
     const OPTION_REGEX = '!^##(\w+\s*=?[^#]*)##$!';
@@ -142,6 +143,7 @@ class RuleSet
         $type = 'regex';
         $valid = true;
         $size = preg_match(self::SIZE_REGEX, $regex, $sizematches);
+        $ores = preg_match(self::ORES_REGEX, $regex, $oresmatches);
 
         if (preg_match(self::TITLE_REGEX, $regex, $titlematches)) {
         	$regex = '/' . $titlematches[1] . '/';
@@ -153,7 +155,7 @@ class RuleSet
         	$type = 'lead';
         }
 
-        if (! $size) {
+        if (! $size && ! $ores) {
             $regex = preg_replace(self::JAVA_UNICODE_REGEX, '$1', $regex);
             $regex .= 'ui'; // Add Unicode, ignore case options
             $valid = (@preg_match($regex, '') !== false);
@@ -166,6 +168,11 @@ class RuleSet
             $rule['type'] = 'size';
             $rule['sizeoperator'] = $sizematches[1];
             $rule['sizeoperand'] = $sizematches[2];
+
+        } elseif ($ores) {
+            $rule['type'] = 'ores';
+            $rule['orestopic'] = trim($oresmatches[1]);
+            $rule['oresminscore'] = floatval($oresmatches[2]);
         }
 
         // Process the inhibitors

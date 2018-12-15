@@ -41,9 +41,10 @@ class RuleSetProcessor
      *
      * @param $data string Data
      * @param $title string Article title
+     * @param $oresscores array ORES scores for article
      * @return array Results, one record per rule match, record keys = score, regex
      */
-    public function processData(&$data, &$title)
+    public function processData($data, $title, $oresscores)
     {
         $results = array();
         $this->ledeEnd = null;
@@ -54,11 +55,12 @@ class RuleSetProcessor
         if (preg_match(CommonRegex::REDIRECT_REGEX, $cleandata)) return $results;
 
         foreach ($this->ruleSet->rules as &$rule) {
-            $score = $this->processRule($cleandata, $rule, $title);
+            $score = $this->processRule($cleandata, $rule, $title, $oresscores);
             if ($score != 0) {
                 $results[] = array('score' => $score, 'regex' => preg_replace('/ui$/u', '', $rule['regex']));
             }
         }
+        unset($rule);
 
         return $results;
     }
@@ -69,9 +71,10 @@ class RuleSetProcessor
      * @param $data string Data
      * @param $rule array Rule
      * @param $title string Article title
+     * @param $oresscores array ORES scores for article
      * @return int Score
      */
-    protected function processRule(&$data, &$rule, &$title)
+    protected function processRule($data, $rule, $title, $oresscores)
     {
         $score = 0;
 
@@ -129,6 +132,12 @@ class RuleSetProcessor
                     if ($matches[0][1] > $this->ledeEnd) $score = 0;
                 }
             	break;
+
+            case 'ores':
+                if (isset($oresscores[$rule['orestopic']]) && $oresscores[$rule['orestopic']] > $rule['oresminscore']) {
+                    $score = $rule['score'];
+                }
+                break;
 
             default:
                 throw new Exception('Unknown rule type ' . $rule['type']);

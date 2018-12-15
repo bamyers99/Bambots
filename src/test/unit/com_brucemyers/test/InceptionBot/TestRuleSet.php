@@ -37,6 +37,7 @@ class TestRuleSet extends UnitTestCase
         -20  /$SIZE<2500/
         /$TITLE:National Park/
         /$LEAD:\([^)]*(born|b\.)/ , /Borneo/
+        /$ORES:STEM.Medicine > 0.5/
         5 /Bay\W*of\W*Plenty\P{M}\x{2460}\p{Greek}\p{isCyrillic}\P{IsArmenian}/ <!-- Tests Unicode -->
         /Northland\Wgeo\Wstub/
         6  /\WOtago\W/ , /Australia/ , /Tasmania/ , /Hobart/

@@ -35,6 +35,8 @@ class TestRuleSetProcessor extends UnitTestCase
         -50 /$SIZE<10/
         /$TITLE:National Park/
         /$LEAD:United States/
+        20 /$ORES:STEM.Medicine > 0.5/
+        20 /$ORES:Geography.Landforms > 0.5/
         100 /InComment/
         100 /Reference/
 EOT;
@@ -60,13 +62,15 @@ EOT2;
         $this->assertEqual($errorcnt, 0, 'Parse error');
         if ($errorcnt) print_r($ruleset->errors);
         $title = 'Yellowstone National Park';
+        $oresscores = array('STEM.Medicine' => 0.9930457472612884);
 
         $processor = new RuleSetProcessor($ruleset);
-        $results = $processor->processData($data, $title);
-        $this->assertEqual(count($results), 7, 'Mismatched rule count');
+        $results = $processor->processData($data, $title, $oresscores);
+        $this->assertEqual(count($results), 8, 'Mismatched rule count');
+        if (count($results) != 8) print_r($results);
 
         $totalScore = 0;
-        $realScore = 81; // Includes lede matches
+        $realScore = 101; // Includes lede matches
         foreach ($results as $result) {
             $totalScore += $result['score'];
         }
@@ -103,7 +107,7 @@ EOT2;
         $title = 'Yellowstone National Park';
 
         $processor = new RuleSetProcessor($ruleset);
-        $results = $processor->processData($data, $title);
+        $results = $processor->processData($data, $title, array());
         $this->assertEqual(count($results), 3, 'Mismatched rule count');
 
         $totalScore = 0;
@@ -132,7 +136,7 @@ EOT2;
         //print_r($ruleset);
 
         $processor = new RuleSetProcessor($ruleset);
-        $results = $processor->processData($data, $title);
+        $results = $processor->processData($data, $title, array());
         $this->assertEqual(count($results), 2, 'Mismatched rule count');
 
         $totalScore = 0;

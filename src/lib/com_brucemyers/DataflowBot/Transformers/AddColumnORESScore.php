@@ -67,7 +67,7 @@ class AddColumnORESScore extends AddColumn
 	{
 		$basetypes = parent::getParameterTypes();
 		$types = array(
-		    new ComponentParameter('lookupcol', ComponentParameter::PARAMETER_TYPE_STRING, 'Article name column #',
+		    new ComponentParameter('lookupcol', ComponentParameter::PARAMETER_TYPE_STRING, 'Article revid column #',
 		    	'Column numbers start at 1',
 		    	array('size' => 3, 'maxlength' => 3)),
 			new ComponentParameter('wiki', ComponentParameter::PARAMETER_TYPE_ENUM, 'Wiki', '',
