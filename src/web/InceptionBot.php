@@ -19,6 +19,7 @@ use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Config;
 use com_brucemyers\InceptionBot\RuleSet;
 use com_brucemyers\InceptionBot\RuleSetProcessor;
+use com_brucemyers\InceptionBot\OresDraftTopicLister;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -98,6 +99,7 @@ function rule_test($rulename, $testpage)
         rule_display($rulename, $testpage);
         return;
     }
+    $testpage = str_replace('_', ' ', $testpage);
     $prefix = 'User:AlexNewArtBot/';
     $fullrulename = $rulename;
     if (strpos($fullrulename, $prefix) === false) $fullrulename = $prefix . $rulename;
@@ -134,7 +136,13 @@ function rule_test($rulename, $testpage)
             $results .= 'Test page ' . htmlentities($testpage, ENT_COMPAT, 'UTF-8') . ' not found.<br />';
         } else {
             $processor = new RuleSetProcessor($ruleset);
-            $scores = $processor->processData($testpagedata, $testpage);
+
+            $lister = new OresDraftTopicLister($wiki);
+            $oresscores = $lister->getScores(array($testpage));
+            $oresscore = array();
+            if (isset($oresscores[$testpage])) $oresscore = $oresscores[$testpage];
+
+            $scores = $processor->processData($testpagedata, $testpage, $oresscore);
 
             $totscore = 0;
             foreach ($scores as $score) {
