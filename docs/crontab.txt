@@ -5,3 +5,4 @@
 10 1 * * sun jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DataflowBot.php >/dev/null
 17 2 * * tue jsub -N CleanupWorklistBot -wd /data/project/bambots/Bambots/src/cli -mem 2500m php CleanupWorklistBot.php >/dev/null
 17 3 * * tue jsub -N DataflowBot -wd /data/project/bambots/Bambots/src/cli -mem 768m php DataflowBot.php PopularLowQuality >/dev/null
+00 19 * * * jsub -N InceptionBot -wd /data/project/bambots/Bambots/src/cli -mem 1024m php InceptionBot.php >/dev/null
