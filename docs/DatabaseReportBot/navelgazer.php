@@ -16,9 +16,10 @@
  */
 
 $count = 0;
-$edits = array();
+$edits = [];
+$langs = [];
 $username = false;
-$edittypes = array(
+$edittypes = [
 	'wbsetclaim-create' => 0,
 	'wbcreateclaim' => 0,
 	'wbsetlabel-add' => -1,
@@ -26,7 +27,11 @@ $edittypes = array(
 	'wbsetaliases-add' => -3,
 	'wbsetsitelink-add' => -4,
 	'wbmergeitems-from' => -5
-);
+];
+
+/* wbsetlabel-add:1|he */
+/* wbsetdescription-add:1|yo */
+/* wbsetaliases-add:1|sv */
 
 $prevmonth = date('Y-m', strtotime('-1 month'));
 
@@ -56,10 +61,21 @@ while (! feof($hndl)) {
 
 				$key = "a$typevalue"; // don't want a numeric key
 
-				if (! isset($edits[$username])) $edits[$username] = array();
-				if (! isset($edits[$username][$key])) $edits[$username][$key] = array('t' => 0, 'm' => 0);
+				if (! isset($edits[$username])) $edits[$username] = [];
+				if (! isset($edits[$username][$key])) $edits[$username][$key] = ['t' => 0, 'm' => 0];
 				++$edits[$username][$key]['t'];
 				if ($timestamp == $prevmonth) ++$edits[$username][$key]['m'];
+
+				if ($typevalue === -1 || $typevalue === -2 || $typevalue === -3) {
+				    if (preg_match('!\\|([a-z]{2,3}(?:-[a-z]+)*)!', $comment, $matches)) {
+				        $lang = $matches[1];
+				        if (! isset($langs[$lang])) $langs[$lang] = [];
+				        if (! isset($langs[$lang][$username])) $langs[$lang][$username] = ['t' => 0, 'm' => 0];
+				        ++$langs[$lang][$username]['t'];
+				        if ($timestamp == $prevmonth) ++$langs[$lang][$username]['m'];
+				    }
+				}
+
 				break;
 			}
 		}
@@ -73,10 +89,20 @@ fclose($hndl);
 $hndl = fopen('navelgazer.tsv', 'w');
 
 foreach ($edits as $username => $totals) {
-	foreach ($totals as $key => $total) {
-		$key = substr($key, 1);
-		fwrite($hndl, "$username\t$key\t{$total['t']}\t{$total['m']}\n");
-	}
+    foreach ($totals as $key => $total) {
+        $key = substr($key, 1);
+        fwrite($hndl, "$username\t$key\t{$total['t']}\t{$total['m']}\n");
+    }
+}
+
+fclose($hndl);
+
+$hndl = fopen('navelgazerlang.tsv', 'w');
+
+foreach ($langs as $lang => $totals) {
+    foreach ($totals as $username => $total) {
+        fwrite($hndl, "$lang\t$username\t{$total['t']}\t{$total['m']}\n");
+    }
 }
 
 fclose($hndl);

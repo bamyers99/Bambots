@@ -24,8 +24,8 @@ $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
-error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-ini_set("display_errors", 1);
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -75,7 +75,13 @@ function display_form($navels)
 		<script type='text/javascript'>
 			$(document).ready(function()
 			    {
-		        $('.tablesorter').tablesorter();
+			    <?php if (! empty($params['langadd'])) { ?>
+		        	$('.tablesorter').tablesorter({sortList: [[2,1]]});
+			   <?php } elseif (! empty($params['username'])) { ?>
+		        	$('.tablesorter').tablesorter({sortList: [[0,0]]});
+			   <?php } else { ?>
+		        	$('.tablesorter').tablesorter({sortList: [[1,1]]});
+		        <?php } ?>
 			    }
 			);
 		</script>
@@ -103,6 +109,8 @@ function display_form($navels)
         		echo "P$key = {$edit_type}";
         	}
         ?></td></tr>
+        <tr><td colspan='2'>or</td></tr>
+        <tr><td><b>Language code</b></td><td><input id="langadd" name="langadd" type="text" size="10" value="<?php echo $params['langadd'] ?>" /> (label, description, alias additions)</td></tr>
         <tr><td colspan='2'><hr /></td></tr>
         <tr><td><b>Property label language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /></td></tr>
         <tr><td colspan='2'><input type="submit" value="Submit" /></td></tr>
@@ -119,8 +127,9 @@ function display_form($navels)
 <?php
 	if (! empty($navels)) {
 		if (empty($navels['data'])) {
-			if (! empty($params['username'])) echo 'User does not have any property additions';
-			else echo 'Property not found';
+		    if (! empty($params['username'])) echo 'User does not have any property additions';
+		    elseif (! empty($params['property'])) echo 'Property not found';
+		    else echo 'Language not found';
 
 		} elseif (! empty($params['username'])) {
 			if (! empty($params['property'])) echo "Clear the Username field to do a property search<br />\n";
@@ -157,35 +166,51 @@ function display_form($navels)
 
 			echo "</tbody></table>\n";
 
-		} else { // property
-			echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
-			if ($params['property'] < 0) {
-				if (isset($edit_types[$params['property']])) echo 'Action: ' . $edit_types[$params['property']] . "<br />\n";
-			} else {
-				$url = "https://www.wikidata.org/wiki/Property:P" . $params['property'];
-				$term_text = htmlentities($navels['property_label'], ENT_COMPAT, 'UTF-8');
-				echo "Property: <a href='$url' class='external'>$term_text (P{$params['property']})</a><br />\n";
-			}
-			if (count($navels['data']) == 100) echo "Top 100<br />\n";
+		} elseif (! empty($params['property'])) {
+		    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
+		    if ($params['property'] < 0) {
+		        if (isset($edit_types[$params['property']])) echo 'Action: ' . $edit_types[$params['property']] . "<br />\n";
+		    } else {
+		        $url = "https://www.wikidata.org/wiki/Property:P" . $params['property'];
+		        $term_text = htmlentities($navels['property_label'], ENT_COMPAT, 'UTF-8');
+		        echo "Property: <a href='$url' class='external'>$term_text (P{$params['property']})</a><br />\n";
+		    }
+		    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
-			echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
+		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
-			foreach ($navels['data'] as $row) {
-				$user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
-				$url = "/bambots/NavelGazer.php?username=" . urlencode($row[0]);
-				echo "<tr><td><a href='$url'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
-					"</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
-			}
+		    foreach ($navels['data'] as $row) {
+		        $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+		        $url = "/bambots/NavelGazer.php?username=" . urlencode($row[0]);
+		        echo "<tr><td><a href='$url'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+		        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
+		    }
 
-			echo "</tbody></table>\n";
+		    echo "</tbody></table>\n";
 
-			$host  = $_SERVER['HTTP_HOST'];
-			$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-			$extra = "NavelGazer.php?action=getCSV&property=P" . urlencode($params['property']);
+		    $host  = $_SERVER['HTTP_HOST'];
+		    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+		    $extra = "NavelGazer.php?action=getCSV&property=P" . urlencode($params['property']);
 
-			echo "<a href='//$host$uri/$extra'>Download all users in CSV format</a>\n<br />";
-		}
-	}
+		    echo "<a href='//$host$uri/$extra'>Download all users in CSV format</a>\n<br />";
+
+		} elseif (! empty($params['langadd'])) { // langadd
+		    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
+    	    echo "<b>Label, description, alias additions in '{$params['langadd']}'</b><br />\n";
+    	    if (count($navels['data']) == 100) echo "Top 100<br />\n";
+
+    	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
+
+    	    foreach ($navels['data'] as $row) {
+    	        $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+    	        $url = "https://www.wikidata.org/wiki/User:" . urlencode($row[0]);
+    	        echo "<tr><td><a href='$url' class='external'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+    	        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
+    	    }
+
+    	    echo "</tbody></table>\n";
+    	}
+    }
 ?>
         <br /><div><sup>1</sup><a href='http://www.merriam-webster.com/dictionary/navel-gazing'>navel–gazing</a> (Merriam-Webster)</div>
         <div><sup>2</sup>Data derived from database dump wikidatawiki-stub-meta-history.xml revision comments</div>
@@ -200,7 +225,7 @@ function get_navels()
 	$property_label = '';
 	$wdwiki = new WikidataWiki();
 
-	if (empty($params['username']) && empty($params['property'])) return $return;
+	if (empty($params['username']) && empty($params['property']) && empty($params['langadd'])) return $return;
 
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
@@ -251,16 +276,16 @@ function get_navels()
 			}
 		}
 
-	} else { // property
+	} elseif (! empty($params['property'])) {
 		$items = $wdwiki->getItemsNoCache('Property:P' . $params['property']);
 
 		if (! empty($items)) {
 			$property_label = $items[0]->getLabelDescription('label', $params['lang']);
 		}
 
-		$sql = "SELECT user_name, create_count, month_count " .
-				" FROM s51454__wikidata.navelgazer " .
-				" WHERE property_id = ? ORDER by create_count DESC LIMIT 100";
+		$sql = 'SELECT user_name, create_count, month_count ' .
+				' FROM s51454__wikidata.navelgazer ' .
+				' WHERE property_id = ? ORDER by create_count DESC LIMIT 100';
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, (int)$params['property']);
@@ -270,6 +295,26 @@ function get_navels()
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
 			$data[] = array($row['user_name'], $row['create_count'], $row['month_count']);
 		}
+
+	} elseif (! empty($params['langadd'])) { // langadd
+	    $sql = '(SELECT user_name, create_count, month_count ' .
+	   	    ' FROM s51454__wikidata.navelgazerlang ' .
+	   	    ' WHERE `language` = ? ORDER BY create_count DESC LIMIT 50) ' .
+	   	    ' UNION ' .
+	   	    ' (SELECT user_name, create_count, month_count ' .
+	   	   	' FROM s51454__wikidata.navelgazerlang ' .
+	   	   	' WHERE `language` = ? ORDER BY month_count DESC LIMIT 50) ' .
+	   	   	' ORDER BY month_count DESC';
+
+	    $sth = $dbh_wiki->prepare($sql);
+	    $sth->bindValue(1, $params['langadd']);
+	    $sth->bindValue(2, $params['langadd']);
+
+	    $sth->execute();
+
+	    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+	        $data[$row['user_name']] = array($row['user_name'], $row['create_count'], $row['month_count'], ''); // removes dups
+	    }
 	}
 
 	$return = array('data' => $data, 'dataasof' => $dataasof, 'property_label' => $property_label);
@@ -289,6 +334,7 @@ function get_params()
 	$params['username'] = isset($_REQUEST['username']) ? $_REQUEST['username'] : '';
 	$params['property'] = isset($_REQUEST['property']) ? $_REQUEST['property'] : '';
 	if (! empty($params['property']) && $params['property'][0] == 'P') $params['property'] = substr($params['property'], 1);
+	$params['langadd'] = isset($_REQUEST['langadd']) ? $_REQUEST['langadd'] : '';
 	$params['lang'] = isset($_REQUEST['lang']) ? $_REQUEST['lang'] : '';
 
 	if (! empty($params['lang']) && preg_match('!([a-zA-Z]+)!', $params['lang'], $matches)) {
