@@ -305,7 +305,7 @@ function get_navels()
 SELECT ?item ?c
 {
     ?item wdt:P424 "{$params['langadd']}" .
-    ?item wdt:P31 wd:Q1288568 .
+    ?item wdt:P31/wdt:P279* wd:Q34770 .
 }
 EOT;
 
