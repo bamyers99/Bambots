@@ -41,17 +41,18 @@ class WikidataSPARQL extends MediaWiki
     /**
      * Perform a SPARQL query
      * @param string $query URL encoded query
+     * @param string $post for internal use
      * @param number $repeat for internal use
      * @throws Exception
      * @return array of array(variable => array('type' => type, 'value' => value, 'xml:lang' => language (for labels and descriptions)))
      */
-    public function query($query, $repeat=0)
+    public function query($query, $post = NULL, $repeat=0)
     {
     	$ret = $this->http->get($this->url . $query);
 
     	if ($this->http->http_code() != "200") {
     		if ($repeat < 10) {
-    			return $this->query($query, ++$repeat);
+    		    return $this->query($query, NULL, ++$repeat);
     		} else {
     			throw new Exception("HTTP Error.");
     		}

@@ -19,6 +19,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\Util\CSVString;
 use com_brucemyers\MediaWiki\WikidataWiki;
+use com_brucemyers\MediaWiki\WikidataSPARQL;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -194,9 +195,11 @@ function display_form($navels)
 
 		    echo "<a href='//$host$uri/$extra'>Download all users in CSV format</a>\n<br />";
 
-		} elseif (! empty($params['langadd'])) { // langadd
+		} elseif (! empty($params['langadd'])) {
 		    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
-    	    echo "<b>Label, description, alias additions in '{$params['langadd']}'</b><br />\n";
+    	    echo "<b>Label, description, alias additions for '{$params['langadd']}'";
+    	    if (! empty($navels['property_label'])) echo ' (' . $navels['property_label'] . ')';
+            echo "</b><br />\n";
     	    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
     	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
@@ -209,6 +212,7 @@ function display_form($navels)
     	    }
 
     	    echo "</tbody></table>\n";
+    	    echo "Note: Includes top 50 total count and top 50 last month count<br />\n";
     	}
     }
 ?>
@@ -296,7 +300,33 @@ function get_navels()
 			$data[] = array($row['user_name'], $row['create_count'], $row['month_count']);
 		}
 
-	} elseif (! empty($params['langadd'])) { // langadd
+	} elseif (! empty($params['langadd'])) {
+	    $sparql = <<<EOT
+SELECT ?item ?c
+{
+    ?item wdt:P424 "{$params['langadd']}" .
+    ?item wdt:P31 wd:Q1288568 .
+}
+EOT;
+
+	    $wdsparql = new WikidataSPARQL();
+	    $result = $wdsparql->query(rawurlencode($sparql));
+
+	    $property_label = '';
+
+	    if (! empty($result)) {
+	        $uri = $result[0]['item']['value'];
+	        preg_match('!entity/(.+)!', $uri, $matches);
+	        $qid = $matches[1];
+	        $wdwiki = new WikidataWiki();
+	        $items = $wdwiki->getItemsNoCache($qid);
+
+	        if (! empty($items)) {
+	            $property_label = $items[0]->getLabelDescription('label', $params['lang']);
+	        }
+
+	    }
+
 	    $sql = '(SELECT user_name, create_count, month_count ' .
 	   	    ' FROM s51454__wikidata.navelgazerlang ' .
 	   	    ' WHERE `language` = ? ORDER BY create_count DESC LIMIT 50) ' .
