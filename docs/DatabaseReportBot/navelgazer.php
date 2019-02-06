@@ -26,12 +26,18 @@ $edittypes = [
 	'wbsetdescription-add' => -2,
 	'wbsetaliases-add' => -3,
 	'wbsetsitelink-add' => -4,
-	'wbmergeitems-from' => -5
+	'wbmergeitems-from' => -5,
+    'add-form' => -6,
+    'add-form-representations' => -7,
+    'add-form-grammatical-features' => -8,
+    'add-sense' => -9,
+    'add-sense-glosses' => -10
 ];
 
 /* wbsetlabel-add:1|he */
 /* wbsetdescription-add:1|yo */
 /* wbsetaliases-add:1|sv */
+/* wbsetsitelink-add:1|nlwikinews */
 
 $prevmonth = date('Y-m', strtotime('-1 month'));
 
@@ -66,9 +72,20 @@ while (! feof($hndl)) {
 				++$edits[$username][$key]['t'];
 				if ($timestamp == $prevmonth) ++$edits[$username][$key]['m'];
 
-				if ($typevalue === -1 || $typevalue === -2 || $typevalue === -3) {
-				    if (preg_match('!\\|([a-z]{2,3}(?:-[a-z]+)*)!', $comment, $matches)) {
-				        $lang = $matches[1];
+				if ($typevalue === -1 || $typevalue === -2 || $typevalue === -3 || $typevalue === -4) {
+				    $lang = '';
+
+				    if ($typevalue == -4) {
+				        if (preg_match('!\\|([a-z]{2,3})wiki!', $comment, $matches)) {
+				            $lang = $matches[1];
+				        }
+				    } else {
+				        if (preg_match('!\\|([a-z]{2,3}(?:-[a-z]+)*)!', $comment, $matches)) {
+				            $lang = $matches[1];
+				        }
+				    }
+
+				    if (! empty($lang)) {
 				        if (! isset($langs[$lang])) $langs[$lang] = [];
 				        if (! isset($langs[$lang][$username])) $langs[$lang][$username] = ['t' => 0, 'm' => 0];
 				        ++$langs[$lang][$username]['t'];

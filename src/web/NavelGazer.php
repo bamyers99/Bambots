@@ -58,7 +58,12 @@ function display_form($navels)
 		-2 => 'Description additions',
 		-3 => 'Alias additions',
 		-4 => 'Site link additions',
-		-5 => 'Merges'
+		-5 => 'Merges',
+	    -6 => 'Form additions',
+	    -7 => 'Form representations',
+	    -8 => 'Form grammatical features',
+	    -9 => 'Sense additions',
+	    -10 => 'Sense glosses'
 	);
 
     ?>
@@ -76,12 +81,12 @@ function display_form($navels)
 		<script type='text/javascript'>
 			$(document).ready(function()
 			    {
-			    <?php if (! empty($params['langadd'])) { ?>
-		        	$('.tablesorter').tablesorter({sortList: [[2,1]]});
-			   <?php } elseif (! empty($params['username'])) { ?>
+				<?php if (! empty($params['username'])) { ?>
 		        	$('.tablesorter').tablesorter({sortList: [[0,0]]});
-			   <?php } else { ?>
+			    <?php } elseif (! empty($params['property'])) { ?>
 		        	$('.tablesorter').tablesorter({sortList: [[1,1]]});
+				<?php } elseif (! empty($params['langadd'])) { ?>
+		        	$('.tablesorter').tablesorter({sortList: [[2,1]]});
 		        <?php } ?>
 			    }
 			);
@@ -106,12 +111,12 @@ function display_form($navels)
         <tr><td>Pseudo properties</td><td><?php
          	foreach ($edit_types as $key => $edit_type) {
          		if ($key != -1) echo ', ';
-        		if ($key == -3) echo '<br />';
+        		if ($key == -3 || $key == -6 || $key == -8) echo '<br />';
         		echo "P$key = {$edit_type}";
         	}
         ?></td></tr>
         <tr><td colspan='2'>or</td></tr>
-        <tr><td><b>Language code</b></td><td><input id="langadd" name="langadd" type="text" size="10" value="<?php echo $params['langadd'] ?>" /> (label, description, alias additions)</td></tr>
+        <tr><td><b>Language code</b></td><td><input id="langadd" name="langadd" type="text" size="10" value="<?php echo $params['langadd'] ?>" /> (label, description, alias, sitelink additions)</td></tr>
         <tr><td colspan='2'><hr /></td></tr>
         <tr><td><b>Property label language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /></td></tr>
         <tr><td colspan='2'><input type="submit" value="Submit" /></td></tr>
@@ -152,7 +157,7 @@ function display_form($navels)
 				}
 			}
 
-			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
+			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Datatype</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			usort($navels['data'], function($a, $b) {
 				return strcmp(strtolower($a[3]), strtolower($b[3]));
@@ -161,11 +166,22 @@ function display_form($navels)
 			foreach ($navels['data'] as $row) {
 				$url = "/bambots/NavelGazer.php?property=P" . $row[0];
 				$term_text = htmlentities($row[3], ENT_COMPAT, 'UTF-8');
-				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td>{$row[4]}</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 					"</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 			}
 
 			echo "</tbody></table>\n";
+
+			if (! empty($navels['langdata'])) {
+			    echo "<table class='wikitable tablesorter'><thead><tr><th>Language</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
+
+			    foreach ($navels['langdata'] as $row) {
+			        echo "<tr><td>{$row[0]}</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+			        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
+			    }
+
+			    echo "</tbody></table>\n";
+			}
 
 		} elseif (! empty($params['property'])) {
 		    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
@@ -197,18 +213,19 @@ function display_form($navels)
 
 		} elseif (! empty($params['langadd'])) {
 		    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
-    	    echo "<b>Label, description, alias additions for '{$params['langadd']}'";
+    	    echo "<b>Label, description, alias, sitelink additions for '{$params['langadd']}'";
     	    if (! empty($navels['property_label'])) echo ' (' . $navels['property_label'] . ')';
             echo "</b><br />\n";
     	    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
-    	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
+    	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th><th class='unsortable'>Property additions</th></tr></thead><tbody>\n";
 
     	    foreach ($navels['data'] as $row) {
     	        $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
-    	        $url = "https://www.wikidata.org/wiki/User:" . urlencode($row[0]);
+    	        $url = "https://www.wikidata.org/wiki/User:" . str_replace(' ', '_', $row[0]);
+    	        $userurl = "/bambots/NavelGazer.php?username=" . urlencode($row[0]);
     	        echo "<tr><td><a href='$url' class='external'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
-    	        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
+    	        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td><td style='text-align:center'><a href='$userurl'>view</a></td></tr>\n";
     	    }
 
     	    echo "</tbody></table>\n";
@@ -224,8 +241,9 @@ function display_form($navels)
 function get_navels()
 {
 	global $params;
-	$return = array();
-	$data = array();
+	$return = [];
+	$data = [];
+	$langdata = [];
 	$property_label = '';
 	$wdwiki = new WikidataWiki();
 
@@ -260,7 +278,7 @@ function get_navels()
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$data[$row['property_id']] = array($row['property_id'], $row['create_count'], $row['month_count'], ''); // removes dups
+			$data[$row['property_id']] = [$row['property_id'], $row['create_count'], $row['month_count'], '', '']; // removes dups
 		}
 
 		if (! empty($data)) {
@@ -277,7 +295,22 @@ function get_navels()
 				$property_label = $item->getLabelDescription('label', $params['lang']);
 
 				if (! empty($property_label)) $data[$pid][3] = $property_label;
+				$data[$pid][4] = $item->getDatatype();
 			}
+		}
+
+		// load language stats
+		$sql = "SELECT `language`, create_count, month_count " .
+		  		" FROM s51454__wikidata.navelgazerlang " .
+		  		" WHERE user_name = ? ORDER BY `language`";
+
+		$sth = $dbh_wiki->prepare($sql);
+		$sth->bindValue(1, $params['username']);
+
+		$sth->execute();
+
+		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		    $langdata[$row['language']] = [$row['language'], $row['create_count'], $row['month_count']]; // removes dups
 		}
 
 	} elseif (! empty($params['property'])) {
@@ -297,7 +330,7 @@ function get_navels()
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$data[] = array($row['user_name'], $row['create_count'], $row['month_count']);
+			$data[] = [$row['user_name'], $row['create_count'], $row['month_count']];
 		}
 
 	} elseif (! empty($params['langadd'])) {
@@ -343,11 +376,11 @@ EOT;
 	    $sth->execute();
 
 	    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-	        $data[$row['user_name']] = array($row['user_name'], $row['create_count'], $row['month_count'], ''); // removes dups
+	        $data[$row['user_name']] = [$row['user_name'], $row['create_count'], $row['month_count'], '']; // removes dups
 	    }
 	}
 
-	$return = array('data' => $data, 'dataasof' => $dataasof, 'property_label' => $property_label);
+	$return = ['data' => $data, 'dataasof' => $dataasof, 'property_label' => $property_label, 'langdata' => $langdata];
 
 	return $return;
 }
