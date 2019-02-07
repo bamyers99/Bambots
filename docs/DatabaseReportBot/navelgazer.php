@@ -19,6 +19,7 @@ $count = 0;
 $edits = [];
 $langs = [];
 $username = false;
+// The order of the following is important, longer types with the same prefix must come before the prefix.
 $edittypes = [
 	'wbsetclaim-create' => 0,
 	'wbcreateclaim' => 0,
@@ -27,11 +28,11 @@ $edittypes = [
 	'wbsetaliases-add' => -3,
 	'wbsetsitelink-add' => -4,
 	'wbmergeitems-from' => -5,
-    'add-form' => -6,
     'add-form-representations' => -7,
     'add-form-grammatical-features' => -8,
-    'add-sense' => -9,
-    'add-sense-glosses' => -10
+    'add-form' => -6,
+    'add-sense-glosses' => -10,
+    'add-sense' => -9
 ];
 
 /* wbsetlabel-add:1|he */

@@ -59,11 +59,11 @@ function display_form($navels)
 		-3 => 'Alias additions',
 		-4 => 'Site link additions',
 		-5 => 'Merges',
-	    -6 => 'Form additions',
-	    -7 => 'Form representations',
-	    -8 => 'Form grammatical features',
-	    -9 => 'Sense additions',
-	    -10 => 'Sense glosses'
+	    -6 => 'Lexeme: form additions',
+	    -7 => 'Lexeme: form representations',
+	    -8 => 'Lexeme: form grammatical features',
+	    -9 => 'Lexeme: sense additions',
+	    -10 => 'Lexeme: sense glosses'
 	);
 
     ?>
@@ -173,6 +173,7 @@ function display_form($navels)
 			echo "</tbody></table>\n";
 
 			if (! empty($navels['langdata'])) {
+			    echo '<div><b>Label, description, alias, sitelink additions</b></div>';
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Language</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['langdata'] as $row) {
