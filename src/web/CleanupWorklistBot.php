@@ -19,6 +19,9 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\CleanupWorklistBot\CreateTables;
 use com_brucemyers\CleanupWorklistBot\ProjectPages;
+use PDOException;
+use com_brucemyers\Util\Logger;
+use Exception;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -149,7 +152,14 @@ function _test_category($category)
 	$enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+
+	try {
+	   $dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+	} catch (PDOException $e) {
+	    Logger::log($e->getMessage());
+	    throw new Exception('Connection error, see log for details');
+	}
+
 	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$project_members = '';

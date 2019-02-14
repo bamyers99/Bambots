@@ -21,6 +21,9 @@ use com_brucemyers\Util\FileCache;
 use com_brucemyers\MediaWiki\WikidataItem;
 use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
+use PDOException;
+use com_brucemyers\Util\Logger;
+use Exception;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -317,7 +320,12 @@ function get_subclasses()
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
 
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+	try {
+	   $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+	} catch (PDOException $e) {
+	    Logger::log($e->getMessage());
+	    throw new Exception('Connection error, see log for details');
+	}
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.subclasstotals WHERE qid = 0");

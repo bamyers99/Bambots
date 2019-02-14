@@ -21,6 +21,9 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\WikidataWiki;
 use PDO;
+use PDOException;
+use com_brucemyers\Util\Logger;
+use Exception;
 
 class ServiceManager
 {
@@ -54,14 +57,19 @@ class ServiceManager
 	 */
 	public function getDBConnection($wikiname)
 	{
-		if ($wikiname == 'tools') {
-			$dbh = new PDO("mysql:host={$this->tools_host};dbname=s51454__PageTools;charset=utf8", $this->dbuser, $this->dbpass);
+	    try {
+    		if ($wikiname == 'tools') {
+    			$dbh = new PDO("mysql:host={$this->tools_host};dbname=s51454__PageTools;charset=utf8", $this->dbuser, $this->dbpass);
 
-		} else {
-    		$wiki_host = $this->wiki_host;
-    		if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
-    		$dbh = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $this->dbuser, $this->dbpass);
-		}
+    		} else {
+        		$wiki_host = $this->wiki_host;
+        		if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
+        		$dbh = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $this->dbuser, $this->dbpass);
+    		}
+	    } catch (PDOException $e) {
+	        Logger::log($e->getMessage());
+	        throw new Exception('Connection error, see log for details');
+	    }
 
     	$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
