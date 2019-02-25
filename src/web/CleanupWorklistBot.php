@@ -19,9 +19,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\CleanupWorklistBot\CreateTables;
 use com_brucemyers\CleanupWorklistBot\ProjectPages;
-use PDOException;
 use com_brucemyers\Util\Logger;
-use Exception;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.

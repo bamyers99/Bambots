@@ -21,9 +21,7 @@ use com_brucemyers\Util\FileCache;
 use com_brucemyers\MediaWiki\WikidataItem;
 use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
-use PDOException;
 use com_brucemyers\Util\Logger;
-use Exception;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.

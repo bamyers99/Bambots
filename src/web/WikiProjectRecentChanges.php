@@ -21,9 +21,7 @@ use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\HttpUtil;
 use com_brucemyers\Util\HTMLForm;
 use com_brucemyers\PageTools\UIHelper;
-use PDOException;
 use com_brucemyers\Util\Logger;
-use Exception;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
