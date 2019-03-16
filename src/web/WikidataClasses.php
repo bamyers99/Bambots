@@ -396,8 +396,13 @@ function get_subclasses()
 		// Retrieve popular properties
 		$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 		if (empty($wiki_host)) $wiki_host = "wikidatawiki.web.db.svc.eqiad.wmflabs";
-		$dbh_wikidata = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
-		$dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		try {
+		    $dbh_wikidata = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		    $dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		} catch (PDOException $e) {
+		    Logger::log($e->getMessage());
+		    throw new Exception('Connection error, see log for details');
+		}
 
 		$sql = "SELECT pid2, count, probability FROM wbs_propertypairs WHERE pid1 = 31 AND qid1 = ? AND context = 'item' ORDER BY probability DESC LIMIT 10";
 		$sth = $dbh_wikidata->prepare($sql);
@@ -536,8 +541,14 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
 
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
-	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	try {
+	    $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	    $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	} catch (PDOException $e) {
+	    Logger::log($e->getMessage());
+	    echo "/**/$callback({});";
+	    return;
+	}
 
 	$page = str_replace(' ', '_', $page);
 
