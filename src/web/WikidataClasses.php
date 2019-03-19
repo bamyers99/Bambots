@@ -255,7 +255,7 @@ function display_form($subclasses)
 			if (! empty($subclasses['pop_props'])) {
 				echo "<h2>Most common properties for this class</h2>\n";
 
-				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Count</th><th>Percentage</th><th>Missing property</th></tr></thead><tbody>\n";
+				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Percentage</th><th>Missing property</th></tr></thead><tbody>\n";
 
 				foreach ($subclasses['pop_props'] as $pid => $row) {
 					$wdurl = "https://www.wikidata.org/wiki/" . $pid;
@@ -272,8 +272,7 @@ function display_form($subclasses)
 					$sparql = "<a href='$sparql' class='external'>SPARQL query</a>";
 
 					echo "<tr><td><a class='external' href='$wdurl'>$term_text</a></td>" .
-						"<td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
-						"</td><td style='text-align:right'>" . $row[2] . "</td><td style='text-align:center'>$sparql</td></tr>\n";
+						"</td><td style='text-align:right'>" . $row[1] . "</td><td style='text-align:center'>$sparql</td></tr>\n";
 				}
 
 				echo "</tbody></table>\n";
@@ -288,7 +287,7 @@ function display_form($subclasses)
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
        <div>Note: Some totals may not balance due to a class having the same super-parent class multiple times.</div>
-       <div>Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
+       <div><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
 /**
@@ -307,11 +306,11 @@ function get_subclasses()
 		return $results;
 	}
 
-	$return = array();
-	$parents = array();
-	$children = array();
-	$class = array();
-	$pop_props = array();
+	$return = [];
+	$parents = [];
+	$children = [];
+	$class = [];
+	$pop_props = [];
 
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
@@ -353,8 +352,8 @@ function get_subclasses()
 		$sth->execute();
 
 		if ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$class = array('Q' . $params['id'], '', $row['directchildcnt'], $row['indirectchildcnt'],
-					$row['directinstcnt'], $row['indirectinstcnt'], $row['islistofcnt']);
+			$class = ['Q' . $params['id'], '', $row['directchildcnt'], $row['indirectchildcnt'],
+					$row['directinstcnt'], $row['indirectinstcnt'], $row['islistofcnt']];
 
 			$items = $wdwiki->getItemsNoCache($class[0]);
 
@@ -378,7 +377,7 @@ function get_subclasses()
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$parents['Q' . $row['parent_qid']] = array($row['parent_qid'], 'Q' . $row['parent_qid']); // removes dup terms
+			$parents['Q' . $row['parent_qid']] = [$row['parent_qid'], 'Q' . $row['parent_qid']]; // removes dup terms
 		}
 
 		if (! empty($parents)) {
@@ -394,36 +393,10 @@ function get_subclasses()
 		}
 
 		// Retrieve popular properties
-		$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
-		if (empty($wiki_host)) $wiki_host = "wikidatawiki.web.db.svc.eqiad.wmflabs";
-		try {
-		    $dbh_wikidata = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
-		    $dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		} catch (PDOException $e) {
-		    Logger::log($e->getMessage());
-		    throw new Exception('Connection error, see log for details');
-		}
+		$props = $wdwiki->getPropertySuggestions("Q{$params['id']}", $params['lang']);
 
-		$sql = "SELECT pid2, count, probability FROM wbs_propertypairs WHERE pid1 = 31 AND qid1 = ? AND context = 'item' ORDER BY probability DESC LIMIT 10";
-		$sth = $dbh_wikidata->prepare($sql);
-		$sth->bindValue(1, $params['id']);
-
-		$sth->execute();
-
-		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$pop_props['Property:P' . $row['pid2']] = array('P' . $row['pid2'], $row['count'], floor($row['probability'] * 100));
-		}
-
-		if (! empty($pop_props)) {
-			$prop_ids = array_keys($pop_props);
-			$items = $wdwiki->getItemsNoCache($prop_ids);
-
-			foreach ($items as $item) {
-				$pid = $item->getId();
-				$term_text = $item->getLabelDescription('label', $params['lang']);
-
-				if (! empty($term_text)) $pop_props['Property:' . $pid][0] = $term_text;
-			}
+		foreach ($props['search'] as $prop) {
+		    $pop_props['Property:' . $prop['id']] = array($prop['label'], floor($prop['rating'] * 100));
 		}
 	}
 

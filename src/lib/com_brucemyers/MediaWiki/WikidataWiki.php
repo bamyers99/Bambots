@@ -83,4 +83,20 @@ class WikidataWiki extends MediaWiki
 
         return $ret;
     }
+
+    /**
+     * Get property suggestions for an item
+     *
+     * @param string $qid Item id
+     * @param string $language label language
+     * @return array suggestions (id, rating, label)
+     */
+    public function getPropertySuggestions($qid, $language)
+    {
+        $query = "?action=wbsgetsuggestions&format=php&entity=$qid&limit=10&language=$language&include=all";
+
+        $ret = $this->query($query);
+
+        return $ret;
+    }
 }

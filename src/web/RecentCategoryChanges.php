@@ -104,6 +104,7 @@ function display_form()
     <a href="RecentCategoryChanges.php?wiki=<?php echo urlencode($params['wiki']) ?>&amp;action=statistics" class='novisited'><?php echo htmlentities($l10n->get('statistics', true), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
     <a href="CategoryWatchlist.php" class='novisited'><?php echo htmlentities($l10n->get('watchlisttitle', true), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
     <a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class='novisited'>Documentation</a> <b>&bull;</b>
+    <a href="/privacy.html">Privacy Policy</a> <b>&bull;</b>
     <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
 

@@ -148,6 +148,7 @@ function display_form()
     ?></div><br /><div style="display: table; margin: 0 auto;">
 	<?php echo '<div>' . htmlentities($l10n->get('bottomnote1'), ENT_COMPAT, 'UTF-8') . '<br />' .
 		htmlentities($l10n->get('bottomnote2'), ENT_COMPAT, 'UTF-8') . '</div>'; ?>
+	<a href="/privacy.html">Privacy Policy</a> <b>&bull;</b>
     <a href="https://en.wikipedia.org/wiki/User:Bamyers99/TemplateParametersTool" class='novisited'>Documentation</a> <b>&bull;</b>
     <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }

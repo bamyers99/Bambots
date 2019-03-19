@@ -229,6 +229,7 @@ function display_form()
 
     ?></div><br /><div style="display: table; margin: 0 auto;">
     <a href="RecentCategoryChanges.php?wiki=<?php echo urlencode($params['wiki']) ?>" class='novisited'><?php echo htmlentities($l10n->get('recentcategorychanges'), ENT_COMPAT, 'UTF-8') ?></a> <b>&bull;</b>
+    <a href="/privacy.html">Privacy Policy</a> <b>&bull;</b>
     <a href="https://en.wikipedia.org/wiki/User:CategoryWatchlistBot" class='novisited'>Documentation</a> <b>&bull;</b>
     <?php echo htmlentities($l10n->get('author', true), ENT_COMPAT, 'UTF-8') ?>: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
