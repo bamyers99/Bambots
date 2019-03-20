@@ -19,18 +19,15 @@ namespace com_brucemyers\CategoryWatchlistBot;
 
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\FileCache;
-use com_brucemyers\Util\MySQLDate;
 use PDO;
 
 class WatchResults
 {
 	static $reporttypes = array('B' => 'B', 'P' => '+', 'M' => '-');
-	protected $dbh_wiki;
 	protected $dbh_tools;
 
-	public function __construct(PDO $dbh_wiki, PDO $dbh_tools)
+	public function __construct(PDO $dbh_tools)
 	{
-		$this->dbh_wiki = $dbh_wiki;
 		$this->dbh_tools = $dbh_tools;
 	}
 

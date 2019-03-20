@@ -255,7 +255,7 @@ function display_form($subclasses)
 			if (! empty($subclasses['pop_props'])) {
 				echo "<h2>Most common properties for this class</h2>\n";
 
-				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Percentage</th><th>Missing property</th></tr></thead><tbody>\n";
+				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Missing property</th></tr></thead><tbody>\n";
 
 				foreach ($subclasses['pop_props'] as $pid => $row) {
 					$wdurl = "https://www.wikidata.org/wiki/" . $pid;
@@ -272,7 +272,7 @@ function display_form($subclasses)
 					$sparql = "<a href='$sparql' class='external'>SPARQL query</a>";
 
 					echo "<tr><td><a class='external' href='$wdurl'>$term_text</a></td>" .
-						"</td><td style='text-align:right'>" . $row[1] . "</td><td style='text-align:center'>$sparql</td></tr>\n";
+						"<td style='text-align:center'>$sparql</td></tr>\n";
 				}
 
 				echo "</tbody></table>\n";
@@ -282,7 +282,7 @@ function display_form($subclasses)
 		}
 	}
 ?>
-       <div>Data derived from database dump wikidatawiki-pages-articles.xml and Wikibase table wbs_propertypairs.</div>
+       <div>Data derived from database dump wikidatawiki-pages-articles.xml and wikidata api query wbsgetsuggestions.</div>
        <?php if ($params['id'] == 0) {?><div><sup>1</sup>Root classes with no child classes and less than <?php echo MIN_ORPHAN_DIRECT_INST_CNT; ?> instances are excluded.</div><?php } ?>
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
@@ -396,6 +396,7 @@ function get_subclasses()
 		$props = $wdwiki->getPropertySuggestions("Q{$params['id']}", $params['lang']);
 
 		foreach ($props['search'] as $prop) {
+		    if ($prop['id'] == 'P31') continue;
 		    $pop_props['Property:' . $prop['id']] = array($prop['label'], floor($prop['rating'] * 100));
 		}
 	}

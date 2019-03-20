@@ -150,11 +150,9 @@ class UIHelper
 			return array('errors' => array('Query not found'), 'results' => array());
 		}
 
-		$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-
 		$results = array();
 
-    	$watchResults = new WatchResults($dbh_wiki, $this->dbh_tools);
+    	$watchResults = new WatchResults($this->dbh_tools);
     	$results = $watchResults->getResults($queryid, $params, $page, $max_rows);
 
 		return array('errors' => $errors, 'results' => $results);
