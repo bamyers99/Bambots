@@ -122,7 +122,8 @@ class UIHelper
 			$ret = $mediawiki->getpage('Template:' . $params['template'] . '/doc');
 
 			if (! empty($ret)) {
-			    preg_match('!<templatedata>(.+?)</templatedata>!', $ret, $matches);
+			    preg_match('!<templatedata>\s*(.+?)\s*</templatedata>!', $ret, $matches);
+			    echo $matches[1];
 			    $info['TemplateData'] = new TemplateData($matches[1]);
 			} else {
 				$wikis = $this->getWikis();
