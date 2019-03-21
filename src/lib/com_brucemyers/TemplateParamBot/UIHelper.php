@@ -115,11 +115,15 @@ class UIHelper
 			}
 
 			// Fetch the TemplateData
-			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-			$sql = "SELECT pp_value FROM page_props WHERE pp_page = {$info['tmplid']} AND pp_propname = 'templatedata'";
-			$sth = $dbh_wiki->query($sql);
-			if ($row = $sth->fetch(PDO::FETCH_NUM)) {
-				$info['TemplateData'] = new TemplateData($row[0]);
+			$wikilang = substr($wikiname, 0, -4);
+			$domain = "$wikilang.wikipedia.org";
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+			$query = "?action=query&format=php&prop=pageprops&pageids={$info['tmplid']}&ppprop=templatedata";
+
+			$ret = $mediawiki->query($query);
+
+			if (isset($ret['query']['pages'][$info['tmplid']]['pageprops']['templatedata'])) {
+			    $info['TemplateData'] = new TemplateData($ret['query']['pages'][$info['tmplid']]['pageprops']['templatedata']);
 			} else {
 				$wikis = $this->getWikis();
 				$l10n = new L10N($wikis[$wikiname]['lang']);
