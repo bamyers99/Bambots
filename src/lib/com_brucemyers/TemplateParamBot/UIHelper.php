@@ -118,12 +118,12 @@ class UIHelper
 			$wikilang = substr($wikiname, 0, -4);
 			$domain = "$wikilang.wikipedia.org";
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
-			$query = "?action=query&format=php&prop=pageprops&pageids={$info['tmplid']}&ppprop=templatedata";
 
-			$ret = $mediawiki->query($query);
+			$ret = $mediawiki->getpage('Template:' . $params['template'] . '/doc');
 
-			if (isset($ret['query']['pages'][$info['tmplid']]['pageprops']['templatedata'])) {
-			    $info['TemplateData'] = new TemplateData($ret['query']['pages'][$info['tmplid']]['pageprops']['templatedata']);
+			if (! empty($ret)) {
+			    preg_match('!<templatedata>(.+?)</templatedata>!', $ret, $matches);
+			    $info['TemplateData'] = new TemplateData($matches[1]);
 			} else {
 				$wikis = $this->getWikis();
 				$l10n = new L10N($wikis[$wikiname]['lang']);
