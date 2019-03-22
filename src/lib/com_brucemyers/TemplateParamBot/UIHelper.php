@@ -218,7 +218,6 @@ class UIHelper
 		$results = $sth->fetchAll(PDO::FETCH_NUM);
 
 		if (! empty($results)) {
-			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
 			$page_ids = array();
 			foreach ($results as $row) {
 				$page_ids[] = $row[0];
@@ -226,15 +225,16 @@ class UIHelper
 
 			$page_ids = implode(',', $page_ids);
 
-			$sql = "SELECT page_title, page_namespace FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
-			$sth = $dbh_wiki->prepare($sql);
-			$sth->execute();
+			$wikilang = substr($wikiname, 0, -4);
+			$domain = "$wikilang.wikipedia.org";
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 
-			$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+			$ret = $mediawiki->getPagesByID($page_ids, false);
 
-			foreach ($results as &$result) {
-				if ($result['page_namespace'] != 0)
-					$result['page_title'] = MediaWiki::getNamespacePrefix($result['page_namespace']) . $result['page_title'];
+			$results = [];
+
+			foreach ($ret as $page_title => $result) {
+			    $results[] = ['page_title' => $page_title];
 			}
 
 			unset($result);
@@ -281,23 +281,23 @@ class UIHelper
 		$results = $sth->fetchAll(PDO::FETCH_NUM);
 
 		if (! empty($results)) {
-			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-			$page_ids = array();
+			$page_ids = [];
 			foreach ($results as $row) {
 				$page_ids[] = $row[0];
 			}
 
 			$page_ids = implode(',', $page_ids);
 
-			$sql = "SELECT page_title, page_namespace FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ") ORDER BY page_title";
-			$sth = $dbh_wiki->prepare($sql);
-			$sth->execute();
+			$wikilang = substr($wikiname, 0, -4);
+			$domain = "$wikilang.wikipedia.org";
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 
-			$results = $sth->fetchAll(PDO::FETCH_ASSOC);
+			$ret = $mediawiki->getPagesByID($page_ids, false);
 
-			foreach ($results as &$result) {
-				if ($result['page_namespace'] != 0)
-					$result['page_title'] = MediaWiki::getNamespacePrefix($result['page_namespace']) . $result['page_title'];
+			$results = [];
+
+			foreach ($ret as $page_title => $result) {
+			    $results[] = ['page_title' => $page_title];
 			}
 
 			unset($result);
@@ -343,29 +343,23 @@ class UIHelper
 		$results = $sth->fetchAll(PDO::FETCH_ASSOC);
 
 		if (! empty($results)) {
-			$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-			$page_ids = array();
+			$page_ids = [];
 			foreach ($results as $row) {
 				$page_ids[$row['page_id']] = true; // removes dups
 			}
 
 			$page_ids = implode(',', array_keys($page_ids));
 
-			$sql = "SELECT page_id, page_title, page_namespace FROM `{$wikiname}_p`.page WHERE page_id IN (" . $page_ids . ")";
-			$sth = $dbh_wiki->prepare($sql);
-			$sth->execute();
+			$wikilang = substr($wikiname, 0, -4);
+			$domain = "$wikilang.wikipedia.org";
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 
-			$page_names = array();
+			$ret = $mediawiki->getPagesByID($page_ids, false);
 
-			$results2 = $sth->fetchAll(PDO::FETCH_ASSOC);
+			$page_names = [];
 
-			foreach ($results2 as $result) {
-				$page_title = str_replace('_', ' ', $result['page_title']);
-
-				if ($result['page_namespace'] != 0)
-					$page_title = MediaWiki::getNamespacePrefix($result['page_namespace']) . $page_title;
-
-				$page_names[$result['page_id']] = $page_title;
+			foreach ($ret as $page_title => $result) {
+				$page_names[$result['pageid']] = $page_title;
 			}
 
 			foreach ($results as &$result) {

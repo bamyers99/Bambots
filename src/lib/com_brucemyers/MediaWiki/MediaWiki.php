@@ -507,6 +507,41 @@ class MediaWiki extends wikipedia
     }
 
     /**
+     * Get multiple pages
+     *
+     * @param $pageids array Page ids
+     * @param $getcontent bool (default: true)
+     * @return array Page text and/or meta data, pagename=>array(content,pageid)
+     */
+    public function getPagesByID($pageids, $getcontent = true)
+    {
+        if (empty($pageids)) return [];
+        $pages = [];
+        $pageChunks = array_chunk($pageids, Config::get(self::WIKIPAGEINCREMENT));
+        $revisions = '';
+        if ($getcontent) $revisions = '&prop=revisions&rvprop=content';
+
+        foreach ($pageChunks as $pageChunk) {
+            $pageids = implode('|', $pageChunk);
+            $ret = $this->query("?action=query&format=php$revisions&pageids=" . urlencode($pagenames) . '&rvslots=main&continue=');
+
+            if (isset($ret['error'])) {
+                throw new Exception('Query Error ' . $ret['error']['info']);
+            }
+
+            foreach ($ret['query']['pages'] as $page) {
+                if (isset($page['revisions'][0]['slots']['main']['*'])) {
+                    $pagename = $page['title'];
+                    $pages[$pagename] = ['pageid' => $page['pageid']];
+                    if ($getcontent) $pages[$pagename]['content'] = $page['revisions'][0]['slots']['main']['*'];
+                }
+            }
+        }
+
+        return $pages;
+    }
+
+    /**
      * Cache multiple pages
      *
      * @param $pagenames array Page names
