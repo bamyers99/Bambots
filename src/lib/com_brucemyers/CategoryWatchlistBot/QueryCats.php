@@ -17,6 +17,7 @@
 
 namespace com_brucemyers\CategoryWatchlistBot;
 
+use com_brucemyers\MediaWiki\MediaWiki;
 use PDO;
 
 class QueryCats
