@@ -104,6 +104,7 @@ class UIHelper
 			$info['file_offset'] = $row['file_offset'];
 			$info['loaded'] = $row['loaded'];
 			$info['tmplid'] = $row['id'];
+			$info['name'] = $row['name'];
 			$info['params'] = array();
 
 			$sql = "SELECT * FROM `{$wikiname}_totals` WHERE template_id = {$info['tmplid']} ORDER BY param_name";
@@ -122,8 +123,7 @@ class UIHelper
 			$ret = $mediawiki->getpage('Template:' . $params['template'] . '/doc');
 
 			if (! empty($ret)) {
-			    preg_match('!<templatedata>\s*(.+?)\s*</templatedata>!', $ret, $matches);
-			    echo $matches[1];
+			    preg_match('!<templatedata>\s*(.+?)\s*</templatedata>!s', $ret, $matches);
 			    $info['TemplateData'] = new TemplateData($matches[1]);
 			} else {
 				$wikis = $this->getWikis();

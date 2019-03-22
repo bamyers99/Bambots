@@ -148,12 +148,20 @@ class TemplateParamBot
         	$wikiname = $row['wikiname'];
         	$templid = $row['template_id'];
 
-        	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-        	$sql = "SELECT pp_value, page_title FROM page_props, page WHERE pp_page = $templid AND pp_propname = 'templatedata' AND pp_page = page_id";
-        	$sth = $dbh_wiki->query($sql);
-        	if ($td = $sth->fetch(PDO::FETCH_NUM)) {
-        		$templatedata = new TemplateData($td[0]);
-        		$templname = str_replace('_', ' ', $td[1]);
+        	// Get the template data
+        	$wikilang = substr($wikiname, 0, -4);
+        	$domain = "$wikilang.wikipedia.org";
+        	$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+
+        	$sth = $dbh_tools->query("SELECT name FROM {$wikiname}_templates WHERE id = $templid");
+        	$rowst = $sth->fetchAll(PDO::FETCH_NUM);
+        	$templname = $rowst[0][0];
+
+        	$ret = $mediawiki->getpage('Template:' . $templname . '/doc');
+
+        	if (! empty($ret)) {
+        	    preg_match('!<templatedata>\s*(.+?)\s*</templatedata>!s', $ret, $matches);
+        	    $templatedata = new TemplateData($matches[1]);
     			$templatedata->enhanceConfig($templateParamConfig->getTemplate($templname));
         		$paramdefs = $templatedata->getParams();
         	} else {
