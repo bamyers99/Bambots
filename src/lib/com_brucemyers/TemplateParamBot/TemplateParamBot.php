@@ -153,9 +153,9 @@ class TemplateParamBot
         	$domain = "$wikilang.wikipedia.org";
         	$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 
-        	$sth = $dbh_tools->query("SELECT name FROM {$wikiname}_templates WHERE id = $templid");
-        	$rowst = $sth->fetchAll(PDO::FETCH_NUM);
-        	$templname = $rowst[0][0];
+        	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
+        	$template = $sth->fetch(PDO::FETCH_ASSOC);
+        	$templname = $template['name'];
 
         	$ret = $mediawiki->getpage('Template:' . $templname . '/doc');
 
@@ -179,17 +179,14 @@ class TemplateParamBot
         	$validations = array();
 
         	foreach ($paramdefs as $param_name => $paramdef) {
-	        	if ($paramdef['type'] == 'yesno') $validations[$param_name] = array('type' => 'yesno');
+        	    if (isset($paramdef['type']) && $paramdef['type'] == 'yesno') $validations[$param_name] = array('type' => 'yesno');
 	        	elseif (isset($paramdef['regex'])) $validations[$param_name] = array('type' => 'regex', 'regex' => "!^{$paramdef['regex']}$!u");
 	        	elseif (isset($paramdef['values'])) $validations[$param_name] = array('type' => 'values', 'values' => $paramdef['values']);
         	}
 
-        	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
-        	$template = $sth->fetch(PDO::FETCH_ASSOC);
         	$offset = intval($template['file_offset']);
         	$dumpdate = date('Ymd', strtotime($template['last_update']));
         	$instancecnt = $template['instance_count'];
-        	$template = $template['name'];
 
         	if ($offset < 0) {
         		if ($offset == -1) {
@@ -204,7 +201,7 @@ class TemplateParamBot
         	}
 
         	$sth = $dbh_tools->prepare("UPDATE loads SET status = 'R', progress = ? WHERE wikiname = ? AND template_id = $templid");
-        	$sth->execute(array("Loading $instancecnt instances for $template", $wikiname));
+        	$sth->execute(array("Loading $instancecnt instances for $templname", $wikiname));
 
 	    	$filepath = $datadir . 'TemplateParamBot' . DIRECTORY_SEPARATOR . "$wikiname-$dumpdate-TemplateParams";
 	    	$hndl = fopen($filepath, 'r');
@@ -282,7 +279,7 @@ class TemplateParamBot
 
 					++$valuecnt;
 					if ($valuecnt % 2000 == 0) {
-						$sthprogress->execute(array("Loaded $loadedcnt of $instancecnt instances for $template", $wikiname));
+					    $sthprogress->execute(array("Loaded $loadedcnt of $instancecnt instances for $templname", $wikiname));
 
 						$dbh_tools->commit();
 						$dbh_tools->beginTransaction();
@@ -305,7 +302,7 @@ class TemplateParamBot
 	    	$runtime = $ts['hours'] . ':' . $ts['minutes'] . ':' . $ts['seconds'];
 
 	    	$sth = $dbh_tools->prepare("UPDATE loads SET status = 'C', progress = ?, lastrun = ?, runtime = ? WHERE wikiname = ? AND template_id = $templid");
-	    	$sth->execute(array("Loaded $instancecnt instances for $template", $lastrun, $runtime, $wikiname));
+	    	$sth->execute(array("Loaded $instancecnt instances for $templname", $lastrun, $runtime, $wikiname));
         	$dbh_tools->exec("UPDATE `{$wikiname}_templates` SET loaded = 'Y' WHERE id = $templid");
         }
     }
