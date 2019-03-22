@@ -348,7 +348,7 @@ class UIHelper
 			$domain = "$wikilang.wikipedia.org";
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 
-			$ret = $mediawiki->getPagesByID($page_ids, false);
+			$ret = $mediawiki->getPagesByID(array_keys($page_ids), false);
 
 			$page_names = [];
 
