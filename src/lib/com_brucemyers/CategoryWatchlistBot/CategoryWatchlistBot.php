@@ -17,9 +17,7 @@
 
 namespace com_brucemyers\CategoryWatchlistBot;
 
-use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Timer;
-use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\MySQLDate;

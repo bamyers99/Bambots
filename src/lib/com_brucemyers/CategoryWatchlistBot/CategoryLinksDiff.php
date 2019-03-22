@@ -18,7 +18,6 @@
 namespace com_brucemyers\CategoryWatchlistBot;
 
 use PDO;
-use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\Util\Config;
@@ -56,7 +55,7 @@ class CategoryLinksDiff
     function processWiki($wikiname, $wikidata)
     {
     	$this->categoryNS = $wikidata['catNS'];
-    	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
+    	$wiki = $this->serviceMgr->getMediaWiki($wikidata['domain']);
     	$dbh_tools = $this->serviceMgr->getDBConnection('tools');
 
     	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_diffs` (
@@ -106,7 +105,7 @@ class CategoryLinksDiff
 
     	// Calc category tress for QueryCats::CATEGORY_COUNT_RECALC and QueryCats::CATEGORY_COUNT_UNKNOWN
     	$dbh_tools2 = $this->serviceMgr->getDBConnection('tools');
-    	$querycats = new QueryCats($dbh_wiki, $dbh_tools2);
+    	$querycats = new QueryCats($wiki, $dbh_tools2);
 
     	$sth = $dbh_tools->prepare('SELECT id, params, catcount FROM querys WHERE wikiname = ? AND catcount IN (?,?)');
     	$sth->bindParam(1, $wikiname);
@@ -135,19 +134,16 @@ class CategoryLinksDiff
     	$dbh_tools2 = null;
 
     	// Get the current rev_id
-    	$sth = $dbh_wiki->query('SELECT rev_id, rev_timestamp FROM revision ORDER BY rev_id DESC LIMIT 1');
-    	$row = $sth->fetch(PDO::FETCH_ASSOC);
-    	$cur_rev_id = (int)$row['rev_id'];
-    	$cur_timestamp = MediaWiki::wikiTimestampToUnixTimestamp($row['rev_timestamp']);
+    	$ret = $wiki->getList('recentchanges', ['rclimit' => 1]);
+    	$cur_rev_id = (int)$ret['query']['recentchanges'][0]['revid'];
+    	$cur_timestamp = MediaWiki::ISO8601TimestampToUnixTimestamp($ret['query']['recentchanges'][0]['timestamp']);
 
     	// Limit to 3 hours max revisions
     	$prev_timestamp = strtotime('-3 hours', $cur_timestamp);
-    	$prev_timestamp = MediaWiki::unixTimestampToWikiTimestamp($prev_timestamp);
+    	$prev_timestamp = MediaWiki::unixTimestampToISO8601Timestamp($prev_timestamp);
 
-    	$sth = $dbh_wiki->query("SELECT rev_id FROM revision WHERE rev_timestamp > '$prev_timestamp' ORDER BY rev_timestamp LIMIT 1");
-    	$row = $sth->fetch(PDO::FETCH_ASSOC);
-    	$prev_rev_id = (int)$row['rev_id'];
-    	$sth = null;
+    	$ret = $wiki->getList('recentchanges', ['rclimit' => 1, 'rcstart' => $prev_timestamp]);
+    	$prev_rev_id = (int)$ret['query']['recentchanges'][0]['revid'];
 
     	// Get the previous rev_id
     	$sth = $dbh_tools->prepare('SELECT rev_id FROM runs WHERE wikiname = ? ORDER BY rundate DESC LIMIT 1');
@@ -156,39 +152,44 @@ class CategoryLinksDiff
 
     	if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
     		$run_rev_id = (int)$row['rev_id'];
-    		if ($run_rev_id > $prev_rev_id) $prev_rev_id = $run_rev_id;
+    		if ($run_rev_id > $prev_rev_id) {
+    		    $prev_rev_id = $run_rev_id;
+    		    $ret = $wiki->getRevisionInfo($prev_rev_id);
+    		    $page = reset(ret['query']['pages']);
+    		    $prev_timestamp = $page['revisions'][0]['timestamp'];
+    		}
     	}
 
     	$sth = null;
     	$dbh_tools = null;
 
-    	// Get the changed pages since the last run
-    	$sth = $dbh_wiki->prepare('SELECT page_namespace, page_title, rev_id, rev_parent_id FROM revision, page WHERE rev_id > ? AND rev_id <= ? AND rev_page = page_id');
-    	$sth->bindParam(1, $prev_rev_id);
-    	$sth->bindParam(2, $cur_rev_id);
-    	$sth->execute();
-    	$sth->setFetchMode(PDO::FETCH_NUM);
-
         // Want the highest rev_id and the lowest rev_parent_id
 
-    	$pages = array();
-		while ($row = $sth->fetch()) {
-			$pagekey = str_pad($row[0], 4, '0', STR_PAD_LEFT) . $row[1]; // Sort by namespace, title
-			$rev_id = (int)$row[2];
-			$parent_id = (int)$row[3];
+    	$pages = [];
 
-			if (! isset($pages[$pagekey])) {
-				$pages[$pagekey] = array('h' => $rev_id, 'l' => $parent_id);
-			} else {
-				$page = $pages[$pagekey];
-				if ($rev_id > $page['h']) $pages[$pagekey]['h'] = $rev_id;
-				if ($parent_id < $page['l']) $pages[$pagekey]['l'] = $parent_id;
-			}
-		}
+    	$lister = new RecentChangeLister($mediawiki, $prev_timestamp, MediaWiki::unixTimestampToISO8601Timestamp($cur_timestamp));
 
-		$sth->closeCursor();
-		$sth = null;
-		$dbh_wiki = null;
+    	while (($rcpages = $lister->getNextBatch()) !== false) {
+    	    foreach ($rcpages as $rcpage) {
+    	        $ns = $rcpage['ns'];
+    	        $pagetitle = $rcpage['title'];
+    	        if ($ns != 0) {
+    	            list($dummy, $pagetitle) = explode(':', $pagetitle, 2);
+    	        }
+
+    	        $pagekey = str_pad($ns, 4, '0', STR_PAD_LEFT) . $pagetitle; // Sort by namespace, title
+    	        $rev_id = $rcpage['revid'];
+    	        $parent_id = $rcpage['old_revid'];
+
+    	        if (! isset($pages[$pagekey])) {
+    	            $pages[$pagekey] = array('h' => $rev_id, 'l' => $parent_id);
+    	        } else {
+    	            $page = $pages[$pagekey];
+    	            if ($rev_id > $page['h']) $pages[$pagekey]['h'] = $rev_id;
+    	            if ($parent_id < $page['l']) $pages[$pagekey]['l'] = $parent_id;
+    	        }
+    	    }
+    	}
 
 		krsort($pages); // Reverse so that recent changes has articles first
 
@@ -301,10 +302,6 @@ class CategoryLinksDiff
 
 			$this->parseCategoriesTemplates($revtext1, $currcats, $currtemplates, $this->categoryNS);
 			$this->parseCategoriesTemplates($revtext2, $prevcats, $prevtemplates, $this->categoryNS);
-			$this->followTemplateRedirects($wikiname, $prevtemplates, $currtemplates);
-			// Remove dups after redirect replacement
-			$prevtemplates = array_unique($prevtemplates);
-			$currtemplates = array_unique($currtemplates);
 
 			// Write diffs
 			$catchanges = array();
@@ -399,60 +396,5 @@ class CategoryLinksDiff
    			$templatename = $template['name'];
    			$templates[$templatename] = $templatename; // Removes dups
    		}
-    }
-
-    protected function followTemplateRedirects($wikiname, &$prevtemplates, &$currtemplates)
-    {
-    	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-
-    	$alltemplates = array();
-
-        foreach ($prevtemplates as $templatename) {
-    		$alltemplates[$templatename] = true; // Removes dups
-    	}
-
-        foreach ($currtemplates as $templatename) {
-    		$alltemplates[$templatename] = true; // Removes dups
-    	}
-
-    	if (empty($alltemplates)) return;
-
-    	$escapednames = array();
-
-		foreach ($alltemplates as $templatename => $dummy) {
-			$tempname = str_replace(' ', '_', $templatename);
-			$escapednames[] = $dbh_wiki->quote($tempname);
-		}
-
-		$escapednames = implode(',', $escapednames);
-
-		$sql = "SELECT page_title, rd_title FROM page " .
-			" LEFT JOIN redirect ON page_id = rd_from " .
-			" WHERE page_namespace = 10 AND page_title IN ($escapednames)";
-
-    	$results = $dbh_wiki->query($sql);
-    	$results->setFetchMode(PDO::FETCH_NUM);
-
-    	$existing = array();
-
-    	while ($row = $results->fetch()) {
-    		$oldname = str_replace('_', ' ', $row[0]);
-    		$existing[$oldname] = $row[1];
-    	}
-
-    	$results->closeCursor();
-    	$results = null;
-
-    	// Strip non-existant templates and replace redirects
-        foreach ($prevtemplates as $oldname => $dummy) {
-        	// Can't use isset because an array value of null considers the key unset.
-    		if (! array_key_exists($oldname, $existing)) unset($prevtemplates[$oldname]);
-    		elseif ($existing[$oldname] !== null) $prevtemplates[$oldname] = str_replace('_', ' ', $existing[$oldname]);
-    	}
-
-    	foreach ($currtemplates as $oldname => $dummy) {
-    		if (! array_key_exists($oldname, $existing)) unset($currtemplates[$oldname]);
-    		elseif ($existing[$oldname] !== null) $currtemplates[$oldname] = str_replace('_', ' ', $existing[$oldname]);
-    	}
     }
 }

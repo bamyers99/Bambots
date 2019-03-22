@@ -100,8 +100,11 @@ class UIHelper
     		$sth->bindParam(1, $accessdate);
     		$sth->execute();
     	} else {
-    		$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-    		$querycats = new QueryCats($dbh_wiki, $this->dbh_tools);
+    	    $wikilang = substr($wikiname, 0, -4);
+    	    $domain = "$wikilang.wikipedia.org";
+    	    $mediawiki = $this->serviceMgr->getMediaWiki($domain);
+
+    		$querycats = new QueryCats($mediawiki, $this->dbh_tools);
     		$cats = $querycats->calcCats($params, true);
     		$catcount = $cats['catcount'];
 
@@ -499,16 +502,14 @@ class UIHelper
 		static $dbh_wiki = null;
 		if (empty($dbh_wiki)) $dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
 
-		$escapedname = $dbh_wiki->quote($templatename);
+		$wikilang = substr($wikiname, 0, -4);
+		$domain = "$wikilang.wikipedia.org";
+		$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 
-		$sql = "SELECT rd_title FROM page, redirect " .
-				" WHERE page_namespace = 10 AND page_is_redirect = 1 AND page_title = $escapedname AND page_id = rd_from";
+		$resolvedTitle = $mediawiki->resolvePageTitle("Template:$templatename");
 
-		$results = $dbh_wiki->query($sql);
-		$results->setFetchMode(PDO::FETCH_NUM);
-
-		if ($row = $results->fetch()) {
-			$templatename = str_replace('_', ' ', $row[0]);
+		if (! empty($resolvedTitle)) {
+			$templatename = substr($resolvedTitle, 9);
 		}
 
 		$results->closeCursor();

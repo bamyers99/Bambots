@@ -805,8 +805,8 @@ class MediaWiki extends wikipedia
      */
     public static function wikiTimestampToUnixTimestamp($timestamp)
     {
-    	$dt = DateTime::createFromFormat('YmdHis', $timestamp);
-    	return $dt->getTimestamp();
+        $dt = DateTime::createFromFormat('YmdHis', $timestamp);
+        return $dt->getTimestamp();
     }
 
     /**
@@ -817,6 +817,76 @@ class MediaWiki extends wikipedia
      */
     public static function unixTimestampToWikiTimestamp($timestamp)
     {
-    	return date('YmdHis', $timestamp);
+        return date('YmdHis', $timestamp);
     }
+
+    /**
+     * Convert a ISO 8601 timestamp to a unix timestamp.
+     *
+     * @param string $timestamp ISO 8601 timestamp
+     * @return int Unix timestamp
+     */
+    public static function ISO8601TimestampToUnixTimestamp($timestamp)
+    {
+        $dt = new DateTime($timestamp);
+        return $dt->getTimestamp();
+    }
+
+    /**
+     * Convert a unix timestamp to a ISO 8601 timestamp.
+     *
+     * @param int $timestamp Unix timestamp
+     * @return string ISO 8601 timestamp
+     */
+    public static function unixTimestampToISO8601Timestamp($timestamp)
+    {
+        return date('Y-m-d\TH:i:s\Z', $timestamp);
+    }
+
+    /**
+     * Resolve a page title by following redirects.
+     *
+     * @param string $pagetitle
+     * @return string resolve page title
+     */
+    public function resolvePageTitle($pagetitle)
+    {
+        $query = '?action=query&format=php&redirects=1&titles='  . urlencode($pagetitle);
+
+        $ret = $this->query($query);
+
+        if (isset($ret['error'])) {
+            Logger::log('MediaWiki->resolvePageTitle Error ' . $ret['error']['info']);
+            return '';
+        }
+
+        if (! empty($ret['query']['pages'])) {
+            foreach ($ret['query']['pages'] as $page) {
+                return $page['title'];
+            }
+        }
+
+        return '';
+    }
+
+    public function getRevisionInfo($revid)
+    {
+        $query = '?action=query&format=php&prop=revisions&revids=' . $revid;
+
+        $ret = $this->query($query);
+
+        if (isset($ret['error'])) {
+            Logger::log('MediaWiki->resolvePageTitle Error ' . $ret['error']['info']);
+            return [];
+        }
+
+        if (! empty($ret['query']['pages'])) {
+            foreach ($ret['query']['pages'] as $page) {
+                return $page['title'];
+            }
+        }
+
+        return [];
+    }
+
 }

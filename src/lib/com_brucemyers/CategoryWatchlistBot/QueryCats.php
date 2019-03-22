@@ -27,12 +27,12 @@ class QueryCats
 	const CATEGORY_COUNT_RECALC = -4;
 	const MAX_UNAPPROVED_CATCOUNT = 500;
 
-	protected $dbh_wiki;
+	protected $media_wiki;
 	protected $dbh_tools;
 
-	public function __construct(PDO $dbh_wiki, PDO $dbh_tools)
+	public function __construct(MediaWiki $media_wiki, PDO $dbh_tools)
 	{
-		$this->dbh_wiki = $dbh_wiki;
+	    $this->media_wiki = $media_wiki;
 		$this->dbh_tools = $dbh_tools;
 	}
 
@@ -47,7 +47,6 @@ class QueryCats
 	{
 		$cats = array();
 		$errors = array();
-		$sth = $this->dbh_wiki->prepare('SELECT cat_title FROM category WHERE cat_title = ?');
 		$reporttypes = array('B' => 'B', 'P' => '+', 'M' => '-');
 
 		for ($x=1; $x <= 10; ++$x) {
@@ -57,15 +56,10 @@ class QueryCats
 			$reporttype = $reporttypes[$params["rt$x"]];
 
 			if (! empty($catname)) {
-				$wikicatname = str_replace(' ', '_', ucfirst($catname));
+				$ret = $this->media_wiki->resolvePageTitle("Category:$catname");
 
-				// See if the category exists
-	    		$sth->bindParam(1, $wikicatname);
-	    		$sth->execute();
-
-	    		if ($sth->fetch(PDO::FETCH_ASSOC)) $cats[] = array('cn' => $wikicatname, 'sd' => $subdepth, 'rt' => $reporttype);
+				if (! empty($ret)) $cats[] = array('cn' => $catname, 'sd' => $subdepth, 'rt' => $reporttype);
 	    		else $errors[] = "Category not found - $catname";
-	    		$sth->closeCursor();
 			}
 		}
 
@@ -122,7 +116,7 @@ class QueryCats
 	{
 		if (! is_array($searchcats)) $searchcats = (array)$searchcats;
 
-		$nextcats = array();
+		$nextcats = [];
 
 		foreach ($searchcats as $cat) {
 			if (isset($foundcats[$cat])) continue;
@@ -133,19 +127,20 @@ class QueryCats
 
 		if (! count($nextcats)) return;
 
-		$placeholders = implode(',', array_fill(0, count($nextcats), '?'));
-		$sth = $this->dbh_wiki->prepare("SELECT DISTINCT page_title FROM page,categorylinks WHERE page_id=cl_from AND cl_to IN ($placeholders) AND cl_type='subcat'");
-		$sth->execute($nextcats);
 
-		$subcats = array();
+		$subcats = [];
 
-		while($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-			$cat = $row['page_title'];
-			if (isset($foundcats[$cat])) continue;
-			$subcats[] = $cat;
+		foreach ($nextcats as $nextcat) {
+		    $ret = $this->media_wiki->getList('categorymembers', ['cmtitle' => "Category:$nextcat", 'cmtype' => 'subcat', 'cmlimit' => '500']);
+
+		    if (isset($ret['query']['categorymembers'])) {
+		        foreach ($ret['query']['categorymembers'] as $cm) {
+        			$cat = substr($cm['title'], 9);
+        			if (isset($foundcats[$cat])) continue;
+        			$subcats[] = $cat;
+        		}
+		    }
 		}
-
-		$sth->closeCursor();
 
 		if (! count($subcats)) return;
 
