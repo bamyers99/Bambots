@@ -223,8 +223,6 @@ class UIHelper
 				$page_ids[] = $row[0];
 			}
 
-			$page_ids = implode(',', $page_ids);
-
 			$wikilang = substr($wikiname, 0, -4);
 			$domain = "$wikilang.wikipedia.org";
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
@@ -234,7 +232,7 @@ class UIHelper
 			$results = [];
 
 			foreach ($ret as $page_title => $result) {
-			    $results[] = ['page_title' => $page_title];
+			    $results[] = ['page_title' => str_replace(' ', '_', $page_title)];
 			}
 
 			unset($result);
@@ -286,8 +284,6 @@ class UIHelper
 				$page_ids[] = $row[0];
 			}
 
-			$page_ids = implode(',', $page_ids);
-
 			$wikilang = substr($wikiname, 0, -4);
 			$domain = "$wikilang.wikipedia.org";
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
@@ -297,7 +293,7 @@ class UIHelper
 			$results = [];
 
 			foreach ($ret as $page_title => $result) {
-			    $results[] = ['page_title' => $page_title];
+			    $results[] = ['page_title' => str_replace(' ', '_', $page_title)];
 			}
 
 			unset($result);
@@ -348,8 +344,6 @@ class UIHelper
 				$page_ids[$row['page_id']] = true; // removes dups
 			}
 
-			$page_ids = implode(',', array_keys($page_ids));
-
 			$wikilang = substr($wikiname, 0, -4);
 			$domain = "$wikilang.wikipedia.org";
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
@@ -363,7 +357,7 @@ class UIHelper
 			}
 
 			foreach ($results as &$result) {
-				$result['page_title'] = $page_names[$result['page_id']];
+				$result['page_title'] = str_replace(' ', '_', $page_names[$result['page_id']]);
 			}
 
 			unset($result);

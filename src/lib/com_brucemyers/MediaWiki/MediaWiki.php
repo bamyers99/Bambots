@@ -523,17 +523,18 @@ class MediaWiki extends wikipedia
 
         foreach ($pageChunks as $pageChunk) {
             $pageids = implode('|', $pageChunk);
-            $ret = $this->query("?action=query&format=php$revisions&pageids=" . urlencode($pagenames) . '&rvslots=main&continue=');
+            $ret = $this->query("?action=query&format=php$revisions&pageids=" . urlencode($pageids) . '&rvslots=main&continue=');
 
             if (isset($ret['error'])) {
                 throw new Exception('Query Error ' . $ret['error']['info']);
             }
 
             foreach ($ret['query']['pages'] as $page) {
-                if (isset($page['revisions'][0]['slots']['main']['*'])) {
-                    $pagename = $page['title'];
-                    $pages[$pagename] = ['pageid' => $page['pageid']];
-                    if ($getcontent) $pages[$pagename]['content'] = $page['revisions'][0]['slots']['main']['*'];
+                $pagename = $page['title'];
+                $pages[$pagename] = ['pageid' => $page['pageid']];
+
+                if ($getcontent && isset($page['revisions'][0]['slots']['main']['*'])) {
+                   $pages[$pagename]['content'] = $page['revisions'][0]['slots']['main']['*'];
                 }
             }
         }
