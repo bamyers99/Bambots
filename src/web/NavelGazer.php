@@ -165,7 +165,7 @@ function display_form($navels)
 			});
 
 			foreach ($navels['data'] as $row) {
-				$url = "/bambots/NavelGazer.php?property=P" . $row[0];
+				$url = "/NavelGazer.php?property=P" . $row[0];
 				$term_text = htmlentities($row[3], ENT_COMPAT, 'UTF-8');
 				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td>{$row[4]}</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 					"</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
@@ -200,7 +200,7 @@ function display_form($navels)
 
 		    foreach ($navels['data'] as $row) {
 		        $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
-		        $url = "/bambots/NavelGazer.php?username=" . urlencode($row[0]);
+		        $url = "/NavelGazer.php?username=" . urlencode($row[0]);
 		        echo "<tr><td><a href='$url'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 		        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 		    }
@@ -225,7 +225,7 @@ function display_form($navels)
     	    foreach ($navels['data'] as $row) {
     	        $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
     	        $url = "https://www.wikidata.org/wiki/User:" . str_replace(' ', '_', $row[0]);
-    	        $userurl = "/bambots/NavelGazer.php?username=" . urlencode($row[0]);
+    	        $userurl = "/NavelGazer.php?username=" . urlencode($row[0]);
     	        echo "<tr><td><a href='$url' class='external'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
     	        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td><td style='text-align:center'><a href='$userurl'>view</a></td></tr>\n";
     	    }
