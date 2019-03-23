@@ -499,12 +499,12 @@ class UIHelper
 	 */
 	public function processTemplateRedirect($wikiname, $templatename)
 	{
-		static $dbh_wiki = null;
-		if (empty($dbh_wiki)) $dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-
-		$wikilang = substr($wikiname, 0, -4);
-		$domain = "$wikilang.wikipedia.org";
-		$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+	    static $mediawiki = null;
+	    if (empty($mediawiki)) {
+	        $wikilang = substr($wikiname, 0, -4);
+	        $domain = "$wikilang.wikipedia.org";
+	        $mediawiki = $this->serviceMgr->getMediaWiki($domain);
+	    }
 
 		$resolvedTitle = $mediawiki->resolvePageTitle("Template:$templatename");
 

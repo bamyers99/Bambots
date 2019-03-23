@@ -152,10 +152,19 @@ class CategoryLinksDiff
 
     	if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
     		$run_rev_id = (int)$row['rev_id'];
+
     		if ($run_rev_id > $prev_rev_id) {
     		    $prev_rev_id = $run_rev_id;
     		    $ret = $wiki->getRevisionInfo($prev_rev_id);
-    		    $prev_timestamp = $ret['timestamp'];
+
+    		    if (isset($ret['timestamp'])) {
+    		        $prev_timestamp = $ret['timestamp'];
+    		    } else {
+    		        $prev_timestamp = strtotime('-1 hours', $cur_timestamp);
+    		        $prev_timestamp = MediaWiki::unixTimestampToISO8601Timestamp($prev_timestamp);
+    		        $ret = $wiki->getList('recentchanges', ['rclimit' => 1, 'rcstart' => $prev_timestamp]);
+    		        $prev_rev_id = (int)$ret['query']['recentchanges'][0]['revid'];
+    		    }
     		}
     	}
 

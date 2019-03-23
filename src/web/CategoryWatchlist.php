@@ -17,7 +17,6 @@
 
 use com_brucemyers\CategoryWatchlistBot\UIHelper;
 use com_brucemyers\Util\MySQLDate;
-use com_brucemyers\Util\DateUtil;
 use com_brucemyers\Util\HttpUtil;
 use com_brucemyers\Util\L10N;
 
