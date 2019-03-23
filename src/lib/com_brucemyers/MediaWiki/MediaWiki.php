@@ -869,6 +869,12 @@ class MediaWiki extends wikipedia
         return '';
     }
 
+    /**
+     * Get revision info
+     *
+     * @param int $revid
+     * @return array (revid,parentid,user,timestamp,comment)
+     */
     public function getRevisionInfo($revid)
     {
         $query = '?action=query&format=php&prop=revisions&revids=' . $revid;
@@ -882,7 +888,7 @@ class MediaWiki extends wikipedia
 
         if (! empty($ret['query']['pages'])) {
             foreach ($ret['query']['pages'] as $page) {
-                return $page['title'];
+                return $page['revisions'][0];
             }
         }
 

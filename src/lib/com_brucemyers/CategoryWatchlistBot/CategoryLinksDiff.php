@@ -155,8 +155,7 @@ class CategoryLinksDiff
     		if ($run_rev_id > $prev_rev_id) {
     		    $prev_rev_id = $run_rev_id;
     		    $ret = $wiki->getRevisionInfo($prev_rev_id);
-    		    $page = reset($ret['query']['pages']);
-    		    $prev_timestamp = $page['revisions'][0]['timestamp'];
+    		    $prev_timestamp = $ret['timestamp'];
     		}
     	}
 
