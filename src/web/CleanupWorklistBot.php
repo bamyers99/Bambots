@@ -15,11 +15,9 @@
  limitations under the License.
  */
 
-use com_brucemyers\Util\Config;
-use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\CleanupWorklistBot\CreateTables;
 use com_brucemyers\CleanupWorklistBot\ProjectPages;
-use com_brucemyers\Util\Logger;
+use com_brucemyers\MediaWiki\MediaWiki;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -146,75 +144,67 @@ function cat_test($project, $category_override)
  */
 function _test_category($category)
 {
-	$result = array('project_members' => '', 'project_cat' => '', 'found_importance' => false, 'found_class' => false);
-	$enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
-	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
-	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-
-	try {
-	   $dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
-	} catch (PDOException $e) {
-	    Logger::log($e->getMessage());
-	    throw new Exception('Connection error, see log for details');
-	}
-
-	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+	$result = ['project_members' => '', 'project_cat' => '', 'found_importance' => false, 'found_class' => false];
+	$mediawiki = new MediaWiki('https://en.wikipedia.org/w/api.php');
 	$project_members = '';
 
 	// category - x articles by quality (subcats)
-	$sth = $dbh_enwiki->prepare(ProjectPages::SQL_Articles_by_quality);
 	$ucfcategory = ucfirst($category);
 	$param = "{$ucfcategory}_articles_by_quality";
-	$sth->bindParam(1, $param);
-	$sth->execute();
+	$ret = $mediawiki->getProp('categoryinfo', ['titles' => "Category:$param"]);
 
-	if ($sth->fetch(PDO::FETCH_ASSOC)) {
-		$project_members = "$param (child categories)";
-		$project_cat = $param;
+	if (! empty($ret['query']['pages'])) {
+	    $page = reset($ret['query']['pages']);
+	    if ($page['categoryinfo']['pages'] > 0) {
+		    $project_members = "$param (child categories)";
+		    $project_cat = $param;
+	    }
 	}
-	$sth->closeCursor();
 
 	if (empty($project_members)) {
 		// category - WikiProject x articles
-		$sth = $dbh_enwiki->prepare(ProjectPages::SQL_WikiProject_articles);
-		$param = "WikiProject_{$category}_articles";
-		$sth->bindParam(1, $param);
-		$sth->execute();
+	    $param = "WikiProject_{$category}_articles";
+	    $ret = $mediawiki->getProp('categoryinfo', ['titles' => "Category:$param"]);
 
-		if ($sth->fetch(PDO::FETCH_ASSOC)) {
-			$project_members = $param;
-			$project_cat = $param;
+	    if (! empty($ret['query']['pages'])) {
+	        $page = reset($ret['query']['pages']);
+	        if ($page['categoryinfo']['pages'] - ($page['categoryinfo']['subcats'] + $page['categoryinfo']['files']) > 0) {
+	            $project_members = $param;
+			    $project_cat = $param;
+	        }
 		}
-		$sth->closeCursor();
 	}
 
 	if (empty($project_members)) {
 		// category - x (talk namespace)
-		$sth = $dbh_enwiki->prepare(ProjectPages::SQL_Category_talk);
 		$param = $category;
-		$sth->bindParam(1, $param);
-		$sth->execute();
+		$ret = $mediawiki->getList('categorymembers', [
+		    'titles' => "Category:$param",
+		    'cmnamespace' => 1,
+		    'cmtype' => 'page',
+		    'cmlimit' => 1
+		]);
 
-		if ($sth->fetch(PDO::FETCH_ASSOC)) {
-			$project_members = "$param (talk namespace)";
-			$project_cat = $param;
+		if (! empty($ret['query']['categorymembers'])) {
+		    $project_members = "$param (talk namespace)";
+		    $project_cat = $param;
 		}
-		$sth->closeCursor();
 	}
 
 	if (empty($project_members)) {
 		// category - x (article namespace)
-		$sth = $dbh_enwiki->prepare(ProjectPages::SQL_Category_article);
 		$param = $category;
-		$sth->bindParam(1, $param);
-		$sth->execute();
+		$ret = $mediawiki->getList('categorymembers', [
+		    'titles' => "Category:$param",
+		    'cmnamespace' => 0,
+		    'cmtype' => 'page',
+		    'cmlimit' => 1
+		]);
 
-		if ($sth->fetch(PDO::FETCH_ASSOC)) {
-			$project_members = "$param (article namespace)";
+		if (! empty($ret['query']['categorymembers'])) {
+		    $project_members = "$param (article namespace)";
 			$project_cat = $param;
 		}
-		$sth->closeCursor();
 	}
 
 
@@ -226,17 +216,16 @@ function _test_category($category)
 		$found_importance = false;
 
 		foreach (array_keys(CreateTables::$IMPORTANCES) as $importance) {
-			$sth = $dbh_enwiki->prepare(ProjectPages::SQL_Importance . ' LIMIT 1');
-			$sth->bindValue(1, "{$importance}-importance_{$category}_articles");
-			$sth->execute();
+			$ret = $mediawiki->getList('categorymembers', [
+			    'titles' => "Category:{$importance}-importance_{$category}_articles",
+			    'cmtype' => 'page',
+			    'cmlimit' => 1
+			]);
 
-			if ($sth->fetch(PDO::FETCH_ASSOC)) {
-				$found_importance = true;
-				$sth->closeCursor();
+			if (! empty($ret['query']['categorymembers'])) {
+			    $found_importance = true;
 				break;
 			}
-
-			$sth->closeCursor();
 		}
 
 		$result['found_importance'] = $found_importance;
@@ -250,17 +239,16 @@ function _test_category($category)
 			else
 				$theclass = "{$class}-Class_{$category}_articles";
 
-			$sth = $dbh_enwiki->prepare(ProjectPages::SQL_Class . ' LIMIT 1');
-			$sth->bindValue(1, $theclass);
-			$sth->execute();
+			$ret = $mediawiki->getList('categorymembers', [
+			    'titles' => "Category:$theclass",
+			    'cmtype' => 'page',
+			    'cmlimit' => 1
+			    ]);
 
-			if ($sth->fetch(PDO::FETCH_ASSOC)) {
-				$found_class = true;
-				$sth->closeCursor();
+			if (! empty($ret['query']['categorymembers'])) {
+			    $found_class = true;
 				break;
 			}
-
-			$sth->closeCursor();
 		}
 
 		$result['found_class'] = $found_class;
