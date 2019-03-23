@@ -512,9 +512,6 @@ class UIHelper
 			$templatename = substr($resolvedTitle, 9);
 		}
 
-		$results->closeCursor();
-		$results = null;
-
 		return $templatename;
 	}
 }

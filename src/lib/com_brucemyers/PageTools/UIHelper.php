@@ -47,7 +47,7 @@ class UIHelper
 	 */
 	public function getResults($params)
 	{
-		$results = array();
+		$results = [];
 		$pagename = str_replace(' ', '_', ucfirst(trim($params['page'])));
 		$wiki = $params['wiki'];
 
@@ -129,14 +129,14 @@ class UIHelper
 		$results['abstract'] = $value;
 
 		// Get the categories
-		$results['categories'] = array();
-	    $catparams = array(
+		$results['categories'] = [];
+	    $catparams = [
             'titles' => $pagename,
             'clprop' => 'hidden',
             'cllimit' => Config::get(MediaWiki::WIKIPAGEINCREMENT)
-        );
+        ];
 
-        $continue = array('continue' => '');
+        $continue = ['continue' => ''];
 
         while ($continue !== false) {
             $clparams = array_merge($catparams, $continue);
@@ -159,56 +159,27 @@ class UIHelper
 	        }
         }
 
-        // Get the wikidata match and/or likely matches
-        $dbh_wikidata = $this->serviceMgr->getDBConnection('wikidatawiki');
+        // Get the wikidata match
 
-		$pagename = str_replace('_', ' ', $pagename);
-        $sql = "SELECT ips_item_id FROM wb_items_per_site WHERE ips_site_id = ? AND ips_site_page = ?";
-        $sth = $dbh_wikidata->prepare($sql);
-        $sth->bindValue(1, $wiki);
-        $sth->bindValue(2, str_replace('_', ' ', $pagename));
-        $sth->execute();
+        $wikidata_ids = [];
+        $results['wikidata_exact_match'] = false;
 
-        $wikidata_ids = array();
+        $wdparams = [
+            'titles' => $pagename,
+            'ppprop' => 'wikibase_item'
+        ];
 
-        if ($row = $sth->fetch(PDO::FETCH_NUM)) {
-        	$id = "Q{$row[0]}";
-        	$wikidata_ids[$id] = array();
-        	$results['wikidata_exact_match'] = true;
-        } else {
-        	$results['wikidata_exact_match'] = false;
-        	$temppage = str_replace('_', ' ', $pagename);
-        	// Strip qualifier
-        	$temppage = preg_replace('! \([^\)]+\)!', '', $temppage);
+        $ret = $mediawiki->getProp('pageprops', $wdparams);
 
-        	// Look for an exact match
-			$temppage2 = $dbh_wikidata->quote($temppage);
-        	$exactsql = "SELECT ips_item_id, ips_site_id, 0 AS priority FROM wb_items_per_site WHERE ips_site_page = $temppage2";
+        if (! empty($ret['query']['pages'])) {
+            $page = reset($ret['query']['pages']);
 
-        	// Only use first and last words for partial match
-        	$pageparts = explode(' ', $temppage);
-        	if (count($pageparts) > 1) {
-        		$temppage = $pageparts[0] . ' %' . $pageparts[count($pageparts) - 1];
-        	}
-
-			$temppage = $dbh_wikidata->quote("$temppage%"); // allow qualifier
-
-        	$sql = "($exactsql) UNION (SELECT ips_item_id, ips_site_id, 1 AS priority FROM wb_items_per_site
-        		WHERE ips_site_page LIKE $temppage) ORDER BY priority LIMIT 10";
-        	$sth = $dbh_wikidata->prepare($sql);
-        	$sth->execute();
-        	$sth->setFetchMode(PDO::FETCH_NUM);
-
-        	while ($row = $sth->fetch()) {
-        		$id = "Q{$row[0]}";
-        		$site = $row[1];
-        		if (! isset($wikidata_ids[$id])) $wikidata_ids[$id] = array();
-        		$wikidata_ids[$id][] = $site;
-        	}
+            if (isset($page['pageprops']['wikibase_item'])) {
+                $id = $page['pageprops']['wikibase_item'];
+            	$wikidata_ids[$id] = [];
+            	$results['wikidata_exact_match'] = true;
+            }
         }
-
-        $sth->closeCursor();
-        $sth = null;
 
         // Retrieve the current wikidata revisions
         $wikidatawiki = $this->serviceMgr->getWikidataWiki();

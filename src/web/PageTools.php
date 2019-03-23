@@ -198,11 +198,6 @@ function display_data()
 			echo "<div><b>Official website:</b> <a href='$official_site'>$temp</a><div>";
 		}
 
-		// replication lag > 1 minute
-		$replag = $uihelper->getReplicationLag('wikidatawiki');
-		if (strlen($replag['replag']) > 10) $replag = "<div><b>Note</b>: The labs Wikidata database copy is lagging {$replag['replag']} behind the main Wikidata database.</div>";
-		else $replag = '';
-
 		// display wikidata
 		if ($results['wikidata_exact_match']) {
 			$itemid = $results['wikidata'][0]->getId();
@@ -217,10 +212,8 @@ function display_data()
 				echo "<div><b>Wikidata - Born:</b> $birthdates <b>Died:</b> $deathdates</div>";
 			}
 
-			if (! empty($replag)) echo $replag;
 		} else {
 			echo '<h3>Possible Wikidata matches</h3>';
-			if (! empty($replag)) echo $replag;
 
 			if (empty($results['wikidata'])) echo '<div>None</div>';
 			else {
