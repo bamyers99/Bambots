@@ -828,6 +828,7 @@ class MediaWiki extends wikipedia
      */
     public static function ISO8601TimestampToUnixTimestamp($timestamp)
     {
+        date_default_timezone_set('UTC');
         $dt = new DateTime($timestamp);
         return $dt->getTimestamp();
     }
@@ -840,6 +841,7 @@ class MediaWiki extends wikipedia
      */
     public static function unixTimestampToISO8601Timestamp($timestamp)
     {
+        date_default_timezone_set('UTC');
         return date('Y-m-d\TH:i:s\Z', $timestamp);
     }
 
