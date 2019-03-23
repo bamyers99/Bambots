@@ -16,13 +16,15 @@
  */
 
 use com_brucemyers\CleanupWorklistBot\CreateTables;
-use com_brucemyers\CleanupWorklistBot\ProjectPages;
 use com_brucemyers\MediaWiki\MediaWiki;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
+
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -179,7 +181,7 @@ function _test_category($category)
 		// category - x (talk namespace)
 		$param = $category;
 		$ret = $mediawiki->getList('categorymembers', [
-		    'titles' => "Category:$param",
+		    'cmtitle' => "Category:$param",
 		    'cmnamespace' => 1,
 		    'cmtype' => 'page',
 		    'cmlimit' => 1
@@ -195,7 +197,7 @@ function _test_category($category)
 		// category - x (article namespace)
 		$param = $category;
 		$ret = $mediawiki->getList('categorymembers', [
-		    'titles' => "Category:$param",
+		    'cmtitle' => "Category:$param",
 		    'cmnamespace' => 0,
 		    'cmtype' => 'page',
 		    'cmlimit' => 1
@@ -217,7 +219,7 @@ function _test_category($category)
 
 		foreach (array_keys(CreateTables::$IMPORTANCES) as $importance) {
 			$ret = $mediawiki->getList('categorymembers', [
-			    'titles' => "Category:{$importance}-importance_{$category}_articles",
+			    'cmtitle' => "Category:{$importance}-importance_{$category}_articles",
 			    'cmtype' => 'page',
 			    'cmlimit' => 1
 			]);
@@ -240,7 +242,7 @@ function _test_category($category)
 				$theclass = "{$class}-Class_{$category}_articles";
 
 			$ret = $mediawiki->getList('categorymembers', [
-			    'titles' => "Category:$theclass",
+			    'cmtitle' => "Category:$theclass",
 			    'cmtype' => 'page',
 			    'cmlimit' => 1
 			    ]);
