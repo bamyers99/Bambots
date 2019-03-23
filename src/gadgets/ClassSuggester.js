@@ -87,7 +87,7 @@ Bamyers99.ClassSuggester = {
 						instanceOfQidFound = true;
 						var qid = $( this ).find( 'a' ).attr( 'title' );
 						if ( qid ) {
-							var h = ' <a href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
+							var h = ' <a href="https://bambots.brucemyers.com/WikidataClasses.php?id=' +
 								qid + '&lang=' + lang +
 								'"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
 							$( this ).append( h );
@@ -185,7 +185,7 @@ Bamyers99.ClassSuggester = {
 
 		$.ajax({
 			  dataType: "jsonp",
-			  url: 'https://tools.wmflabs.org/bambots/WikidataClasses.php?callback=?',
+			  url: 'https://bambots.brucemyers.com/WikidataClasses.php?callback=?',
 			  data: opts,
 			  timeout: self.suggestTimeout
 			} )
@@ -362,7 +362,7 @@ Bamyers99.ClassSuggester = {
 
 		if ( type === 'subclass' ) {
 			var qid = params['qid'];
-			h += '<div><a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id= ' + qid +
+			h += '<div><a target="_blank" href="https://bambots.brucemyers.com/WikidataClasses.php?id= ' + qid +
 				'&lang=' + lang + '">Wikidata class browser</a></div>';
 
 		} else if ( type === 'suggestions' ) {
@@ -370,7 +370,7 @@ Bamyers99.ClassSuggester = {
 			if ( data.length === 0 ) {
 				reason = params.reason || '';
 				h += '<div>No suggestions</div><div>' + reason + '</div>';
-				h += '<div><a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?lang=' + lang +
+				h += '<div><a target="_blank" href="https://bambots.brucemyers.com/WikidataClasses.php?lang=' + lang +
 				'">Wikidata class browser</a></div>';
 			} else {
 				$.each( data, function ( k, v ) {
@@ -386,7 +386,7 @@ Bamyers99.ClassSuggester = {
 			if ( $.isEmptyObject( data ) ) {
 				reason = params.reason || '';
 				h += '<div>No suggestions</div><div>' + reason + '</div>';
-				h += '<div><a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?lang=' + lang +
+				h += '<div><a target="_blank" href="https://bambots.brucemyers.com/WikidataClasses.php?lang=' + lang +
 					'">Wikidata class browser</a></div>';
 
 			} else {
@@ -395,7 +395,7 @@ Bamyers99.ClassSuggester = {
 					star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
 					var label = '<span title="' + self.gc.htmlEncode( v.desc ) + '">' + self.gc.htmlEncode( v.label ) + '</span>';
 					h += '<div>' + label + star +
-						' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
+						' <a target="_blank" href="https://bambots.brucemyers.com/WikidataClasses.php?id=' +
 						v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
 					h += ' | <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
 						'data-qid="' + v.qid + '" data-label="' + self.gc.htmlEncode( v.label ) + '">Create claim</a>';
@@ -406,7 +406,7 @@ Bamyers99.ClassSuggester = {
 						star = v.catcnt ? ' <span style="color: #00f">&starf;</span>' : '';
 						var label = '<span title="' + self.gc.htmlEncode( v.desc ) + '">' + self.gc.htmlEncode( v.label ) + '</span>';
 						h += '<div>&boxur;&thinsp;' + label + star +
-							' <a target="_blank" href="https://tools.wmflabs.org/bambots/WikidataClasses.php?id=' +
+							' <a target="_blank" href="https://bambots.brucemyers.com/WikidataClasses.php?id=' +
 							v.qid + '&lang=' + lang + '"><span style="font-size: 16pt" title="view in class browser">&telrec;</span></a>';
 						h += ' | <a href="javascript:;" class="Bamyers99_ClassSuggester_createClaim" ' +
 							'data-qid="' + v.qid + '" data-label="' + self.gc.htmlEncode( v.label ) + '">Create claim</a>';

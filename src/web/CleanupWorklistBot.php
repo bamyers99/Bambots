@@ -170,7 +170,7 @@ function _test_category($category)
 
 	    if (! empty($ret['query']['pages'])) {
 	        $page = reset($ret['query']['pages']);
-	        if ($page['categoryinfo']['pages'] - ($page['categoryinfo']['subcats'] + $page['categoryinfo']['files']) > 0) {
+	        if ($page['categoryinfo']['pages'] > 0) {
 	            $project_members = $param;
 			    $project_cat = $param;
 	        }

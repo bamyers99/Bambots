@@ -22,6 +22,7 @@ use com_brucemyers\MediaWiki\WikidataItem;
 use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\Util\Logger;
+use com_brucemyers\MediaWiki\MediaWiki;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -509,79 +510,59 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	if (! $userlang) $userlang = 'en';
 	$userlang = preg_replace('!\W!', '', $userlang);
 
-	$wikiname = "{$lang}wiki";
-	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
-	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
-	if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
+	// Retrieve the pages 3 smallest categories with min 5 pages and no year in cat name
+	$mediawiki = new MediaWiki("https://$lang.wikipedia.org/w/api.php");
 
-	try {
-	    $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
-	    $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	} catch (PDOException $e) {
-	    Logger::log($e->getMessage());
+	$ret = $mediawiki->getProp('categoryinfo', [
+	    'titles' => $page,
+	    'generator' => 'categories',
+	    'gclshow' => '!hidden',
+	    'gcllimit' => '15'
+	]);
+
+	if (empty($ret['query']['pages'])) {
 	    echo "/**/$callback({});";
 	    return;
 	}
 
-	$page = str_replace(' ', '_', $page);
+	$cats = [];
 
-	// Retrieve the pages 3 smallest categories with min 5 pages and no year in cat name
-	$sql = 'SELECT cat_title ' .
-		' FROM page ' .
-		' JOIN categorylinks cl ON page.page_id = cl_from ' .
-		' JOIN category cat ON cl_to = cat_title ' .
-		' LEFT JOIN page catpage ON cat_title = catpage.page_title ' .
-		" LEFT JOIN page_props ON pp_page = catpage.page_id AND pp_propname = 'hiddencat' " .
-		' WHERE page.page_namespace = 0 AND page.page_title = ? ' .
-		' AND catpage.page_namespace = 14 AND pp_value IS NULL ' .
-		' AND cat_pages - (cat_subcats + cat_files) >= 5 ' .
-		" AND cat_title NOT REGEXP '[[:digit:]]{4}' " .
-		' ORDER BY cat_pages - (cat_subcats + cat_files) ' .
-		' LIMIT 3 ';
-
-	$sth = $dbh_wiki->prepare($sql);
-	$sth->bindValue(1, $page);
-
-	$sth->execute();
-	$sth->setFetchMode(PDO::FETCH_NAMED);
-	$cats = array();
-
-	while ($row = $sth->fetch()) {
-		$cats[$row['cat_title']] = array('qids' => array(), 'instanceofs' => array());
+	foreach ($ret['query']['pages'] as $qp) {
+	    $title = substr($qp['title'], 9);
+	    $page_cnt = $qp['categoryinfo']['pages'];
+	    if ($page_cnt < 5) continue;
+	    if (preg_match('!\d{4}!', $title)) continue;
+	    $cats[$title] = ['qids' => [], 'instanceofs' => [], 'page_cnt' => $page_cnt];
 	}
 
-	$sth->closeCursor();
+	uasort($cats, function ($a, $b) {
+	    if ($a['page_cnt'] > $b['page_cnt']) return 1;
+	    if ($a['page_cnt'] < $b['page_cnt']) return -1;
+	    return 0;
+	});
 
-	if (! $cats) {
-		echo "/**/$callback({});";
-		return;
-	}
+	$cats = array_slice($cats, 0, 3);
 
 	// Retrieve the category member qids
-	$qids = array();
+	$qids = [];
 
 	foreach ($cats as $cat => $dummy) {
-		$sql = 'SELECT pp_value ' .
-			' FROM categorylinks ' .
-			' JOIN page_props ON cl_from = pp_page ' .
-	       	" WHERE cl_to = ? AND pp_propname = 'wikibase_item' AND cl_type = 'page' " .
-	       	' ORDER BY cl_sortkey_prefix ' . // weed out * sort key etc
-			' LIMIT 10 ';
+	    $ret = $mediawiki->getProp('pageprops', [
+	        'ppprop' => 'wikibase_item',
+	        'generator' => 'categorymembers',
+	        'gcmtitle' => "Category:$cat",
+	        'gcmtype' => 'page',
+	        'gcmsort' => 'sortkey',
+	        'gcmlimit' => '10'
+	    ]);
 
-		$sth = $dbh_wiki->prepare($sql);
-		$sth->bindValue(1, $cat);
-
-		$sth->execute();
-		$sth->setFetchMode(PDO::FETCH_NUM);
-
-		while ($row = $sth->fetch()) {
-			$qid = $row[0];
-			$qids[$qid] = true; // removes dups
-			$cats[$cat]['qids'][] = $qid;
-		}
-
-		$sth->closeCursor();
+	    if (! empty($ret['query']['pages'])) {
+	        foreach ($ret['query']['pages'] as $qp) {
+	            $qid = $qp['pageprops']['wikibase_item'];
+	            $qids[$qid] = true; // removes dups
+	            $cats[$cat]['qids'][] = $qid;
+	        }
+	    }
 	}
 
 	if (! $qids) {
@@ -638,7 +619,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 
 	// Take the top 2 instanceofs per category
 
-	$instanceofs = array();
+	$instanceofs = [];
 
 	foreach ($cats as $data) {
 		$x = 0;
@@ -672,14 +653,14 @@ function perform_suggest($lang, $page, $callback, $userlang)
 		}
 	}
 
-	$sth->closeCursor();
-
 	if (! $qids) {
 		echo "/**/$callback({});";
 		return;
 	}
 
 	// Retrieve the child classes
+	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
 
