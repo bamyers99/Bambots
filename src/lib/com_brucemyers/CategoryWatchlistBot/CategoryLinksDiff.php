@@ -167,7 +167,7 @@ class CategoryLinksDiff
 
     	$pages = [];
 
-    	$lister = new RecentChangeLister($mediawiki, $prev_timestamp, MediaWiki::unixTimestampToISO8601Timestamp($cur_timestamp));
+    	$lister = new RecentChangeLister($wiki, $prev_timestamp, MediaWiki::unixTimestampToISO8601Timestamp($cur_timestamp));
 
     	while (($rcpages = $lister->getNextBatch()) !== false) {
     	    foreach ($rcpages as $rcpage) {
