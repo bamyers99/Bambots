@@ -156,6 +156,7 @@ class CategoryLinksDiff
     		    $prev_rev_id = $run_rev_id;
     		    $ret = $wiki->getRevisionInfo($prev_rev_id);
     		    $prev_timestamp = $ret['timestamp'];
+    		    echo "prev timestamp1 =" . $prev_timestamp . "\n";
     		}
     	}
 
@@ -165,6 +166,8 @@ class CategoryLinksDiff
         // Want the highest rev_id and the lowest rev_parent_id
 
     	$pages = [];
+    	echo "prev timestamp2 =" . $prev_timestamp . "\n";
+    	echo "cur timestamp =" . MediaWiki::unixTimestampToISO8601Timestamp($cur_timestamp) . "\n";
 
     	$lister = new RecentChangeLister($wiki, $prev_timestamp, MediaWiki::unixTimestampToISO8601Timestamp($cur_timestamp));
 
@@ -189,6 +192,8 @@ class CategoryLinksDiff
     	        }
     	    }
     	}
+
+    	echo "page count =" . count($pages) . "\n";
 
 		krsort($pages); // Reverse so that recent changes has articles first
 
