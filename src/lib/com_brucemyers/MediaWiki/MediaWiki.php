@@ -691,7 +691,7 @@ class MediaWiki extends wikipedia
     	$ret = $this->query("?action=query&format=php&prop=$proptype" . $addparams);
 
     	if (isset($ret['error'])) {
-    		throw new Exception("$listtype Error " . $ret['error']['info']);
+    	    throw new Exception("$proptype Error " . $ret['error']['info']);
     	}
 
     	return $ret;
@@ -884,7 +884,7 @@ class MediaWiki extends wikipedia
         $ret = $this->query($query);
 
         if (isset($ret['error'])) {
-            Logger::log('MediaWiki->resolvePageTitle Error ' . $ret['error']['info']);
+            Logger::log('MediaWiki->getRevisionInfo Error ' . $ret['error']['info']);
             return [];
         }
 

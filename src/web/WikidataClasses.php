@@ -528,7 +528,8 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	$cats = [];
 
 	foreach ($ret['query']['pages'] as $qp) {
-	    $title = substr($qp['title'], 9);
+	    $colonpos = strpos($qp['title'], ':');
+	    $title = substr($qp['title'], $colonpos + 1);
 	    $page_cnt = $qp['categoryinfo']['pages'];
 	    if ($page_cnt < 5) continue;
 	    if (preg_match('!\d{4}!', $title)) continue;
