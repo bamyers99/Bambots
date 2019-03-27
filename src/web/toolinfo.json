@@ -30,16 +30,6 @@
 	}
 ,
 	{
-	    "name" : "ReplicationLag",
-	    "title" : "Database replication lag",
-	    "description" : "Display the database replication lag for a wiki.",
-	    "url" : "https://tools.wmflabs.org/bambots/ReplicationLag.php",
-	    "keywords" : "database,lag,replication",
-	    "author" : "bamyers99",
-	    "repository" : "https://github.com/bamyers99/Bambots"
-	}
-,
-	{
 	    "name" : "CategoryWatchlistBot",
 	    "title" : "Category membership watchlist",
 	    "description" : "Watch category membership changes (page adds/removals).",
@@ -85,16 +75,6 @@
 	    "description" : "Displays wikidata class information including subclass and instance totals",
 	    "url" : "https://tools.wmflabs.org/bambots/WikidataClasses.php",
 	    "keywords" : "wikidata,class,statistics,stats",
-	    "author" : "bamyers99",
-	    "repository" : "https://github.com/bamyers99/Bambots"
-	}
-,
-	{
-	    "name" : "WikiProjectRecentChanges",
-	    "title" : "English WikiProject article recent changes",
-	    "description" : "Displays recent changes for WikiProject articles",
-	    "url" : "https://tools.wmflabs.org/bambots/WikiProjectRecentChanges.php",
-	    "keywords" : "enwiki,recent changes,wikiproject",
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
 	}
