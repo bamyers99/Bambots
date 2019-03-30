@@ -23,6 +23,7 @@ use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\MediaWiki\WikidataSPARQL;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -265,7 +266,7 @@ function display_form($subclasses)
 
 					$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
 						"  ?s wdt:P31 wd:Q{$params['id']} .\n" .
-						"  OPTIONAL { ?s p:$pid ?prop }\n" .
+						"  OPTIONAL { ?s wdt:$pid ?prop }\n" .
 						"  FILTER ( !bound(?prop) )\n" .
 						"  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
 						"}\nORDER BY ?sLabel");
@@ -394,11 +395,22 @@ function get_subclasses()
 		}
 
 		// Retrieve popular properties
-		$props = $wdwiki->getPropertySuggestions("Q{$params['id']}", $params['lang']);
 
-		foreach ($props['search'] as $prop) {
-		    if ($prop['id'] == 'P31') continue;
-		    $pop_props['Property:' . $prop['id']] = array($prop['label'], floor($prop['rating'] * 100));
+		// Get an instance of this class
+		$wdsparql = new WikidataSPARQL();
+		$ret = $wdsparql->query("SELECT DISTINCT %3Fs WHERE {%0A%20 %3Fs wdt%3AP31 wd%3AQ{$params['id']} .%0A}%0ALIMIT 1");
+
+		if (! empty($ret)) {
+		    $uri = $ret[0]['s']['value'];
+		    preg_match('!entity/(.+)!', $uri, $matches);
+		    $instanceid = $matches[1];
+
+    		$props = $wdwiki->getPropertySuggestions($instanceid, $params['lang']);
+
+    		foreach ($props['search'] as $prop) {
+    		    if ($prop['id'] == 'P31') continue;
+    		    $pop_props['Property:' . $prop['id']] = array($prop['label'], floor($prop['rating'] * 100));
+    		}
 		}
 	}
 
