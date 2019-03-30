@@ -398,7 +398,13 @@ function get_subclasses()
 
 		// Get an instance of this class
 		$wdsparql = new WikidataSPARQL();
-		$ret = $wdsparql->query("SELECT DISTINCT %3Fs WHERE {%0A%20 %3Fs wdt%3AP31 wd%3AQ{$params['id']} .%0A}%0ALIMIT 1");
+		$sparql = <<<EOT
+SELECT DISTINCT ?s WHERE {
+  ?s wdt:P31 wd:Q{$params['id']} .
+}
+LIMIT 1
+EOT;
+		$ret = $wdsparql->query(rawurlencode($sparql));
 
 		if (! empty($ret)) {
 		    $uri = $ret[0]['s']['value'];
