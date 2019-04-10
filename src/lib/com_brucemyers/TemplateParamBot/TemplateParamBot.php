@@ -739,8 +739,9 @@ class TemplateParamBot
     			$tmplid = substr($parts[0], 1);
     			$pagecnt = $parts[1];
     			$instancecnt = $parts[2];
+    			$tmplname = $parts[3];
 
-    			$sth_template->execute(array($tmplid, $tmplid, $pagecnt, $instancecnt, -1, $last_update, 0, 'N'));
+    			$sth_template->execute(array($tmplid, $tmplname, $pagecnt, $instancecnt, -1, $last_update, 0, 'N'));
 
     			++$templatecnt;
     			$templateinstancecnt += $instancecnt;
@@ -814,30 +815,6 @@ class TemplateParamBot
 				templateinstancecnt = ? WHERE wikiname = ?');
     		$sth->execute(array(0, $dumpdate, $templatecnt, $templateinstancecnt, $wikiname));
     	}
-
-    	$sql = "SELECT id FROM `{$wikiname}_templates`";
-    	$sth = $dbh_tools->query($sql);
-
-    	$ids = array();
-
-    	while ($row = $sth->fetch(PDO::FETCH_NUM)) {
-    		$ids[] = $row[0];
-    	}
-
-    	$ids = implode(',', $ids);
-
-    	$dbh_wiki = $this->serviceMgr->getDBConnection($wikiname);
-    	$sql = "SELECT page_id, page_title FROM `{$wikiname}_p`.page WHERE page_id IN ($ids)";
-		$sth = $dbh_wiki->query($sql);
-
-		while ($row = $sth->fetch(PDO::FETCH_NUM)) {
-			$id = $row[0];
-			$title = str_replace('_', ' ', $row[1]);
-
-    		$sql = "UPDATE `{$wikiname}_templates` SET `name` = ? WHERE id = $id";
-			$sth2 = $dbh_tools->prepare($sql);
-    		$sth2->execute(array($title));
-		}
 
     	return '';
     }
