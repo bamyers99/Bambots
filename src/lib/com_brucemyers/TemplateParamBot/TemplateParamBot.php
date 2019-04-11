@@ -150,18 +150,28 @@ class TemplateParamBot
 
         	// Get the template data
         	$wikilang = substr($wikiname, 0, -4);
-        	$domain = "$wikilang.wikipedia.org";
-        	$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+        	if ($wikilang == 'commons') {
+        	    $domain = "commons.wikimedia.org";
+        	} else {
+        	    $domain = "$wikilang.wikipedia.org";
+        	}
+        	$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
         	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
         	$template = $sth->fetch(PDO::FETCH_ASSOC);
         	$templname = $template['name'];
 
-        	$ret = $mediawiki->getpage('Template:' . $templname . '/doc');
+        	$query = '?action=templatedata&format=php&titles=' . urlencode('Template:' . $templname);
 
-        	if (! empty($ret)) {
-        	    preg_match('!<templatedata>\s*(.+?)\s*</templatedata>!s', $ret, $matches);
-        	    $templatedata = new TemplateData($matches[1]);
+        	$ret = $mediawiki->query($query);
+
+        	if (isset($ret['error'])) {
+        	    Logger::log('TemplateParamBot->processLoads Error ' . $ret['error']['info']);
+        	    $ret = [];
+        	}
+
+        	if (! empty($ret) && ! empty($ret['pages'])) {
+        	    $templatedata = new TemplateData(null, reset($ret['pages']));
     			$templatedata->enhanceConfig($templateParamConfig->getTemplate($templname));
         		$paramdefs = $templatedata->getParams();
         	} else {

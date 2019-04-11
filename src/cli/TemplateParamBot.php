@@ -65,6 +65,6 @@ try {
     $msg = $ex->getMessage() . "\n" . $ex->getTraceAsString();
     Logger::log($msg);
     $headers  = 'MIME-Version: 1.0' . "\r\n";
-    $headers .= 'From: WMF Labs <admin@brucemyers.com>' . "\r\n";
+    $headers .= 'From: Bambots <admin@brucemyers.com>' . "\r\n";
     mail(Config::get(TemplateParamBot::ERROREMAIL), 'TemplateParamBot failed', $msg, $headers);
 }
