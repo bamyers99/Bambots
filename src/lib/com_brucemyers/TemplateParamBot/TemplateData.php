@@ -21,19 +21,23 @@ class TemplateData
 {
 	protected $data;
 
-	public function __construct($json)
+	public function __construct($json, $phpdata = null)
 	{
-		if (strlen($json) > 1 && substr($json, 0, 2) === "\037\213" ) {
-//			$json = gzdecode($json); // gzdecode not available in < php 5.4
-			$json = gzinflate(substr($json,10,-8));
-		}
+	    if (! empty($phpdata)) {
+	        $this->data = $phpdata;
+	    } else {
+       		if (strlen($json) > 1 && substr($json, 0, 2) === "\037\213" ) {
+//			    $json = gzdecode($json); // gzdecode not available in < php 5.4
+    			$json = gzinflate(substr($json,10,-8));
+    		}
 
-		$this->data = json_decode($json, true);
-		if ($this->data === NULL) {
-			echo $json;
-			echo '<br />json_decode error = ' . json_last_error() . '<br />';
-			$this->data = array();
-		}
+    		$this->data = json_decode($json, true);
+    		if ($this->data === NULL) {
+    			echo $json;
+    			echo '<br />json_decode error = ' . json_last_error() . '<br />';
+    			$this->data = array();
+    		}
+	    }
 
 		// Normalization
 		if (isset($this->data['params'])) {

@@ -20,7 +20,6 @@ namespace com_brucemyers\TemplateParamBot;
 use com_brucemyers\Util\L10N;
 use com_brucemyers\Util\Config;
 use PDO;
-use com_brucemyers\MediaWiki\MediaWiki;
 
 class UIHelper
 {
@@ -117,14 +116,25 @@ class UIHelper
 
 			// Fetch the TemplateData
 			$wikilang = substr($wikiname, 0, -4);
-			$domain = "$wikilang.wikipedia.org";
+			if ($wikilang == 'commons') {
+			    $domain = "commons.wikimedia.org";
+			} else {
+			    $domain = "$wikilang.wikipedia.org";
+			}
+
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
 
-			$ret = $mediawiki->getpage('Template:' . $params['template'] . '/doc');
+			$query = '?action=templatedata&format=php&titles=' . urlencode('Template:' . $params['template']);
 
-			if (! empty($ret)) {
-			    preg_match('!<templatedata>\s*(.+?)\s*</templatedata>!s', $ret, $matches);
-			    $info['TemplateData'] = new TemplateData($matches[1]);
+			$ret = $mediawiki->query($query);
+
+			if (isset($ret['error'])) {
+			    Logger::log('TemplateParamBot->UIHelper->getTemplate Error ' . $ret['error']['info']);
+			    $ret = [];
+			}
+
+			if (! empty($ret) && ! empty($ret['pages'])) {
+			    $info['TemplateData'] = new TemplateData(null, reset($ret['pages']));
 			} else {
 				$wikis = $this->getWikis();
 				$l10n = new L10N($wikis[$wikiname]['lang']);
