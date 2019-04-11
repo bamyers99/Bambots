@@ -234,8 +234,12 @@ class UIHelper
 			}
 
 			$wikilang = substr($wikiname, 0, -4);
-			$domain = "$wikilang.wikipedia.org";
-			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+			if ($wikilang == 'commons') {
+			    $domain = "commons.wikimedia.org";
+			} else {
+			    $domain = "$wikilang.wikipedia.org";
+			}
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
 			$ret = $mediawiki->getPagesByID($page_ids, false);
 
@@ -295,8 +299,12 @@ class UIHelper
 			}
 
 			$wikilang = substr($wikiname, 0, -4);
-			$domain = "$wikilang.wikipedia.org";
-			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+			if ($wikilang == 'commons') {
+			    $domain = "commons.wikimedia.org";
+			} else {
+			    $domain = "$wikilang.wikipedia.org";
+			}
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
 			$ret = $mediawiki->getPagesByID($page_ids, false);
 
@@ -355,8 +363,12 @@ class UIHelper
 			}
 
 			$wikilang = substr($wikiname, 0, -4);
-			$domain = "$wikilang.wikipedia.org";
-			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+			if ($wikilang == 'commons') {
+			    $domain = "commons.wikimedia.org";
+			} else {
+			    $domain = "$wikilang.wikipedia.org";
+			}
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
 			$ret = $mediawiki->getPagesByID(array_keys($page_ids), false);
 
