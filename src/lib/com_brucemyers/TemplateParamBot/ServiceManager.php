@@ -79,15 +79,19 @@ class ServiceManager
 	 * Get a MediaWiki instance.
 	 *
 	 * @param String $domain
+	 * @param bool $login
 	 * @return MediaWiki
 	 */
-	public function getMediaWiki($domain)
+	public function getMediaWiki($domain, $login = true)
 	{
 	    $url = "https://$domain/w/api.php";
 	    $wiki = new MediaWiki($url);
-	    $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
-	    $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
-	    $wiki->login($username, $password);
+
+	    if ($login) {
+	       $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+	       $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+	       $wiki->login($username, $password);
+	    }
 
 		return $wiki;
 	}

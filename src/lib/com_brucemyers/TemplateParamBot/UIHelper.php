@@ -122,7 +122,7 @@ class UIHelper
 			    $domain = "$wikilang.wikipedia.org";
 			}
 
-			$mediawiki = $this->serviceMgr->getMediaWiki($domain);
+			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
 			$query = '?action=templatedata&format=php&titles=' . urlencode('Template:' . $params['template']);
 
