@@ -197,7 +197,7 @@ function dumpTemplateRedirects($wikiname)
     $hndl = fopen($outpath, 'w');
 
     $sql = "SELECT page_title, rd_title FROM page, redirect " .
-   	    " WHERE page_namespace = 10 AND page_id = rd_from AND page_is_redirect = 1";
+   	    " WHERE page_namespace = 10 AND page_id = rd_from AND page_is_redirect = 1 AND rd_namespace = 10";
 
     $results = $dbh_wiki->query($sql);
     $results->setFetchMode(PDO::FETCH_NUM);
