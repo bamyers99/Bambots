@@ -51,13 +51,22 @@ try {
 		$action = $argv[1];
 		switch ($action) {
 		    case 'cattree':
-		    	if ($argc < 4) {
-		    		echo 'Wiki and category required';
-		    		exit;
-		    	}
-		    	printCatTree($argv[2], $argv[3]);
-		    	exit;
-		    	break;
+		        if ($argc < 4) {
+		            echo 'Wiki and category required';
+		            exit;
+		        }
+		        printCatTree($argv[2], $argv[3]);
+		        exit;
+		        break;
+
+		    case 'tmplredirects':
+		        if ($argc < 3) {
+		            echo 'Wiki required';
+		            exit;
+		        }
+		        dumpTemplateRedirects($argv[2]);
+		        exit;
+		        break;
 
 		    default:
 		    	echo 'Unknown action = ' . $action;
@@ -89,7 +98,7 @@ try {
     $msg = $ex->getMessage() . "\n" . $ex->getTraceAsString();
     Logger::log($msg);
     $headers  = 'MIME-Version: 1.0' . "\r\n";
-    $headers .= 'From: WMF Labs <admin@brucemyers.com>' . "\r\n";
+    $headers .= 'From: Bambots <admin@brucemyers.com>' . "\r\n";
     mail(Config::get(CategoryWatchlistBot::ERROREMAIL), 'CategoryWatchlistBot failed', $msg, $headers);
 }
 
@@ -166,5 +175,37 @@ function traverseCats(&$dbh_wiki, &$foundcats, $searchcats, $depth)
 
 			traverseCats($dbh_wiki, $foundcats, $subcats, $depth - 1);
 		}
+	}
+
+	/**
+	 * Dump template redirects
+	 *
+	 * @param string $wikiname
+	 */
+	function dumpTemplateRedirects($wikiname)
+	{
+	    $wiki_host = Config::get(CategoryWatchlistBot::WIKI_HOST);
+	    if (empty($wiki_host)) $wiki_host = "$wikiname.analytics.db.svc.eqiad.wmflabs";
+	    $user = Config::get(CategoryWatchlistBot::LABSDB_USERNAME);
+	    $pass = Config::get(CategoryWatchlistBot::LABSDB_PASSWORD);
+	    $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	    $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+	    $outpath = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . $wikiname . 'TemplateRedirects.tsv';
+	    $hndl = fopen($outpath, 'w');
+
+	    $sql = "SELECT page_title, rd_title FROM page, redirect " .
+	   	    " WHERE page_namespace = 10 AND page_id = rd_from AND page_is_redirect = 1";
+
+	    $results = $dbh_wiki->query($sql);
+	    $results->setFetchMode(PDO::FETCH_NUM);
+
+	    while ($row = $results->fetch()) {
+	        $oldname = str_replace('_', ' ', $row[0]);
+	        $newname = str_replace('_', ' ', $row[1]);
+	        fwrite($hndl, "$oldname\t$newname\n");
+	    }
+
+	    fclose($hndl);
 	}
 }

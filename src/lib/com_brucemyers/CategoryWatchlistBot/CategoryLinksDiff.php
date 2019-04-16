@@ -310,6 +310,10 @@ class CategoryLinksDiff
 
 			$this->parseCategoriesTemplates($revtext1, $currcats, $currtemplates, $this->categoryNS);
 			$this->parseCategoriesTemplates($revtext2, $prevcats, $prevtemplates, $this->categoryNS);
+			$this->followTemplateRedirects($wikiname, $prevtemplates, $currtemplates);
+			// Remove dups after redirect replacement
+			$prevtemplates = array_unique($prevtemplates);
+			$currtemplates = array_unique($currtemplates);
 
 			// Write diffs
 			$catchanges = array();
@@ -404,5 +408,55 @@ class CategoryLinksDiff
    			$templatename = $template['name'];
    			$templates[$templatename] = $templatename; // Removes dups
    		}
+    }
+
+    protected function followTemplateRedirects($wikiname, &$prevtemplates, &$currtemplates)
+    {
+        $dbh_tools = $this->serviceMgr->getDBConnection('tools');
+
+        $alltemplates = array();
+
+        foreach ($prevtemplates as $templatename) {
+            $alltemplates[$templatename] = true; // Removes dups
+        }
+
+        foreach ($currtemplates as $templatename) {
+            $alltemplates[$templatename] = true; // Removes dups
+        }
+
+        if (empty($alltemplates)) return;
+
+        $escapednames = array();
+
+        foreach ($alltemplates as $templatename => $dummy) {
+            $escapednames[] = $dbh_tools->quote($templatename);
+        }
+
+        $escapednames = implode(',', $escapednames);
+
+        $sql = "SELECT from_title, to_title FROM {$wikiname}_tmplredirects " .
+            " WHERE from_title IN ($escapednames)";
+
+        $results = $dbh_tools->query($sql);
+        $results->setFetchMode(PDO::FETCH_NUM);
+
+        $redirects = [];
+
+        while ($row = $results->fetch()) {
+            $oldname = $row[0];
+            $redirects[$oldname] = $row[1];
+        }
+
+        $results->closeCursor();
+        $results = null;
+
+        // Replace redirects
+        foreach ($prevtemplates as $oldname => $dummy) {
+            if (isset($redirects[$oldname])) $prevtemplates[$oldname] = $redirects[$oldname];
+        }
+
+        foreach ($currtemplates as $oldname => $dummy) {
+            if (isset($redirects[$oldname])) $currtemplates[$oldname] = $redirects[$oldname];
+        }
     }
 }
