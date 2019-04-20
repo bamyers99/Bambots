@@ -146,7 +146,7 @@ function display_form($navels)
 
 			foreach ($navels['data'] as $key => $row) {
 				if ($row[0] < 0) {
-					$misc[] = $edit_types[$row[0]] . ": {$row[1]} (last month: {$row[2]})<br />\n";
+				    $misc[] = $edit_types[$row[0]] . ": " . intl_num_format($row[1]) . " (last month: " . intl_num_format($row[2]) . "<br />\n";
 					unset($navels['data'][$key]);
 				}
 			}
@@ -164,14 +164,22 @@ function display_form($navels)
 				return strcmp(strtolower($a[3]), strtolower($b[3]));
 			});
 
+			$propaddcnttot = 0;
+			$propaddcntmth = 0;
+
 			foreach ($navels['data'] as $row) {
+			    $propaddcnttot += $row[1];
+			    $propaddcntmth += $row[2];
 				$url = "/NavelGazer.php?property=P" . $row[0];
 				$term_text = htmlentities($row[3], ENT_COMPAT, 'UTF-8');
 				echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td>{$row[4]}</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 					"</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 			}
 
-			echo "</tbody></table>\n";
+			echo "</tbody>\n";
+			echo "<tfoot><tr><td>Total</td><td>&nbsp;</td><td style='text-align:right'>" . intl_num_format($propaddcnttot) .
+			     "</td><td style='text-align:right'>" . intl_num_format($propaddcntmth) . "</td></tr></tfoot>\n";
+			echo "</table>\n";
 
 			if (! empty($navels['langdata'])) {
 			    echo '<div><b>Label, description, alias, sitelink additions</b></div>';
