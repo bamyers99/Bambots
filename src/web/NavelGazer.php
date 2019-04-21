@@ -207,9 +207,14 @@ function display_form($navels)
 		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 		    foreach ($navels['data'] as $row) {
-		        $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
-		        $url = "/NavelGazer.php?username=" . urlencode($row[0]);
-		        echo "<tr><td><a href='$url'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+		        if (empty($row[0])) {
+		            $col1 = 'anonymous';
+		        } else {
+		            $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+		            $url = "/NavelGazer.php?username=" . urlencode($row[0]);
+		            $col1 = "<a href='$url'>$user_encoded</a>";
+		        }
+		        echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 		        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 		    }
 

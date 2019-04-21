@@ -56,7 +56,7 @@ while (! feof($hndl)) {
 	} elseif (preg_match('!^/timestamp=(\d{4}-\d{2})!', $buffer, $matches)) {
 		$timestamp = $matches[1];
 	} elseif (preg_match('!^/comment=([^\n]+)!', $buffer, $matches)) {
-		if ($username === false) continue;
+	    if ($username === false) $username = ''; // IP edit
 		$comment = $matches[1];
 
 		foreach ($edittypes as $edittype => $typevalue) {
