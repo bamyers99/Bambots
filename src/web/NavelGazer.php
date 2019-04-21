@@ -146,7 +146,7 @@ function display_form($navels)
 
 			foreach ($navels['data'] as $key => $row) {
 				if ($row[0] < 0) {
-				    $misc[] = $edit_types[$row[0]] . ": " . intl_num_format($row[1]) . " (last month: " . intl_num_format($row[2]) . "<br />\n";
+				    $misc[] = $edit_types[$row[0]] . ": " . intl_num_format($row[1]) . " (last month: " . intl_num_format($row[2]) . ")<br />\n";
 					unset($navels['data'][$key]);
 				}
 			}
