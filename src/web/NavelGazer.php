@@ -61,11 +61,42 @@ function display_form($navels)
 		-4 => 'Site link additions',
 		-5 => 'Merges',
 	    -6 => 'Lexeme: form additions',
-	    -7 => 'Lexeme: form representations',
-	    -8 => 'Lexeme: form grammatical features',
+	    -7 => 'Lexeme: representation additions',
+	    -8 => 'Lexeme: grammatical feature additions',
 	    -9 => 'Lexeme: sense additions',
-	    -10 => 'Lexeme: sense glosses'
+	    -10 => 'Lexeme: gloss additions',
+	    -11 => 'Reference additions',
+	    -12 => 'Qualifier additions',
+	    -13 => 'Label changes',
+	    -14 => 'Description changes',
+	    -15 => 'Property deletions',
+	    -16 => 'Property changes',
+	    -17 => 'Undos',
+	    -18 => 'Item creations',
+	    -19 => 'Item changes',
+	    -20 => 'Site link deletions',
+	    -21 => 'Description deletions',
+	    -22 => 'Alias deletions',
+	    -23 => 'Restores',
+	    -24 => 'Label deletions',
+	    -25 => 'Site link changes',
+	    -26 => 'Reference deletions',
+	    -27 => 'Alias changes',
+	    -28 => 'Reference changes',
+	    -29 => 'Qualifier changes',
+	    -30 => 'Lexeme: representation / grammatical feature changes',
+	    -31 => 'Lexeme: form deletions',
+	    -32 => 'Lexeme: representation changes',
+	    -33 => 'Lexeme: representation deletions',
+	    -34 => 'Lexeme: grammatical feature deletions',
+	    -35 => 'Lexeme: sense deletions',
+	    -36 => 'Lexeme: gloss changes',
+	    -37 => 'Lexeme: gloss deletions',
+	    -38 => 'Qualifier deletions',
+	    -39 => 'Lexeme: creations'
 	);
+
+	asort($edit_types);
 
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -103,19 +134,18 @@ function display_form($navels)
 			}
 		}
 		?></h2>
-		<h3>users statement addition counts</h3>
+		<h3>users edit action counts</h3>
         <form action="NavelGazer.php" method="post">
         <table class="form">
         <tr><td><b>Username</b></td><td><input id="username" name="username" type="text" size="10" value="<?php echo $params['username'] ?>" /></td></tr>
         <tr><td colspan='2'>or</td></tr>
         <tr><td><b>Property</b></td><td><input id="property" name="property" type="text" size="10" value="<?php if (! empty($params['property'])) echo 'P' . $params['property'] ?>" /> example: P31</td></tr>
-        <tr><td>Pseudo properties</td><td><?php
+        <tr><td>Pseudo properties</td><td><select name='pseudoprop' onchange='$("#property").val($(this).val())'><?php
+            echo "<option value=''>&nbsp;</option>";
          	foreach ($edit_types as $key => $edit_type) {
-         		if ($key != -1) echo ', ';
-        		if ($key == -3 || $key == -6 || $key == -8) echo '<br />';
-        		echo "P$key = {$edit_type}";
+        		echo "<option value='P$key'>$edit_type (P$key)</option>";
         	}
-        ?></td></tr>
+        ?></select></td></tr>
         <tr><td colspan='2'>or</td></tr>
         <tr><td><b>Language code</b></td><td><input id="langadd" name="langadd" type="text" size="10" value="<?php echo $params['langadd'] ?>" /> (label, description, alias, sitelink additions)</td></tr>
         <tr><td colspan='2'><hr /></td></tr>
@@ -142,22 +172,16 @@ function display_form($navels)
 			if (! empty($params['property'])) echo "Clear the Username field to do a property search<br />\n";
 			echo $navels['dataasof'] . "<sup>[2]</sup><br /><br />\n";
 
-			$misc = array();
+			$misc = [];
 
 			foreach ($navels['data'] as $key => $row) {
-				if ($row[0] < 0) {
-				    $misc[] = $edit_types[$row[0]] . ": " . intl_num_format($row[1]) . " (last month: " . intl_num_format($row[2]) . ")<br />\n";
-					unset($navels['data'][$key]);
-				}
+			    if ($row[0] < 0) {
+			        $misc[] = $row;
+			        unset($navels['data'][$key]);
+			    }
 			}
 
-			if (! empty($misc)) {
-				sort($misc);
-				foreach ($misc as $statement) {
-					echo $statement;
-				}
-			}
-
+			echo "<h3>Property additions</h3>";
 			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Datatype</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			usort($navels['data'], function($a, $b) {
@@ -181,8 +205,22 @@ function display_form($navels)
 			     "</td><td style='text-align:right'>" . intl_num_format($propaddcntmth) . "</td></tr></tfoot>\n";
 			echo "</table>\n";
 
+			if (! empty($misc)) {
+			    echo "<h3>Other actions</h3>";
+			    echo "<table class='wikitable tablesorter'><thead><tr><th>Action</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
+
+			    foreach ($misc as $row) {
+			        $url = "/NavelGazer.php?property=P" . $row[0];
+			        $term_text = $edit_types[$row[0]];
+			        echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+			        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
+			    }
+
+			    echo "</tbody></table>\n";
+			}
+
 			if (! empty($navels['langdata'])) {
-			    echo '<div><b>Label, description, alias, sitelink additions</b></div>';
+			    echo '<h3>Label, description, alias, sitelink additions</h3>';
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Language</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['langdata'] as $row) {
@@ -236,11 +274,19 @@ function display_form($navels)
     	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th><th class='unsortable'>Property additions</th></tr></thead><tbody>\n";
 
     	    foreach ($navels['data'] as $row) {
-    	        $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
-    	        $url = "https://www.wikidata.org/wiki/User:" . str_replace(' ', '_', $row[0]);
-    	        $userurl = "/NavelGazer.php?username=" . urlencode($row[0]);
-    	        echo "<tr><td><a href='$url' class='external'>$user_encoded</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
-    	        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td><td style='text-align:center'><a href='$userurl'>view</a></td></tr>\n";
+    	        if (empty($row[0])) {
+    	            $col1 = 'anonymous';
+    	            $col4 = '&nbsp';
+    	        } else {
+    	            $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+    	            $url = "https://www.wikidata.org/wiki/User:" . str_replace(' ', '_', $row[0]);
+    	            $col1 = "<a href='$url' class='external'>$user_encoded</a>";
+    	            $userurl = "/NavelGazer.php?username=" . urlencode($row[0]);
+    	            $col4 = "<a href='$userurl'>view</a>";
+    	        }
+
+    	        echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+    	        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td><td style='text-align:center'>$col4</td></tr>\n";
     	    }
 
     	    echo "</tbody></table>\n";
