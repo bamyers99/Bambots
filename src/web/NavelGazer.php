@@ -240,6 +240,7 @@ function display_form($navels)
 		        $term_text = htmlentities($navels['property_label'], ENT_COMPAT, 'UTF-8');
 		        echo "Property: <a href='$url' class='external'>$term_text (P{$params['property']})</a><br />\n";
 		    }
+		    echo "Total count: " . intl_num_format($navels['createtotal']) . " Last month: " . intl_num_format($navels['monthtotal']) . "<br />\n";
 		    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
 		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
@@ -307,6 +308,8 @@ function get_navels()
 	$langdata = [];
 	$property_label = '';
 	$wdwiki = new WikidataWiki();
+	$createtotal = 0;
+	$monthtotal = 0;
 
 	if (empty($params['username']) && empty($params['property']) && empty($params['langadd'])) return $return;
 
@@ -388,15 +391,21 @@ function get_navels()
 
 		$sql = 'SELECT user_name, create_count, month_count ' .
 				' FROM s51454__wikidata.navelgazer ' .
-				' WHERE property_id = ? ORDER by create_count DESC LIMIT 100';
+				' WHERE property_id = ? ORDER by create_count DESC';
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, (int)$params['property']);
 
 		$sth->execute();
+		$count = 0;
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$data[] = [$row['user_name'], $row['create_count'], $row['month_count']];
+		    if ($count < 100) {
+			    $data[] = [$row['user_name'], $row['create_count'], $row['month_count']];
+		    }
+		    $createtotal += $row['create_count'];
+		    $monthtotal += $row['month_count'];
+		    ++$count;
 		}
 
 	} elseif (! empty($params['langadd'])) {
@@ -446,7 +455,9 @@ EOT;
 	    }
 	}
 
-	$return = ['data' => $data, 'dataasof' => $dataasof, 'property_label' => $property_label, 'langdata' => $langdata];
+	$return = ['data' => $data, 'dataasof' => $dataasof, 'property_label' => $property_label, 'langdata' => $langdata,
+	    'createtotal' => $createtotal, 'monthtotal' => $monthtotal
+	];
 
 	return $return;
 }
