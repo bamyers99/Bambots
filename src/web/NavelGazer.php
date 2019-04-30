@@ -69,11 +69,11 @@ function display_form($navels)
 	    -12 => 'Qualifier additions',
 	    -13 => 'Label changes',
 	    -14 => 'Description changes',
-	    -15 => 'Property deletions',
-	    -16 => 'Property changes',
+	    -15 => 'Claim deletions',
+	    -16 => 'Claim changes',
 	    -17 => 'Undos',
-	    -18 => 'Item creations',
-	    -19 => 'Item changes',
+	    -18 => 'Item/Property creations',
+	    -19 => 'Item/Property changes',
 	    -20 => 'Site link deletions',
 	    -21 => 'Description deletions',
 	    -22 => 'Alias deletions',
@@ -93,7 +93,8 @@ function display_form($navels)
 	    -36 => 'Lexeme: gloss changes',
 	    -37 => 'Lexeme: gloss deletions',
 	    -38 => 'Qualifier deletions',
-	    -39 => 'Lexeme: creations'
+	    -39 => 'Lexeme: creations',
+	    -40 => 'Lexeme: merges'
 	);
 
 	asort($edit_types);

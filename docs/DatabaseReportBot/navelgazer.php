@@ -37,6 +37,7 @@ $edittypes = [
     '!^wbeditentity-create-sense:!' => -9,
     '!^add-sense-glosses:!' => -10,
     '!^wbsetreference-add:!' => -11,
+    '!^wbsetreference:!' => -11,
     '!^wbsetqualifier-add:!' => -12,
     '!^wbsetlabel-set:!' => -13,
     '!^wbsetlabeldescriptionaliases:!' => -13,
@@ -46,6 +47,11 @@ $edittypes = [
     '!^undo:!' => -17,
     '!^wbeditentity-create:!' => -18,
     '!^wbeditentity-create-item:!' => -18,
+    '!^wbeditentity-create-property:!' => -18,
+    '!^wbeditentity:!' => -18,
+    '!^special-create-item:!' => -18,
+    '!^special-create-property:!' => -18,
+    '!^wbcreate-new:!' => -18,
     '!^wbeditentity-update:!' => -19,
     '!^wbsetsitelink-remove:!' => -20,
     '!^wbsetdescription-remove:!' => -21,
@@ -72,7 +78,8 @@ $edittypes = [
     '!^update-sense-elements:!' => -36,
     '!^remove-sense-glosses:!' => -37,
     '!^wbremovequalifiers-remove:!' => -38,
-    '!^wbeditentity-create-lexeme:!' => -39
+    '!^wbeditentity-create-lexeme:!' => -39,
+    '!^wblmergelexemes-from:!' => -40
 ];
 
 DEFINE('MONTHLY_INCREMENT', 0x100000000);
@@ -101,14 +108,17 @@ while (! feof($hndl)) {
 	} elseif (preg_match('!^/timestamp=(\d{4}-\d{2})!', $buffer, $matches)) {
 		$timestamp = $matches[1];
 	} elseif (preg_match('!^/comment=/\\* ([^\n]+)!', $buffer, $matches)) {
-	    if (++$count % 1000000 == 0) echo "Processed $count\n";
+	    if (++$count % 10000000 == 0) echo "Processed " . number_format($count) . "\n";
 	    if ($username === false) $username = ''; // anonymous edit
 		$comment = $matches[1];
 
 		foreach ($edittypes as $edittype => $typevalue) {
 		    if (preg_match($edittype, $comment)) {
 				if ($typevalue === 0) {
-					if (! preg_match('!\\[\\[Property:P(\d+)!', $comment, $matches)) break;
+				    if (! preg_match('!\\[\\[Property:P(\d+)!', $comment, $matches)){
+				        if (! preg_match('!^wbcreateclaim:1 \\*/ p(\d+)', $comment, $matches)) break;
+				    }
+
 					$typevalue = $matches[1];
 				}
 
@@ -147,7 +157,7 @@ while (! feof($hndl)) {
 
 }
 
-echo "Processed $count\n";
+echo "Processed " . number_format($count) . "\n";
 
 fclose($hndl);
 $hndl = fopen('navelgazer.tsv', 'w');
