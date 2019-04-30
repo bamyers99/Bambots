@@ -126,8 +126,24 @@ while (! feof($hndl)) {
 
 				if (! isset($edits[$username])) $edits[$username] = [];
 				if (! isset($edits[$username][$key])) $edits[$username][$key] = 0; // grand total lower 32 bits, month total upper 32 bits
-				++$edits[$username][$key];
-				if ($timestamp == $prevmonth) $edits[$username][$key] += MONTHLY_INCREMENT;
+
+				$multiplier = 1;
+
+				if ($typevalue === -3 || $typevalue === -22 || $typevalue === -27) { // can have multiple alias changes per edit
+				    preg_match('!^([a-z\-]+)\s*(:\s*(.*?)\s*)?\\*/!', $comment, $matches);
+
+				    $args = isset($matches[3]) ? explode('|', $matches[3]) : [];
+
+				    if (isset($args[0])) {
+				        $multiplier = intval($args[0]);
+				    }
+				}
+
+				$edits[$username][$key] += $multiplier;
+
+				if ($timestamp == $prevmonth) {
+				    $edits[$username][$key] += (MONTHLY_INCREMENT * $multiplier);
+				}
 
 				if ($typevalue === -1 || $typevalue === -2 || $typevalue === -3 || $typevalue === -4) {
 				    $lang = '';
@@ -145,8 +161,8 @@ while (! feof($hndl)) {
 				    if (! empty($lang)) {
 				        if (! isset($langs[$lang])) $langs[$lang] = [];
 				        if (! isset($langs[$lang][$username])) $langs[$lang][$username] = 0;
-				        ++$langs[$lang][$username];
-				        if ($timestamp == $prevmonth) $langs[$lang][$username] += MONTHLY_INCREMENT;
+				        $langs[$lang][$username] += $multiplier;
+				        if ($timestamp == $prevmonth) $langs[$lang][$username] += (MONTHLY_INCREMENT * $multiplier);
 				    }
 				}
 
