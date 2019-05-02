@@ -292,14 +292,14 @@ function display_form($navels)
     	            $blankspace = '';
     	            if ($row[2] < 10) $blankspace = '&numsp;';
     	            echo " $blankspace($row[2])";
-    	        } else echo ' &numsp; &numsp; ';
+    	        } else echo ' &numsp;&numsp;&numsp;&numsp;';
 
     	        echo "</span></td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . '<span style="font-family: monospace;">';
     	        if ($row[4] != 0) {
     	            $blankspace = '';
     	            if ($row[4] < 10) $blankspace = '&numsp;';
     	            echo " $blankspace($row[4])";
-    	        } else echo ' &numsp; &numsp; ';
+    	        } else echo ' &numsp;&numsp;&numsp;&numsp;';
 
     	        echo "</span></td><td style='text-align:center'>$col4</td></tr>\n";
     	    }
