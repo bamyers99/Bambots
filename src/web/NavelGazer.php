@@ -119,7 +119,7 @@ function display_form($navels)
 			    <?php } elseif (! empty($params['property'])) { ?>
 		        	$('.tablesorter').tablesorter({sortList: [[1,1]]});
 				<?php } elseif (! empty($params['langadd'])) { ?>
-		        	$('.tablesorter').tablesorter({sortList: [[2,1]]});
+		        	$('.tablesorter').tablesorter({sortList: [[2,1]], headers: {3: {sorter: false}}});
 		        <?php } ?>
 			    }
 			);
@@ -273,7 +273,7 @@ function display_form($navels)
             echo "</b><br />\n";
     	    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
-    	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th><th class='unsortable'>Property additions</th></tr></thead><tbody>\n";
+    	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count (rank)</th><th>Last month (rank)</th><th>Property additions</th></tr></thead><tbody>\n";
 
     	    foreach ($navels['data'] as $row) {
     	        if (empty($row[0])) {
@@ -287,8 +287,21 @@ function display_form($navels)
     	            $col4 = "<a href='$userurl'>view</a>";
     	        }
 
-    	        echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
-    	        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td><td style='text-align:center'>$col4</td></tr>\n";
+    	        echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) . '<span style="font-family: monospace;">';
+    	        if ($row[2] != 0) {
+    	            $blankspace = '';
+    	            if ($row[2] < 10) $blankspace = '&numsp;';
+    	            echo " $blankspace($row[2])";
+    	        } else echo ' &numsp; &numsp; ';
+
+    	        echo "</span></td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . '<span style="font-family: monospace;">';
+    	        if ($row[4] != 0) {
+    	            $blankspace = '';
+    	            if ($row[4] < 10) $blankspace = '&numsp;';
+    	            echo " $blankspace($row[4])";
+    	        } else echo ' &numsp; &numsp; ';
+
+    	        echo "</span></td><td style='text-align:center'>$col4</td></tr>\n";
     	    }
 
     	    echo "</tbody></table>\n";
@@ -443,7 +456,7 @@ EOT;
 	   	    ' (SELECT user_name, create_count, month_count ' .
 	   	   	' FROM s51454__wikidata.navelgazerlang ' .
 	   	   	' WHERE `language` = ? ORDER BY month_count DESC LIMIT 50) ' .
-	   	   	' ORDER BY month_count DESC';
+	   	   	' ORDER BY create_count DESC';
 
 	    $sth = $dbh_wiki->prepare($sql);
 	    $sth->bindValue(1, $params['langadd']);
@@ -452,8 +465,50 @@ EOT;
 	    $sth->execute();
 
 	    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-	        $data[$row['user_name']] = [$row['user_name'], $row['create_count'], $row['month_count'], '']; // removes dups
+	        $data[$row['user_name']] = [$row['user_name'], $row['create_count'], 0, $row['month_count'], 0]; // removes dups
 	    }
+
+	    $rank = 1;
+	    $prevcnt = -1;
+	    $prevrank = 0;
+
+	    foreach ($data as &$row) {
+	        if ($row[1] == $prevcnt) {
+	            $row[2] = $prevrank;
+	        } else {
+	            $row[2] = $rank;
+	            $prevrank = $rank;
+	        }
+
+	        if ($rank == 50) break;
+	        ++$rank;
+	        $prevcnt = $row[1];
+	    }
+	    unset($row);
+
+	    usort($data, function ($a, $b) { //desc
+	        if ($a[3] < $b[3]) return 1;
+	        if ($a[3] > $b[3]) return -1;
+	        return 0;
+	    });
+
+        $rank = 1;
+        $prevcnt = -1;
+        $prevrank = 0;
+
+        foreach ($data as &$row) {
+            if ($row[3] == $prevcnt) {
+                $row[4] = $prevrank;
+            } else {
+                $row[4] = $rank;
+                $prevrank = $rank;
+            }
+
+            if ($rank == 50) break;
+            ++$rank;
+            $prevcnt = $row[3];
+        }
+        unset($row);
 	}
 
 	$return = ['data' => $data, 'dataasof' => $dataasof, 'property_label' => $property_label, 'langdata' => $langdata,
