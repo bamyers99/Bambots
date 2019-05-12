@@ -116,7 +116,7 @@ while (! feof($hndl)) {
 		    if (preg_match($edittype, $comment)) {
 				if ($typevalue === 0) {
 				    if (! preg_match('!\\[\\[Property:P(\d+)!', $comment, $matches)){
-				        if (! preg_match('!^wbcreateclaim:1 \\*/ p(\d+)', $comment, $matches)) break;
+				        if (! preg_match('!^wbcreateclaim:1 \\*/ p(\d+)!', $comment, $matches)) break;
 				    }
 
 					$typevalue = $matches[1];
