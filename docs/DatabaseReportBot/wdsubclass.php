@@ -31,7 +31,9 @@ define('CLASS_FOUND', 'f');
 define('PARENTS', 'p');
 
 $count = 0;
-$classes = array();
+$classes = [];
+$values = [];
+$valuecounts = [];
 
 $whndl = fopen('wdsubclassclasses.tsv', 'w');
 $hndl = fopen('php://stdin', 'r');
@@ -75,6 +77,8 @@ while (! feof($hndl)) {
 
 			if (! isset($classes[$instanceqid])) $classes[$instanceqid] = init_class();
 			++$classes[$instanceqid][DIRECT_INSTANCE_CNT];
+
+			processvalues($instanceqid, $data);
 		}
 	}
 
@@ -121,9 +125,34 @@ foreach ($classes as $classqid => $class) {
 $whndl = fopen('wdsubclasstotals.tsv', 'w');
 
 foreach ($classes as $classqid => $class) {
-	$isroot = count($class[PARENTS]) ? 'N' : 'Y';
+    $isroot = count($class[PARENTS]) ? 'N' : 'Y';
 
     fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$class[INDIRECT_CHILD_COUNT]}\t{$class[DIRECT_INSTANCE_CNT]}\t{$class[INDIRECT_INSTANCE_CNT]}\t{$class[ISLISTOF_COUNT]}\n");
+}
+
+fclose($whndl);
+
+// Write value counts
+$whndl = fopen('wdsubclassvalues.tsv', 'w');
+
+foreach ($values as $key => $valuevalues) {
+    list($classqid, $pid, $qualpid) = explode('-', $key);
+
+    if ($valuevalues === false) { // > 200 values
+        $newkey = "$pid-$qualpid-0";
+        fwrite($whndl, "$classqid\t$newkey\t0\n");
+    } else {
+        foreach ($valuevalues as $vkey => $count) {
+            $newkey = "$pid-$qualpid-$vkey";
+            fwrite($whndl, "$classqid\t$newkey\t$count\n");
+        }
+    }
+}
+
+foreach ($valuecounts as $key => $count) {
+    list($classqid, $pid, $qualpid) = explode('-', $key);
+    $newkey = "$pid-$qualpid-C";
+    fwrite($whndl, "$classqid\t$newkey\t$count\n");
 }
 
 fclose($whndl);
@@ -159,4 +188,58 @@ function init_class()
 {
 	return array(DIRECT_CHILD_COUNT => 0,  INDIRECT_CHILD_COUNT => 0, PARENTS => array(), DIRECT_INSTANCE_CNT => 0,
 		INDIRECT_INSTANCE_CNT => 0, ISLISTOF_COUNT => 0, CLASS_FOUND => false);
+}
+
+/**
+ * Save wikibase-item type values for properties and their qualifiers.
+ *
+ * @param unknown $classqid
+ * @param unknown $data
+ */
+function processvalues($classqid, $data)
+{
+    global $values, $valuecounts;
+
+    foreach ($data['claims'] as $pid => $claims) {
+        $pid = substr($pid, 1);
+
+        foreach ($claims as $claim) {
+            $mainsnak = $claim['mainsnak'];
+            if ($mainsnak['snaktype'] == 'value' && $mainsnak['datatype'] != 'wikibase-item') continue;
+            if ($mainsnak['snaktype'] == 'novalue') $valueid = 19798647;
+            elseif ($mainsnak['snaktype' == 'somevalue']) $valueid = 19798648;
+            else $valueid = $mainsnak['datavalue']['value']['numeric-id'];
+
+            $key = "$classqid-$pid-0";
+            if (! isset($valuecounts[$key])) $valuecounts[$key] = 0;
+            ++$valuecounts[$key];
+
+            if (! isset($values[$key])) $values[$key] = [$valueid => 0];
+            if ($values[$key] !== false && ! isset($values[$key][$valueid])) $values[$key][$valueid] = 0;
+            if (count($values[$key]) == 200) $values[$key] = false; // limit to 200
+            if ($values[$key] !== false) ++$values[$key][$valueid];
+
+            if (isset($claim['qualifiers'])) {
+                foreach ($claim['qualifiers'] as $qualpid => $qualifiers) {
+                    $qualpid = substr($qualpid, 1);
+
+                    foreach ($qualifiers as $qualifier) {
+                        if ($qualifier['snaktype'] == 'value' && $qualifier['datatype'] != 'wikibase-item') continue;
+                        if ($qualifier['snaktype'] == 'novalue') $valueid = 19798647;
+                        elseif ($qualifier['snaktype' == 'somevalue']) $valueid = 19798648;
+                        else $valueid = $qualifier['datavalue']['value']['numeric-id'];
+
+                        $key = "$classqid-$pid-$qualpid";
+                        if (! isset($valuecounts[$key])) $valuecounts[$key] = 0;
+                        ++$valuecounts[$key];
+
+                        if (! isset($values[$key])) $values[$key] = [$valueid => 0];
+                        if ($values[$key] !== false && ! isset($values[$key][$valueid])) $values[$key][$valueid] = 0;
+                        if (count($values[$key]) == 200) $values[$key] = false; // limit to 200
+                        if ($values[$key] !== false) ++$values[$key][$valueid];
+                    }
+                }
+            }
+        }
+    }
 }
