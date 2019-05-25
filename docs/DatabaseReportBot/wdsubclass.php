@@ -14,7 +14,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
- bunzip2 -c wikidatawiki*-pages-articles.xml.bz2 | ./xml2 | grep '"P279"\|"P31"' | php wdsubclass.php&
+ bunzip2 -c wikidatawiki*-pages-articles.xml.bz2 | ./xml2 | grep '"P279"\|"P31"\|"P360"' | php wdsubclass.php&
  */
 
 define('PROP_SUBCLASSOF', 'P279');
@@ -138,21 +138,18 @@ $whndl = fopen('wdsubclassvalues.tsv', 'w');
 foreach ($values as $key => $valuevalues) {
     list($classqid, $pid, $qualpid) = explode('-', $key);
 
-    if ($valuevalues === false) { // > 200 values
-        $newkey = "$pid-$qualpid-0";
-        fwrite($whndl, "$classqid\t$newkey\t0\n");
+    if ($valuevalues === false) { // > 50 values
+        fwrite($whndl, "$classqid\t$pid\t$qualpid\t0\t0\n");
     } else {
         foreach ($valuevalues as $vkey => $count) {
-            $newkey = "$pid-$qualpid-$vkey";
-            fwrite($whndl, "$classqid\t$newkey\t$count\n");
+            fwrite($whndl, "$classqid\t$pid\t$qualpid\t$vkey\t$count\n");
         }
     }
 }
 
 foreach ($valuecounts as $key => $count) {
     list($classqid, $pid, $qualpid) = explode('-', $key);
-    $newkey = "$pid-$qualpid-C";
-    fwrite($whndl, "$classqid\t$newkey\t$count\n");
+    if ($count > 9) fwrite($whndl, "$classqid\t$pid\t$qualpid\tC\t$count\n");
 }
 
 fclose($whndl);
@@ -201,42 +198,48 @@ function processvalues($classqid, $data)
     global $values, $valuecounts;
 
     foreach ($data['claims'] as $pid => $claims) {
+        if ($pid == PROP_INSTANCEOF || $pid == PROP_SUBCLASSOF) continue;
         $pid = substr($pid, 1);
+
+        $ckey = "$classqid-$pid-0";
+        if (! isset($valuecounts[$ckey])) $valuecounts[$ckey] = 0;
+        ++$valuecounts[$ckey];
 
         foreach ($claims as $claim) {
             $mainsnak = $claim['mainsnak'];
-            if ($mainsnak['snaktype'] == 'value' && $mainsnak['datatype'] != 'wikibase-item') continue;
-            if ($mainsnak['snaktype'] == 'novalue') $valueid = 19798647;
-            elseif ($mainsnak['snaktype' == 'somevalue']) $valueid = 19798648;
-            else $valueid = $mainsnak['datavalue']['value']['numeric-id'];
 
-            $key = "$classqid-$pid-0";
-            if (! isset($valuecounts[$key])) $valuecounts[$key] = 0;
-            ++$valuecounts[$key];
+            if ($mainsnak['snaktype'] == 'value' && $mainsnak['datavalue']['type'] == 'wikibase-entityid' && $mainsnak['datavalue']['value']['entity-type'] == 'item') {
+                $valueid = $mainsnak['datavalue']['value']['numeric-id'];
 
-            if (! isset($values[$key])) $values[$key] = [$valueid => 0];
-            if ($values[$key] !== false && ! isset($values[$key][$valueid])) $values[$key][$valueid] = 0;
-            if (count($values[$key]) == 200) $values[$key] = false; // limit to 200
-            if ($values[$key] !== false) ++$values[$key][$valueid];
+                if (! isset($values[$ckey])) $values[$ckey] = [$valueid => 0];
+
+                if ($values[$ckey] !== false) {
+                    if (! isset($values[$ckey][$valueid])) $values[$ckey][$valueid] = 0;
+                    if (count($values[$ckey]) == 50) $values[$ckey] = false; // limit to 50
+                    else ++$values[$ckey][$valueid];
+                }
+            }
 
             if (isset($claim['qualifiers'])) {
                 foreach ($claim['qualifiers'] as $qualpid => $qualifiers) {
                     $qualpid = substr($qualpid, 1);
 
+                    $qkey = "$classqid-$pid-$qualpid";
+                    if (! isset($valuecounts[$qkey])) $valuecounts[$qkey] = 0;
+                    ++$valuecounts[$qkey];
+
                     foreach ($qualifiers as $qualifier) {
-                        if ($qualifier['snaktype'] == 'value' && $qualifier['datatype'] != 'wikibase-item') continue;
-                        if ($qualifier['snaktype'] == 'novalue') $valueid = 19798647;
-                        elseif ($qualifier['snaktype' == 'somevalue']) $valueid = 19798648;
-                        else $valueid = $qualifier['datavalue']['value']['numeric-id'];
+                        if ($qualifier['snaktype'] != 'value' || $qualifier['datavalue']['type'] != 'wikibase-entityid' ||
+                            $qualifier['datavalue']['value']['entity-type'] != 'item') continue;
+                        $valueid = $qualifier['datavalue']['value']['numeric-id'];
 
-                        $key = "$classqid-$pid-$qualpid";
-                        if (! isset($valuecounts[$key])) $valuecounts[$key] = 0;
-                        ++$valuecounts[$key];
+                        if (! isset($values[$qkey])) $values[$qkey] = [$valueid => 0];
 
-                        if (! isset($values[$key])) $values[$key] = [$valueid => 0];
-                        if ($values[$key] !== false && ! isset($values[$key][$valueid])) $values[$key][$valueid] = 0;
-                        if (count($values[$key]) == 200) $values[$key] = false; // limit to 200
-                        if ($values[$key] !== false) ++$values[$key][$valueid];
+                        if ($values[$qkey] !== false) {
+                            if (! isset($values[$qkey][$valueid])) $values[$qkey][$valueid] = 0;
+                            if (count($values[$qkey]) == 50) $values[$qkey] = false; // limit to 50
+                            else ++$values[$qkey][$valueid];
+                        }
                     }
                 }
             }

@@ -23,7 +23,6 @@ use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\MediaWiki\MediaWiki;
-use com_brucemyers\MediaWiki\WikidataSPARQL;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -37,12 +36,12 @@ define('PROP_INSTANCEOF', 'P31');
 
 $instanceofIgnores = array('Q13406463','Q11266439'); // Wikimedia list article, Wikimedia template
 
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-//ini_set("display_errors", 1);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
-$params = array();
+$params = [];
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
@@ -54,6 +53,13 @@ switch ($action) {
 		$userlang = isset($_REQUEST['userLang']) ? $_REQUEST['userLang'] : '';
 		if ($lang && $page && $callback) perform_suggest($lang, $page, $callback, $userlang);
 		exit;
+
+	case 'enumqualifiers':
+	    $id = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
+	    $pid = isset($_REQUEST['pid']) ? $_REQUEST['pid'] : '';
+	    $lang = isset($_REQUEST['lang']) ? $_REQUEST['lang'] : '';
+	    display_enum_qualifiers($id, $pid, $lang);
+	    exit;
 }
 
 get_params();
@@ -257,7 +263,8 @@ function display_form($subclasses)
 			if (! empty($subclasses['pop_props'])) {
 				echo "<h2>Most common properties for this class</h2>\n";
 
-				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Missing property</th></tr></thead><tbody>\n";
+				echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Instance<br />count</th><th>Percentage</th>";
+			    echo "<th>Missing property</th><th>Enumerated<br />value<br />count</th><th>Qualifier<br />count</th><th>Enumerated<br />values /<br />qualifiers</th></tr></thead><tbody>\n";
 
 				foreach ($subclasses['pop_props'] as $pid => $row) {
 					$wdurl = "https://www.wikidata.org/wiki/" . $pid;
@@ -265,7 +272,8 @@ function display_form($subclasses)
 					$term_text = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
 
 					$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
-						"  ?s wdt:P31 wd:Q{$params['id']} .\n" .
+						"  ?s p:P31 ?stmt .\n" .
+                        "  ?stmt ps:P31 wd:Q{$params['id']} .\n" .
 						"  OPTIONAL { ?s wdt:$pid ?prop }\n" .
 						"  FILTER ( !bound(?prop) )\n" .
 						"  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
@@ -274,7 +282,19 @@ function display_form($subclasses)
 					$sparql = "<a href='$sparql' class='external'>SPARQL query</a>";
 
 					echo "<tr><td><a class='external' href='$wdurl'>$term_text</a></td>" .
-						"<td style='text-align:center'>$sparql</td></tr>\n";
+						"<td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
+						"</td><td style='text-align:right'>" . $row[2] . "</td><td style='text-align:center'>$sparql</td><td style='text-align:right' ";
+
+					if ($row[3] == 0) echo "data-sort-value='0'>&nbsp;";
+					elseif ($row[3] == -1) echo "data-sort-value='50'>&gt; 50";
+					else echo "data-sort-value='{$row[3]}'>{$row[3]}";
+
+					echo "</td><td style='text-align:right'>{$row[4]}</td><td style='text-align:center'>";
+
+					if ($row[4] != 0 || $row[3] > 0) echo "<a href='WikidataClasses.php?action=enumqualifiers&lang={$params['lang']}&id=Q{$params['id']}&pid=$pid'>view</a>";
+					else echo '&nbsp;';
+
+				    echo "</td></tr>\n";
 				}
 
 				echo "</tbody></table>\n";
@@ -284,11 +304,294 @@ function display_form($subclasses)
 		}
 	}
 ?>
-       <div>Data derived from database dump wikidatawiki-pages-articles.xml and wikidata api query wbsgetsuggestions.</div>
+       <div>Data derived from database dump wikidatawiki-pages-articles.xml.</div>
        <?php if ($params['id'] == 0) {?><div><sup>1</sup>Root classes with no child classes and less than <?php echo MIN_ORPHAN_DIRECT_INST_CNT; ?> instances are excluded.</div><?php } ?>
        <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
        <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
        <div>Note: Some totals may not balance due to a class having the same super-parent class multiple times.</div>
+       <div><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
+}
+
+/**
+ * Display enumerations and qualifiers
+ *
+ */
+function display_enum_qualifiers($id, $pid, $lang)
+{
+    $wdwiki = new WikidataWiki();
+    $title = '';
+
+    // Get the class label
+    $item = $wdwiki->getItemWithCache($id);
+
+    if (! empty($item)) {
+        $class_label = $item->getLabelDescription('label', $lang);
+        if (empty($class_label)) $class_label = $id;
+        else $class_label = "$class_label ($id)";
+        $title = " : $class_label";
+    }
+
+    // Get the property label
+    $item = $wdwiki->getItemWithCache("Property:$pid");
+
+    if (! empty($item)) {
+        $prop_label = $item->getLabelDescription('label', $lang);
+        if (empty($prop_label)) $prop_label = $pid;
+        else $prop_label = "$prop_label ($pid)";
+        $title .= " : $prop_label";
+    }
+
+    $title = htmlentities($title, ENT_COMPAT, 'UTF-8');
+
+    echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+    ?>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	    <meta name="robots" content="noindex, nofollow" />
+	    <title><?php echo 'Wikidata Class Browser' . $title ?></title>
+    	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
+    	<script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
+		<script type='text/javascript' src='js/jquery.tablesorter.min.js'></script>
+	</head>
+	<body>
+		<script type='text/javascript'>
+			$(document).ready(function()
+			    {
+		        $('.tablesorter').tablesorter();
+			    }
+			);
+		</script>
+		<div style="display: table; margin: 0 auto;">
+		<h2>Wikidata Class Browser<?php echo $title ?></h2>
+        <br />
+		<?php
+        echo "<table><tbody>\n";
+
+        $term_text = htmlentities($class_label, ENT_COMPAT, 'UTF-8');
+        $url = "https://www.wikidata.org/wiki/" . $id;
+        echo "<tr><td>Class:</td><td><a class='external' href='$url' title='Wikidata link'>$term_text</a></td></tr>\n";
+
+        $term_text = htmlentities($prop_label, ENT_COMPAT, 'UTF-8');
+        $url = "https://www.wikidata.org/wiki/Property:" . $pid;
+        echo "<tr><td>Property:</td><td><a class='external' href='$url' title='Wikidata link'>$term_text</a></td></tr>\n";
+
+        echo "</tbody></table>\n";
+
+        // Get the enum values
+        $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+        $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+        $wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
+        if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
+
+        try {
+            $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+        } catch (PDOException $e) {
+            Logger::log($e->getMessage());
+            throw new Exception('Connection error, see log for details');
+        }
+        $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        $sql = "SELECT value, valcount ";
+        $sql .= " FROM s51454__wikidata.subclassvalues ";
+        $sql .= " WHERE qid = ? AND pid = ? AND qualpid = 0 AND value NOT IN ('C','0') ORDER BY valcount DESC ";
+
+        $sth = $dbh_wiki->prepare($sql);
+        $numeric_id = substr($id, 1);
+        $numeric_pid = substr($pid, 1);
+        $sth->bindValue(1, $numeric_id);
+        $sth->bindValue(2, $numeric_pid);
+
+        $sth->execute();
+        $enums = [];
+
+        while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+            $valid = "Q{$row['value']}";
+            $valcount = $row['valcount'];
+            $enums[$valid] = [$valid, $valcount];
+        }
+
+        if (! empty($enums)) {
+            // Get the labels
+            $enum_ids = array_keys($enums);
+            $items = $wdwiki->getItemsWithCache($enum_ids);
+
+            foreach ($items as $item) {
+                $qid = $item->getId();
+                $term_text = $item->getLabelDescription('label', $lang);
+
+                if (! empty($term_text)) $enums[$qid][0] = $term_text;
+            }
+
+            echo "<h2>Enumerated values</h2>\n";
+
+            echo "<table class='wikitable tablesorter'><thead><tr><th>Value</th><th>Instance<br />count</th><th>Instances<br />with value</th></tr></thead><tbody>\n";
+
+            foreach ($enums as $valid => $enum) {
+                $wdurl = "https://www.wikidata.org/wiki/" . $valid;
+                $term_text = htmlentities($enum[0], ENT_COMPAT, 'UTF-8');
+
+                $sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
+                    "  ?s p:P31 ?stmt .\n" .
+                    "  ?stmt ps:P31 wd:$id .\n" .
+                    "  ?s wdt:$pid wd:$valid .\n" .
+                    "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"$lang\" }\n" .
+                    "}\nORDER BY ?sLabel");
+
+                $sparql = "<a href='$sparql' class='external'>SPARQL query</a>";
+
+                echo "<tr><td><a class='external' href='$wdurl'>$term_text</a></td><td style='text-align:right' data-sort-value='{$enum[1]}'>" .
+                intl_num_format($enum[1]) ."</td><td style='text-align:center'>$sparql</td></tr>";
+            }
+
+            echo "</tbody></table>\n";
+        }
+
+        // Get qualifiers
+        $sql = "SELECT qualpid, valcount ";
+        $sql .= " FROM s51454__wikidata.subclassvalues ";
+        $sql .= " WHERE qid = ? AND pid = ? AND qualpid <> 0 AND value = 'C' ORDER BY valcount DESC LIMIT 50";
+
+        $sth = $dbh_wiki->prepare($sql);
+        $sth->bindValue(1, $numeric_id);
+        $sth->bindValue(2, $numeric_pid);
+
+        $sth->execute();
+        $qualids = [];
+        $quals = [];
+
+        while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+            $qualid = $row['qualpid'];
+            $qualids[] = $qualid;
+            $quals['Property:P' . $qualid] = ["P$qualid", $row['valcount'], 0, []];
+        }
+
+        if (! empty($quals)) {
+            $qualids = implode(',', $qualids);
+
+            // Get the labels
+            $prop_ids = array_keys($quals);
+            $items = $wdwiki->getItemsWithCache($prop_ids);
+
+            foreach ($items as $item) {
+                $qualpid = $item->getId();
+                $term_text = $item->getLabelDescription('label', $lang);
+
+                if (! empty($term_text)) $quals['Property:' . $qualpid][0] = $term_text;
+            }
+
+            // Find > 50 unique values
+            $sql = "SELECT qualpid ";
+            $sql .= " FROM s51454__wikidata.subclassvalues ";
+            $sql .= " WHERE qid = ? AND pid = ? AND value = '0' AND qualpid IN ($qualids)";
+
+            $sth = $dbh_wiki->prepare($sql);
+            $sth->bindValue(1, $numeric_id);
+            $sth->bindValue(2, $numeric_pid);
+
+            $sth->execute();
+
+            while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+                $qualpid = $row['qualpid'];
+                $quals['Property:P' . $qualpid][2] = -1;
+            }
+
+            // Get enum values
+            $sql = "SELECT qualpid, value, valcount ";
+            $sql .= " FROM s51454__wikidata.subclassvalues ";
+            $sql .= " WHERE qid = ? AND pid = ? AND value NOT IN ('0','C') AND qualpid IN ($qualids)";
+
+            $sth = $dbh_wiki->prepare($sql);
+            $sth->bindValue(1, $numeric_id);
+            $sth->bindValue(2, $numeric_pid);
+
+            $sth->execute();
+            $valids = [];
+
+            while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+                $qualpid = $row['qualpid'];
+                $value = $row['value'];
+                $valcount = $row['valcount'];
+                $quals['Property:P' . $qualpid][2] = 1;
+                $quals['Property:P' . $qualpid][3]["Q$value"] = ["Q$value", $valcount];
+                $valids["Q$value"] = true; // gets rid of duplicates
+            }
+
+            // Get enum value labels
+            // Chunk it to keep from running out of memory
+            $pageChunks = array_chunk($valids, 50, true);
+
+            foreach ($pageChunks as $pageChunk) {
+                $items = $wdwiki->getItemsWithCache(array_keys($pageChunk));
+
+                foreach ($items as $item) {
+                    $itemid = $item->getId();
+                    $term_text = $item->getLabelDescription('label', $lang);
+
+                    if (! empty($term_text)) {
+                        foreach ($quals as &$qual) {
+                            foreach ($qual[3] as $qualvalid => &$qualvalue) {
+                                if ($qualvalid == $itemid) $qualvalue[0] = $term_text;
+                            }
+                            unset($qualvalue);
+                        }
+                        unset($qual);
+                    }
+                }
+            }
+
+            echo "<h2>Qualifiers</h2>\n";
+
+            echo "<table class='wikitable tablesorter'><thead><tr><th>Qualifier</th><th>Usage<br />count</th><th>Instances<br />with qualifier</th>";
+            echo "<th>Enumerated values (count) (SPARQL query)</th></tr></thead><tbody>\n";
+
+            foreach ($quals as $propid => $qual) {
+                $qualpid = substr($propid, 9);
+                $wdurl = "https://www.wikidata.org/wiki/" . $propid;
+                $term_text = htmlentities($qual[0], ENT_COMPAT, 'UTF-8');
+
+                $sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
+                    "  ?s p:P31 ?stmt .\n" .
+                    "  ?stmt ps:P31 wd:$id .\n" .
+                    "  ?s p:$pid ?qualstmt .\n" .
+                    "  ?qualstmt pq:$qualpid ?qualval .\n" .
+                    "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"$lang\" }\n" .
+                    "}\nORDER BY ?sLabel");
+
+                $sparql = "<a href='$sparql' class='external'>SPARQL query</a>";
+
+                echo "<tr><td><a class='external' href='$wdurl'>$term_text</a></td><td style='text-align:right' data-sort-value='{$qual[1]}'>" .
+                intl_num_format($qual[1]) ."</td><td style='text-align:center'>$sparql</td><td>";
+
+                if ($qual[2] == 0) echo "&nbsp;";
+                elseif ($qual[2] == -1) echo "&gt; 50";
+                else {
+                    foreach ($qual[3] as $qualid => $qualval) {
+                        $sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
+                            "  ?s p:P31 ?stmt .\n" .
+                            "  ?stmt ps:P31 wd:$id .\n" .
+                            "  ?s p:$pid ?qualstmt .\n" .
+                            "  ?qualstmt pq:$qualpid wd:$qualid .\n" .
+                            "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"$lang\" }\n" .
+                            "}\nORDER BY ?sLabel");
+
+                        $sparql = "<a href='$sparql' class='external'>view</a>";
+
+                        echo "{$qualval[0]} ({$qualval[1]}) ($sparql)<br />";
+                    }
+                }
+
+                echo "</td></tr>";
+            }
+
+            echo "</tbody></table>\n";
+        }
+
+        ?>
+       <br />
+       <div>Data derived from database dump wikidatawiki-pages-articles.xml.</div>
+       <div>Note: Names/descriptions are cached, so changes may not be seen until the next data load.</div>
+       <div>Note: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.</div>
        <div><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
@@ -339,6 +642,7 @@ function get_subclasses()
 	$day = $month_day % 100;
 	if ($day < 10) $day = "0$day";
 	$dataasof = "$year-$month-$day";
+	$directinstcnt = 0;
 
 	$wdwiki = new WikidataWiki();
 
@@ -354,6 +658,8 @@ function get_subclasses()
 		$sth->execute();
 
 		if ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		    $directinstcnt = $row['directinstcnt'];
+
 			$class = ['Q' . $params['id'], '', $row['directchildcnt'], $row['indirectchildcnt'],
 					$row['directinstcnt'], $row['indirectinstcnt'], $row['islistofcnt']];
 
@@ -396,27 +702,82 @@ function get_subclasses()
 
 		// Retrieve popular properties
 
-		// Get an instance of this class
-		$wdsparql = new WikidataSPARQL();
-		$sparql = <<<EOT
-SELECT DISTINCT ?s WHERE {
-  ?s wdt:P31 wd:Q{$params['id']} .
-}
-LIMIT 1
-EOT;
-		$ret = $wdsparql->query(rawurlencode($sparql));
+		$sql = "SELECT pid, valcount ";
+		$sql .= " FROM s51454__wikidata.subclassvalues ";
+		$sql .= " WHERE qid = ? AND qualpid = 0 AND value = 'C' ORDER BY valcount DESC LIMIT 50";
 
-		if (! empty($ret)) {
-		    $uri = $ret[0]['s']['value'];
-		    preg_match('!entity/(.+)!', $uri, $matches);
-		    $instanceid = $matches[1];
+		$sth = $dbh_wiki->prepare($sql);
+		$sth->bindValue(1, $params['id']);
 
-    		$props = $wdwiki->getPropertySuggestions($instanceid, $params['lang']);
+		$sth->execute();
+		$pids = [];
 
-    		foreach ($props['search'] as $prop) {
-    		    if ($prop['id'] == 'P31') continue;
-    		    $pop_props['Property:' . $prop['id']] = array($prop['label'], floor($prop['rating'] * 100));
-    		}
+		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		    $pid = $row['pid'];
+		    $pids[] = $pid;
+		    $pop_props['Property:P' . $pid] = ['P' . $pid, $row['valcount'], floor($row['valcount'] / $directinstcnt * 100), 0, 0];
+		}
+
+		if (! empty($pop_props)) {
+		    $pids = implode(',', $pids);
+
+		    // Get the labels
+		    $prop_ids = array_keys($pop_props);
+		    $items = $wdwiki->getItemsWithCache($prop_ids);
+
+		    foreach ($items as $item) {
+		        $pid = $item->getId();
+		        $term_text = $item->getLabelDescription('label', $params['lang']);
+
+		        if (! empty($term_text)) $pop_props['Property:' . $pid][0] = $term_text;
+		    }
+
+		    // Find > 50 unique values
+		    $sql = "SELECT pid ";
+		    $sql .= " FROM s51454__wikidata.subclassvalues ";
+		    $sql .= " WHERE qid = ? AND qualpid = 0 AND value = '0' AND pid IN ($pids)";
+
+		    $sth = $dbh_wiki->prepare($sql);
+		    $sth->bindValue(1, $params['id']);
+
+		    $sth->execute();
+
+		    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		        $pid = $row['pid'];
+		        $pop_props['Property:P' . $pid][3] = -1;
+		    }
+
+		    // Get the enumeration counts
+		    $sql = "SELECT pid, count(*) AS enumcount ";
+		    $sql .= " FROM s51454__wikidata.subclassvalues ";
+		    $sql .= " WHERE qid = ? AND qualpid = 0 AND value NOT IN ('C','0')  AND pid IN ($pids) ";
+		    $sql .= " GROUP BY pid";
+
+		    $sth = $dbh_wiki->prepare($sql);
+		    $sth->bindValue(1, $params['id']);
+
+		    $sth->execute();
+
+		    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		        $pid = $row['pid'];
+		        $pop_props['Property:P' . $pid][3] = $row['enumcount'];
+		    }
+
+		    // Get the qualifier counts
+		    $sql = "SELECT pid, count(*) AS enumcount ";
+		    $sql .= " FROM s51454__wikidata.subclassvalues ";
+		    $sql .= " WHERE qid = ? AND qualpid <> 0 AND value = 'C'  AND pid IN ($pids) ";
+		    $sql .= " GROUP BY pid";
+
+		    $sth = $dbh_wiki->prepare($sql);
+		    $sth->bindValue(1, $params['id']);
+
+		    $sth->execute();
+
+		    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		        $pid = $row['pid'];
+		        $pop_props['Property:P' . $pid][4] = $row['enumcount'];
+		    }
 		}
 	}
 
@@ -479,7 +840,7 @@ function get_params()
 {
 	global $params;
 
-	$params = array();
+	$params = [];
 
 	$params['id'] = '0';
 	if (isset($_REQUEST['id'])) $params['id'] = trim($_REQUEST['id']);
