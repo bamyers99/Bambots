@@ -17,8 +17,6 @@
 
 namespace com_brucemyers\Util;
 
-use com_brucemyers\Util\CommonRegex;
-
 /**
  * TemplateParamParser
  */
@@ -33,7 +31,7 @@ class TemplateParamParser
 		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/s'
 	);
 
-	const MAX_ITERATIONS = 100000;
+	const MAX_ITERATIONS = 10000;
 
 	/**
 	 * Get template names and parameters in a string.

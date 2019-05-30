@@ -36,8 +36,8 @@ define('PROP_INSTANCEOF', 'P31');
 
 $instanceofIgnores = array('Q13406463','Q11266439'); // Wikimedia list article, Wikimedia template
 
-error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-ini_set("display_errors", 1);
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
