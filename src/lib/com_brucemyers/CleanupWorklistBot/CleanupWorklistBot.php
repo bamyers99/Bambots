@@ -92,8 +92,9 @@ class CleanupWorklistBot
         	try {
 	        	$page_count = $project_pages->load($category);
 	        	if ($page_count < 10 && $project != 'Bhubaneswar') {
-	        		$errorrulsets[] = $project . ' (no pages in project)';
-	        		Logger::log($project . ' (no pages in project)');
+	        		$errorrulsets[] = $project . ' (< 10 pages in project)';
+	        		Logger::log($project . ' (< 10 pages in project)');
+	        		Config::set(self::CURRENTPROJECT, '', true);
 	        		continue;
 	        	}
 
