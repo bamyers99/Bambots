@@ -149,8 +149,8 @@ class DataflowBot
 						'params' => array (
 							'wiki' => 'enwiki',
 							'sql' => "SELECT rc_title AS Article, COUNT(*) AS Edits,
-  						COUNT(DISTINCT rc_user_text) AS Editors, -- used to be rc_user which counted all IPs as same
-  						ROUND(LN(COUNT(*)) * (LN(COUNT(DISTINCT rc_user_text))+1.4), 2) AS `Weighted rank`
+  						COUNT(DISTINCT rc_actor) AS Editors,
+  						ROUND(LN(COUNT(*)) * (LN(COUNT(DISTINCT rc_actor))+1.4), 2) AS `Weighted rank`
 						FROM recentchanges
 						WHERE rc_namespace = 0
   						AND rc_timestamp > DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 7 DAY), '%Y%m%d%H%i%s')
