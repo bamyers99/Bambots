@@ -122,14 +122,14 @@ class ProjectPages
                 break;
 
             case 1: // WikiProject x articles (talk namespace)
-                $params['cmtitle'] = "WikiProject {$category} articles";
+                $params['cmtitle'] = "Category:WikiProject {$category} articles";
                 $params['cmlimit'] = 'max';
                 $ret = $this->mediawiki->getList('categorymembers', $params);
                 break;
 
             case 2: // x (talk namespace)
             case 3: // x (article namespace)
-                $params['cmtitle'] = $category;
+                $params['cmtitle'] = "Category:$category";
                 $params['cmlimit'] = 'max';
                 $ret = $this->mediawiki->getList('categorymembers', $params);
                 break;

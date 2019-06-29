@@ -584,7 +584,7 @@ class Categories {
 				case 'from-monthly' :
 					$cats[] = ['type' => 'from-monthly', 'params' => ['generator' => 'allpages', 'gapprefix' => "$cat from ", 'gapnamespace' => 14, 'gaplimit' => 'max']];
 
-					$cats[] = ['type' => 'no-date', 'params' => ['titles' => $cat]];
+					$cats[] = ['type' => 'no-date', 'params' => ['titles' => "Category:$cat"]];
 					break;
 
 				case 'since-yearly' :
@@ -593,9 +593,9 @@ class Categories {
 
 				case 'no-date' :
 					if ($subcatsonly) {
-					    $cats[] = ['type' => 'no-date', 'params' => ['generator' => 'categorymembers', 'gcmtitle' => $cat, 'gcmtype' => 'subcat', 'gcmlimit' => 'max']];
+					    $cats[] = ['type' => 'no-date', 'params' => ['generator' => 'categorymembers', 'gcmtitle' => "Category:$cat", 'gcmtype' => 'subcat', 'gcmlimit' => 'max']];
 					} else {
-					    $cats[] = ['type' => 'no-date', 'params' => ['titles' => $cat]];
+					    $cats[] = ['type' => 'no-date', 'params' => ['titles' => "Category:$cat"]];
 					}
 					break;
 			}
