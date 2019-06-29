@@ -84,7 +84,7 @@ class Categories {
 					'group' => 'Clarity',
 					'display' => 'Expert attention needed'
 			],
-			'Articles needing link rot cleanup' => [
+			'Articles with bare URLs for citations' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Link rot cleanup'
@@ -195,10 +195,6 @@ class Categories {
 					'type' => 'from-monthly',
 					'display' => 'Improper non-free content'
 			],
-			'Articles with improper non-free content (lists)' => [
-					'type' => 'from-monthly',
-					'display' => 'Improper non-free content (lists)'
-			],
 			'Articles with limited geographic scope' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
@@ -291,10 +287,6 @@ class Categories {
 					'type' => 'from-monthly',
 					'group' => 'Neutrality'
 			],
-			'NRHP articles with dead external links' => [
-					'type' => 'from-monthly',
-					'group' => 'Links'
-			],
 			'Orphaned articles' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
@@ -325,14 +317,6 @@ class Categories {
 			'Unreferenced BLPs' => [
 					'type' => 'from-monthly',
 					'group' => 'References'
-			],
-			'Unreviewed new articles' => [
-					'type' => 'from-monthly',
-					'group' => 'Content'
-			],
-			'Unreviewed new articles created via the Article Wizard' => [
-					'type' => 'from-monthly',
-					'group' => 'Content'
 			],
 			'Vague or ambiguous geographic scope' => [
 					'type' => 'from-monthly',
@@ -382,7 +366,7 @@ class Categories {
 					'group' => 'Clarity',
 					'display' => 'Rewrite needed'
 			],
-			'Wikipedia articles needing style editing' => [
+			'Wikipedia articles with style issues by month' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Style editing needed'
@@ -625,7 +609,14 @@ class Categories {
 			    }
 
 				foreach ($ret['query']['pages'] as $catid => $catinfo) {
+				    if (! isset($catinfo['categoryinfo'])) {
+				        Logger::log("categoryinfo not found id= $catid\n" . print_r($catinfo, true));
+				        continue;
+				    }
+
 				    if ($catinfo['categoryinfo']['pages'] == 0) continue;
+
+				    $catinfo['title'] = substr($catinfo['title'], 9);
 				    $title = $catinfo['title'];
 
 				    $month = null;
@@ -633,7 +624,14 @@ class Categories {
 
 				    switch ($params['type']) {
 				        case 'from-monthly':
-				            if (preg_match('! (\w+) \d{4}$!', $title, $matches)) $month = $months[$matches[1]];
+				            if (preg_match('! (\w+) \d{4}$!', $title, $matches)) {
+				                if (! isset($months[$matches[1]])) {
+				                    Logger::log("month not found - $title\n");
+				                    continue 2;
+				                }
+
+				                $month = $months[$matches[1]];
+				            }
                             // fall thru
 
 				        case 'since-yearly':
@@ -642,15 +640,17 @@ class Categories {
 
 					if ($subcatsonly) {
 						self::$parentCats [$title] = $cat;
+					} else {
+					    $catinfo['title'] = $cat;
 					}
 
 					if (! $skipCatLoad) {
 						if (isset($this->categories[$catid])) continue; // skip dup categories
 
-						$isth->execute ( [$catid, $title, $month, $year] );
+						$isth->execute ( [$catid, $catinfo['title'], $month, $year] );
 
 						++ $count;
-						$this->categories[$catid] = ['t' => $title, 'm' => $month, 'y' => $year];
+						$this->categories[$catid] = ['t' => $catinfo['title'], 'm' => $month, 'y' => $year];
 
 						$this->loadCategoryMembers ( $catid, $title, $dbh_tools );
 					}

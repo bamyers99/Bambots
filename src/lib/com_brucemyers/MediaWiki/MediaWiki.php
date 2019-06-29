@@ -691,7 +691,7 @@ class MediaWiki extends wikipedia
     	$ret = $this->query("?action=query&format=php&prop=$proptype" . $addparams);
 
     	if (isset($ret['error'])) {
-    	    throw new Exception("$proptype Error " . $ret['error']['info']);
+    	    throw new Exception("$proptype Error " . $ret['error']['info'] . "\n". print_r($params, true));
     	}
 
     	return $ret;
