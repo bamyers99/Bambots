@@ -141,6 +141,7 @@ class ProjectPages
 
         switch ($member_cat_type) {
             case 0: // articles by quality (subcats)
+                if (! isset($ret['query']) || ! isset($ret['query']['projects']) || empty($ret['query']['projects'])) return [];
                 $ret = reset($ret['query']['projects']);
 
                 foreach ($ret as $page) {
@@ -152,6 +153,7 @@ class ProjectPages
 
             case 1: // WikiProject x articles (talk namespace)
             case 2: // x (talk namespace)
+                if (! isset($ret['query']) || ! isset($ret['query']['categorymembers']) || empty($ret['query']['categorymembers'])) return [];
                 foreach ($ret['query']['categorymembers'] as $page) {
                     if ($page['ns'] != 1) continue;
                     $result[] = ['pt' => substr($page['title'], 5), 'i' => '', 'c' => ''];
@@ -159,6 +161,7 @@ class ProjectPages
                 break;
 
             case 3:// x (article namespace)
+                if (! isset($ret['query']) || ! isset($ret['query']['categorymembers']) || empty($ret['query']['categorymembers'])) return [];
                 foreach ($ret['query']['categorymembers'] as $page) {
                     if ($page['ns'] != 0) continue;
                     $result[] = ['pt' => $page['title'], 'i' => '', 'c' => ''];
