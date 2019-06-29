@@ -18,521 +18,514 @@
 namespace com_brucemyers\CleanupWorklistBot;
 
 use PDO;
+use com_brucemyers\Util\Logger;
 
 class Categories {
-	public static $CATEGORIES = array (
+	public static $CATEGORIES = [
 			// from-monthly
-			'1911 Britannica articles needing updates' => array (
+			'1911 Britannica articles needing updates' => [
 					'type' => 'from-monthly'
-			),
-			'Accuracy disputes' => array (
+			],
+			'Accuracy disputes' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Accuracy disputes or self-published'
-			),
-			'Article sections to be split' => array (
+			],
+			'Article sections to be split' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Sections to be split'
-			),
-			'Articles about possible neologisms' => array (
+			],
+			'Articles about possible neologisms' => [
 					'type' => 'from-monthly',
 					'display' => 'Possible neologisms'
-			),
-			'Articles containing potentially dated statements' => array (
+			],
+			'Articles containing potentially dated statements' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Potentially dated statements'
-			),
-			'Articles lacking in-text citations' => array (
+			],
+			'Articles lacking in-text citations' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Has general references but lacks inline footnotes'
-			),
-			'Articles lacking page references' => array (
+			],
+			'Articles lacking page references' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Footnotes need specific page numbers'
-			),
-			'Articles lacking reliable references' => array (
+			],
+			'Articles lacking reliable references' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Cites unreliable sources'
-			),
-			'Articles lacking sources' => array (
+			],
+			'Articles lacking sources' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Cites no sources'
-			),
-			'Articles needing additional categories' => array (
+			],
+			'Articles needing additional categories' => [
 					'type' => 'from-monthly',
 					'display' => 'Categories needed'
-			),
-			'Articles needing additional references' => array (
+			],
+			'Articles needing additional references' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Unsourced passages need footnotes {{refimprove}}'
-			),
-			'Articles needing cleanup' => array (
+			],
+			'Articles needing cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Cleanup needed'
-			),
-			'Articles needing expert attention' => array (
+			],
+			'Articles needing expert attention' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity',
 					'display' => 'Expert attention needed'
-			),
-			'Articles needing link rot cleanup' => array (
+			],
+			'Articles needing link rot cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Link rot cleanup'
-			),
-			'Articles needing more viewpoints' => array (
+			],
+			'Articles needing more viewpoints' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Viewpoints needed'
-			),
-			'Articles needing sections' => array (
+			],
+			'Articles needing sections' => [
 					'type' => 'from-monthly',
 					'display' => 'Sections needed'
-			),
-			'Articles needing the year an event occurred' => array (
+			],
+			'Articles needing the year an event occurred' => [
 					'type' => 'from-monthly',
 					'display' => 'Year an event occurred needed'
-			),
-			'Articles requiring tables' => array (
+			],
+			'Articles requiring tables' => [
 					'type' => 'from-monthly',
 					'display' => 'Tables needed'
-			),
-			'Articles slanted towards recent events' => array (
+			],
+			'Articles slanted towards recent events' => [
 					'type' => 'from-monthly',
 					'display' => 'Slanted towards recent events'
-			),
-			'Articles sourced by IMDb' => array (
+			],
+			'Articles sourced by IMDb' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'IMDb sourced'
-			),
-			'Articles sourced only by IMDb' => array (
+			],
+			'Articles sourced only by IMDb' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'IMDb only sourced'
-			),
-			'Articles that may be too long' => array (
+			],
+			'Articles that may be too long' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Too long'
-			),
-			'Articles that may contain original research' => array (
+			],
+			'Articles that may contain original research' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Original research'
-			),
-			'Articles that need to differentiate between fact and fiction' => array (
+			],
+			'Articles that need to differentiate between fact and fiction' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Fact and fiction differentiation'
-			),
-			'Articles to be expanded' => array (
+			],
+			'Articles to be expanded' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Expansion needed'
-			),
-			'Articles to be merged' => array (
+			],
+			'Articles to be merged' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Merge needed'
-			),
-			'Articles to be split' => array (
+			],
+			'Articles to be split' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Split needed'
-			),
-			'Articles with a promotional tone' => array (
+			],
+			'Articles with a promotional tone' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Promotional tone'
-			),
-			'Articles with broken or outdated citations' => array (
+			],
+			'Articles with broken or outdated citations' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Broken or outdated citations'
-			),
-			'Articles with close paraphrasing' => array (
+			],
+			'Articles with close paraphrasing' => [
 					'type' => 'from-monthly',
 					'display' => 'Close paraphrasing'
-			),
-			'Articles with close paraphrasing of public domain sources' => array (
+			],
+			'Articles with close paraphrasing of public domain sources' => [
 					'type' => 'from-monthly',
 					'display' => 'Close paraphrasing of public domain sources'
-			),
-			'Articles with dead external links' => array (
+			],
+			'Articles with dead external links' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Dead external links {{dead link}}'
-			),
-			'Articles with disproportional geographic scope' => array (
+			],
+			'Articles with disproportional geographic scope' => [
 					'type' => 'from-monthly',
 					'display' => 'Disproportional geographic scope'
-			),
-			'Articles with disputed statements' => array (
+			],
+			'Articles with disputed statements' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Disputed statements'
-			),
-			'Articles with excessive see also sections' => array (
+			],
+			'Articles with excessive see also sections' => [
 					'type' => 'from-monthly',
 					'display' => 'Excessive see also sections'
-			),
-			'Articles with failed verification' => array (
+			],
+			'Articles with failed verification' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Failed verification'
-			),
-			'Articles with improper non-free content' => array (
+			],
+			'Articles with improper non-free content' => [
 					'type' => 'from-monthly',
 					'display' => 'Improper non-free content'
-			),
-			'Articles with improper non-free content (lists)' => array (
+			],
+			'Articles with improper non-free content (lists)' => [
 					'type' => 'from-monthly',
 					'display' => 'Improper non-free content (lists)'
-			),
-			'Articles with limited geographic scope' => array (
+			],
+			'Articles with limited geographic scope' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Limited geographic scope'
-			),
-			'Articles with links needing disambiguation' => array (
+			],
+			'Articles with links needing disambiguation' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Links needing disambiguation'
-			),
-			'Articles with minor POV problems' => array (
+			],
+			'Articles with minor POV problems' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Minor POV problems'
-			),
-			'Articles with obsolete information' => array (
+			],
+			'Articles with obsolete information' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Obsolete information'
-			),
-			'Articles with peacock terms' => array (
+			],
+			'Articles with peacock terms' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Peacock terms'
-			),
-			'Articles with sections that need to be turned into prose' => array (
+			],
+			'Articles with sections that need to be turned into prose' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Prose needed'
-			),
-			'Articles with specifically marked weasel-worded phrases' => array (
+			],
+			'Articles with specifically marked weasel-worded phrases' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Weasel-worded phrases'
-			),
-			'Articles with too few wikilinks' => array (
+			],
+			'Articles with too few wikilinks' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Wikilinks needed'
-			),
-			'Articles with topics of unclear notability' => array (
+			],
+			'Articles with topics of unclear notability' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Notability unclear'
-			),
-			'Articles with trivia sections' => array (
+			],
+			'Articles with trivia sections' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Trivia sections'
-			),
-			'Articles with unsourced statements' => array (
+			],
+			'Articles with unsourced statements' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Unsourced passages need footnotes {{citation needed}}'
-			),
-			'Articles with weasel words' => array (
+			],
+			'Articles with weasel words' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Weasel words'
-			),
-			'Autobiographical articles' => array (
+			],
+			'Autobiographical articles' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality'
-			),
-			'BLP articles lacking sources' => array (
+			],
+			'BLP articles lacking sources' => [
 					'type' => 'from-monthly',
 					'group' => 'References'
-			),
-			'Copied and pasted articles and sections' => array (
+			],
+			'Copied and pasted articles and sections' => [
 					'type' => 'from-monthly'
-			),
-			'Copied and pasted articles and sections with url provided' => array (
+			],
+			'Copied and pasted articles and sections with url provided' => [
 					'type' => 'from-monthly'
-			),
-			'Dead-end pages' => array (
+			],
+			'Dead-end pages' => [
 					'type' => 'from-monthly',
 					'group' => 'Links'
-			),
-			'Disambiguation pages in need of cleanup' => array (
+			],
+			'Disambiguation pages in need of cleanup' => [
 					'type' => 'from-monthly'
-			),
-			'Incomplete disambiguation' => array (
+			],
+			'Incomplete disambiguation' => [
 					'type' => 'from-monthly'
-			),
-			'Incomplete lists' => array (
+			],
+			'Incomplete lists' => [
 					'type' => 'from-monthly',
 					'group' => 'Content'
-			),
-			'NPOV disputes' => array (
+			],
+			'NPOV disputes' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality'
-			),
-			'NRHP articles with dead external links' => array (
+			],
+			'NRHP articles with dead external links' => [
 					'type' => 'from-monthly',
 					'group' => 'Links'
-			),
-			'Orphaned articles' => array (
+			],
+			'Orphaned articles' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Orphaned'
-			),
-			'Pages with excessive dablinks' => array (
+			],
+			'Pages with excessive dablinks' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Dablinks excessive'
-			),
-			'Recently revised' => array (
+			],
+			'Recently revised' => [
 					'type' => 'from-monthly'
-			),
-			'Self-contradictory articles' => array (
+			],
+			'Self-contradictory articles' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity'
-			),
-			'Suspected copyright infringements without a source' => array (
+			],
+			'Suspected copyright infringements without a source' => [
 					'type' => 'from-monthly'
-			),
-			'Uncategorized' => array (
+			],
+			'Uncategorized' => [
 					'type' => 'from-monthly'
-			),
-			'Uncategorized stubs' => array (
+			],
+			'Uncategorized stubs' => [
 					'type' => 'from-monthly',
 					'group' => 'References'
-			),
-			'Unreferenced BLPs' => array (
+			],
+			'Unreferenced BLPs' => [
 					'type' => 'from-monthly',
 					'group' => 'References'
-			),
-			'Unreviewed new articles' => array (
+			],
+			'Unreviewed new articles' => [
 					'type' => 'from-monthly',
 					'group' => 'Content'
-			),
-			'Unreviewed new articles created via the Article Wizard' => array (
+			],
+			'Unreviewed new articles created via the Article Wizard' => [
 					'type' => 'from-monthly',
 					'group' => 'Content'
-			),
-			'Vague or ambiguous geographic scope' => array (
+			],
+			'Vague or ambiguous geographic scope' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity'
-			),
-			'Vague or ambiguous time' => array (
+			],
+			'Vague or ambiguous time' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity'
-			),
-			'Wikipedia articles in need of updating' => array (
+			],
+			'Wikipedia articles in need of updating' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Update needed'
-			),
-			'Wikipedia articles needing clarification' => array (
+			],
+			'Wikipedia articles needing clarification' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity',
 					'display' => 'Clarification needed'
-			),
-			'Wikipedia articles needing context' => array (
+			],
+			'Wikipedia articles needing context' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity',
 					'display' => 'Context needed'
-			),
-			'Wikipedia articles needing copy edit' => array (
+			],
+			'Wikipedia articles needing copy edit' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Copy edit needed'
-			),
-			'Wikipedia articles needing factual verification' => array (
+			],
+			'Wikipedia articles needing factual verification' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Factual verification needed'
-			),
-			'Wikipedia articles needing page number citations' => array (
+			],
+			'Wikipedia articles needing page number citations' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Page number citations needed'
-			),
-			'Wikipedia articles needing reorganization' => array (
+			],
+			'Wikipedia articles needing reorganization' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Reorganization needed'
-			),
-			'Wikipedia articles needing rewrite' => array (
+			],
+			'Wikipedia articles needing rewrite' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity',
 					'display' => 'Rewrite needed'
-			),
-			'Wikipedia articles needing style editing' => array (
+			],
+			'Wikipedia articles needing style editing' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Style editing needed'
-			),
-			'Wikipedia articles that are too technical' => array (
+			],
+			'Wikipedia articles that are too technical' => [
 					'type' => 'from-monthly',
 					'group' => 'Clarity',
 					'display' => 'Too technical'
-			),
-			'Wikipedia articles with plot summary needing attention' => array (
+			],
+			'Wikipedia articles with plot summary needing attention' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Plot summary needs attention'
-			),
-			'Wikipedia articles with possible conflicts of interest' => array (
+			],
+			'Wikipedia articles with possible conflicts of interest' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Conflict of interest'
-			),
-			'Wikipedia external links cleanup' => array (
+			],
+			'Wikipedia external links cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'External link cleanup {{external links}}'
-			),
-			'Wikipedia introduction cleanup' => array (
+			],
+			'Wikipedia introduction cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Introduction cleanup'
-			),
-			'Wikipedia list cleanup' => array (
+			],
+			'Wikipedia list cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'List cleanup'
-			),
-			'Wikipedia pages needing cleanup' => array (
+			],
+			'Wikipedia pages needing cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Cleanup needed'
-			),
-			'Wikipedia references cleanup' => array (
+			],
+			'Wikipedia references cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
 					'display' => 'Reference cleanup'
-			),
-			'Wikipedia spam cleanup' => array (
+			],
+			'Wikipedia spam cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Spam cleanup'
-			),
-			'Wikipedia articles containing buzzwords' => array (
+			],
+			'Wikipedia articles containing buzzwords' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Buzzword cleanup'
-			),
-			'Wikipedia articles without plot summaries' => array (
+			],
+			'Wikipedia articles without plot summaries' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Plot summary needed'
-			),
-			'Wikipedia red link cleanup' => array (
+			],
+			'Wikipedia red link cleanup' => [
 					'type' => 'from-monthly',
 					'group' => 'Links',
 					'display' => 'Red link cleanup'
-			),
+			],
 
 			// no-date
-			'All articles needing coordinates' => array (
+			'All articles needing coordinates' => [
 					'type' => 'no-date',
 					'group' => 'Content',
 					'display' => 'Coordinates needed'
-			),
-			'All articles needing expert attention' => array (
+			],
+			'All articles needing expert attention' => [
 					'type' => 'no-date',
 					'group' => 'Clarity',
 					'display' => 'Expert attention needed'
-			),
-			'Animals cleanup' => array (
+			],
+			'Animals cleanup' => [
 					'type' => 'no-date',
 					'group' => 'Content'
-			),
-			'Articles needing more detailed references' => array (
+			],
+			'Articles needing more detailed references' => [
 					'type' => 'no-date',
 					'group' => 'References',
 					'display' => 'Detailed references needed'
-			),
-			'Articles with incorrect citation syntax' => array (
+			],
+			'Articles with incorrect citation syntax' => [
 					'type' => 'no-date',
 					'subcats' => 'only',
 					'group' => 'References',
 					'display' => 'Citation syntax incorrect'
-			),
-			'CS1 errors' => array (
+			],
+			'CS1 errors' => [
 					'type' => 'no-date',
 					'subcats' => 'only',
 					'group' => 'References'
-			),
-			'External link templates with potential for greater use' => array (
-					'type' => 'no-date',
-					'group' => 'Template'
-			),
-			'Invalid conservation status' => array (
+			],
+			'Invalid conservation status' => [
 					'type' => 'no-date'
-			),
-			'Missing taxobox' => array (
+			],
+			'Missing taxobox' => [
 					'type' => 'no-date'
-			),
-			'Pages using duplicate arguments in template calls' => array (
+			],
+			'Pages using duplicate arguments in template calls' => [
 					'type' => 'no-date',
 					'display' => 'Template call duplicate arguments'
-			),
-			'Pages with reference errors' => array ( // Tracks subcats of Pages with citation errors
+			],
+			'Pages with reference errors' => [ // Tracks subcats of Pages with citation errors
 					'type' => 'no-date',
 					'group' => 'References',
 					'display' => 'Reference errors'
-			),
-			'Plant articles needing a taxobox' => array (
+			],
+			'Plant articles needing a taxobox' => [
 					'type' => 'no-date'
-			),
-			'Taxoboxes needing a status system parameter' => array (
+			],
+			'Taxoboxes needing a status system parameter' => [
 					'type' => 'no-date'
-			),
-			'Taxoboxes with an invalid color' => array (
+			],
+			'Taxoboxes with an invalid color' => [
 					'type' => 'no-date'
-			),
-			'Taxoboxes with an unrecognised status system' => array (
+			],
+			'Taxoboxes with an unrecognised status system' => [
 					'type' => 'no-date'
-			),
-			'Templates with missing or incorrect documentation' => array (
-					'type' => 'no-date',
-					'group' => 'Template'
-			),
-			'Tree of Life cleanup' => array (
+			],
+			'Tree of Life cleanup' => [
 					'type' => 'no-date',
 					'group' => 'Content'
-			),
-			'Wikipedia articles needing cleanup after translation' => array (
+			],
+			'Wikipedia articles needing cleanup after translation' => [
 					'type' => 'no-date',
 					'group' => 'Content',
 					'display' => 'Translation cleanup needed'
-			),
+			],
 
 			// since-yearly
-			'Pages with DOIs inactive' => array (
+			'Pages with DOIs inactive' => [
 					'type' => 'since-yearly',
 					'group' => 'Links',
 					'display' => 'DOIs inactive'
-			)
-	);
+			]
+	];
 
 	// Short category names for CS1 errors subcats
-	public static $SHORTCATS = array (
+	public static $SHORTCATS = [
 			'Pages using citations with accessdate and no URL' => 'Citation with accessdate and no URL',
 			'Pages with archiveurl citation errors' => 'Archiveurl citation error',
 			'Pages containing cite templates with deprecated parameters' => 'Cite template with deprecated parameters',
@@ -547,14 +540,14 @@ class Categories {
 			'Pages with citations using unnamed parameters' => 'Citation using unnamed parameter',
 			'Pages with citations using unsupported parameters' => 'Citation using unsupported parameter',
 			'Pages with URL errors' => 'URL error'
-	);
+	];
 
-	static $parentCats = array ();
+	static $parentCats = [];
 	var $tools_host;
-	var $enwiki_host;
+	var $mediawiki;
 	var $user;
 	var $pass;
-	public $categories = array(); // Storing in memory because SQL join is hanging.
+	public $categories = []; // Storing in memory because SQL join is hanging.
 
 	/**
 	 * Constructor
@@ -564,9 +557,9 @@ class Categories {
 	 * @param string $pass
 	 * @param string $tools_host
 	 */
-	public function __construct($enwiki_host, $user, $pass, $tools_host)
+	public function __construct($mediawiki, $user, $pass, $tools_host)
 	{
-		$this->enwiki_host = $enwiki_host;
+	    $this->mediawiki = $mediawiki;
 		$this->user = $user;
 		$this->pass = $pass;
 		$this->tools_host = $tools_host;
@@ -581,6 +574,7 @@ class Categories {
 	 */
 	public function load($skipCatLoad)
 	{
+	    $months = array_flip(ReportGenerator::$MONTHS);
     	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$count = 0;
@@ -594,96 +588,73 @@ class Categories {
 		foreach ( self::$CATEGORIES as $cat => $attribs ) {
 			$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
    			$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			$isth = $dbh_tools->prepare ( 'INSERT INTO category VALUES (:id, :title, :month, :year)' );
+			$isth = $dbh_tools->prepare ( 'INSERT INTO category VALUES (?,?,?,?)' );
 			$cattype = $attribs ['type'];
 
 			$subcatsonly = isset ( $attribs ['subcats'] );
 			if ($skipCatLoad && ! $subcatsonly)
 				continue;
-			$sqls = array ();
+			$cats = [];
 
 			switch ($cattype) {
 				case 'from-monthly' :
-					$param = str_replace ( ' ', '\_', "$cat from %" );
-					// Making sure a page for the category exists to weed out bad categories.
-					$sqls [$param] = "SELECT cat_id as id, cat_title as title,
-						MONTH(STR_TO_DATE(SUBSTRING_INDEX(SUBSTRING_INDEX(cat_title, '_', -2), '_', 1), '%M')) as month,
-						SUBSTRING_INDEX(cat_title, '_', -1) as year
-						FROM category, page
-						WHERE cat_title = page_title AND page_namespace = 14 AND
-							cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
+					$cats[] = ['type' => 'from-monthly', 'params' => ['generator' => 'allpages', 'gapprefix' => "$cat from ", 'gapnamespace' => 14, 'gaplimit' => 'max']];
 
-					$param = str_replace ( ' ', '_', $cat );
-					$sqls [$param] = "SELECT cat_id as id, cat_title as title,
-						NULL as month,
-						NULL as year
-						FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0";
+					$cats[] = ['type' => 'no-date', 'params' => ['titles' => $cat]];
 					break;
 
 				case 'since-yearly' :
-					$param = str_replace ( ' ', '\_', "$cat since %" );
-					$sqls [$param] = "SELECT cat_id as id, cat_title as title,
-						NULL as month,
-						SUBSTRING_INDEX(cat_title, '_', -1) as year
-						FROM category, page
-						WHERE cat_title = page_title AND page_namespace = 14 AND
-							cat_title LIKE ? AND cat_pages - (cat_subcats + cat_files) > 0";
+					$cats[] = ['type' => 'since-yearly', 'params' => ['generator' => 'allpages', 'gapprefix' => "$cat since ", 'gapnamespace' => 14, 'gaplimit' => 'max']];
 					break;
 
 				case 'no-date' :
-					$param = str_replace ( ' ', '_', $cat );
-
 					if ($subcatsonly) {
-						$sqls [$param] = "SELECT c.cat_id as id, c.cat_title as title,
-							NULL as month,
-							NULL as year
-							FROM category c
-							JOIN page AS cat ON c.cat_title = cat.page_title
-							JOIN categorylinks AS cl ON cat.page_id = cl.cl_from
-							WHERE cl.cl_to = ? AND c.cat_pages - (c.cat_subcats + c.cat_files) > 0 AND cl_type = \"subcat\"";
+					    $cats[] = ['type' => 'no-date', 'params' => ['generator' => 'categorymembers', 'gcmtitle' => $cat, 'gcmtype' => 'subcat', 'gcmlimit' => 'max']];
 					} else {
-						$sqls [$param] = "SELECT cat_id as id, cat_title as title,
-							NULL as month,
-							NULL as year
-							FROM category WHERE cat_title = ? AND cat_pages - (cat_subcats + cat_files) > 0";
+					    $cats[] = ['type' => 'no-date', 'params' => ['titles' => $cat]];
 					}
 					break;
 			}
 
-			foreach ( $sqls as $param => $sql ) {
-    			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
-    			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    			echo "$param => $sql\n";
-				$sth = $dbh_enwiki->prepare ( $sql );
-				$sth->bindParam ( 1, $param );
-				$sth->setFetchMode ( PDO::FETCH_ASSOC );
-				$sth->execute ();
+			foreach ( $cats as $params ) {
+			    $ret = $this->mediawiki->getProp('categoryinfo', $params['params']);
 
-				while ( $row = $sth->fetch () ) {
-					$title = $row ['title'];
+			    if (! isset($ret['query']) || ! isset($ret['query']['pages']) || empty($ret['query']['pages'])) {
+			        Logger::log("category not found " . print_r($params, true));
+			        continue;
+			    }
+
+				foreach ($ret['query']['pages'] as $catid => $catinfo) {
+				    if ($catinfo['categoryinfo']['pages'] == 0) continue;
+				    $title = $catinfo['title'];
+
+				    $month = null;
+				    $year = null;
+
+				    switch ($params['type']) {
+				        case 'from-monthly':
+				            if (preg_match('! (\w+) \d{4}$!', $title, $matches)) $month = $months[$matches[1]];
+                            // fall thru
+
+				        case 'since-yearly':
+				            if (preg_match('!(\d{4})$!', $title, $matches)) $year = $matches[1];
+				    }
+
 					if ($subcatsonly) {
-						$childTitle = str_replace ( '_', ' ', $title );
-						self::$parentCats [$childTitle] = $cat;
-					} else {
-						$row ['title'] = str_replace ( ' ', '_', $cat );
+						self::$parentCats [$title] = $cat;
 					}
 
 					if (! $skipCatLoad) {
-						$catid = (int)$row['id'];
 						if (isset($this->categories[$catid])) continue; // skip dup categories
 
-						$isth->execute ( $row );
+						$isth->execute ( [$catid, $title, $month, $year] );
 
 						++ $count;
-						$this->categories[$catid] = array('t' => $row['title'], 'm' => $row['month'], 'y' => $row['year']);
+						$this->categories[$catid] = ['t' => $title, 'm' => $month, 'y' => $year];
 
 						$this->loadCategoryMembers ( $catid, $title, $dbh_tools );
 					}
 				}
-
-				$sth->closeCursor ();
-				$sth = null;
-				$dbh_enwiki = null;
 			}
 
 			$isth = null;
@@ -699,7 +670,7 @@ class Categories {
 
 			while ( $row = $results->fetch () ) {
 				$catid = (int)$row['cat_id'];
-				$this->categories[$catid] = array('t' => $row['cat_title'], 'm' => $row['month'], 'y' => $row['year']);
+				$this->categories[$catid] = ['t' => $row['cat_title'], 'm' => $row['month'], 'y' => $row['year']];
 			}
 
 			$results->closeCursor();
@@ -719,33 +690,43 @@ class Categories {
 	 */
 	function loadCategoryMembers($catid, $cat, PDO $dbh_tools)
 	{
-    	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
-    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		$count = 0;
-		$dbh_tools->beginTransaction ();
-		$isth = $dbh_tools->prepare ( 'INSERT INTO categorylinks VALUES (:cl_from, :cat_id)' );
-		$sql = "SELECT cl_from
-				FROM categorylinks
-				WHERE cl_to = ? AND cl_type = 'page'";
+		$isth = $dbh_tools->prepare ( 'INSERT INTO categorylinks VALUES (?,?)' );
+		$continue = '';
 
-		$sth = $dbh_enwiki->prepare ( $sql );
-		$sth->bindParam ( 1, $cat );
-		$sth->setFetchMode ( PDO::FETCH_ASSOC );
-		$sth->execute ();
+		while ($members = $this->getChunk($cat, $continue)) {
+		    $dbh_tools->beginTransaction();
 
-		while ( $row = $sth->fetch () ) {
-			++ $count;
-			if ($count % 1000 == 0) {
-				$dbh_tools->commit ();
-				$dbh_tools->beginTransaction ();
-			}
-			$isth->execute ( array('cl_from' => $row['cl_from'], 'cat_id' => $catid) );
+		    foreach ($members as $page) {
+		        if ($page['ns'] != 0) continue;
+		        $isth->execute([$page['title'], $catid]);
+		    }
+
+		    $dbh_tools->commit();
+
+		    if ($continue === false) break;
 		}
 
-		$sth->closeCursor ();
-		$sth = null;
-		$dbh_tools->commit ();
 		$isth = null;
-		$dbh_enwiki = null;
+	}
+
+	/**
+	 * Get a chunk of category members.
+	 *
+	 * @param string $category
+	 * @param mixed $continue
+	 * @return mixed
+	 */
+	function getChunk($category, &$continue)
+	{
+	    $params = ['continue' => $continue, 'cmtitle' => $category, 'cmlimit' => 'max'];
+
+	    $ret = $this->mediawiki->getList('categorymembers', $params);
+
+	    if (isset($ret['continue'])) $continue = $ret['continue'];
+	    else $continue = false;
+
+	    if (! isset($ret['query']) || ! isset($ret['query']['categorymembers'])) return [];
+
+	    return $ret['query']['categorymembers'];
 	}
 }

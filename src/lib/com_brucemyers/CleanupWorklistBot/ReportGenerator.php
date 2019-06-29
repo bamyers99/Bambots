@@ -24,7 +24,7 @@ use com_brucemyers\MediaWiki\ResultWriter;
 
 class ReportGenerator
 {
-	static $MONTHS = array(1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
+	public static $MONTHS = array(1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
 		7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December');
 	var $outputdir;
 	var $urlpath;
@@ -64,7 +64,7 @@ class ReportGenerator
 		$this->pass = $pass;
 	}
 
-	function generateReports($project, $isWikiProject, $project_pages)
+	function generateReports($project, $isWikiProject, $project_pages, $member_cat_type)
 	{
     	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -84,18 +84,17 @@ class ReportGenerator
 		$expiry = strtotime('+1 week');
 		$expiry = date('D, d M Y', $expiry) . ' 00:00:00 GMT';
 
-		$results = $dbh_tools->query('SELECT `article_id`, `page_title`, `importance`, `class` FROM `page` p');
+		$results = $dbh_tools->query('SELECT `page_title`, `importance`, `class` FROM `page` p');
 
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
-			$pageid = (int)$row['article_id'];
+			$pagetitle = $row['page_title'];
 
-			$clquery->bindValue(1, $pageid);
+			$clquery->bindValue(1, $pagetitle);
 			$clquery->execute();
 
-			$title = str_replace('_', ' ', $row['page_title']);
 			if ($row['importance'] == null) $row['importance'] = '';
 			if ($row['class'] == null) $row['class'] = '';
-			$curclean[$title] = array(self::KEY_IMP => $row['importance'], self::KEY_CLS => $row['class'], self::KEY_ISSUES => array());
+			$curclean[$pagetitle] = [self::KEY_IMP => $row['importance'], self::KEY_CLS => $row['class'], self::KEY_ISSUES => []];
 			++$cleanup_pages;
 
 			while ($clrow = $clquery->fetch(PDO::FETCH_ASSOC)) {
@@ -103,9 +102,9 @@ class ReportGenerator
 				++$issue_count;
 				if (! isset($this->categories[$cat_id])) {
 					$cat = $this->catobj->categories[$cat_id];
-					$this->categories[$cat_id] = array(self::KEY_TITLE => $cat['t'], self::KEY_MTH => $cat['m'], self::KEY_YR => $cat['y']);
+					$this->categories[$cat_id] = [self::KEY_TITLE => $cat['t'], self::KEY_MTH => $cat['m'], self::KEY_YR => $cat['y']];
 				}
-				$curclean[$title][self::KEY_ISSUES][] = $cat_id;
+				$curclean[$pagetitle][self::KEY_ISSUES][] = $cat_id;
 			}
 
 			$clquery->closeCursor();
@@ -526,8 +525,8 @@ class ReportGenerator
 
 		$sth = $dbh_tools->prepare("DELETE FROM project WHERE `name` = ?");
 		$sth->execute(array($wikiproject));
-		$sth = $dbh_tools->prepare("INSERT INTO project VALUES (?, ?)");
-		$sth->execute(array($wikiproject, 1));
+		$sth = $dbh_tools->prepare("INSERT INTO project VALUES (?, ?, ?)");
+		$sth->execute(array($wikiproject, 1, $member_cat_type));
 
 		$dbh_tools = null;
 

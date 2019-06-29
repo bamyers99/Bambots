@@ -36,10 +36,9 @@ class CreateTables
     public function __construct(PDO $dbh_tools)
     {
     	$sql = "CREATE TABLE IF NOT EXISTS `categorylinks` (
-		  `cl_from` int(10) unsigned NOT NULL,
+		  `cl_from` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 		  `cat_id` int(10) unsigned NOT NULL,
-		  UNIQUE KEY `cl_from` (`cl_from`,`cat_id`),
-    	  KEY `cat_id` (`cat_id`, `cl_from`)
+		  UNIQUE KEY `cl_from` (`cl_from`,`cat_id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
@@ -57,13 +56,10 @@ class CreateTables
 		$importances_string = "'" . implode("', '", array_keys(self::$IMPORTANCES)) . "'";
 
     	$sql = "CREATE TABLE IF NOT EXISTS `page` (
-		  `article_id` int(10) unsigned NOT NULL,
-		  `talk_id` int(10) unsigned NULL,
 		  `page_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
           `importance` ENUM($importances_string),
           `class` ENUM($classes_string),
-    	  PRIMARY KEY (`article_id`),
-    	  UNIQUE KEY `talk_id` (`talk_id`)
+    	  PRIMARY KEY (`page_title`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
@@ -82,6 +78,7 @@ class CreateTables
     	$sql = "CREATE TABLE IF NOT EXISTS `project` (
     	  `name` varchar(255) NOT NULL,
     	  `wiki_too_big` int(8) NOT NULL,
+          `member_cat_type` int(8) NOT NULL DEFAULT '0',
     	  PRIMARY KEY `name` (`name`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);

@@ -18,157 +18,175 @@
 namespace com_brucemyers\test\CleanupWorklistBot;
 
 use PDO;
+use Mock;
 
 class CreateTables
 {
+    var $mediawiki;
+
 	/**
 	 * Create test tables
 	 *
 	 * @param PDO $dbh_enwiki
 	 * @param PDO $dbh_tools
 	 */
-    public function __construct(PDO $dbh_enwiki, PDO $dbh_tools)
+    public function __construct(PDO $dbh_tools)
     {
-    	// enwiki
-   		$dbh_enwiki->exec('DROP TABLE IF EXISTS page');
-   		$dbh_enwiki->exec('DROP TABLE IF EXISTS categorylinks');
-
-    	$sql = "CREATE TABLE IF NOT EXISTS `category` (
-		  `cat_id` int(10) unsigned NOT NULL,
-		  `cat_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-		  `cat_pages` int(11) NOT NULL DEFAULT '0',
-		  `cat_subcats` int(11) NOT NULL DEFAULT '0',
-		  `cat_files` int(11) NOT NULL DEFAULT '0',
-		  PRIMARY KEY (`cat_id`),
-		  UNIQUE KEY `cat_title` (`cat_title`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-    	$dbh_enwiki->exec($sql);
-
-    	$sql = "CREATE TABLE IF NOT EXISTS `categorylinks` (
-		  `cl_from` int(10) unsigned NOT NULL DEFAULT '0',
-		  `cl_to` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
-		  `cl_type` enum('page','subcat','file') NOT NULL DEFAULT 'page',
-		  UNIQUE KEY `cl_from` (`cl_from`,`cl_to`),
-		  KEY `cl_sortkey` (`cl_to`,`cl_type`,`cl_from`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-    	$dbh_enwiki->exec($sql);
-
-    	$sql = "CREATE TABLE IF NOT EXISTS `page` (
-		  `page_id` int(10) unsigned NOT NULL,
-		  `page_namespace` int(11) NOT NULL,
-		  `page_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-		  PRIMARY KEY (`page_id`),
-		  UNIQUE KEY `name_title` (`page_namespace`,`page_title`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-    	$dbh_enwiki->exec($sql);
-
     	// tools
     	new \com_brucemyers\CleanupWorklistBot\CreateTables($dbh_tools);
 
-    	// load enwiki
-
-   		$dbh_enwiki->exec('TRUNCATE category');
-   		$dbh_enwiki->exec('TRUNCATE page');
-   		$dbh_enwiki->exec('TRUNCATE categorylinks');
    		$dbh_tools->exec('TRUNCATE history');
-
-     	// project article categories
-
-    	// category - x articles by quality (subcats)
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (1,'Michigan_articles_by_quality',2,2,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (2,'B-Class_Michigan_articles',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (3,'Unassessed_Michigan_articles',3,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (4,'Top-importance_Michigan_articles',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (5,'NA-importance_Michigan_articles',3,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (6,'All_articles_needing_coordinates',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (7,'Articles_needing_cleanup_from_May_2013',3,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (8,'Articles_needing_cleanup_from_March_2013',1,0,0)");
-   		$dbh_enwiki->exec("INSERT INTO category VALUES (9,'External_link_templates_with_potential_for_greater_use',1,0,0)");
-
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (1, 14, 'B-Class_Michigan_articles')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (2, 14, 'Unassessed_Michigan_articles')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (3, 0, 'Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (4, 1, 'Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (5, 0, 'Detroit,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (6, 1, 'Detroit,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (7, 0, 'Mackinac_Island')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (8, 1, 'Mackinac_Island')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (9, 0, 'Lansing,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (10, 1, 'Lansing,_Michigan')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (11, 14, 'All_articles_needing_coordinates')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (12, 14, 'Articles_needing_cleanup_from_May_2013')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (13, 14, 'Articles_needing_cleanup_from_March_2013')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (14, 10, 'EFloras')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (15, 11, 'EFloras')");
-   		$dbh_enwiki->exec("INSERT INTO page VALUES (16, 14, 'External_link_templates_with_potential_for_greater_use')");
-
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (1, 'Michigan_articles_by_quality', 'subcat')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (2, 'Michigan_articles_by_quality', 'subcat')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (3, 'All_articles_needing_coordinates', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'B-Class_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (4, 'Top-importance_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_May_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (5, 'Articles_needing_cleanup_from_March_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'Unassessed_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (6, 'NA-importance_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'Unassessed_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (8, 'NA-importance_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (9, 'Articles_needing_cleanup_from_May_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'Unassessed_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (10, 'NA-importance_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (14, 'External_link_templates_with_potential_for_greater_use', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (15, 'Unassessed_Michigan_articles', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (15, 'NA-importance_Michigan_articles', 'page')");
-
    		$dbh_tools->exec("INSERT INTO history VALUES ('Michigan', '2014-05-14', 2, 1, 2, 1, 0)");
    		$dbh_tools->exec("INSERT INTO history VALUES ('Michigan', '2014-05-21', 3, 2, 3, 0, 1)");
 
-   	 	// category - WikiProject x articles
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (100,'WikiProject_India_articles',1,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (101,'Stub-Class_India_articles',1,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (102,'Unknown-importance_India_articles',1,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (103,'Articles_needing_cleanup',1,0,0)");
+   		$dbh_tools->exec('TRUNCATE project');
+   		$dbh_tools->exec("INSERT INTO project VALUES ('Featured_articles', 1, 3)");
+   		$dbh_tools->exec("INSERT INTO project VALUES ('Good_article_nominees', 1, 2)");
+   		$dbh_tools->exec("INSERT INTO project VALUES ('India', 1, 1)");
+   		$dbh_tools->exec("INSERT INTO project VALUES ('WikiProject_Michigan', 1, 0)");
 
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (100, 0, 'India')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (101, 1, 'India')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (102, 14, 'Articles_needing_cleanup')");
+   		// enwiki
+   		Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
+   		$this->mediawiki = new \MockMediaWiki();
 
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (100, 'Articles_needing_cleanup', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (101, 'WikiProject_India_articles', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (101, 'Stub-Class_India_articles', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (101, 'Unknown-importance_India_articles', 'page')");
+   		// category - x articles by quality (subcats)
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['projects' => ['Michigan' => [
+   		        ['ns' => 0, 'title' =>'Michigan', 'assessment' => ['importance' => 'Top', 'class' => 'B']],
+   		        ['ns' => 0, 'title' =>'Detroit, Michigan', 'assessment' => ['importance' => 'NA', 'class' => 'Unassessed']],
+   		        ['ns' => 0, 'title' =>'Mackinac Island', 'assessment' => ['importance' => 'NA', 'class' => 'Unassessed']],
+   		        ['ns' => 0, 'title' =>'Lansing, Michigan', 'assessment' => ['importance' => 'NA', 'class' => 'Unassessed']]
+   		    ]]]],
+   		    ['projectpages', ['continue' => '', 'wppprojects' => 'Michigan', 'wpplimit' => 'max']]
+   		    );
+
+   		$this->mediawiki->returns('getProp',
+   		    ['query' => ['pages' =>  [
+   		        '11' => ['title' =>'All articles needing coordinates', 'categoryinfo' => ['pages' => 1]]
+   		    ]]],
+   		    ['categoryinfo', ['titles' => 'All articles needing coordinates']]
+   		    );
+
+   		$this->mediawiki->returns('getProp',
+   		    ['query' => ['pages' =>  [
+   		        '12' => ['title' =>'Articles needing cleanup from May 2013', 'categoryinfo' => ['pages' => 3]],
+   		        '13' => ['title' =>'Articles needing cleanup from March 2013', 'categoryinfo' => ['pages' => 1]]
+   		    ]]],
+   		    ['categoryinfo', ['generator' => 'allpages', 'gapprefix' => 'Articles needing cleanup from ', 'gapnamespace' => 14, 'gaplimit' => 'max']]
+   		    );
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'Michigan', 'ns' => 0]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'All articles needing coordinates', 'cmlimit' => 'max']]
+   		    );
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'Detroit, Michigan', 'ns' => 0],
+   		        ['title' =>'Lansing, Michigan', 'ns' => 0],
+   		        ['title' =>'Earth', 'ns' => 0],
+   		        ['title' =>'Read\'s Cavern', 'ns' => 0]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Articles needing cleanup from May 2013', 'cmlimit' => 'max']]
+   		    );
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'Detroit, Michigan', 'ns' => 0]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Articles needing cleanup from March 2013', 'cmlimit' => 'max']]
+   		    );
 
 
-    	// category - x (talk namespace); subcats = only
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (200,'Good_article_nominees',1,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (201,'Articles_with_incorrect_citation_syntax',1,1,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (202,'Pages_using_citations_with_format_and_no_URL',1,0,0)");
+   		// category - WikiProject x articles (talk namespace)
 
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (200, 14, 'Pages_using_citations_with_format_and_no_URL')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (201, 0, 'United_States')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (202, 1, 'United_States')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (203, 14, 'Articles_with_incorrect_citation_syntax')");
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'Talk:India', 'ns' => 1]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'WikiProject India articles', 'cmlimit' => 'max']]
+   		    );
 
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (200, 'Articles_with_incorrect_citation_syntax', 'subcat')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (201, 'Pages_using_citations_with_format_and_no_URL', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (202, 'Good_article_nominees', 'page')");
+   		$this->mediawiki->returns('getProp',
+   		    ['query' => ['pages' =>  [
+   		        '102' => ['title' =>'Articles needing cleanup', 'categoryinfo' => ['pages' => 1]]
+   		    ]]],
+   		    ['categoryinfo', ['titles' => 'Articles needing cleanup']]
+   		    );
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'India', 'ns' => 0]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Articles needing cleanup', 'cmlimit' => 'max']]
+   		    );
+
+
+    	// category - x (talk namespace)
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'Talk:United States', 'ns' => 1]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Good article nominees', 'cmlimit' => 'max']]
+   		    );
+
+   		$this->mediawiki->returns('getProp',
+   		    ['query' => ['pages' =>  [
+   		        '200' => ['title' =>'Pages using citations with format and no URL', 'categoryinfo' => ['pages' => 1]]
+   		    ]]],
+   		    ['categoryinfo', ['generator' => 'categorymembers', 'gcmtitle' => 'Articles with incorrect citation syntax', 'gcmtype' => 'subcat', 'gcmlimit' => 'max']]
+   		    );
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'United States', 'ns' => 0]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Pages using citations with format and no URL', 'cmlimit' => 'max']]
+   		    );
 
 
     	// category - x (article namespace)
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (300,'Featured_articles',2,0,0)");
-    	$dbh_enwiki->exec("INSERT INTO category VALUES (301,'Pages_with_DOIs_inactive_since_2013',2,0,0)");
 
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (301, 0, 'Earth')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (302, 1, 'Earth')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (303, 0, 'Read\'s Cavern')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (304, 1, 'Read\'s Cavern')");
-    	$dbh_enwiki->exec("INSERT INTO page VALUES (305, 14, 'Pages_with_DOIs_inactive_since_2013')");
+    	$this->mediawiki->returns('getList',
+    	    ['query' => ['categorymembers' =>  [
+    	        ['title' =>'Earth', 'ns' => 0],
+    	        ['title' =>'Read\'s Cavern', 'ns' => 0]
+    	    ]]],
+    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Featured articles', 'cmlimit' => 'max']]
+    	    );
 
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Featured_articles', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Pages_with_DOIs_inactive_since_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (301, 'Articles_needing_cleanup_from_May_2013', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Featured_articles', 'page')");
-    	$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Pages_with_DOIs_inactive_since_2013', 'page')");
-   		$dbh_enwiki->exec("INSERT INTO categorylinks VALUES (303, 'Articles_needing_cleanup_from_May_2013', 'page')");
+    	$this->mediawiki->returns('getProp',
+    	    ['query' => ['pages' =>  [
+    	        '305' => ['title' =>'Pages with DOIs inactive since 2013', 'categoryinfo' => ['pages' => 2]]
+    	    ]]],
+    	    ['categoryinfo', ['generator' => 'allpages', 'gapprefix' => 'Pages with DOIs inactive since ', 'gapnamespace' => 14, 'gaplimit' => 'max']]
+    	    );
+
+    	$this->mediawiki->returns('getList',
+    	    ['query' => ['categorymembers' =>  [
+    	        ['title' =>'Earth', 'ns' => 0],
+    	        ['title' =>'Read\'s Cavern', 'ns' => 0]
+    	    ]]],
+    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Pages with DOIs inactive since 2013', 'cmlimit' => 'max']]
+    	    );
+
+    	// Dummys
+
+    	$this->mediawiki->returns('getList',
+    	    ['query' => ['categorymembers' =>  []]]
+    	    );
+
+    	$this->mediawiki->returns('getProp',
+    	    ['query' => ['pages' =>  []]]
+    	    );
+    }
+
+    public function getMediawiki()
+    {
+        return $this->mediawiki;
     }
 }

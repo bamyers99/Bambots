@@ -33,26 +33,24 @@ class TestReports extends UnitTestCase
 
     public function testGenerate()
     {
-    	$enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
     	$tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
     	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 
-    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
-    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    	new CreateTables($dbh_enwiki, $dbh_tools);
+    	$tables = new CreateTables($dbh_tools);
+    	$mediawiki = $tables->getMediawiki();
 
-    	$categories = new Categories($enwiki_host, $user, $pass, $tools_host);
+    	$categories = new Categories($mediawiki, $user, $pass, $tools_host);
     	$categories->load(false);
 
     	$asof_date = getdate();
     	$outputdir = Config::get(CleanupWorklistBot::HTMLDIR);
     	$urlpath = Config::get(CleanupWorklistBot::URLPATH);
 
-    	$project_pages = new ProjectPages($enwiki_host, $user, $pass, $tools_host);
+    	$project_pages = new ProjectPages($mediawiki, $user, $pass, $tools_host);
 
     	$wikiDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
     	$wikiDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $wikiDir);
@@ -63,22 +61,22 @@ class TestReports extends UnitTestCase
     	$repgen = new ReportGenerator($tools_host, $outputdir, $urlpath, $asof_date, $resultwriter, $categories, $user, $pass);
 
     	$category = 'Good_article_nominees';
-    	$page_count = $project_pages->load($category);
+    	$page_count = $project_pages->load($category, 2);
 
-    	$repgen->generateReports($category, false, $page_count);
+    	$repgen->generateReports($category, false, $page_count, 2);
 
     	$category = 'Featured_articles';
-    	$page_count = $project_pages->load($category);
+    	$page_count = $project_pages->load($category, 3);
 
-    	$repgen->generateReports($category, false, $page_count);
+    	$repgen->generateReports($category, false, $page_count, 3);
 
         $category = 'India';
-    	$page_count = $project_pages->load($category);
+    	$page_count = $project_pages->load($category, 1);
 
-    	$repgen->generateReports($category, false, $page_count);
+    	$repgen->generateReports($category, false, $page_count, 1);
 
     	$category = 'Michigan';
-    	$page_count = $project_pages->load($category);
+    	$page_count = $project_pages->load($category, 0);
 
     	$csvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $category . '.csv';
     	$hndl = fopen($csvpath, 'wb');
@@ -87,6 +85,6 @@ class TestReports extends UnitTestCase
     	fwrite($hndl, '""K" Brighton, Michigan","NA","Unassessed","2","March 2013","Articles needing cleanup (May 2013, March 2013)"' . "\n");
     	fclose($hndl);
 
-    	$repgen->generateReports($category, true, $page_count);
+    	$repgen->generateReports($category, true, $page_count, 0);
     }
 }

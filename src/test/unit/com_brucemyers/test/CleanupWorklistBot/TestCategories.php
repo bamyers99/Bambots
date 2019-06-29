@@ -29,23 +29,22 @@ class TestCategories extends UnitTestCase
 
     public function testCategoryLoad()
     {
-    	$enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
     	$tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
     	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 
-    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
-    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    	new CreateTables($dbh_enwiki, $dbh_tools);
-    	$categories = new Categories($enwiki_host, $user, $pass, $tools_host);
+    	$tables = new CreateTables($dbh_tools);
+    	$mediawiki = $tables->getMediawiki();
+
+    	$categories = new Categories($mediawiki, $user, $pass, $tools_host);
     	$count = $categories->load(false);
-    	$this->assertEqual($count, 7, 'Wrong category count');
+    	$this->assertEqual($count, 6, "Wrong category count $count != 6");
 
     	$result = $dbh_tools->query('SELECT count(*) as linkcount FROM categorylinks', PDO::FETCH_ASSOC);
     	$row = $result->fetch();
-    	$this->assertEqual($row['linkcount'], 11, 'Wrong category link count');
+    	$this->assertEqual($row['linkcount'], 10, "Wrong category link count {$row['linkcount']} != 10");
     }
 }

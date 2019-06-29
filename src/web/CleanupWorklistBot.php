@@ -131,6 +131,7 @@ function cat_test($project, $category_override)
 		$output .= "Project articles category: <a href='https://en.wikipedia.org/wiki/Category:$project_cat'>$project_members</a><br />";
 		$output .= 'Project class categories found: ' . (($result['found_class']) ? 'Yes' : 'No') . '<br />';
 		$output .= 'Project importance categories found: ' . (($result['found_importance']) ? 'Yes' : 'No') . '<br />';
+		$output .= 'Project member category type: ' . $result['member_cat_type'] . '<br />';
 	} else {
 		$output .= 'Project articles category: <span style="font-style: italic;">Not found</span><br />';
 	}
@@ -149,6 +150,7 @@ function _test_category($category)
 	$result = ['project_members' => '', 'project_cat' => '', 'found_importance' => false, 'found_class' => false];
 	$mediawiki = new MediaWiki('https://en.wikipedia.org/w/api.php');
 	$project_members = '';
+	$member_cat_type = 0;
 
 	// category - x articles by quality (subcats)
 	$ucfcategory = ucfirst($category);
@@ -160,6 +162,7 @@ function _test_category($category)
 	    if ($page['categoryinfo']['pages'] > 0) {
 		    $project_members = "$param (child categories)";
 		    $project_cat = $param;
+		    $member_cat_type = 0;
 	    }
 	}
 
@@ -173,6 +176,7 @@ function _test_category($category)
 	        if ($page['categoryinfo']['pages'] > 0) {
 	            $project_members = $param;
 			    $project_cat = $param;
+			    $member_cat_type = 1;
 	        }
 		}
 	}
@@ -190,6 +194,7 @@ function _test_category($category)
 		if (! empty($ret['query']['categorymembers'])) {
 		    $project_members = "$param (talk namespace)";
 		    $project_cat = $param;
+		    $member_cat_type = 2;
 		}
 	}
 
@@ -206,6 +211,7 @@ function _test_category($category)
 		if (! empty($ret['query']['categorymembers'])) {
 		    $project_members = "$param (article namespace)";
 			$project_cat = $param;
+			$member_cat_type = 3;
 		}
 	}
 
@@ -213,6 +219,7 @@ function _test_category($category)
 	if (! empty($project_members)) {
 		$result['project_members'] = $project_members;
 		$result['project_cat'] = $project_cat;
+		$result['member_cat_type'] = $member_cat_type;
 
 		// Check importance categories
 		$found_importance = false;

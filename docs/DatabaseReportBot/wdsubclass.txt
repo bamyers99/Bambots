@@ -31,7 +31,7 @@ sql tools
 TRUNCATE s51454__wikidata.subclassclasses;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassclasses.tsv' INTO TABLE s51454__wikidata.subclassclasses CHARACTER SET binary;
 
-TRUNCATE s51454__wikidata.subclasstotals;
+TRUNCATE s51454__wikidata.subclassvalues;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassvalues.tsv' INTO TABLE s51454__wikidata.subclassvalues CHARACTER SET binary;
 
 TRUNCATE s51454__wikidata.subclasstotals;

@@ -35,7 +35,6 @@ class CleanupWorklistBot
     const CURRENTPROJECT = 'CleanupWorklistBot.currentproject';
     const HTMLDIR = 'CleanupWorklistBot.htmldir';
     const URLPATH = 'CleanupWorklistBot.urlpath';
-    const ENWIKI_HOST = 'CleanupWorklistBot.enwiki_host';
     const TOOLS_HOST = 'CleanupWorklistBot.tools_host';
     const LABSDB_USERNAME = 'CleanupWorklistBot.labsdb_username';
     const LABSDB_PASSWORD = 'CleanupWorklistBot.labsdb_password';
@@ -49,7 +48,6 @@ class CleanupWorklistBot
         $totaltimer->start();
         $startProject = Config::get(self::CURRENTPROJECT);
 
-    	$enwiki_host = Config::get(self::ENWIKI_HOST);
     	$tools_host = Config::get(self::TOOLS_HOST);
     	$user = Config::get(self::LABSDB_USERNAME);
     	$pass = Config::get(self::LABSDB_PASSWORD);
@@ -58,26 +56,48 @@ class CleanupWorklistBot
 
         new CreateTables($dbh_tools);
 
+        // Retrieve the projects member category type
+        $results = $dbh_tools->query('SELECT `name`, member_cat_type FROM project');
+
+        while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+            $project = $row['name'];
+            $member_cat_type = (int)$row['member_cat_type'];
+
+            if (isset($ruleconfigs[$project])) {
+                $ruleconfigs[$project] = ['category' => $ruleconfigs[$project], 'member_cat_type' => $member_cat_type];
+            }
+        }
+
         if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('TRUNCATE project');
         $dbh_tools = null;
 
         $restarted = '';
         if (! empty($startProject)) $restarted = ' (restarted)';
 
-        $categories = new Categories($enwiki_host, $user, $pass, $tools_host);
+        $mediawiki = new MediaWiki('https://en.wikipedia.org/w/api.php');
+
+        $categories = new Categories($mediawiki, $user, $pass, $tools_host);
         $categories->load($skipCatLoad);
 
         $asof_date = getdate();
     	$outputdir = Config::get(self::HTMLDIR);
         $urlpath = Config::get(self::URLPATH);
 
-        $project_pages = new ProjectPages($enwiki_host, $user, $pass, $tools_host);
+        $project_pages = new ProjectPages($mediawiki, $user, $pass, $tools_host);
 
         $repgen = new ReportGenerator($tools_host, $outputdir, $urlpath, $asof_date, $resultWriter, $categories, $user, $pass);
 
         // Generate each projects reports.
 
-        foreach ($ruleconfigs as $project => $category) {
+        foreach ($ruleconfigs as $project => $attribs) {
+            if (is_array($attribs)) {
+                $category = $attribs['category'];
+                $member_cat_type = $attribs['member_cat_type'];
+            } else {
+                $category = $attribs;
+                $member_cat_type = 0;
+            }
+
         	if (! empty($startProject) && $project != $startProject) continue;
             $startProject = '';
             Config::set(self::CURRENTPROJECT, $project, true);
@@ -87,10 +107,12 @@ class CleanupWorklistBot
         		$project = substr($project, 12);
         		$isWikiProject = true;
         	}
+
         	if (empty($category)) $category = $project;
 
         	try {
-	        	$page_count = $project_pages->load($category);
+        	    $page_count = $project_pages->load($category, $member_cat_type);
+
 	        	if ($page_count < 10 && $project != 'Bhubaneswar') {
 	        		$errorrulsets[] = $project . ' (< 10 pages in project)';
 	        		Logger::log($project . ' (< 10 pages in project)');
@@ -98,7 +120,10 @@ class CleanupWorklistBot
 	        		continue;
 	        	}
 
-	        	$repgen->generateReports($project, $isWikiProject, $page_count);
+	        	$repgen->generateReports($project, $isWikiProject, $page_count, $member_cat_type);
+
+	        	if ($page_count > 10000) $mediawiki->login(null, null); // re-login
+
         	} catch (CatTypeNotFoundException $ex) {
         		$errorrulsets[] = $project . ' (project category not found)';
         	}
@@ -250,7 +275,7 @@ EOT;
         $outputDir .= DIRECTORY_SEPARATOR;
 
     	$backupFile = $outputDir . 'CleanupWorklistBot_History.bz2';
-    	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CleanupWorklistBot history | bzip2 -9 > $backupFile";
+    	$command = "mysqldump -h {$tools_host} -u {$user} -p{$pass} s51454__CleanupWorklistBot history project | bzip2 -9 > $backupFile";
     	Logger::log($command);
     	$ret = system($command, $return_var);
 

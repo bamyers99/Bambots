@@ -32,7 +32,7 @@ class ProjectPages
 	const SQL_Importance = "SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'";
 	const SQL_Class = "SELECT cl_from FROM categorylinks WHERE cl_to = ? AND cl_type = 'page'";
 
-	var $enwiki_host;
+	var $mediawiki;
 	var $user;
 	var $pass;
 	var $tools_host;
@@ -40,14 +40,14 @@ class ProjectPages
     /**
      * Constructor
      *
-	 * @param string $enwiki_host
+	 * @param string $mediawiki
 	 * @param string $user
 	 * @param string $pass
      * @param string $tools_host
      */
-     public function __construct($enwiki_host, $user, $pass, $tools_host)
+     public function __construct($mediawiki, $user, $pass, $tools_host)
     {
-		$this->enwiki_host = $enwiki_host;
+        $this->mediawiki = $mediawiki;
 		$this->user = $user;
 		$this->pass = $pass;
         $this->tools_host = $tools_host;
@@ -57,248 +57,116 @@ class ProjectPages
      * Load a projects pages
      *
      * @param string $category
+     * @param int $member_cat_type
      * @return int Pages loaded
      * @throws Exception
      */
-    public function load($category)
+    public function load($category, $member_cat_type)
     {
-    	$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
-    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$category = str_replace(' ', '_', $category);
-    	// Determine the category type
-    	$sql = '';
-
-    	// category - x articles by quality (subcats)
-    	$sth = $dbh_enwiki->prepare(self::SQL_Articles_by_quality);
-    	$ucfcategory = ucfirst($category);
-    	$param = "{$ucfcategory}_articles_by_quality";
-    	$sth->bindParam(1, $param);
-    	$sth->execute();
-
-    	if ($sth->fetch(PDO::FETCH_ASSOC)) $sql = '
-			SELECT DISTINCT article.page_id as artid, talk.page_id as talkid, article.page_title as title
-			FROM page AS article
-			JOIN page AS talk ON article.page_title = talk.page_title
-			JOIN categorylinks AS cl1 ON talk.page_id = cl1.cl_from
-			JOIN page AS cat ON cl1.cl_to = cat.page_title
-			JOIN categorylinks AS cl2 ON cat.page_id = cl2.cl_from
-			WHERE cl2.cl_to = ?
-			AND article.page_namespace = ?
-			AND talk.page_namespace = ?
-			AND cat.page_namespace = 14';
-
-    	$sth->closeCursor();
-    	$sth = null;
-
-    	if (empty($sql)) {
-    		// category - WikiProject x articles
-    		$sth = $dbh_enwiki->prepare(self::SQL_WikiProject_articles);
-    		$param = "WikiProject_{$category}_articles";
-    		$sth->bindParam(1, $param);
-    		$sth->execute();
-
-    		if ($sth->fetch(PDO::FETCH_ASSOC)) $sql = '
-				SELECT article.page_id as artid, talk.page_id as talkid, article.page_title as title
- 				FROM page AS article
-    			JOIN page AS talk ON article.page_title = talk.page_title
-				JOIN categorylinks AS cl ON talk.page_id = cl.cl_from
-				WHERE cl.cl_to = ?
-				AND article.page_namespace = ?
-				AND talk.page_namespace = ?';
-
-    		$sth->closeCursor();
-    		$sth = null;
-    	}
-
-    	if (empty($sql)) {
-    		// category - x (talk namespace)
-    		$sth = $dbh_enwiki->prepare(self::SQL_Category_talk);
-    		$param = $category;
-    		$sth->bindParam(1, $param);
-    		$sth->execute();
-
-    		if ($sth->fetch(PDO::FETCH_ASSOC)) $sql = '
-				SELECT article.page_id as artid, talk.page_id as talkid, article.page_title as title
-				FROM page AS article
-				JOIN page AS talk ON article.page_title = talk.page_title
-				JOIN categorylinks AS cl ON talk.page_id = cl.cl_from
-				WHERE cl.cl_to = ?
-				AND article.page_namespace = ?
-				AND talk.page_namespace = ?';
-
-    		$sth->closeCursor();
-    		$sth = null;
-    	}
-
-    	if (empty($sql)) {
-    		// category - x (article namespace)
-    		$sth = $dbh_enwiki->prepare(self::SQL_Category_article);
-    		$param = $category;
-    		$sth->bindParam(1, $param);
-    		$sth->execute();
-
-    		if ($sth->fetch(PDO::FETCH_ASSOC)) $sql = '
-				SELECT article.page_id as artid, talk.page_id as talkid, article.page_title as title
-				FROM page AS article
-				LEFT JOIN page AS talk ON article.page_title = talk.page_title
-				JOIN categorylinks AS cl ON article.page_id = cl.cl_from
-				WHERE cl.cl_to = ?
-				AND article.page_namespace = ?
-				AND talk.page_namespace = ?';
-
-    		$sth->closeCursor();
-    		$sth = null;
-    	}
-
-    	if (empty($sql)) throw new CatTypeNotFoundException("Category type not found for '$category'");
+    	$category = str_replace('_', ' ', $category);
 
     	// Load the pages
     	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->exec('TRUNCATE page');
-    	$dbh_tools = null;
     	$page_count = 0;
 
-    	$namespaces = array(0, 10); // main, template
+    	$continue = '';
+    	// IGNORE necessary because of replica database integrity issues
+    	$isth = $dbh_tools->prepare('INSERT IGNORE INTO page VALUES (?,?,?)');
 
-    	foreach ($namespaces as $namespace) {
-    		$talknamespace = $namespace + 1;
-    		$namspace_prefix = MediaWiki::getNamespacePrefix($namespace);
+    	while ($members = $this->getChunk($member_cat_type, $category, $continue)) {
+    	    $dbh_tools->beginTransaction();
 
-	   		$dbh_enwiki = null;
-	   		$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
-	   		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	    foreach ($members as $attribs) {
+    	        ++$page_count;
 
-	    	$sth = $dbh_enwiki->prepare($sql);
-	    	$sth->bindParam(1, $param);
-	    	$sth->bindParam(2, $namespace);
-	    	$sth->bindParam(3, $talknamespace);
-	    	$sth->setFetchMode(PDO::FETCH_ASSOC);
-	    	$sth->execute();
+    	        $isth->execute([$attribs['pt'], $attribs['i'], $attribs['c']]);
+    	    }
 
-	    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
-	   		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	    	$dbh_tools->beginTransaction();
-	    	// IGNORE necessary because of replica database integrity issues
-	    	$isth = $dbh_tools->prepare('INSERT IGNORE INTO page (article_id, talk_id, page_title) VALUES (:artid, :talkid, :title)');
+    	    $dbh_tools->commit();
 
-	    	while($row = $sth->fetch()) {
-				++$page_count;
-	    		if ($page_count % 1000 == 0) {
-	    			$dbh_tools->commit();
-	    			$dbh_tools->beginTransaction();
-	    		}
-
-	    		$row['title'] = $namspace_prefix . $row['title'];
-
-				$isth->execute($row);
-	    	}
-
-	    	$sth->closeCursor();
-	    	$sth = null;
-	    	$dbh_tools->commit();
-	    	$isth = null;
+    	    if ($continue === false) break;
     	}
 
     	// Delete the pages with no issues
     	$sql = 'DELETE FROM page
-    		WHERE article_id NOT IN (
+    		WHERE page_title NOT IN (
     			SELECT cl_from
     			FROM categorylinks
 			)';
 
     	$dbh_tools->exec($sql);
-    	$dbh_enwiki = null;
-
-    	// Set importance
-    	foreach(array_keys(CreateTables::$IMPORTANCES) as $importance) {
-   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
-   			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    		$sth = $dbh_enwiki->prepare(self::SQL_Importance);
-    		$sth->bindValue(1, "{$importance}-importance_{$category}_articles");
-    		$sth->setFetchMode(PDO::FETCH_ASSOC);
-    		$sth->execute();
-    		$count = 0;
-
-    		$cl_froms = array();
-
-    		while($row = $sth->fetch()) {
-    			$cl_froms[] = $row['cl_from'];
-    		}
-
-    		$sth->closeCursor();
-    		$sth = null;
-    		$chunks = array_chunk($cl_froms, 100);
-
-    		$dbh_tools->beginTransaction();
-
-    		foreach ($chunks as $chunk) {
-    			$count += count($chunk);
-    			if ($count % 1000 == 0) {
-    				$dbh_tools->commit();
-    				$dbh_tools->beginTransaction();
-    			}
-    			$ids = implode(',', $chunk);
-    			$sql = "UPDATE page SET importance = '$importance' WHERE talk_id IN ($ids)";
-    			$dbh_tools->exec($sql);
-    		}
-
-    		$dbh_tools->commit();
-   			$dbh_enwiki = null;
-    	}
-
-    	$total_class = 0;
-
-
-    	// Set class
-    	foreach(array_keys(CreateTables::$CLASSES) as $class) {
-   			$dbh_enwiki = new PDO("mysql:host={$this->enwiki_host};dbname=enwiki_p;charset=utf8", $this->user, $this->pass);
-   			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    		if ($class == 'Unassessed')
-  		        $theclass = "{$class}_{$category}_articles";
-       		else
-          		$theclass = "{$class}-Class_{$category}_articles";
-
-    		$sth = $dbh_enwiki->prepare(self::SQL_Class);
-    		$sth->bindValue(1, $theclass);
-    		$sth->setFetchMode(PDO::FETCH_ASSOC);
-    		$sth->execute();
-    		$count = 0;
-
-    	    $cl_froms = array();
-
-    		while($row = $sth->fetch()) {
-    			$cl_froms[] = $row['cl_from'];
-    		}
-
-    		$sth->closeCursor();
-    		$sth = null;
-    		$chunks = array_chunk($cl_froms, 100);
-
-    		$dbh_tools->beginTransaction();
-
-    		foreach ($chunks as $chunk) {
-    			$count += count($chunk);
-    			if ($count % 1000 == 0) {
-    				$dbh_tools->commit();
-    				$dbh_tools->beginTransaction();
-    			}
-    			$ids = implode(',', $chunk);
-    			$sql = "UPDATE page SET class = '$class' WHERE talk_id IN ($ids)";
-    			$dbh_tools->exec($sql);
-    		}
-
-    		$dbh_tools->commit();
-    		$total_class += $count;
-   			$dbh_enwiki = null;
-    	}
 
     	$dbh_tools = null;
 
-    	if (! $total_class) Logger::log("$category (no classes found)");
-
     	return $page_count;
+    }
+
+    /**
+     * Get a chunk of project members.
+     *
+     * @param int $member_cat_type
+     * @param string $category
+     * @param mixed $continue
+     * @return mixed
+     */
+    function getChunk($member_cat_type, $category, &$continue)
+    {
+        $result = [];
+        $params = ['continue' => $continue];
+
+        switch ($member_cat_type) {
+            case 0: // articles by quality (subcats)
+                $params['wppprojects'] = $category;
+                $params['wpplimit'] = 'max';
+                $ret = $this->mediawiki->getList('projectpages', $params);
+                break;
+
+            case 1: // WikiProject x articles (talk namespace)
+                $params['cmtitle'] = "WikiProject {$category} articles";
+                $params['cmlimit'] = 'max';
+                $ret = $this->mediawiki->getList('categorymembers', $params);
+                break;
+
+            case 2: // x (talk namespace)
+            case 3: // x (article namespace)
+                $params['cmtitle'] = $category;
+                $params['cmlimit'] = 'max';
+                $ret = $this->mediawiki->getList('categorymembers', $params);
+                break;
+        }
+
+        if (isset($ret['continue'])) $continue = $ret['continue'];
+        else $continue = false;
+
+        switch ($member_cat_type) {
+            case 0: // articles by quality (subcats)
+                $ret = reset($ret['query']['projects']);
+
+                foreach ($ret as $page) {
+                    if ($page['ns'] != 0) continue;
+                    $result[] = ['pt' => $page['title'], 'i' => $page['assessment']['importance'], 'c' => $page['assessment']['class']];
+                }
+
+                break;
+
+            case 1: // WikiProject x articles (talk namespace)
+            case 2: // x (talk namespace)
+                foreach ($ret['query']['categorymembers'] as $page) {
+                    if ($page['ns'] != 1) continue;
+                    $result[] = ['pt' => substr($page['title'], 5), 'i' => '', 'c' => ''];
+                }
+                break;
+
+            case 3:// x (article namespace)
+                foreach ($ret['query']['categorymembers'] as $page) {
+                    if ($page['ns'] != 0) continue;
+                    $result[] = ['pt' => $page['title'], 'i' => '', 'c' => ''];
+                }
+                break;
+        }
+
+        return $result;
     }
 }

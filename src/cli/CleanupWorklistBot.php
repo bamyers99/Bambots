@@ -51,28 +51,18 @@ try {
 	if ($argc > 1) {
 		$action = $argv[1];
 		switch ($action) {
-		    case 'retrieveCSV':
-		    	retrieveCSV($wiki);
-				exit;
-		    	break;
-
-		    case 'retrieveHistory':
-		    	retrieveHistory($wiki);
-				exit;
-		    	break;
-
 		    case 'checkWPCategory':
-		    	checkWPCategory($wiki);
-				exit;
-		    	break;
+		        checkWPCategory($wiki);
+		        exit;
+		        break;
+
+		    case 'calcMemberCatType':
+		        calcMemberCatType($wiki);
+		        exit;
+		        break;
 
 		    case 'skipCatLoad':
 		    	$skipCatLoad = true;
-		    	break;
-
-		    case 'toolserver':
-		    	toolserverLinks($wiki);
-		    	exit;
 		    	break;
 
 		    default:
@@ -93,7 +83,7 @@ try {
         $parts = explode('=>', Config::get(CleanupWorklistBot::CUSTOMRULE), 2);
         $key = str_replace(' ', '_', trim($parts[0]));
         $value = (count($parts) > 1) ? str_replace(' ', '_', trim($parts[1])) : '';
-    	$rules = array($key => $value);
+    	$rules = [$key => $value];
     }
     else {
         $data = $wiki->getpage('User:CleanupWorklistBot/Master');
@@ -121,102 +111,6 @@ try {
     $headers  = 'MIME-Version: 1.0' . "\r\n";
     $headers .= 'From: WMF Labs <admin@brucemyers.com>' . "\r\n";
     mail(Config::get(CleanupWorklistBot::ERROREMAIL), 'CleanupWorklistBot failed', $msg, $headers);
-}
-
-/**
- * Retrieve CSV files from toolserver.
- */
-function retrieveCSV($wiki)
-{
-    $data = $wiki->getpage('User:CleanupWorklistBot/Master');
-    $masterconfig = new MasterRuleConfig($data);
-    $outputdir = Config::get(CleanupWorklistBot::HTMLDIR);
-    $ch = curl_init();
-
-    foreach ($masterconfig->ruleConfig as $project => $category) {
-    	if (strpos($project, 'WikiProject_') === 0) {
-    		$project = substr($project, 12);
-    	}
-    	$filesafe_project = str_replace('/', '_', $project);
-
-    	$csvurl = 'http://toolserver.org/~svick/CleanupListing/CleanupListing.php?project=' . urlencode($project) . '&format=csv';
-		$bakcsvpath = $outputdir . 'csv' . DIRECTORY_SEPARATOR . $filesafe_project . '.csv.bak';
-
-		if (file_exists($bakcsvpath)) continue;
-
-		$fp = fopen($bakcsvpath, 'w');
-		curl_setopt($ch, CURLOPT_HEADER, 0);
-		curl_setopt($ch, CURLOPT_FILE, $fp);
-		curl_setopt($ch, CURLOPT_URL, $csvurl);
-
-		$stat = curl_exec($ch);
-		if ($stat !== true) echo "curl_exec failed: $project | " . curl_error($ch);
-
-		fclose($fp);
-
-		clearstatcache();
-		$filesize = filesize($bakcsvpath);
-		if ($filesize < 66) {
-			echo "No data for: $project\n";
-    		unlink($bakcsvpath);
-		};
-    }
-
-	curl_close($ch);
-}
-
-/**
- * Retrieve history from toolserver.
- */
-function retrieveHistory($wiki)
-{
-    $data = $wiki->getpage('User:CleanupWorklistBot/Master');
-    $masterconfig = new MasterRuleConfig($data);
-    $ch = curl_init();
-
-    $tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
-    $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
-    $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-
-    $dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
-    $dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $isth = $dbh_tools->prepare('INSERT INTO history VALUES (?,?,?,?,?)');
-
-    foreach ($masterconfig->ruleConfig as $project => $category) {
-    	if (strpos($project, 'WikiProject_') === 0) {
-    		$project = substr($project, 12);
-    	}
-
-    	$histurl = 'http://toolserver.org/~svick/CleanupListing/CleanupListingHistory.php?project=' . urlencode($project);
-
-		curl_setopt($ch, CURLOPT_HEADER, 0);
-		curl_setopt($ch, CURLOPT_URL, $histurl);
-    	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		$page = curl_exec($ch);
-
-		if ($page === false) {
-			echo "curl_exec failed: $project | " . curl_error($ch);
-			continue;
-		}
-
-		if (strpos($page, 'Timestamp') === false) {
-			echo "No data for: $project\n";
-			continue;
-		}
-
-		preg_match_all('`<tr>\s*<td>(\d{4}-\d{2}-\d{2})\s\d{2}:\d{2}:\d{2}</td>\s*<td>(\d+)</td>\s*<td>(\d+)</td>\s*<td>(\d+)</td>\s*</tr>`i', $page, $rows, PREG_SET_ORDER);
-
-		foreach ($rows as $row) {
-			$date = $row[1];
-			$totart = $row[2];
-			$cuart = $row[3];
-			$istot = $row[4];
-
-			$isth->execute(array($project, $date, $totart, $cuart, $istot));
-		}
-    }
-
-	curl_close($ch);
 }
 
 /**
@@ -262,49 +156,103 @@ function checkWPCategory($wiki)
     }
 }
 
-    /**
-     * Find toolserver cleanup listing links
-     */
-    function toolserverLinks($wiki)
-    {
-    	$outputDir = Config::get(CleanupWorklistBot::OUTPUTDIR);
-    	$outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
-    	$outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
-    	$outputDir .= DIRECTORY_SEPARATOR;
-    	$resultwriter = new FileResultWriter($outputDir);
+/**
+ * Check WikiProject class category.
+ */
+function calcMemberCatType($wiki)
+{
+    $tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
+    $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+    $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+    $dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
+    $dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-	    $enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
-		$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
-		$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-		$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
-		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		$output = '';
-		$projects = array();
+    $data = $wiki->getpage('User:CleanupWorklistBot/Master');
+    $masterconfig = new MasterRuleConfig($data);
 
-	    $results = $dbh_enwiki->query("SELECT DISTINCT el_to, page_namespace, page_title FROM externallinks
-	    		LEFT JOIN page ON page_id = el_from
-	    		WHERE el_to LIKE 'http://toolserver.org/~svick/CleanupListing%'
-	    			AND page_namespace = 10 -- Template
-	    			-- AND page_namespace IN (2,4,100,10) -- User, Wikipedia, Portal, Template
-	    		ORDER BY el_to, page_namespace, page_title");
+    $projects = [];
 
-    	while($row = $results->fetch(PDO::FETCH_ASSOC)) {
-    		if (strpos($row['el_to'], '=')) list($url, $project) = explode('=', $row['el_to'], 2);
-    		else $project = '?';
+    foreach ($masterconfig->ruleConfig as $wikiproject => $category) {
+        $project = $wikiproject;
+        if (strpos($wikiproject, 'WikiProject_') === 0) {
+            $project = substr($project, 12);
+        }
 
-    		if (strpos($project, '&')) list($project, $params) = explode('&', $project, 2);
-    		$wikilink = MediaWiki::$namespaces[(int)$row['page_namespace']] . ':' . $row['page_title'];
+        if (empty($category)) $category = $project;
 
-    		if (! isset($projects[$project])) $projects[$project] = array();
-    		$projects[$project][] = $wikilink;
-    	}
-
-    	ksort($projects);
-
-    	foreach ($projects as $project => $wikilinks) {
-    		foreach ($wikilinks as $wikilink) $output .= "*$project - [[$wikilink]]\n";
-    	}
-
-		$resultwriter->writeResults("User:CleanupWorklistBot/ToolserverLinks", $output, "");
+        $projects[$wikiproject] = $category;
     }
 
+    $results = $dbh_tools->query('SELECT `name` FROM project');
+
+    while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+        $project = $row['name'];
+
+        if (isset($projects[$project])) {
+            $member_cat_type = _test_category($wiki, $projects[$project]);
+
+            $sth = $dbh_tools->prepare("UPDATE project SET member_cat_type = ? WHERE `name` = ?");
+            $sth->execute([$member_cat_type, $project]);
+        }
+    }
+}
+
+/**
+ * Tests a category.
+ *
+ * @param string $category
+ * @return int
+ */
+function _test_category($wiki, $category)
+{
+    // category - x articles by quality (subcats)
+    $ucfcategory = ucfirst($category);
+    $param = "{$ucfcategory}_articles_by_quality";
+    $ret = $wiki->getProp('categoryinfo', ['titles' => "Category:$param"]);
+
+    if (! empty($ret['query']['pages'])) {
+        $page = reset($ret['query']['pages']);
+        if ($page['categoryinfo']['pages'] > 0) {
+            return 0;
+        }
+    }
+
+    // category - WikiProject x articles
+    $param = "WikiProject_{$category}_articles";
+    $ret = $wiki->getProp('categoryinfo', ['titles' => "Category:$param"]);
+
+    if (! empty($ret['query']['pages'])) {
+        $page = reset($ret['query']['pages']);
+        if ($page['categoryinfo']['pages'] > 0) {
+            return 1;
+        }
+    }
+
+    // category - x (talk namespace)
+    $param = $category;
+    $ret = $wiki->getList('categorymembers', [
+        'cmtitle' => "Category:$param",
+        'cmnamespace' => 1,
+        'cmtype' => 'page',
+        'cmlimit' => 1
+    ]);
+
+    if (! empty($ret['query']['categorymembers'])) {
+        return 2;
+    }
+
+    // category - x (article namespace)
+    $param = $category;
+    $ret = $wiki->getList('categorymembers', [
+        'cmtitle' => "Category:$param",
+        'cmnamespace' => 0,
+        'cmtype' => 'page',
+        'cmlimit' => 1
+    ]);
+
+    if (! empty($ret['query']['categorymembers'])) {
+        return 3;
+    }
+
+    return 0;
+}

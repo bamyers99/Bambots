@@ -30,37 +30,35 @@ class TestProjectPage extends UnitTestCase
 
     public function testPageLoad()
     {
-    	$enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
     	$tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
     	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 
-    	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
-    	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    	new CreateTables($dbh_enwiki, $dbh_tools);
+    	$tables = new CreateTables($dbh_tools);
+    	$mediawiki = $tables->getMediawiki();
 
-    	$categories = new Categories($enwiki_host, $user, $pass, $tools_host);
+    	$categories = new Categories($mediawiki, $user, $pass, $tools_host);
     	$categories->load(false);
 
-    	$project_pages = new ProjectPages($enwiki_host, $user, $pass, $tools_host);
+    	$project_pages = new ProjectPages($mediawiki, $user, $pass, $tools_host);
 
     	$category = 'Michigan';
-    	$page_count = $project_pages->load($category);
-    	$this->assertEqual($page_count, 5, "Wrong page count for $category $page_count != 4");
+    	$page_count = $project_pages->load($category, 0);
+    	$this->assertEqual($page_count, 4, "Wrong page count for $category $page_count != 4");
 
     	$category = 'India';
-    	$page_count = $project_pages->load($category);
+    	$page_count = $project_pages->load($category, 1);
     	$this->assertEqual($page_count, 1, "Wrong page count for $category $page_count != 1");
 
     	$category = 'Good_article_nominees';
-    	$page_count = $project_pages->load($category);
+    	$page_count = $project_pages->load($category, 2);
     	$this->assertEqual($page_count, 1, "Wrong page count for $category $page_count != 1");
 
     	$category = 'Featured articles';
-    	$page_count = $project_pages->load($category);
+    	$page_count = $project_pages->load($category, 3);
     	$this->assertEqual($page_count, 2, "Wrong page count for $category $page_count != 2");
     }
 }
