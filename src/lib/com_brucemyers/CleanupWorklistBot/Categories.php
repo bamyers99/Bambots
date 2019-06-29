@@ -723,7 +723,7 @@ class Categories {
 	 */
 	function getChunk($category, &$continue)
 	{
-	    $params = ['continue' => $continue, 'cmtitle' => $category, 'cmlimit' => 'max'];
+	    $params = ['continue' => $continue, 'cmtitle' => $category, 'cmlimit' => 'max', 'cmtype' => 'page'];
 
 	    $ret = $this->mediawiki->getList('categorymembers', $params);
 

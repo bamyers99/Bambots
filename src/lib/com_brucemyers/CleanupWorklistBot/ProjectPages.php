@@ -69,22 +69,44 @@ class ProjectPages
     	$dbh_tools->exec('TRUNCATE page');
     	$page_count = 0;
 
-    	$continue = '';
+    	if ($member_cat_type == 0) {
+    	    $categories = [];
+    	    $params = ['generator' => 'categorymembers',
+                'gcmtitle' => "Category:$category articles by quality",
+    	        'gcmtype' => 'subcat',
+    	        'gcmlimit' => 'max'];
+
+    	    $ret = $this->mediawiki->getProp('categoryinfo', $params);
+
+    	    if (isset($ret['query']) && isset($ret['query']['pages'])) {
+    	        foreach ($ret['query']['pages'] as $catinfo) {
+    	            if ($catinfo['categoryinfo']['pages'] == 0) continue;
+    	            $categories[] = $catinfo['title'];
+    	        }
+    	    }
+    	} else {
+    	    $categories = [$category];
+    	}
+
     	// IGNORE necessary because of replica database integrity issues
     	$isth = $dbh_tools->prepare('INSERT IGNORE INTO page VALUES (?,?,?)');
 
-    	while ($members = $this->getChunk($member_cat_type, $category, $continue)) {
-    	    $dbh_tools->beginTransaction();
+    	foreach ($categories as $cat) {
+        	$continue = '';
 
-    	    foreach ($members as $attribs) {
-    	        ++$page_count;
+        	while ($members = $this->getChunk($member_cat_type, $cat, $continue)) {
+        	    $dbh_tools->beginTransaction();
 
-    	        $isth->execute([$attribs['pt'], $attribs['i'], $attribs['c']]);
-    	    }
+        	    foreach ($members as $title) {
+        	        ++$page_count;
 
-    	    $dbh_tools->commit();
+        	        $isth->execute([$title, '', '']);
+        	    }
 
-    	    if ($continue === false) break;
+        	    $dbh_tools->commit();
+
+        	    if ($continue === false) break;
+        	}
     	}
 
     	// Delete the pages with no issues
@@ -95,6 +117,22 @@ class ProjectPages
 			)';
 
     	$dbh_tools->exec($sql);
+
+    	// Get article assessments
+    	$isth = $dbh_tools->prepare('UPDATE page SET class = ?, importance = ? WHERE page_title = ?');
+    	$continue = '';
+
+    	while ($members = $this->getAssessmentChunk($category, $continue)) {
+    	    $dbh_tools->beginTransaction();
+
+    	    foreach ($members as $attribs) {
+     	        $isth->execute([$attribs['c'], $attribs['i'], $attribs['pt']]);
+    	    }
+
+    	    $dbh_tools->commit();
+
+    	    if ($continue === false) break;
+    	}
 
     	$dbh_tools = null;
 
@@ -112,61 +150,77 @@ class ProjectPages
     function getChunk($member_cat_type, $category, &$continue)
     {
         $result = [];
-        $params = ['continue' => $continue];
+        $params = ['continue' => $continue, 'cmlimit' => 'max', 'cmtype' => 'page'];
 
         switch ($member_cat_type) {
-            case 0: // articles by quality (subcats)
-                $params['wppprojects'] = $category;
-                $params['wpplimit'] = 'max';
-                $params['wppassessments'] = 'true';
-                $ret = $this->mediawiki->getList('projectpages', $params);
+            case 0: // articles by quality (subcats, talk namespace)
+                $params['cmtitle'] = $category;
                 break;
 
             case 1: // WikiProject x articles (talk namespace)
                 $params['cmtitle'] = "Category:WikiProject {$category} articles";
-                $params['cmlimit'] = 'max';
-                $ret = $this->mediawiki->getList('categorymembers', $params);
                 break;
 
             case 2: // x (talk namespace)
             case 3: // x (article namespace)
                 $params['cmtitle'] = "Category:$category";
-                $params['cmlimit'] = 'max';
-                $ret = $this->mediawiki->getList('categorymembers', $params);
                 break;
         }
+
+        $ret = $this->mediawiki->getList('categorymembers', $params);
 
         if (isset($ret['continue'])) $continue = $ret['continue'];
         else $continue = false;
 
+        if (! isset($ret['query']) || ! isset($ret['query']['categorymembers']) || empty($ret['query']['categorymembers'])) return [];
+
         switch ($member_cat_type) {
-            case 0: // articles by quality (subcats)
-                if (! isset($ret['query']) || ! isset($ret['query']['projects']) || empty($ret['query']['projects'])) return [];
-                $ret = reset($ret['query']['projects']);
-
-                foreach ($ret as $page) {
-                    if ($page['ns'] != 0) continue;
-                    $result[] = ['pt' => $page['title'], 'i' => $page['assessment']['importance'], 'c' => $page['assessment']['class']];
-                }
-
-                break;
-
+            case 0: // articles by quality (subcats, talk namespace)
             case 1: // WikiProject x articles (talk namespace)
             case 2: // x (talk namespace)
-                if (! isset($ret['query']) || ! isset($ret['query']['categorymembers']) || empty($ret['query']['categorymembers'])) return [];
                 foreach ($ret['query']['categorymembers'] as $page) {
                     if ($page['ns'] != 1) continue;
-                    $result[] = ['pt' => substr($page['title'], 5), 'i' => '', 'c' => ''];
+                    $result[] = substr($page['title'], 5);
                 }
                 break;
 
             case 3:// x (article namespace)
-                if (! isset($ret['query']) || ! isset($ret['query']['categorymembers']) || empty($ret['query']['categorymembers'])) return [];
                 foreach ($ret['query']['categorymembers'] as $page) {
                     if ($page['ns'] != 0) continue;
-                    $result[] = ['pt' => $page['title'], 'i' => '', 'c' => ''];
+                    $result[] = $page['title'];
                 }
                 break;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get a chunk of project member assessments.
+     *
+     * @param string $category
+     * @param mixed $continue
+     * @return mixed
+     */
+    function getAssessmentChunk($category, &$continue)
+    {
+        $result = [];
+
+        $params = ['continue' => $continue];
+        $params['wppprojects'] = $category;
+        $params['wpplimit'] = 'max';
+        $params['wppassessments'] = 'true';
+        $ret = $this->mediawiki->getList('projectpages', $params);
+
+        if (isset($ret['continue'])) $continue = $ret['continue'];
+        else $continue = false;
+
+        if (! isset($ret['query']) || ! isset($ret['query']['projects']) || empty($ret['query']['projects'])) return [];
+        $ret = reset($ret['query']['projects']);
+
+        foreach ($ret as $page) {
+            if ($page['ns'] != 0) continue;
+            $result[] = ['pt' => $page['title'], 'i' => $page['assessment']['importance'], 'c' => $page['assessment']['class']];
         }
 
         return $result;

@@ -63,6 +63,30 @@ class CreateTables
 
    		$this->mediawiki->returns('getProp',
    		    ['query' => ['pages' =>  [
+   		        ['title' =>'Category:B-Class Michigan articles', 'categoryinfo' => ['pages' => 1]],
+   		        ['title' =>'Category:Unassessed Michigan articles', 'categoryinfo' => ['pages' => 3]]
+   		    ]]],
+   		    ['categoryinfo', ['generator' => 'categorymembers', 'gcmtitle' => 'Category:Michigan articles by quality', 'gcmtype' => 'subcat', 'gcmlimit' => 'max']]
+   		    );
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'Talk:Michigan', 'ns' => 1]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmlimit' => 'max', 'cmtype' => 'page', 'cmtitle' => 'Category:B-Class Michigan articles']]
+   		    );
+
+   		$this->mediawiki->returns('getList',
+   		    ['query' => ['categorymembers' =>  [
+   		        ['title' =>'Talk:Detroit, Michigan', 'ns' => 1],
+   		        ['title' =>'Talk:Mackinac Island', 'ns' => 1],
+   		        ['title' =>'Talk:Lansing, Michigan', 'ns' => 1]
+   		    ]]],
+   		    ['categorymembers', ['continue' => '', 'cmlimit' => 'max', 'cmtype' => 'page', 'cmtitle' => 'Category:Unassessed Michigan articles']]
+   		    );
+
+   		$this->mediawiki->returns('getProp',
+   		    ['query' => ['pages' =>  [
    		        '11' => ['title' =>'Category:All articles needing coordinates', 'categoryinfo' => ['pages' => 1]]
    		    ]]],
    		    ['categoryinfo', ['titles' => 'Category:All articles needing coordinates']]
@@ -80,7 +104,7 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Michigan', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:All articles needing coordinates', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:All articles needing coordinates', 'cmlimit' => 'max', 'cmtype' => 'page']]
    		    );
 
    		$this->mediawiki->returns('getList',
@@ -90,14 +114,14 @@ class CreateTables
    		        ['title' =>'Earth', 'ns' => 0],
    		        ['title' =>'Read\'s Cavern', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup from May 2013', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup from May 2013', 'cmlimit' => 'max', 'cmtype' => 'page']]
    		    );
 
    		$this->mediawiki->returns('getList',
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Detroit, Michigan', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup from March 2013', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup from March 2013', 'cmlimit' => 'max', 'cmtype' => 'page']]
    		    );
 
 
@@ -107,7 +131,7 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Talk:India', 'ns' => 1]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:WikiProject India articles', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmlimit' => 'max', 'cmtype' => 'page', 'cmtitle' => 'Category:WikiProject India articles']]
    		    );
 
    		$this->mediawiki->returns('getProp',
@@ -121,7 +145,7 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'India', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup', 'cmlimit' => 'max', 'cmtype' => 'page']]
    		    );
 
 
@@ -131,7 +155,7 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Talk:United States', 'ns' => 1]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Good article nominees', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmlimit' => 'max', 'cmtype' => 'page', 'cmtitle' => 'Category:Good article nominees']]
    		    );
 
    		$this->mediawiki->returns('getProp',
@@ -145,7 +169,7 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'United States', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Pages using citations with format and no URL', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Pages using citations with format and no URL', 'cmlimit' => 'max', 'cmtype' => 'page']]
    		    );
 
 
@@ -156,14 +180,14 @@ class CreateTables
     	        ['title' =>'Earth', 'ns' => 0],
     	        ['title' =>'Read\'s Cavern', 'ns' => 0]
     	    ]]],
-    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Featured articles', 'cmlimit' => 'max']]
+    	    ['categorymembers', ['continue' => '', 'cmlimit' => 'max', 'cmtype' => 'page', 'cmtitle' => 'Category:Featured articles']]
     	    );
 
     	$this->mediawiki->returns('getProp',
     	    ['query' => ['pages' =>  [
-    	        '305' => ['title' =>'Category:Pages with DOIs inactive since 2013', 'categoryinfo' => ['pages' => 2]]
+    	        '305' => ['title' =>'Category:Pages with DOIs inactive as of 2013', 'categoryinfo' => ['pages' => 2]]
     	    ]]],
-    	    ['categoryinfo', ['generator' => 'allpages', 'gapprefix' => 'Pages with DOIs inactive since ', 'gapnamespace' => 14, 'gaplimit' => 'max']]
+    	    ['categoryinfo', ['generator' => 'allpages', 'gapprefix' => 'Pages with DOIs inactive as of ', 'gapnamespace' => 14, 'gaplimit' => 'max']]
     	    );
 
     	$this->mediawiki->returns('getList',
@@ -171,7 +195,7 @@ class CreateTables
     	        ['title' =>'Earth', 'ns' => 0],
     	        ['title' =>'Read\'s Cavern', 'ns' => 0]
     	    ]]],
-    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Pages with DOIs inactive since 2013', 'cmlimit' => 'max']]
+    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Pages with DOIs inactive as of 2013', 'cmlimit' => 'max', 'cmtype' => 'page']]
     	    );
 
     	// Dummys

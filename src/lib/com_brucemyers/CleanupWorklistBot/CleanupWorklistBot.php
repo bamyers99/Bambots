@@ -69,7 +69,8 @@ class CleanupWorklistBot
             }
         }
 
-        if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('TRUNCATE project');
+        // wiki_too_big is now used to indicate if a wikiproject is active: 0=inactive, 1=active
+        if (empty($startProject) && count($ruleconfigs) > 100) $dbh_tools->exec('UPDATE `project` SET wiki_too_big = 0');
         $dbh_tools = null;
 
         $restarted = '';
@@ -144,7 +145,6 @@ class CleanupWorklistBot
 		$totaltime .= $restarted;
 
         $this->_writeHtmlStatus(count($ruleconfigs), $totaltime, $errorrulsets, $asof_date, $outputdir);
-        //$this->_writeStatus(count($ruleconfigs), $totaltime, $errorrulsets);
 
         $this->_backupHistory($tools_host, $user, $pass, $errorrulsets);
     }
@@ -168,11 +168,10 @@ class CleanupWorklistBot
 
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $results = $dbh_tools->query('SELECT * FROM `project` ORDER BY `name`');
+        $results = $dbh_tools->query('SELECT * FROM `project` WHERE wiki_too_big = 1 ORDER BY `name`');
 
         while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
         	$project = $row['name'];
-        	$wiki_too_big = (int)$row['wiki_too_big'];
 
             $isWikiProject = false;
         	if (strpos($project, 'WikiProject_') === 0) {
@@ -185,8 +184,7 @@ class CleanupWorklistBot
         	$wikiproject = ($isWikiProject) ? 'WikiProject ' : '';
 			$projecturl = "https://en.wikipedia.org/wiki/Wikipedia:{$wikiproject}" . $project;
 			$histurl = $urlpath . 'history/' . $filesafe_project . '.html';
-			if ($wiki_too_big) $bycaturl = $urlpath . 'bycat/' . $filesafe_project . '.html';
-			else $bycaturl = 'https://en.wikipedia.org/wiki/User:CleanupWorklistBot/lists/' . $filesafe_project;
+			$bycaturl = $urlpath . 'bycat/' . $filesafe_project . '.html';
 			$csvurl = $urlpath . 'csv/' . $filesafe_project . '.csv';
 			$alphaurl = $urlpath . 'alpha/' . $filesafe_project . '.html';
 
@@ -233,31 +231,6 @@ EOT;
 
     	fwrite($hndl, $output);
     	fclose($hndl);
-    }
-
-    /**
-     * Write the bot status page
-     */
-    protected function _writeStatus($rulesetcnt, $totaltime, $errorrulsets)
-    {
-    	$errcnt = count($errorrulsets);
-
-    	$output = <<<EOT
-<noinclude>__NOINDEX__</noinclude>
-'''Last run:''' {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />
-'''Processing time:''' $totaltime<br />
-'''Project count:''' $rulesetcnt<br />
-'''Errors:''' $errcnt
-EOT;
-
-    	if ($errcnt) {
-    		$output .= "\n===Errors===\n";
-    		foreach ($errorrulsets as $project) {
-    			$output .= "*$project\n";
-    		}
-    	}
-
-    	$this->resultWriter->writeResults('User:CleanupWorklistBot/Status', $output, "$errcnt errors; Total time: $totaltime");
     }
 
     /**
