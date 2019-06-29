@@ -23,6 +23,7 @@ use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Email;
+use com_brucemyers\MediaWiki\MediaWiki;
 use PDO;
 
 class CleanupWorklistBot

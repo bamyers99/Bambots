@@ -18,8 +18,6 @@
 namespace com_brucemyers\CleanupWorklistBot;
 
 use PDO;
-use com_brucemyers\Util\Logger;
-use com_brucemyers\MediaWiki\MediaWiki;
 
 class ProjectPages
 {
