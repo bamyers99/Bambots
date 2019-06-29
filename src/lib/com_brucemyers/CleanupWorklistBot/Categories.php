@@ -366,7 +366,7 @@ class Categories {
 					'group' => 'Clarity',
 					'display' => 'Rewrite needed'
 			],
-			'Wikipedia articles with style issues by month' => [
+			'Wikipedia articles with style issues' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Style editing needed'
@@ -484,9 +484,6 @@ class Categories {
 			'Taxoboxes needing a status system parameter' => [
 					'type' => 'no-date'
 			],
-			'Taxoboxes with an invalid color' => [
-					'type' => 'no-date'
-			],
 			'Taxoboxes with an unrecognised status system' => [
 					'type' => 'no-date'
 			],
@@ -584,11 +581,11 @@ class Categories {
 				case 'from-monthly' :
 					$cats[] = ['type' => 'from-monthly', 'params' => ['generator' => 'allpages', 'gapprefix' => "$cat from ", 'gapnamespace' => 14, 'gaplimit' => 'max']];
 
-					$cats[] = ['type' => 'no-date', 'params' => ['titles' => "Category:$cat"]];
+					$cats[] = ['type' => 'no-date', 'from-monthly-no-date' => true, 'params' => ['titles' => "Category:$cat"]];
 					break;
 
-				case 'since-yearly' :
-					$cats[] = ['type' => 'since-yearly', 'params' => ['generator' => 'allpages', 'gapprefix' => "$cat since ", 'gapnamespace' => 14, 'gaplimit' => 'max']];
+				case 'since-yearly' : // now 'as of'
+					$cats[] = ['type' => 'since-yearly', 'params' => ['generator' => 'allpages', 'gapprefix' => "$cat as of ", 'gapnamespace' => 14, 'gaplimit' => 'max']];
 					break;
 
 				case 'no-date' :
@@ -604,7 +601,7 @@ class Categories {
 			    $ret = $this->mediawiki->getProp('categoryinfo', $params['params']);
 
 			    if (! isset($ret['query']) || ! isset($ret['query']['pages']) || empty($ret['query']['pages'])) {
-			        Logger::log("category not found " . print_r($params, true));
+			        if (! isset($params['from-monthly-no-date'])) Logger::log("category not found " . print_r($params, true));
 			        continue;
 			    }
 
@@ -624,18 +621,26 @@ class Categories {
 
 				    switch ($params['type']) {
 				        case 'from-monthly':
-				            if (preg_match('! (\w+) \d{4}$!', $title, $matches)) {
+				            if (preg_match("!^$cat from ([ADFJMNOS]\w+) (\d{4})$!", $title, $matches)) {
 				                if (! isset($months[$matches[1]])) {
-				                    Logger::log("month not found - $title\n");
+				                    Logger::log("month not found - $title");
 				                    continue 2;
 				                }
 
 				                $month = $months[$matches[1]];
+				                $year = $matches[2];
+
+				            } elseif (preg_match("!^$cat from (\d{4})$!", $title, $matches)) {
+				                $year = $matches[1];
+				            } else {
+				                continue 2;
 				            }
-                            // fall thru
+
+				            break;
 
 				        case 'since-yearly':
-				            if (preg_match('!(\d{4})$!', $title, $matches)) $year = $matches[1];
+				            if (preg_match("!^$cat since (\d{4})$!", $title, $matches)) $year = $matches[1];
+				            break;
 				    }
 
 					if ($subcatsonly) {

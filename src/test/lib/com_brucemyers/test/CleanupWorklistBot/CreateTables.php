@@ -58,20 +58,20 @@ class CreateTables
    		        ['ns' => 0, 'title' =>'Mackinac Island', 'assessment' => ['importance' => 'NA', 'class' => 'Unassessed']],
    		        ['ns' => 0, 'title' =>'Lansing, Michigan', 'assessment' => ['importance' => 'NA', 'class' => 'Unassessed']]
    		    ]]]],
-   		    ['projectpages', ['continue' => '', 'wppprojects' => 'Michigan', 'wpplimit' => 'max']]
+   		    ['projectpages', ['continue' => '', 'wppprojects' => 'Michigan', 'wpplimit' => 'max', 'wppassessments' => 'true']]
    		    );
 
    		$this->mediawiki->returns('getProp',
    		    ['query' => ['pages' =>  [
-   		        '11' => ['title' =>'All articles needing coordinates', 'categoryinfo' => ['pages' => 1]]
+   		        '11' => ['title' =>'Category:All articles needing coordinates', 'categoryinfo' => ['pages' => 1]]
    		    ]]],
-   		    ['categoryinfo', ['titles' => 'All articles needing coordinates']]
+   		    ['categoryinfo', ['titles' => 'Category:All articles needing coordinates']]
    		    );
 
    		$this->mediawiki->returns('getProp',
    		    ['query' => ['pages' =>  [
-   		        '12' => ['title' =>'Articles needing cleanup from May 2013', 'categoryinfo' => ['pages' => 3]],
-   		        '13' => ['title' =>'Articles needing cleanup from March 2013', 'categoryinfo' => ['pages' => 1]]
+   		        '12' => ['title' =>'Category:Articles needing cleanup from May 2013', 'categoryinfo' => ['pages' => 3]],
+   		        '13' => ['title' =>'Category:Articles needing cleanup from March 2013', 'categoryinfo' => ['pages' => 1]]
    		    ]]],
    		    ['categoryinfo', ['generator' => 'allpages', 'gapprefix' => 'Articles needing cleanup from ', 'gapnamespace' => 14, 'gaplimit' => 'max']]
    		    );
@@ -80,7 +80,7 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Michigan', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'All articles needing coordinates', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:All articles needing coordinates', 'cmlimit' => 'max']]
    		    );
 
    		$this->mediawiki->returns('getList',
@@ -90,14 +90,14 @@ class CreateTables
    		        ['title' =>'Earth', 'ns' => 0],
    		        ['title' =>'Read\'s Cavern', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Articles needing cleanup from May 2013', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup from May 2013', 'cmlimit' => 'max']]
    		    );
 
    		$this->mediawiki->returns('getList',
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Detroit, Michigan', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Articles needing cleanup from March 2013', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup from March 2013', 'cmlimit' => 'max']]
    		    );
 
 
@@ -107,21 +107,21 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Talk:India', 'ns' => 1]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'WikiProject India articles', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:WikiProject India articles', 'cmlimit' => 'max']]
    		    );
 
    		$this->mediawiki->returns('getProp',
    		    ['query' => ['pages' =>  [
-   		        '102' => ['title' =>'Articles needing cleanup', 'categoryinfo' => ['pages' => 1]]
+   		        '102' => ['title' =>'Category:Articles needing cleanup', 'categoryinfo' => ['pages' => 1]]
    		    ]]],
-   		    ['categoryinfo', ['titles' => 'Articles needing cleanup']]
+   		    ['categoryinfo', ['titles' => 'Category:Articles needing cleanup']]
    		    );
 
    		$this->mediawiki->returns('getList',
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'India', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Articles needing cleanup', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Articles needing cleanup', 'cmlimit' => 'max']]
    		    );
 
 
@@ -131,21 +131,21 @@ class CreateTables
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'Talk:United States', 'ns' => 1]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Good article nominees', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Good article nominees', 'cmlimit' => 'max']]
    		    );
 
    		$this->mediawiki->returns('getProp',
    		    ['query' => ['pages' =>  [
-   		        '200' => ['title' =>'Pages using citations with format and no URL', 'categoryinfo' => ['pages' => 1]]
+   		        '200' => ['title' =>'Category:Pages using citations with format and no URL', 'categoryinfo' => ['pages' => 1]]
    		    ]]],
-   		    ['categoryinfo', ['generator' => 'categorymembers', 'gcmtitle' => 'Articles with incorrect citation syntax', 'gcmtype' => 'subcat', 'gcmlimit' => 'max']]
+   		    ['categoryinfo', ['generator' => 'categorymembers', 'gcmtitle' => 'Category:Articles with incorrect citation syntax', 'gcmtype' => 'subcat', 'gcmlimit' => 'max']]
    		    );
 
    		$this->mediawiki->returns('getList',
    		    ['query' => ['categorymembers' =>  [
    		        ['title' =>'United States', 'ns' => 0]
    		    ]]],
-   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Pages using citations with format and no URL', 'cmlimit' => 'max']]
+   		    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Pages using citations with format and no URL', 'cmlimit' => 'max']]
    		    );
 
 
@@ -156,12 +156,12 @@ class CreateTables
     	        ['title' =>'Earth', 'ns' => 0],
     	        ['title' =>'Read\'s Cavern', 'ns' => 0]
     	    ]]],
-    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Featured articles', 'cmlimit' => 'max']]
+    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Featured articles', 'cmlimit' => 'max']]
     	    );
 
     	$this->mediawiki->returns('getProp',
     	    ['query' => ['pages' =>  [
-    	        '305' => ['title' =>'Pages with DOIs inactive since 2013', 'categoryinfo' => ['pages' => 2]]
+    	        '305' => ['title' =>'Category:Pages with DOIs inactive since 2013', 'categoryinfo' => ['pages' => 2]]
     	    ]]],
     	    ['categoryinfo', ['generator' => 'allpages', 'gapprefix' => 'Pages with DOIs inactive since ', 'gapnamespace' => 14, 'gaplimit' => 'max']]
     	    );
@@ -171,7 +171,7 @@ class CreateTables
     	        ['title' =>'Earth', 'ns' => 0],
     	        ['title' =>'Read\'s Cavern', 'ns' => 0]
     	    ]]],
-    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Pages with DOIs inactive since 2013', 'cmlimit' => 'max']]
+    	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Pages with DOIs inactive since 2013', 'cmlimit' => 'max']]
     	    );
 
     	// Dummys

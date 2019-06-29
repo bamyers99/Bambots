@@ -118,6 +118,7 @@ class ProjectPages
             case 0: // articles by quality (subcats)
                 $params['wppprojects'] = $category;
                 $params['wpplimit'] = 'max';
+                $params['wppassessments'] = 'true';
                 $ret = $this->mediawiki->getList('projectpages', $params);
                 break;
 
