@@ -652,7 +652,7 @@ class Categories {
 						++ $count;
 						$this->categories[$catid] = ['t' => $catinfo['title'], 'm' => $month, 'y' => $year];
 
-						$this->loadCategoryMembers ( $catid, $title, $dbh_tools );
+						$this->loadCategoryMembers ( $catid, "Category:$title", $dbh_tools );
 					}
 				}
 			}
