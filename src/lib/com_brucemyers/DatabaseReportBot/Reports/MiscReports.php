@@ -68,7 +68,7 @@ class MiscReports extends DatabaseReport
     			break;
 
     		case 'WikidataPropertyCounts':
-    			$this->WikidataPropertyCounts($apis['dbh_wiki'], $apis['mediawiki'], $apis['dbh_wikidata']);
+    		    $this->WikidataPropertyCounts($params[1]);
     			return false;
     			break;
     	}
@@ -1119,82 +1119,113 @@ END;
 	 *
 	 * @param PDO $dbh_wiki
 	 */
-	public function WikidataPropertyCounts(PDO $dbh_wiki, MediaWiki $mediawiki, PDO $dbh_wikidata)
+	public function WikidataPropertyCounts($language)
 	{
-		$wdwiki = new WikidataWiki();
+	    $type_colors = [
+	        'WikibaseItem' => '',
+	        'CommonsMedia' => 'antiquewhite',
+	        'ExternalId' => '#CFDBC5',
+	        'String' => 'lavenderblush',
+	        'Quantity' => 'oldlace',
+	        'Time' => 'lightyellow',
+	        'Monolingualtext' => 'mintcream',
+	        'Url' => 'honeydew',
+	        'Math' => '#EBC79E',
+	        'GeoShape' => '',
+	        'WikibaseSense' => '',
+	        'WikibaseLexeme' => '',
+	        'MusicalNotation' => '',
+	        'WikibaseProperty' => '',
+	        'TabularData' => '',
+	        'GlobeCoordinate' => 'lavender',
+	        'WikibaseForm' => ''
+	    ];
 
-		// Get the usage counts
-		$counts = $wdwiki->getPageWithCache('Template:Property_uses');
-		preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
-		$counts = array();
-		foreach ($matches as $match) {
-			$counts[$match[1]] = array('count' => $match[2], 'label' => "P{$match[1]}", 'desc' => '');
-		}
+	    $wdwiki = new WikidataWiki();
 
-		// Get the labels and descriptions
-		$ids = implode(',', array_keys($counts));
+	    // Get the property list
 
-		$sql = "SELECT term_entity_id, term_type, term_text " .
-			" FROM wb_terms " .
-			" WHERE term_language = 'en' AND term_entity_id IN ($ids) AND term_entity_type = 'property' ";
+	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20%3FpropLabel%20%3FpropDescription%20%3FpropAltLabel%20(STRAFTER(STR(%3FpropertyType)%2C%20'%23')%20AS%20%3Ftype)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%0A%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cen\"%0A%20%20}%0A}%0A";
 
-		$sth = $dbh_wikidata->prepare($sql);
-		$sth->execute();
+	    $sparql = new WikidataSPARQL();
 
-		while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-			$term_type = $row['term_type'];
-			$entity_id = $row['term_entity_id'];
+	    $rows = $sparql->query($query);
 
-			if ($term_type == 'label') $counts[$entity_id]['label'] = $row['term_text'];
-			elseif ($term_type == 'description') $counts[$entity_id]['desc'] = $row['term_text'];
-		}
+	    $props = [];
 
-		$asof_date = getdate();
-		$asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
-		$path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyCounts.html';
-		$hndl = fopen($path, 'wb');
+	    foreach ($rows as $row) {
+	        $propid = (int)$row['id']['value'];
+	        $label = isset($row['propLabel']['value']) ? $row['propLabel']['value'] : '';
+	        $description = isset($row['propDescription']['value']) ? $row['propDescription']['value'] : '';
+	        $alias = isset($row['propAltLabel']['value']) ? $row['propAltLabel']['value'] : '';
+	        $datatype = $row['type']['value'];
 
-		// Header
-		fwrite($hndl, "<!DOCTYPE html>
-		<html><head>
-		<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-		<title>Wikidata property usage counts</title>
-		<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
-		<script type='text/javascript' src='../js/jquery-2.1.1.min.js'></script>
-		<script type='text/javascript' src='../js/jquery.tablesorter.min.js'></script>
-		<script type='text/javascript'>
-			$(document).ready(function()
-			    {
-			        $('#myTable').tablesorter({});
-			    }
-			);
-		</script>
-		</head><body>
-		<div style='display: table; margin: 0 auto;'>
-		<h1>Wikidata property usage counts</h1>
-		<h3>As of $asof_date</h3>
-		");
+	        $props[] = ['id' => $propid, 'label' => $label, 'description' => $description, 'alias' => $alias, 'datatype' => $datatype];
+	    }
 
-		// Body
+	    usort($props, function ($a, $b) {
+	        if ($a['id'] > $b['id']) return 1;
+	        if ($a['id'] < $b['id']) return -1;
+	        return 0;
+	    });
 
-		fwrite($hndl, "<table id='myTable' class='wikitable'><thead><tr><th>Title</th><th>ID</th><th>Description</th><th>Count</th></tr></thead><tbody>\n");
+        // Get the usage counts
+        $counts = $wdwiki->getPage('Template:Property_uses');
+        preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
+        $counts = [];
+        foreach ($matches as $match) {
+            $counts[$match[1]] = $match[2];
+        }
 
-		foreach ($counts as $id => $data) {
-			$url = "https://www.wikidata.org/wiki/Property:P$id";
-			$label = htmlspecialchars($data['label']);
-			$desc = htmlspecialchars($data['desc']);
-			$count = $data['count'];
+        $asof_date = getdate();
+        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyCounts.html';
+        $hndl = fopen($path, 'wb');
 
-			fwrite($hndl, "<tr><td>$label</td><td data-sort-value='$id'><a href=\"$url\">P$id</a></td><td>$desc</td>" .
-				"<td style='text-align:right' data-sort-value='$count'>" . number_format($count, 0, '', '&thinsp;') . "</td></tr>\n");
-		}
+        // Header
+        fwrite($hndl, "<!DOCTYPE html>
+				<html><head>
+				<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+				<title>Wikidata property counts</title>
+				<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+				</head><body>
+				<div style='display: table; margin: 0 auto;'>
+				<h1>Wikidata property counts</h1>
+				<h3>As of $asof_date</h3>
+				");
 
-		fwrite($hndl, "</tbody></table>\n");
+        // Body
 
-		// Footer
-		fwrite($hndl, '<br />Property count: ' . count($counts));
-		fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
-		fclose($hndl);
+        $wikitext = "{{Languages|en=Wikidata:Database reports/List of properties/all}}\n";
+        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|alias}}\n! {{I18n|datatype}}\n! Count\n";
+
+        foreach ($props as $prop) {
+            $propid = $prop['id'];
+            $label = $prop['label'];
+            $description = $prop['description'];
+            $alias = $prop['alias'];
+            $datatype = $prop['datatype'];
+
+            if (isset($counts[$propid])) $count = $counts[$propid];
+            else $count = 0;
+
+            if ($type_colors[$datatype] && ! empty($type_colors[$datatype])) $color = " style=\"background: {$type_colors[$datatype]}\"";
+            else $color = '';
+
+            $wikitext .= "|-$color\n|data-sort-value=\"$propid\"|[[Property:P$propid|P$propid]]||$label||$description||$alias||$datatype||";
+            $wikitext .= number_format($count, 0) . "\n";
+        }
+
+        $wikitext .= "|}\n\n[[Category:Database reports]]\n[[Category:Properties]]";
+
+        fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+            '</textarea></form>');
+
+        // Footer
+        fwrite($hndl, '<br />Property count: ' . count($props));
+        fwrite($hndl, '<br />Language: ' . $language);
+        fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+        fclose($hndl);
 	}
 
 	/**
