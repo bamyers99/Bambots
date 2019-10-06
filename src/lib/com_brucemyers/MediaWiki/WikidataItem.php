@@ -37,14 +37,14 @@ class WikidataItem
 	const TYPE_AUTHCTRL_MusicBrainz = 'P434';
 	const TYPE_OFFICIAL_WEBSITE = 'P856';
 
-	static public $preferred_langs = array('en','de','es','fr','it','pt');
+	static public $preferred_langs = ['en','de','es','fr','it','pt'];
 
 	const INSTANCE_OF_DISAMBIGUATION = 'Q4167410';
 
-	static $entity_types = array(
+	static $entity_types = [
 			'item' => 'Q',
 			'property' => 'P'
-	);
+	];
 
 	protected $data;
 
@@ -66,6 +66,7 @@ class WikidataItem
 	public function getId()
 	{
 		if (isset($this->data['id'])) return $this->data['id'];
+		elseif (isset($this->data['entity'])) return $this->data['entity'];
 		return '';
 	}
 
@@ -88,7 +89,7 @@ class WikidataItem
 	 */
 	public function getStatementsOfType($property_id)
 	{
-		$statements = array();
+		$statements = [];
 
 		if (! isset($this->data['claims']) || ! isset($this->data['claims'][$property_id])) return $statements;
 
@@ -199,7 +200,7 @@ class WikidataItem
 	public function getStatementQualifiers($property_id, $occurrence)
 	{
 		$occurrence = (int)$occurrence;
-		$qualifiers = array();
+		$qualifiers = [];
 
 		if (! isset($this->data['claims']) || ! isset($this->data['claims'][$property_id])) return $qualifiers;
 		if (count($this->data['claims'][$property_id]) < $occurrence + 1) return $qualifiers;
@@ -214,7 +215,7 @@ class WikidataItem
 					$type = $val['datavalue']['type'];
 					$value= $val['datavalue']['value'];
 
-					if (! isset($qualifiers[$key])) $qualifiers[$key] = array();
+					if (! isset($qualifiers[$key])) $qualifiers[$key] = [];
 					$qualifiers[$key][] = $this->decodeValue($type, $value);
 				}
 			}
@@ -232,7 +233,7 @@ class WikidataItem
 	 */
 	public function getLabelDescription($type, $lang)
 	{
-		$retprefs = array();
+		$retprefs = [];
 		if ($type == 'label') $type = 'labels';
 		else $type = 'descriptions';
 
@@ -262,19 +263,30 @@ class WikidataItem
 	 */
 	public function getSiteLink($site)
 	{
-		$reten = array();
+		$reten = [];
 
-		if (empty($this->data['sitelinks'])) return array();
+		if (empty($this->data['sitelinks'])) return [];
 
 		foreach ($this->data['sitelinks'] as $sitelink) {
 			if (! preg_match('![a-z]{2,3}wiki!', $sitelink['site'])) continue;
-			if ($sitelink['site'] == $site) return array('site' => $site, 'title' => $sitelink['title']);
-			if ($sitelink['site'] == 'enwiki') $reten = array('site' => 'enwiki', 'title' => $sitelink['title']);
-			elseif (! isset($ret)) $ret = array('site' => $sitelink['site'], 'title' => $sitelink['title']);
+			if ($sitelink['site'] == $site) return ['site' => $site, 'title' => $sitelink['title']];
+			if ($sitelink['site'] == 'enwiki') $reten = ['site' => 'enwiki', 'title' => $sitelink['title']];
+			elseif (! isset($ret)) $ret = ['site' => $sitelink['site'], 'title' => $sitelink['title']];
 		}
 
 		if (! empty($reten)) return $reten;
 		if (isset($ret)) return $ret;
-		return array();
+		return [];
+	}
+
+	/**
+	 * Get a redirected to id.
+	 *
+	 * @return string redirect id or empty
+	 */
+	public function getRedirect()
+	{
+	    if (isset($this->data['redirect'])) return $this->data['redirect'];
+        return '';
 	}
 }

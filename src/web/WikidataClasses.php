@@ -668,6 +668,7 @@ function get_subclasses()
 			if (! empty($items)) {
 				$term_text = $items[0]->getLabelDescription('label', $params['lang']);
 				if (! empty($term_text)) $class[0] = $term_text;
+				elseif ($items[0]->getRedirect()) $class[0] .= ' (redirect)';
 				$class[1] = $items[0]->getLabelDescription('description', $params['lang']);
 			}
 		}
@@ -697,6 +698,7 @@ function get_subclasses()
 				$term_text = $item->getLabelDescription('label', $params['lang']);
 
 				if (! empty($term_text)) $parents[$qid][1] = $term_text;
+				elseif ($item->getRedirect()) $parents[$qid][1] .= ' (redirect)';
 			}
 		}
 
@@ -820,6 +822,7 @@ function get_subclasses()
 			$term_text = $item->getLabelDescription('label', $params['lang']);
 
 			if (! empty($term_text)) $children[$qid][1] = $term_text;
+			elseif ($item->getRedirect()) $children[$qid][1] .= ' (redirect)';
 		}
 	}
 
