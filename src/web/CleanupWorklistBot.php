@@ -159,7 +159,7 @@ function _test_category($category)
 
 	if (! empty($ret['query']['pages'])) {
 	    $page = reset($ret['query']['pages']);
-	    if ($page['categoryinfo']['pages'] > 0) {
+	    if (isset($page['categoryinfo']['pages']) && $page['categoryinfo']['pages'] > 0) {
 		    $project_members = "$param (child categories)";
 		    $project_cat = $param;
 		    $member_cat_type = 0;
@@ -173,7 +173,7 @@ function _test_category($category)
 
 	    if (! empty($ret['query']['pages'])) {
 	        $page = reset($ret['query']['pages']);
-	        if ($page['categoryinfo']['pages'] > 0) {
+	        if (isset($page['categoryinfo']['pages']) && $page['categoryinfo']['pages'] > 0) {
 	            $project_members = $param;
 			    $project_cat = $param;
 			    $member_cat_type = 1;

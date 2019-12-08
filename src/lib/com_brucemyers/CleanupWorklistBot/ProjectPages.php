@@ -207,7 +207,7 @@ class ProjectPages
         $result = [];
 
         $params = ['continue' => $continue];
-        $params['wppprojects'] = $category;
+        $params['wppprojects'] = ucfirst($category);
         $params['wpplimit'] = 'max';
         $params['wppassessments'] = 'true';
         $ret = $this->mediawiki->getList('projectpages', $params);
