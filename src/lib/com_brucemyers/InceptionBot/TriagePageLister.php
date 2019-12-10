@@ -18,6 +18,7 @@
 namespace com_brucemyers\InceptionBot;
 
 use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\Util\Logger;
 use Exception;
 
 class TriagePageLister
@@ -66,7 +67,10 @@ class TriagePageLister
 
         $ret = $this->mediawiki->query("?action=pagetriagelist&format=php" . $addparams);
 
-        if (isset($ret['error'])) throw new Exception('TriagePageLister.getNextBatch() failed ' . $ret['error']);
+        if (isset($ret['error'])) {
+            Logger::log(print_r($addparams, true));
+            throw new Exception('TriagePageLister.getNextBatch() failed ' . print_r($ret['error'], true));
+        }
 
         $pages = array();
         foreach ($ret['pagetriagelist']['pages'] as $page) {
