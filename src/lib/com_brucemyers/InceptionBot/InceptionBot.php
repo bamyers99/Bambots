@@ -23,6 +23,7 @@ use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\CommonRegex;
+use Exception;
 
 class InceptionBot
 {
@@ -79,14 +80,18 @@ class InceptionBot
         unset($temppages); // Free-up the memory
 
         // Retrieve triage pages to get redirects that were replaced with a real page.
-        $lister = new TriagePageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
+        try {
+            $lister = new TriagePageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
-        while (($triagepages = $lister->getNextBatch()) !== false) {
-        	foreach ($triagepages as &$triagepage) {
-        		if (! isset($allpages[$triagepage['title']])) $allpages[$triagepage['title']] = $triagepage;
-        	}
+            while (($triagepages = $lister->getNextBatch()) !== false) {
+            	foreach ($triagepages as &$triagepage) {
+            		if (! isset($allpages[$triagepage['title']])) $allpages[$triagepage['title']] = $triagepage;
+            	}
+            }
+            unset($triagepage);
+        } catch (Exception $e) {
+            Logger::log('TriagePageLister error, continuing. Error = ' . $e->getMessage());
         }
-        unset($triagepage);
 
         // Retrieve removed redirects.
         $lister = new RemovedRedirectPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
