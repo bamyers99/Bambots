@@ -41,6 +41,17 @@ class WikidataItem
 
 	const INSTANCE_OF_DISAMBIGUATION = 'Q4167410';
 
+	static public $quantity_units = [
+	    'Q573' => 'day',
+	    'Q23387' => 'week',
+	    'Q5151' => 'month',
+	    'Q577' => 'year',
+	    'Q100995' => 'pound',
+	    'Q11570' => 'kilogram',
+	    'Q41803' => 'gram',
+	    'Q48013' => 'ounce'
+	];
+
 	static $entity_types = [
 			'item' => 'Q',
 			'property' => 'P'
@@ -184,6 +195,32 @@ class WikidataItem
 				return $value;
 				break;
 
+			case 'quantity':
+			    $amount = $value['amount'];
+			    $unit = $value['unit'];
+
+			    if ($unit == '1') $unit = '';
+			    else {
+			        if (preg_match('!entity/(Q\\d+)!', $unit, $matches)) {
+                        $unit = $matches[1];
+			        }
+
+			        if (isset(self::$quantity_units[$unit])) {
+			            $unit = ' ' . self::$quantity_units[$unit];
+			        } else {
+			            $unit = " unknown unit ($unit)";
+			        }
+			    }
+
+			    if (isset($value['lowerBound'])) {
+			        $lower_upper = " ({$value['lowerBound']} - {$value['upperBound']})";
+			    } else {
+			        $lower_upper = '';
+			    }
+
+			    return "$amount$lower_upper$unit";
+			    break;
+
 			default:
 				Logger::log("WikidataItem::decodeValue unknown value type='$type' value=$value");
 				break;
@@ -277,6 +314,17 @@ class WikidataItem
 		if (! empty($reten)) return $reten;
 		if (isset($ret)) return $ret;
 		return [];
+	}
+
+	/**
+	 *
+	 * @param string $lang alias language
+	 * @return array ["language", "value"] ...
+	 */
+	public function getAliases($lang)
+	{
+	    if (! isset($this->data['aliases'][$lang])) return [];
+	    return $this->data['aliases'][$lang];
 	}
 
 	/**

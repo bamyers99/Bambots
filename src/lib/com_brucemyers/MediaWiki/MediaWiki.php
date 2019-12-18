@@ -173,16 +173,20 @@ class MediaWiki extends wikipedia
 			}
 		}
 
-		$retval = unserialize($ret);
-		if ($retval === false) {
-			$origret = $ret;
-			// Patch the last 8 bytes because of garbage chars if $ret length = 32767
-			$ret = substr_replace($ret, "\";}}}}}}", -8, 8);
-			$retval = unserialize($ret);
-			if ($retval === false) {
-				throw new Exception("unserialize failed = $origret - $ret");
-			}
+		if (isset($post['format']) && $post['format'] == 'json') $retval = json_decode($ret, true);
+		else {
+    		$retval = unserialize($ret);
+    		if ($retval === false) {
+    			$origret = $ret;
+    			// Patch the last 8 bytes because of garbage chars if $ret length = 32767
+    			$ret = substr_replace($ret, "\";}}}}}}", -8, 8);
+    			$retval = unserialize($ret);
+    			if ($retval === false) {
+    				throw new Exception("unserialize failed = $origret - $ret");
+    			}
+    		}
 		}
+
         return $retval;
     }
 
@@ -897,4 +901,28 @@ class MediaWiki extends wikipedia
         return [];
     }
 
+    /**
+     * Get CSRF token
+     *
+     * @return string token
+     */
+    public function getCSRFToken()
+    {
+        $x = $this->query('?action=query&meta=tokens&format=php');
+        return $x['query']['tokens']['csrftoken'];
+    }
+
+    /**
+     * Get page last revision ID
+     *
+     * @param string $pagetitle
+     * @return int
+     */
+    public function getLastRevID($pagetitle)
+    {
+        $x = $this->query("?action=query&prop=info&titles=$pagetitle&format=php");
+        foreach ($x['query']['pages'] as $ret) {
+            return $ret['lastrevid'];
+        }
+    }
 }

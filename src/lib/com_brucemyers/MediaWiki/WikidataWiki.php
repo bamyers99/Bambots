@@ -17,7 +17,6 @@
 
 namespace com_brucemyers\MediaWiki;
 
-
 /**
  * Wikidata wrapper
  */
@@ -98,5 +97,31 @@ class WikidataWiki extends MediaWiki
         $ret = $this->query($query);
 
         return $ret;
+    }
+
+    /**
+     * Set a claim
+     *
+     * @param int $baserevid
+     * @param string $username
+     * @param string $csrftoken
+     * @param string $claim json claim data
+     * @return string empty = success, else error info
+     */
+    public function createClaim($baserevid, $username, $csrftoken, $claim)
+    {
+        $opts = [
+            'action' => 'wbsetclaim',
+            'format' => 'json',
+            'baserevid' => $baserevid,
+            'assertuser' => $username,
+            'token' => $csrftoken,
+            'claim' => $claim
+        ];
+
+        $ret = $this->query('', $opts);
+
+        if (isset($ret['error'])) return $ret['error']['info'];
+        return '';
     }
 }
