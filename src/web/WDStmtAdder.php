@@ -18,6 +18,7 @@
 use com_brucemyers\Util\Config;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\MediaWiki\WikidataWiki;
+use com_brucemyers\MediaWiki\WikidataItem;
 use com_brucemyers\MediaWiki\WikidataSPARQL;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\UUID;
@@ -34,7 +35,7 @@ require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 define('PROP_MAX_LONGEVITY', 'P4214');
 define('PROP_MASS', 'P2067');
 define('PROP_GESTATION', 'P3063');
-define('PROP_LITTER_SIZE', 'P?');
+define('PROP_LITTER_SIZE', 'P7725');
 define('PROP_SEX', 'P21');
 define('PROP_OF', 'P642');
 define('PROP_STATED_IN', 'P248');
@@ -72,6 +73,8 @@ function display_form($list)
 {
 	global $params;
 
+	$offset = Config::get('startpos');
+
 	display_header();
 
     echo '<table class="wikitable"><thead><tr><th>Species</th><th>Name</th><th>Gestation</th><th>Litter<br />Size</th><th>Birth<br />Weight</th><th>Adult<br />Weight</th><th>Lonevity</th><th>View</th></tr></thead><tbody>';
@@ -80,13 +83,15 @@ function display_form($list)
         echo '<tr>';
         echo '<td>' . htmlentities($row['genus_species'], ENT_COMPAT, 'UTF-8') . '</td>';
         echo '<td>' . htmlentities($row['common_name'], ENT_COMPAT, 'UTF-8') . '</td>';
-        echo "<td style='text-align:right'>{$row['gestation']}</td>";
-        echo "<td style='text-align:right'>{$row['litter_size']}</td>";
-        echo "<td style='text-align:right'>{$row['birth_weight']}</td>";
-        echo "<td style='text-align:right'>{$row['adult_weight']}</td>";
-        echo "<td style='text-align:right'>{$row['max_longevity']}</td>";
-        echo '<td><a href="/WDStmtAdder.php?action=display_item&item=' . urlencode($row['genus_species']) . '">View</a></td>';
+        echo "<td style='text-align:right'>" . ($row['gestation'] ? $row['gestation'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['litter_size'] ? $row['litter_size'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['birth_weight'] ? $row['birth_weight'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['adult_weight'] ? $row['adult_weight'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['max_longevity'] ? $row['max_longevity'] : '&nbsp;') . "</td>";
+        echo '<td><a href="/WDStmtAdder.php?action=display_item&item=' . urlencode($row['genus_species']) . '&offset=' . $offset . '">View</a></td>';
         echo '</tr>';
+
+        ++$offset;
     }
 
     echo '</tbody></table>';
@@ -122,6 +127,8 @@ function add_stmt(btn, qid, fieldname, fieldvalue, unit) {
 </script>
 <?php
     $itemname = isset($_REQUEST['item']) ? $_REQUEST['item'] : '';
+    $itemoffset = isset($_REQUEST['offset']) ? $_REQUEST['offset'] : '0';
+    Config::set('startpos', $itemoffset + 1, true);
 
     //
     // Get AnAge
@@ -222,12 +229,12 @@ EOT;
 
             foreach ($qualifiers as $prop => $qualifier) {
                 if ($prop == PROP_SEX) {
-                    if ($qualifier == VALUE_ANIMAL_MALE) $sex = VALUE_ANIMAL_MALE;
-                    elseif ($qualifier == VALUE_ANIMAL_FEMALE) $sex = VALUE_ANIMAL_FEMALE;
+                    if ($qualifier[0] == VALUE_ANIMAL_MALE) $sex = VALUE_ANIMAL_MALE;
+                    elseif ($qualifier[0] == VALUE_ANIMAL_FEMALE) $sex = VALUE_ANIMAL_FEMALE;
 
                 } elseif ($prop == PROP_OF) {
-                    if ($qualifier == VALUE_STAGE_BIRTH) $stage = VALUE_STAGE_BIRTH;
-                    elseif ($qualifier == VALUE_STAGE_ADULT) $stage = VALUE_STAGE_ADULT;
+                    if ($qualifier[0] == VALUE_STAGE_BIRTH) $stage = VALUE_STAGE_BIRTH;
+                    elseif ($qualifier[0] == VALUE_STAGE_ADULT) $stage = VALUE_STAGE_ADULT;
                 }
             }
 
@@ -251,6 +258,7 @@ EOT;
     $wdaliases = $wditem->getAliases('en');
     if (count($wdaliases) > 0) $wdalias = $wdaliases[0]['value'];
     else $wdalias = '';
+    $wdsitelinkfound = count($wditem->getSiteLink('enwiki'));
 
     //
     // Get Global Species
@@ -278,6 +286,9 @@ EOT;
     ];
 
     echo "<h3>$itemname ($wdlabel) $wddescription ($wdalias)</h3>";
+    if (! $wdsitelinkfound) {
+        echo "<h3 style='color:red'>No site links</h3>";
+    }
 
     echo '<table class="wikitable"><thead><tr><th>Attribute</th><th>Global species</th><th>Wikidata</th><th>AnAge</th><th>Action</th></tr></thead><tbody>';
 
@@ -401,6 +412,24 @@ function add_stmt()
     $fieldname = isset($_REQUEST['fieldname']) ? $_REQUEST['fieldname'] : '';
     $fieldvalue = isset($_REQUEST['value']) ? $_REQUEST['value'] : '';
     $fieldunit = isset($_REQUEST['unit']) ? $_REQUEST['unit'] : '';
+
+    if ($fieldunit == 'gram' && $fieldvalue >= 1000) {
+        if (strpos($fieldvalue, '.') !== false) {
+            $fieldvalue = '' . round($fieldvalue, 0);
+        }
+
+        $precision = 3;
+        if ($fieldvalue >= 10000) $precision = 2;
+        elseif ($fieldvalue >= 100000) $precision = 1;
+        elseif ($fieldvalue >= 1000000) $precision = 0;
+
+        $fieldunit = 'kilogram';
+        $fieldvalue = substr($fieldvalue, 0, -3) . '.' . substr($fieldvalue, -3);
+        if ($precision != 3) $fieldvalue = substr($fieldvalue, 0, $precision - 3);
+        $fieldvalue = rtrim($fieldvalue, '0');
+        $fieldvalue = rtrim($fieldvalue, '.'); // Do not combine with above because whould remove 0's before the .
+    }
+
     if ($fieldunit != '1') $fieldunit = "http://www.wikidata.org/entity/{$unitsids[$fieldunit]}";
     $uuid = UUID::getUUID();
 
