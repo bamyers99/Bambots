@@ -43,7 +43,7 @@ define('VALUE_ANIMAL_MALE', 'Q44148');
 define('VALUE_ANIMAL_FEMALE', 'Q43445');
 define('VALUE_STAGE_BIRTH', 'Q4128476');
 define('VALUE_STAGE_ADULT', 'Q78101716');
-define('VALUE_DATABASE_QID', 'Q78161166');
+define('VALUE_DATABASE_QID', 'Q21145836');
 
 $params = [];
 
@@ -77,17 +77,18 @@ function display_form($list)
 
 	display_header();
 
-    echo '<table class="wikitable"><thead><tr><th>Species</th><th>Name</th><th>Gestation</th><th>Litter<br />Size</th><th>Birth<br />Weight</th><th>Adult<br />Weight</th><th>Lonevity</th><th>View</th></tr></thead><tbody>';
+//	echo '<table class="wikitable"><thead><tr><th>Species</th><th>Name</th><th>Gestation</th><th>Litter<br />Size</th><th>Birth<br />Weight</th><th>Adult<br />Weight</th><th>Lonevity</th><th>View</th></tr></thead><tbody>';
+	echo '<table class="wikitable"><thead><tr><th>Species</th><th>Litter<br />Size</th><th>View</th></tr></thead><tbody>';
 
     foreach ($list as $row) {
         echo '<tr>';
         echo '<td>' . htmlentities($row['genus_species'], ENT_COMPAT, 'UTF-8') . '</td>';
-        echo '<td>' . htmlentities($row['common_name'], ENT_COMPAT, 'UTF-8') . '</td>';
-        echo "<td style='text-align:right'>" . ($row['gestation'] ? $row['gestation'] : '&nbsp;') . "</td>";
+//        echo '<td>' . htmlentities($row['common_name'], ENT_COMPAT, 'UTF-8') . '</td>';
+//        echo "<td style='text-align:right'>" . ($row['gestation'] ? $row['gestation'] : '&nbsp;') . "</td>";
         echo "<td style='text-align:right'>" . ($row['litter_size'] ? $row['litter_size'] : '&nbsp;') . "</td>";
-        echo "<td style='text-align:right'>" . ($row['birth_weight'] ? $row['birth_weight'] : '&nbsp;') . "</td>";
-        echo "<td style='text-align:right'>" . ($row['adult_weight'] ? $row['adult_weight'] : '&nbsp;') . "</td>";
-        echo "<td style='text-align:right'>" . ($row['max_longevity'] ? $row['max_longevity'] : '&nbsp;') . "</td>";
+//        echo "<td style='text-align:right'>" . ($row['birth_weight'] ? $row['birth_weight'] : '&nbsp;') . "</td>";
+//        echo "<td style='text-align:right'>" . ($row['adult_weight'] ? $row['adult_weight'] : '&nbsp;') . "</td>";
+//        echo "<td style='text-align:right'>" . ($row['max_longevity'] ? $row['max_longevity'] : '&nbsp;') . "</td>";
         echo '<td><a href="/WDStmtAdder.php?action=display_item&item=' . urlencode($row['genus_species']) . '&offset=' . $offset . '">View</a></td>';
         echo '</tr>';
 
@@ -131,15 +132,15 @@ function add_stmt(btn, qid, fieldname, fieldvalue, unit) {
     Config::set('startpos', $itemoffset + 1, true);
 
     //
-    // Get AnAge
+    // Get source database data
     //
 
-    $anage_fields = [
-        'GE' => ['fieldname' => 'gestation', 'unit' => 'day'],
-        'LS' => ['fieldname' => 'litter_size', 'unit' => '1'],
-        'BW' => ['fieldname' => 'birth_weight', 'unit' => 'gram'],
-        'AW' => ['fieldname' => 'adult_weight', 'unit' => 'gram'],
-        'ML' => ['fieldname' => 'max_longevity', 'unit' => 'year']
+    $db_fields = [
+//        'GE' => ['fieldname' => 'gestation', 'unit' => 'day'],
+        'LS' => ['fieldname' => 'litter_size', 'unit' => '1']
+//        'BW' => ['fieldname' => 'birth_weight', 'unit' => 'gram'],
+//        'AW' => ['fieldname' => 'adult_weight', 'unit' => 'gram'],
+//        'ML' => ['fieldname' => 'max_longevity', 'unit' => 'year']
     ];
 
     $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
@@ -155,7 +156,7 @@ function add_stmt(btn, qid, fieldname, fieldvalue, unit) {
     }
     $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.anage WHERE genus_species = ?');
+    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.avianclutch WHERE genus_species = ?');
     $sth->bindValue(1, $itemname);
 
     $sth->execute();
@@ -164,7 +165,7 @@ function add_stmt(btn, qid, fieldname, fieldvalue, unit) {
 
     $anage_attribs = [];
 
-    foreach ($anage_fields as $abbrev => $config) {
+    foreach ($db_fields as $abbrev => $config) {
         $fieldname = $config['fieldname'];
         if ($sourceitem[$fieldname] != '0') $anage_attribs[$abbrev] = $sourceitem[$fieldname];
     }
@@ -184,7 +185,7 @@ EOT;
     $wdsparql = new WikidataSPARQL();
     $result = $wdsparql->query(rawurlencode($sparql));
 
-    if (! empty($result) && count($result) == 1) {
+    if (count($result) == 1) {
         $uri = $result[0]['item']['value'];
         preg_match('!entity/(.+)!', $uri, $matches);
         $qid = $matches[1];
@@ -195,11 +196,188 @@ EOT;
             $wditem = $items[0];
         }
     } else {
-        echo "<h3>Wikidata item not found or ambiguous for $itemname</h3>";
+        echo "<h3>Wikidata item (" . count($result) . ") not found or ambiguous for $itemname</h3>";
         display_footer();
         return;
     }
 
+    $wdalternatechecked = '';
+
+    loadWikidata($wditem, $wd_attribs, $wdlabel, $wddescription, $wdalias, $wdsitelinkcnt);
+
+    if ($wdsitelinkcnt < 2) { // Check taxon synonym
+        $sparql = <<<EOT
+SELECT ?item
+{
+	?item wdt:P1420 wd:$qid .
+}
+LIMIT 2
+EOT;
+
+        $result = $wdsparql->query(rawurlencode($sparql));
+
+        if (count($result) == 1) {
+            $uri = $result[0]['item']['value'];
+            preg_match('!entity/(.+)!', $uri, $matches);
+            $qid = $matches[1];
+            $items = $wdwiki->getItemsNoCache($qid);
+
+            if (! empty($items)) {
+                $wditem = $items[0];
+                loadWikidata($wditem, $wd_attribs, $wdlabel, $wddescription, $wdalias, $wdsitelinkcnt);
+                $wdalternatechecked = ' <span style="color:green">taxon synonym</span>';
+            }
+        }
+    }
+
+    if ($wdsitelinkcnt < 2) { // Check original combination
+        $sparql = <<<EOT
+SELECT ?item
+{
+	?item wdt:P1403 wd:$qid .
+}
+LIMIT 2
+EOT;
+
+        $result = $wdsparql->query(rawurlencode($sparql));
+
+        if (count($result) == 1) {
+            $uri = $result[0]['item']['value'];
+            preg_match('!entity/(.+)!', $uri, $matches);
+            $qid = $matches[1];
+            $items = $wdwiki->getItemsNoCache($qid);
+
+            if (! empty($items)) {
+                $wditem = $items[0];
+                loadWikidata($wditem, $wd_attribs, $wdlabel, $wddescription, $wdalias, $wdsitelinkcnt);
+                $wdalternatechecked = ' <span style="color:green">original combination</span>';
+            }
+        }
+    }
+
+    if ($wdsitelinkcnt < 2) { // Check basionym
+        $sparql = <<<EOT
+SELECT ?item
+{
+	?item wdt:P566 wd:$qid .
+}
+LIMIT 2
+EOT;
+
+        $result = $wdsparql->query(rawurlencode($sparql));
+
+        if (count($result) == 1) {
+            $uri = $result[0]['item']['value'];
+            preg_match('!entity/(.+)!', $uri, $matches);
+            $qid = $matches[1];
+            $items = $wdwiki->getItemsNoCache($qid);
+
+            if (! empty($items)) {
+                $wditem = $items[0];
+                loadWikidata($wditem, $wd_attribs, $wdlabel, $wddescription, $wdalias, $wdsitelinkcnt);
+                $wdalternatechecked = ' <span style="color:green">basionym</span>';
+            }
+        }
+    }
+
+    if ($wdsitelinkcnt < 2) { // Check subject has role protonym
+        $sparql = <<<EOT
+SELECT ?item
+{
+	?item p:P2868 ?subject .
+    ?subject ps:P2868 wd:Q14192851 .
+    ?subject pq:P642 wd:$qid .
+}
+LIMIT 2
+EOT;
+
+        $result = $wdsparql->query(rawurlencode($sparql));
+
+        if (count($result) == 1) {
+            $uri = $result[0]['item']['value'];
+            preg_match('!entity/(.+)!', $uri, $matches);
+            $qid = $matches[1];
+            $items = $wdwiki->getItemsNoCache($qid);
+
+            if (! empty($items)) {
+                $wditem = $items[0];
+                loadWikidata($wditem, $wd_attribs, $wdlabel, $wddescription, $wdalias, $wdsitelinkcnt);
+                $wdalternatechecked = ' <span style="color:green">subject has role protonym</span>';
+            }
+        }
+    }
+
+    //
+    // Get Global Species
+    //
+
+    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.globalspecies, s51454__wikidata.databases1 WHERE name = ? AND dbid = record_id');
+    $sth->bindValue(1, $itemname);
+
+    $sth->execute();
+
+    $gs_attribs = [];
+
+    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+        $gs_attribs[$row['attribute_name']] = $row['attribute_value'];
+    }
+
+    $fields = [
+        'BW' => 'Birth weight',
+        'AW' => 'Adult weight',
+        'MW' => 'Male weight',
+        'FW' => 'Female weight',
+        'GE' => 'Gestation',
+        'LS' => 'Litter size',
+        'ML' => 'Max longevity'
+    ];
+
+    echo "<h3>$itemname ($wdlabel) $wddescription ($wdalias)$wdalternatechecked</h3>";
+    if ($wdsitelinkcnt < 5) {
+        echo "<h3 style='color:red'>Site link count = $wdsitelinkcnt</h3>";
+    }
+
+    echo '<table class="wikitable"><thead><tr><th>Attribute</th><th>Global species</th><th>Wikidata</th><th>Source<br />DB</th><th>Action</th></tr></thead><tbody>';
+
+    foreach ($fields as $fieldname => $description) {
+        echo "<tr><td>$description</td><td style='text-align:right'>";
+
+        if (isset($gs_attribs[$fieldname])) echo $gs_attribs[$fieldname]; else echo '&nbsp;';
+
+        echo "</td><td style='text-align:right'>";
+
+        if (isset($wd_attribs[$fieldname])) echo substr($wd_attribs[$fieldname], 1); else echo '&nbsp;';
+
+        echo "</td><td style='text-align:right'>";
+
+        if (isset($anage_attribs[$fieldname])) echo $anage_attribs[$fieldname]; else echo '&nbsp;';
+
+        echo "</td><td style='text-align:center'>";
+
+        if (isset($anage_attribs[$fieldname]) && ! isset($wd_attribs[$fieldname]) && $wdsitelinkcnt > 2 &&
+            ($fieldname != 'AW' || (! isset($gs_attribs['MW']) && ! isset($gs_attribs['FW'])))) {
+            echo '<form>';
+            echo "<input type='button' value='Add' id='addbtn' onclick='add_stmt(this, \"$qid\", \"$fieldname\", \"" . urlencode($anage_attribs[$fieldname]) .
+                "\", \"{$db_fields[$fieldname]['unit']}\"); return false;' />";
+            echo '</form>';
+        } else {
+            echo '&nbsp;';
+        }
+
+        echo '</td></tr>';
+    }
+
+    $encoded_name = urlencode($itemname);
+
+    echo "</tbody><tfoot><tr><td>&nbsp;</td><td style='text-align:center'><a href='http://localhost:92/taxas/search/$encoded_name'>View</a></td><td style='text-align:center'><a href='https://www.wikidata.org/wiki/$qid'>View</a></td><td>&nbsp;</td><td>&nbsp;</td></tr>";
+
+    echo '</table>';
+
+    display_footer();
+}
+
+function loadWikidata($wditem, &$wd_attribs, &$wdlabel, &$wddescription, &$wdalias, &$wdsitelinkcnt)
+{
     $wd_attribs = [];
 
     $stmts = $wditem->getStatementsOfType(PROP_MAX_LONGEVITY);
@@ -257,76 +435,14 @@ EOT;
     $wddescription = $wditem->getLabelDescription('description', 'en');
     $wdaliases = $wditem->getAliases('en');
     if (count($wdaliases) > 0) $wdalias = $wdaliases[0]['value'];
-    else $wdalias = '';
-    $wdsitelinkfound = count($wditem->getSiteLink('enwiki'));
+    else $wdalias = '<span style="color:red">No alias</span>';
 
-    //
-    // Get Global Species
-    //
-
-    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.globalspecies, s51454__wikidata.databases1 WHERE name = ? AND dbid = record_id');
-    $sth->bindValue(1, $itemname);
-
-    $sth->execute();
-
-    $gs_attribs = [];
-
-    while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-        $gs_attribs[$row['attribute_name']] = $row['attribute_value'];
+    $wdsitelinks = $wditem->getSiteLinks();
+    $wdsitelinkcnt = 0;
+    foreach ($wdsitelinks as $wdsite) {
+        if (! preg_match('!^[a-z]{2,3}wiki$!', $wdsite['site'])) continue;
+        ++$wdsitelinkcnt;
     }
-
-    $fields = [
-        'BW' => 'Birth weight',
-        'AW' => 'Adult weight',
-        'MW' => 'Male weight',
-        'FW' => 'Female weight',
-        'GE' => 'Gestation',
-        'LS' => 'Litter size',
-        'ML' => 'Max longevity'
-    ];
-
-    echo "<h3>$itemname ($wdlabel) $wddescription ($wdalias)</h3>";
-    if (! $wdsitelinkfound) {
-        echo "<h3 style='color:red'>No site links</h3>";
-    }
-
-    echo '<table class="wikitable"><thead><tr><th>Attribute</th><th>Global species</th><th>Wikidata</th><th>AnAge</th><th>Action</th></tr></thead><tbody>';
-
-    foreach ($fields as $fieldname => $description) {
-        echo "<tr><td>$description</td><td style='text-align:right'>";
-
-        if (isset($gs_attribs[$fieldname])) echo $gs_attribs[$fieldname]; else echo '&nbsp;';
-
-        echo "</td><td style='text-align:right'>";
-
-        if (isset($wd_attribs[$fieldname])) echo substr($wd_attribs[$fieldname], 1); else echo '&nbsp;';
-
-        echo "</td><td style='text-align:right'>";
-
-        if (isset($anage_attribs[$fieldname])) echo $anage_attribs[$fieldname]; else echo '&nbsp;';
-
-        echo "</td><td style='text-align:center'>";
-
-        if (isset($anage_attribs[$fieldname]) && ! isset($wd_attribs[$fieldname]) &&
-            ($fieldname != 'AW' || (! isset($gs_attribs['MW']) && ! isset($gs_attribs['FW'])))) {
-            echo '<form>';
-            echo "<input type='button' value='Add' id='addbtn' onclick='add_stmt(this, \"$qid\", \"$fieldname\", \"" . urlencode($anage_attribs[$fieldname]) .
-                "\", \"{$anage_fields[$fieldname]['unit']}\"); return false;' />";
-            echo '</form>';
-        } else {
-            echo '&nbsp;';
-        }
-
-        echo '</td></tr>';
-    }
-
-    $encoded_name = urlencode($itemname);
-
-    echo "</tbody><tfoot><tr><td>&nbsp;</td><td style='text-align:center'><a href='http://localhost:92/taxas/search/$encoded_name'>View</a></td><td style='text-align:center'><a href='https://www.wikidata.org/wiki/$qid'>View</a></td><td>&nbsp;</td><td>&nbsp;</td></tr>";
-
-    echo '</table>';
-
-    display_footer();
 }
 
 function get_list()
@@ -348,7 +464,7 @@ function get_list()
 
 	$startpos = Config::get('startpos');
 
-	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.anage ORDER BY genus_species LIMIT $startpos,100");
+	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.avianclutch ORDER BY genus_species LIMIT $startpos,100");
 
 	$data = [];
 

@@ -305,7 +305,6 @@ class WikidataItem
 		if (empty($this->data['sitelinks'])) return [];
 
 		foreach ($this->data['sitelinks'] as $sitelink) {
-			if (! preg_match('![a-z]{2,3}wiki!', $sitelink['site'])) continue;
 			if ($sitelink['site'] == $site) return ['site' => $site, 'title' => $sitelink['title']];
 			if ($sitelink['site'] == 'enwiki') $reten = ['site' => 'enwiki', 'title' => $sitelink['title']];
 			elseif (! isset($ret)) $ret = ['site' => $sitelink['site'], 'title' => $sitelink['title']];
@@ -314,6 +313,17 @@ class WikidataItem
 		if (! empty($reten)) return $reten;
 		if (isset($ret)) return $ret;
 		return [];
+	}
+
+	/**
+	 * Get all of the site links.
+	 *
+	 * @return array key = site, values = site, title, badges
+	 */
+	public function getSiteLinks()
+	{
+	    if (! empty($this->data['sitelinks'])) return $this->data['sitelinks'];
+	    return [];
 	}
 
 	/**
