@@ -36,6 +36,7 @@ define('PROP_MAX_LONGEVITY', 'P4214');
 define('PROP_MASS', 'P2067');
 define('PROP_GESTATION', 'P3063');
 define('PROP_LITTER_SIZE', 'P7725');
+define('PROP_INCUBATION', 'P7770');
 define('PROP_SEX', 'P21');
 define('PROP_OF', 'P642');
 define('PROP_STATED_IN', 'P248');
@@ -43,7 +44,7 @@ define('VALUE_ANIMAL_MALE', 'Q44148');
 define('VALUE_ANIMAL_FEMALE', 'Q43445');
 define('VALUE_STAGE_BIRTH', 'Q4128476');
 define('VALUE_STAGE_ADULT', 'Q78101716');
-define('VALUE_DATABASE_QID', 'Q21145836');
+define('VALUE_DATABASE_QID', 'Q59337136');
 
 $params = [];
 
@@ -77,18 +78,17 @@ function display_form($list)
 
 	display_header();
 
-//	echo '<table class="wikitable"><thead><tr><th>Species</th><th>Name</th><th>Gestation</th><th>Litter<br />Size</th><th>Birth<br />Weight</th><th>Adult<br />Weight</th><th>Lonevity</th><th>View</th></tr></thead><tbody>';
-	echo '<table class="wikitable"><thead><tr><th>Species</th><th>Litter<br />Size</th><th>View</th></tr></thead><tbody>';
+	echo '<table class="wikitable"><thead><tr><th>Species</th><th>Gestation</th><th>Litter<br />Size</th><th>Birth<br />Weight</th><th>Adult<br />Weight</th><th>Lonevity</th><th>View</th></tr></thead><tbody>';
 
     foreach ($list as $row) {
         echo '<tr>';
         echo '<td>' . htmlentities($row['genus_species'], ENT_COMPAT, 'UTF-8') . '</td>';
 //        echo '<td>' . htmlentities($row['common_name'], ENT_COMPAT, 'UTF-8') . '</td>';
-//        echo "<td style='text-align:right'>" . ($row['gestation'] ? $row['gestation'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['gestation'] ? $row['gestation'] : '&nbsp;') . "</td>";
         echo "<td style='text-align:right'>" . ($row['litter_size'] ? $row['litter_size'] : '&nbsp;') . "</td>";
-//        echo "<td style='text-align:right'>" . ($row['birth_weight'] ? $row['birth_weight'] : '&nbsp;') . "</td>";
-//        echo "<td style='text-align:right'>" . ($row['adult_weight'] ? $row['adult_weight'] : '&nbsp;') . "</td>";
-//        echo "<td style='text-align:right'>" . ($row['max_longevity'] ? $row['max_longevity'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['birth_weight'] ? $row['birth_weight'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['adult_weight'] ? $row['adult_weight'] : '&nbsp;') . "</td>";
+        echo "<td style='text-align:right'>" . ($row['max_longevity'] ? $row['max_longevity'] : '&nbsp;') . "</td>";
         echo '<td><a href="/WDStmtAdder.php?action=display_item&item=' . urlencode($row['genus_species']) . '&offset=' . $offset . '">View</a></td>';
         echo '</tr>';
 
@@ -136,12 +136,14 @@ function add_stmt(btn, qid, fieldname, fieldvalue, unit) {
     //
 
     $db_fields = [
-//        'GE' => ['fieldname' => 'gestation', 'unit' => 'day'],
-        'LS' => ['fieldname' => 'litter_size', 'unit' => '1']
-//        'BW' => ['fieldname' => 'birth_weight', 'unit' => 'gram'],
-//        'AW' => ['fieldname' => 'adult_weight', 'unit' => 'gram'],
-//        'ML' => ['fieldname' => 'max_longevity', 'unit' => 'year']
-    ];
+        'GE' => ['fieldname' => 'gestation', 'unit' => 'day'],
+        'LS' => ['fieldname' => 'litter_size', 'unit' => '1'],
+        'BW' => ['fieldname' => 'birth_weight', 'unit' => 'gram'],
+        'AW' => ['fieldname' => 'adult_weight', 'unit' => 'gram'],
+        'ML' => ['fieldname' => 'max_longevity', 'unit' => 'year'],
+        'MW' => ['fieldname' => 'male_weight', 'unit' => 'gram'],
+        'FW' => ['fieldname' => 'female_weight', 'unit' => 'gram']
+        ];
 
     $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
@@ -156,18 +158,18 @@ function add_stmt(btn, qid, fieldname, fieldvalue, unit) {
     }
     $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.avianclutch WHERE genus_species = ?');
+    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.amniote WHERE genus_species = ?');
     $sth->bindValue(1, $itemname);
 
     $sth->execute();
 
     $sourceitem = $sth->fetch(PDO::FETCH_NAMED);
 
-    $anage_attribs = [];
+    $source_attribs = [];
 
     foreach ($db_fields as $abbrev => $config) {
         $fieldname = $config['fieldname'];
-        if ($sourceitem[$fieldname] != '0') $anage_attribs[$abbrev] = $sourceitem[$fieldname];
+        if ($sourceitem[$fieldname] != '0') $source_attribs[$abbrev] = $sourceitem[$fieldname];
     }
 
     //
@@ -350,15 +352,20 @@ EOT;
 
         echo "</td><td style='text-align:right'>";
 
-        if (isset($anage_attribs[$fieldname])) echo $anage_attribs[$fieldname]; else echo '&nbsp;';
+        if (isset($source_attribs[$fieldname])) echo $source_attribs[$fieldname]; else echo '&nbsp;';
 
         echo "</td><td style='text-align:center'>";
 
-        if (isset($anage_attribs[$fieldname]) && ! isset($wd_attribs[$fieldname]) && $wdsitelinkcnt > 2 &&
+        if (isset($source_attribs[$fieldname]) && ! isset($wd_attribs[$fieldname]) && $wdsitelinkcnt > 2 &&
             ($fieldname != 'AW' || (! isset($gs_attribs['MW']) && ! isset($gs_attribs['FW'])))) {
             echo '<form>';
-            echo "<input type='button' value='Add' id='addbtn' onclick='add_stmt(this, \"$qid\", \"$fieldname\", \"" . urlencode($anage_attribs[$fieldname]) .
+            echo "<input type='button' value='Add' id='addbtn' onclick='add_stmt(this, \"$qid\", \"$fieldname\", \"" . urlencode($source_attribs[$fieldname]) .
                 "\", \"{$db_fields[$fieldname]['unit']}\"); return false;' />";
+
+            if ($fieldname == 'GE') {
+                echo "<input type='button' value='Incubation' id='addbtn' onclick='add_stmt(this, \"$qid\", \"IN\", \"" . urlencode($source_attribs[$fieldname]) .
+                "\", \"{$db_fields[$fieldname]['unit']}\"); return false;' />";
+            }
             echo '</form>';
         } else {
             echo '&nbsp;';
@@ -388,6 +395,11 @@ function loadWikidata($wditem, &$wd_attribs, &$wdlabel, &$wddescription, &$wdali
     $stmts = $wditem->getStatementsOfType(PROP_GESTATION);
     if (count($stmts)) {
         $wd_attribs['GE'] = $stmts[0];
+    }
+
+    $stmts = $wditem->getStatementsOfType(PROP_INCUBATION);
+    if (count($stmts)) {
+        $wd_attribs['GE'] = $stmts[0]; // uses same prop as gestation
     }
 
     $stmts = $wditem->getStatementsOfType(PROP_LITTER_SIZE);
@@ -464,7 +476,7 @@ function get_list()
 
 	$startpos = Config::get('startpos');
 
-	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.avianclutch ORDER BY genus_species LIMIT $startpos,100");
+	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.amniote ORDER BY genus_species LIMIT $startpos,100");
 
 	$data = [];
 
@@ -519,7 +531,8 @@ function add_stmt()
         'FW' => ['valueprop' => PROP_MASS, 'qualifiers' =>[PROP_OF => VALUE_STAGE_ADULT, PROP_SEX => VALUE_ANIMAL_FEMALE]],
         'GE' => ['valueprop' => PROP_GESTATION],
         'LS' => ['valueprop' => PROP_LITTER_SIZE],
-        'ML' => ['valueprop' => PROP_MAX_LONGEVITY]
+        'ML' => ['valueprop' => PROP_MAX_LONGEVITY],
+        'IN' => ['valueprop' => PROP_INCUBATION]
     ];
 
     $unitsids = array_flip(WikidataItem::$quantity_units);
@@ -570,10 +583,13 @@ function add_stmt()
     if (isset($fields[$fieldname]['qualifiers'])) {
         $claim .= '"qualifiers":{';
         $qualifier_order = [];
+        $qualifier_cnt = 0;
 
         foreach ($fields[$fieldname]['qualifiers'] as $qprop => $qvalue) {
+            if ($qualifier_cnt > 0) $claim .= ',';
             $claim .= '"' . $qprop . '":[{"snaktype":"value","property":"' . $qprop . '","datavalue":{"type":"wikibase-entityid","value":{"id":"' . $qvalue . '"}}}]';
             $qualifier_order[] = '"' . $qprop . '"';
+            ++$qualifier_cnt;
         }
 
         $claim .= '},"qualifiers-order":[' . implode(',', $qualifier_order) . '],';
