@@ -44,7 +44,6 @@ define('VALUE_ANIMAL_MALE', 'Q44148');
 define('VALUE_ANIMAL_FEMALE', 'Q43445');
 define('VALUE_STAGE_BIRTH', 'Q4128476');
 define('VALUE_STAGE_ADULT', 'Q78101716');
-define('VALUE_DATABASE_QID', 'Q59337136');
 
 $params = [];
 
@@ -158,7 +157,7 @@ function add_stmt(btn, qid, fieldname, fieldvalue, unit) {
     }
     $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.amniote WHERE genus_species = ?');
+    $sth = $dbh_wiki->prepare('SELECT * FROM s51454__wikidata.hbw WHERE genus_species = ?');
     $sth->bindValue(1, $itemname);
 
     $sth->execute();
@@ -357,7 +356,7 @@ EOT;
         echo "</td><td style='text-align:center'>";
 
         if (isset($source_attribs[$fieldname]) && ! isset($wd_attribs[$fieldname]) && $wdsitelinkcnt > 2 &&
-            ($fieldname != 'AW' || (! isset($gs_attribs['MW']) && ! isset($gs_attribs['FW'])))) {
+            ($fieldname != 'AW' || (! isset($gs_attribs['MW']) && ! isset($gs_attribs['FW']) && ! isset($wd_attribs['MW']) && ! isset($wd_attribs['FW'])))) {
             echo '<form>';
             echo "<input type='button' value='Add' id='addbtn' onclick='add_stmt(this, \"$qid\", \"$fieldname\", \"" . urlencode($source_attribs[$fieldname]) .
                 "\", \"{$db_fields[$fieldname]['unit']}\"); return false;' />";
@@ -476,7 +475,7 @@ function get_list()
 
 	$startpos = Config::get('startpos');
 
-	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.amniote ORDER BY genus_species LIMIT $startpos,100");
+	$sth = $dbh_wiki->query("SELECT * FROM s51454__wikidata.hbw ORDER BY genus_species LIMIT $startpos,100");
 
 	$data = [];
 
@@ -534,6 +533,8 @@ function add_stmt()
         'ML' => ['valueprop' => PROP_MAX_LONGEVITY],
         'IN' => ['valueprop' => PROP_INCUBATION]
     ];
+
+    $dbqid = Config::get('dbid');
 
     $unitsids = array_flip(WikidataItem::$quantity_units);
 
@@ -596,7 +597,7 @@ function add_stmt()
     }
 
     $claim .= '"references":[{"snaks":{"' . PROP_STATED_IN . '":[{"snaktype":"value","property":"' . PROP_STATED_IN . '","datavalue":{"type":"wikibase-entityid",';
-    $claim .= '"value":{"id":"' . VALUE_DATABASE_QID . '"}}}]},"snaks-order":["' . PROP_STATED_IN . '"]}],"rank":"normal"}';
+    $claim .= '"value":{"id":"' . $dbqid . '"}}}]},"snaks-order":["' . PROP_STATED_IN . '"]}],"rank":"normal"}';
 
     // Create the claim
     $ret = $wdwiki->createClaim($lastrevid, $mywikiname, $csrftoken, $claim);
