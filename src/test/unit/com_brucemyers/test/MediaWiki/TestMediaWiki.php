@@ -40,7 +40,7 @@ class TestMediaWiki extends UnitTestCase
         $this->pass();
     }
 
-    public function testPageGet()
+    public function notestPageGet()
     {
         $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
         $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
@@ -68,7 +68,7 @@ class TestMediaWiki extends UnitTestCase
         $this->assertEqual($modified, $modified2, "File cache wasn't used");
     }
 
-    public function notestGetEditToken()
+    public function testGetEditToken()
     {
     	$this->wiki->http->quiet = false;
      	$username = Config::get(MediaWiki::WIKIUSERNAMEKEY);

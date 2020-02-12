@@ -125,14 +125,13 @@ class MediaWiki extends wikipedia
     		$savepassword = $password;
     	}
 
-    	$post = array('lgname' => $username, 'lgpassword' => $password);
-        $ret = $this->query('?action=login&format=php', $post);
+    	// Get a login token
+    	$post = array('meta' => 'tokens', 'type' => 'login');
+    	$ret = $this->query('?action=query&format=php', $post);
+    	$token = $ret['query']['tokens']['logintoken'];
 
-        /* This is now required - see https://bugzilla.wikimedia.org/show_bug.cgi?id=23076 */
-        if ($ret['login']['result'] == 'NeedToken') {
-        	$post['lgtoken'] = $ret['login']['token'];
-        	$ret = $this->query('?action=login&format=php', $post);
-        }
+    	$post = array('lgname' => $username, 'lgpassword' => $password, 'lgtoken' => $token);
+        $ret = $this->query('?action=login&format=php', $post);
 
         if ($ret['login']['result'] != 'Success') {
             throw new Exception('Login Error ' . print_r($ret, true));
