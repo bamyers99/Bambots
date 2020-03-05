@@ -1141,6 +1141,11 @@ END;
 	        'WikibaseForm' => ''
 	    ];
 
+	    $deleted = [
+	        'P7628' => true,
+	        'P7664' => true
+	    ];
+
 	    $wdwiki = new WikidataWiki();
 
 	    // Get the property list
@@ -1155,6 +1160,9 @@ END;
 
 	    foreach ($rows as $row) {
 	        $propid = (int)$row['id']['value'];
+
+	        if (isset($deleted["P$propid"])) continue;
+
 	        $label = isset($row['propLabel']['value']) ? $row['propLabel']['value'] : '';
 	        $description = isset($row['propDescription']['value']) ? $row['propDescription']['value'] : '';
 	        $alias = isset($row['propAltLabel']['value']) ? $row['propAltLabel']['value'] : '';
