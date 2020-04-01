@@ -140,7 +140,7 @@ class Popular1000Pages extends Extractor
 
 			$ns_name = MediaWiki::getNamespaceName($page);
 			if ($ns_name != '') continue;
-			if ($page == 'Main_Page') continue;
+			if ($page == 'Main_Page' || $page == 'Main_page') continue;
 
 			$rows = array(array($page, $pageviews));
 			$writer->writeRecords($rows);
