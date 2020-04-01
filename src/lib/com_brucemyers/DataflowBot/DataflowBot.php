@@ -235,7 +235,7 @@ class DataflowBot
 	function _configPopularLowQuality() {
 		$header = <<<EOT
 ==Lowest quality high-popularity articles==
-Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Weekly page views as of: @@PopPg#year@@-@@PopPg#month@@-@@PopPg#day@@
+Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Weekly page views as of: @@Pop1000Pg#year@@-@@Pop1000Pg#month@@-@@Pop1000Pg#day@@
 EOT;
 		$components = array (
 // 				array (
@@ -247,11 +247,9 @@ EOT;
 // 						)
 // 				),
 				array (
-						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\PopularPages',
+						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\Popular1000Pages',
 						'params' => array (
-							'pagename' => 'User:West.andrew.g/Popular_pages',
-							'minmobile' => '2',
-							'maxmobile' => '95'
+							'pagename' => 'User:HostBot/Top_1000_report'
 						)
 				),
 				array ( // filter before redirects
