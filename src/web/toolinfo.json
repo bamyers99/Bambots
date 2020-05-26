@@ -33,7 +33,7 @@
 	    "name" : "CategoryWatchlistBot",
 	    "title" : "Category membership watchlist",
 	    "description" : "Watch category membership changes (page adds/removals).",
-	    "url" : "https://tools.wmflabs.org/bambots/CategoryWatchlist.php",
+	    "url" : "https://bambots.brucemyers.com/CategoryWatchlist.php",
 	    "keywords" : "category,watchlist",
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
@@ -42,8 +42,8 @@
 	{
 	    "name" : "PageTools",
 	    "title" : "Page tools",
-	    "description" : "Searches for Wikidata item in other languages; provides Authority control searches",
-	    "url" : "https://tools.wmflabs.org/bambots/PageTools.php",
+	    "description" : "Provides Authority control searches",
+	    "url" : "https://bambots.brucemyers.com/PageTools.php",
 	    "keywords" : "wikidata,authority control",
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
@@ -53,7 +53,7 @@
 	    "name" : "TemplateParam",
 	    "title" : "Template parameter usage",
 	    "description" : "Displays template parameter usage from monthly data dump",
-	    "url" : "https://tools.wmflabs.org/bambots/TemplateParam.php",
+	    "url" : "https://bambots.brucemyers.com/TemplateParam.php",
 	    "keywords" : "template",
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
@@ -63,7 +63,7 @@
 	    "name" : "WikidataNavelGazer",
 	    "title" : "Wikidata statement addition counts (Navel Gazer)",
 	    "description" : "Displays wikidata users statement addition counts",
-	    "url" : "https://tools.wmflabs.org/bambots/NavelGazer.php",
+	    "url" : "https://bambots.brucemyers.com/NavelGazer.php",
 	    "keywords" : "wikidata,statistics,stats",
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
@@ -72,8 +72,8 @@
 	{
 	    "name" : "WikidataClassBrowser",
 	    "title" : "Wikidata class browser",
-	    "description" : "Displays wikidata class information including subclass and instance totals",
-	    "url" : "https://tools.wmflabs.org/bambots/WikidataClasses.php",
+	    "description" : "Displays wikidata class information including subclass and instance totals. Includes common class properties, qualifiers, enumerated values.",
+	    "url" : "https://bambots.brucemyers.com/WikidataClasses.php",
 	    "keywords" : "wikidata,class,statistics,stats",
 	    "author" : "bamyers99",
 	    "repository" : "https://github.com/bamyers99/Bambots"
