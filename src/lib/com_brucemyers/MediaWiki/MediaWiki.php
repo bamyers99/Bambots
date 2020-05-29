@@ -256,33 +256,43 @@ class MediaWiki extends wikipedia
      */
     public function getPagesLastRevision($pagenames)
     {
-        if (empty($pagenames)) return array();
-        $pages = array();
+        if (empty($pagenames)) return [];
+        $pages = [];
         $pageChunks = array_chunk($pagenames, Config::get(self::WIKIPAGEINCREMENT));
 
         foreach ($pageChunks as $pageChunk) {
         	$pagenames = implode('|', $pageChunk);
-        	$ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) .
+
+        	if (strlen($pagenames) > 7000) {
+        	    $chunks = array_chunk($pageChunk, ceil(count($pageChunk) / 2));
+        	    $chunkedNames = [implode('|', $chunks[0]), implode('|', $chunks[1])];
+        	} else {
+        	    $chunkedNames = [$pagenames];
+        	}
+
+        	foreach ($chunkedNames as $pagenames) {
+        	    $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) .
         		'&rvslots=main&rvprop=timestamp|flags|comment|user|ids&continue=');
 
-        	if (isset($ret['error'])) {
-        		throw new Exception('Query Error ' . $ret['error']['info']);
-        	}
+            	if (isset($ret['error'])) {
+            		throw new Exception('Query Error ' . $ret['error']['info']);
+            	}
 
-        	$normalized = array();
+            	$normalized = array();
 
-        	if (isset($ret['query']['normalized'])) {
-        		foreach ($ret['query']['normalized'] as $normal) {
-        			$normalized[$normal['to']] = $normal['from'];
-        		}
-        	}
+            	if (isset($ret['query']['normalized'])) {
+            		foreach ($ret['query']['normalized'] as $normal) {
+            			$normalized[$normal['to']] = $normal['from'];
+            		}
+            	}
 
-        	foreach ($ret['query']['pages'] as $page) {
-        		if (isset($page['revisions'][0])) {
-        			$pagename = $page['title'];
-        			if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
-        			$pages[$pagename] = $page['revisions'][0];
-        		}
+            	foreach ($ret['query']['pages'] as $page) {
+            		if (isset($page['revisions'][0])) {
+            			$pagename = $page['title'];
+            			if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
+            			$pages[$pagename] = $page['revisions'][0];
+            		}
+            	}
         	}
         }
 
