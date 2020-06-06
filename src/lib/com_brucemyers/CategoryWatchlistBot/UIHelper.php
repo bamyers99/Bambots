@@ -18,6 +18,7 @@
 namespace com_brucemyers\CategoryWatchlistBot;
 
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\Convert;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\HttpUtil;
@@ -65,16 +66,17 @@ class UIHelper
 	 * Fetch a saved queries paramaters
 	 *
 	 * @param string $queryid Query hash
+	 * @param string $type param type - empty or dump
 	 * @return array Parameters, empty = not found
 	 */
-	public function fetchParams($queryid)
+	public function fetchParams($queryid, $type = '')
 	{
-		$sth = $this->dbh_tools->prepare('SELECT params FROM querys WHERE hash = ?');
-		$sth->bindParam(1, $queryid);
-		$sth->execute();
+	    $sth = $this->dbh_tools->prepare("SELECT params FROM {$type}querys WHERE hash = ?");
+	    $sth->bindParam(1, $queryid);
+	    $sth->execute();
 
-		if ($row = $sth->fetch(PDO::FETCH_ASSOC)) return unserialize($row['params']);
-		else return array();
+	    if ($row = $sth->fetch(PDO::FETCH_ASSOC)) return unserialize($row['params']);
+	    else return [];
 	}
 
 	/**
@@ -82,47 +84,86 @@ class UIHelper
 	 *
 	 * @param array $params
 	 */
-	public function saveQuery(&$params)
+	public function saveQuery($params)
+	{
+	    $serialized = serialize($params);
+	    $hash = md5($serialized);
+	    $accessdate = MySQLDate::toMySQLDate(time());
+	    $wikiname = $params['wiki'];
+
+	    // See if we have a query record
+	    $sth = $this->dbh_tools->prepare("SELECT id FROM querys WHERE hash = ?");
+	    $sth->bindParam(1, $hash);
+	    $sth->execute();
+
+	    if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+	        $queryid = $row['id'];
+	        $sth = $this->dbh_tools->prepare("UPDATE querys SET lastaccess = ? WHERE id = $queryid");
+	        $sth->bindParam(1, $accessdate);
+	        $sth->execute();
+	    } else {
+	        $wikilang = substr($wikiname, 0, -4);
+	        $domain = "$wikilang.wikipedia.org";
+	        $mediawiki = $this->serviceMgr->getMediaWiki($domain);
+
+	        $querycats = new QueryCats($mediawiki, $this->dbh_tools);
+	        $cats = $querycats->calcCats($params, true);
+	        $catcount = $cats['catcount'];
+
+	        $sth = $this->dbh_tools->prepare("INSERT INTO querys (wikiname,hash,params,lastaccess,lastrecalc,catcount) VALUES (?,?,?,?,?,?)");
+	        $sth->bindParam(1, $wikiname);
+	        $sth->bindParam(2, $hash);
+	        $sth->bindParam(3, $serialized);
+	        $sth->bindParam(4, $accessdate);
+	        $sth->bindParam(5, $accessdate);
+	        $sth->bindParam(6, $catcount);
+	        $sth->execute();
+
+	        $id = $this->dbh_tools->lastInsertId();
+	        $querycats->saveCats($id, $cats['cats']);
+	    }
+	}
+
+	/**
+	 * Save a dump query
+	 *
+	 * @param array $params
+	 */
+	public function saveDumpQuery($params)
 	{
 		$serialized = serialize($params);
 		$hash = md5($serialized);
 		$accessdate = MySQLDate::toMySQLDate(time());
-		$wikiname = $params['wiki'];
 
 		// See if we have a query record
-    	$sth = $this->dbh_tools->prepare("SELECT id FROM querys WHERE hash = ?");
+    	$sth = $this->dbh_tools->prepare("SELECT id FROM dumpquerys WHERE hash = ?");
     	$sth->bindParam(1, $hash);
     	$sth->execute();
 
     	if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
     		$queryid = $row['id'];
-    		$sth = $this->dbh_tools->prepare("UPDATE querys SET lastaccess = ? WHERE id = $queryid");
+    		$sth = $this->dbh_tools->prepare("UPDATE dumpquerys SET lastaccess = ? WHERE id = $queryid");
     		$sth->bindParam(1, $accessdate);
     		$sth->execute();
     	} else {
-    	    $wikilang = substr($wikiname, 0, -4);
-    	    $domain = "$wikilang.wikipedia.org";
-    	    $mediawiki = $this->serviceMgr->getMediaWiki($domain);
-
-    		$querycats = new QueryCats($mediawiki, $this->dbh_tools);
-    		$cats = $querycats->calcCats($params, true);
-    		$catcount = $cats['catcount'];
-
-    		$sth = $this->dbh_tools->prepare("INSERT INTO querys (wikiname,hash,params,lastaccess,lastrecalc,catcount) VALUES (?,?,?,?,?,?)");
-    		$sth->bindParam(1, $wikiname);
-    		$sth->bindParam(2, $hash);
-    		$sth->bindParam(3, $serialized);
-    		$sth->bindParam(4, $accessdate);
-    		$sth->bindParam(5, $accessdate);
-    		$sth->bindParam(6, $catcount);
+    		$sth = $this->dbh_tools->prepare("INSERT INTO dumpquerys (hash,params,lastaccess) VALUES (?,?,?)");
+    		$sth->bindParam(1, $hash);
+    		$sth->bindParam(2, $serialized);
+    		$sth->bindParam(3, $accessdate);
     		$sth->execute();
+    	}
 
-    		$id = $this->dbh_tools->lastInsertId();
-    		$querycats->saveCats($id, $cats['cats']);
+    	$sth = $this->dbh_tools->prepare("INSERT IGNORE INTO dumpfiles (wikiname,filename) VALUES (?,?)");
+
+    	for ($x=1; $x <= 10; ++$x) {
+    	    if (empty($params["wn$x"]) || empty($params["fn$x"])) break;
+    	    $sth->bindParam(1, $params["wn$x"]);
+    	    $sth->bindParam(2, $params["fn$x"]);
+    	    $sth->execute();
     	}
 	}
 
-	/**
+/**
 	 * Get watch list results
 	 *
 	 * @param array $params
@@ -133,11 +174,10 @@ class UIHelper
 	 */
 	public function getResults($params, $page, $max_rows)
 	{
-		$errors = array();
+		$errors = [];
 		$serialized = serialize($params);
 		$hash = md5($serialized);
 		$accessdate = MySQLDate::toMySQLDate(time());
-		$wikiname = $params['wiki'];
 
 		// See if we have a query record
     	$sth = $this->dbh_tools->prepare("SELECT id FROM querys WHERE hash = ?");
@@ -150,15 +190,58 @@ class UIHelper
     		$sth->bindParam(1, $accessdate);
     		$sth->execute();
 		} else {
-			return array('errors' => array('Query not found'), 'results' => array());
+			return ['errors' => ['Query not found'], 'results' => []];
 		}
-
-		$results = array();
 
     	$watchResults = new WatchResults($this->dbh_tools);
     	$results = $watchResults->getResults($queryid, $params, $page, $max_rows);
 
-		return array('errors' => $errors, 'results' => $results);
+		return ['errors' => $errors, 'results' => $results];
+	}
+
+	/**
+	 * Get dump watchlist results
+	 *
+	 * @param array $params
+	 * @return array Results, keys = errors -[], results - []
+	 */
+	public function getDumpResults($params)
+	{
+	    $errors = [];
+	    $serialized = serialize($params);
+	    $hash = md5($serialized);
+	    $accessdate = MySQLDate::toMySQLDate(time());
+
+	    // See if we have a query record
+	    $sth = $this->dbh_tools->prepare("SELECT id FROM dumpquerys WHERE hash = ?");
+	    $sth->bindParam(1, $hash);
+	    $sth->execute();
+
+	    if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+	        $queryid = $row['id'];
+	        $sth = $this->dbh_tools->prepare("UPDATE dumpquerys SET lastaccess = ? WHERE id = $queryid");
+	        $sth->bindParam(1, $accessdate);
+	        $sth->execute();
+	    } else {
+	        return ['errors' => ['Query not found'], 'results' => []];
+	    }
+
+	    $results = [];
+
+	    $sth = $this->dbh_tools->prepare("SELECT * FROM dumpfiles WHERE wikiname = ? AND filename = ?");
+
+	    for ($x=1; $x <= 10; ++$x) {
+	        if (empty($params["wn$x"]) || empty($params["fn$x"])) break;
+	        $sth->bindParam(1, $params["wn$x"]);
+	        $sth->bindParam(2, $params["fn$x"]);
+	        $sth->execute();
+
+	        if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+	            $results["{$row['wikiname']}\t{$row['filename']}"] = $row;
+	        }
+	    }
+
+	    return ['errors' => $errors, 'results' => $results];
 	}
 
 	/**
@@ -224,14 +307,14 @@ class UIHelper
     	if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
     		$queryid = $row['id'];
 		} else {
-			return array();
+			return [];
 		}
 
     	$sth = $this->dbh_tools->prepare("SELECT category FROM querycats WHERE queryid = $queryid ORDER BY category");
     	$sth->execute();
 		$sth->setFetchMode(PDO::FETCH_NUM);
 
-		$results = array();
+		$results = [];
 
 		while ($row = $sth->fetch()) {
 			$results[] = $row[0];
@@ -261,7 +344,7 @@ class UIHelper
 			return $results;
 		}
 
-		$stats = array();
+		$stats = [];
 
 		// totalEvents
 		$sql = "SELECT COUNT(*) FROM {$wiki}_diffs";
@@ -303,132 +386,224 @@ class UIHelper
 	 */
 	public function generateAtom($query)
 	{
+	    header('Content-Type: application/atom+xml');
+
+	    // Check the cache
+	    $feed = FileCache::getData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . $query);
+	    if (! empty($feed)) {
+	        echo $feed;
+	        return true;
+	    }
+
+	    $params = $this->fetchParams($query);
+	    $results = $this->getResults($params, 1, 100);
+
+	    $host  = $_SERVER['HTTP_HOST'];
+	    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+	    $extra = "CategoryWatchlist.php?action=atom&amp;query=$query";
+	    $protocol = HttpUtil::getProtocol();
+	    $wikis = $this->getWikis();
+	    $domain = $wikis[$params['wiki']]['domain'];
+	    $wikiprefix = "$protocol://$domain/wiki/";
+	    $l10n = new L10N($wikis[$params['wiki']]['lang']);
+
+	    $updated = gmdate("Y-m-d\TH:i:s\Z");
+
+	    if (empty($params['title'])) {
+	        $title = $params['cn1'];
+	        if (! empty($params['cn2'])) $title = ', ...';
+	    } else {
+	        $title = $params['title'];
+	    }
+
+	    $title = htmlentities($title, ENT_QUOTES, 'UTF-8');
+	    $title2 = htmlentities(htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') . " : $title", ENT_COMPAT, 'UTF-8');
+
+	    $feed = "<?xml version=\"1.0\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xml:lang=\"en\">\n";
+	    $feed .= "<id>$protocol://$host$uri/$extra</id>\n";
+	    $feed .= "<title type=\"html\">$title2</title>\n";
+	    $feed .= "<link rel=\"self\" type=\"application/atom+xml\" href=\"$protocol://$host$uri/$extra\" />\n";
+	    $feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
+	    $feed .= "<updated>$updated</updated>\n";
+
+	    // Sort by date, namespace, title
+	    $dategroups = [];
+	    foreach ($results['results'] as &$result) {
+	        $date = $result['diffdate'];
+	        unset($result['diffdate']);
+	        if (! isset($dategroups[$date])) $dategroups[$date] = array();
+	        $dategroups[$date][] = $result;
+	    }
+	    unset($result);
+
+	    $redirectmsg = htmlentities(' (' . $l10n->get('redirect') . ')', ENT_COMPAT, 'UTF-8');
+
+	    $summary = htmlentities($l10n->get('mostrecentresults'), ENT_COMPAT, 'UTF-8') . "<table><thead><tr><th>" .
+	   	    htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
+	   	    htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
+	   	    htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
+
+	   	    foreach ($dategroups as $date => &$dategroup) {
+	   	        usort($dategroup, array($this, 'resultgroupsort'));
+	   	        $displaydate = htmlentities($l10n->formatDate(MySQLDate::toPHP($date), 'datetimefmt'), ENT_COMPAT, 'UTF-8');
+	   	        $summary .= "<tr><td><i>$displaydate</i></td><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
+	   	        $x = 0;
+	   	        $prevtitle = '';
+	   	        $prevaction = '';
+
+	   	        foreach ($dategroup as &$result) {
+	   	            $title = $result['title'];
+	   	            $action = $result['plusminus'];
+	   	            $category = htmlentities($result['category'], ENT_COMPAT, 'UTF-8');
+	   	            if ($result['cat_template'] == 'T') $category = '{{' . $category . '}}';
+	   	            $displayaction = ($action == '-') ? '&ndash;' : $action;
+	   	            $flags = $result['flags'];
+
+	   	            if ($title == $prevtitle && $action == $prevaction) {
+	   	                $summary .= "; $category";
+	   	            } elseif ($title == $prevtitle) {
+	   	                $summary .= "</td></tr>\n";
+	   	                $summary .= "<tr><td>&nbsp;</td><td>$displayaction</td><td>$category";
+	   	            } else {
+	   	                if ($x++ > 0) $summary .= "</td></tr>\n";
+	   	                $redirectadd = '';
+	   	                if ($flags & 1) $redirectadd = $redirectmsg;
+
+	   	                $summary .= "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
+	   	   	                htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$redirectadd</td><td>$displayaction</td><td>$category";
+	   	            }
+	   	            $prevtitle = $title;
+	   	            $prevaction = $action;
+	   	        }
+
+	   	        if ($x > 0) $summary .= "</td></tr>\n";
+	   	    }
+
+	   	    $summary .= "</tbody></table>\n";
+	   	    $summary = htmlentities($summary, ENT_COMPAT, 'UTF-8');
+	   	    unset($dategroup);
+	   	    unset($result);
+
+	   	    foreach ($dategroups as $date => &$dategroup) {
+	   	        $date = MySQLDate::toPHP($date);
+	   	        $humandate = htmlentities(htmlentities($l10n->formatDate($date, 'datetimefmt'), ENT_COMPAT, 'UTF-8'), ENT_COMPAT, 'UTF-8');
+	   	        $updated = gmdate("Y-m-d\TH:i:s\Z", $date);
+	   	        $title = htmlentities(htmlentities($l10n->get('resultsfor'), ENT_COMPAT, 'UTF-8'), ENT_COMPAT, 'UTF-8') . " $humandate";
+
+	   	        $feed .= "<entry>\n";
+	   	        $feed .= "<id>$protocol://$host$uri/$extra&amp;date=$date</id>\n";
+	   	        $feed .= "<title type=\"html\">$title</title>\n";
+	   	        $feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
+	   	        $feed .= "<updated>$updated</updated>\n";
+	   	        $feed .= "<summary type=\"html\">$summary</summary>\n";
+	   	        $feed .= "<author><name>CategoryWatchlistBot</name></author>\n";
+	   	        $feed .= "</entry>\n";
+	   	        break; // Only want one entry
+	   	    }
+	   	    unset($dategroup);
+
+	   	    $feed .= '</feed>';
+
+	   	    FileCache::putData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . $query, $feed);
+
+	   	    echo $feed;
+
+	   	    return true;
+	}
+
+	/**
+	 * Generate an dump atom feed
+	 *
+	 * @param string $query Query id
+	 * @return boolean true - success, false - failure
+	 */
+	public function generateDumpAtom($query)
+	{
 		header('Content-Type: application/atom+xml');
 
 		// Check the cache
-		$feed = FileCache::getData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . $query);
+		$feed = FileCache::getData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . 'dump' . $query);
 		if (! empty($feed)) {
 			echo $feed;
 			return true;
 		}
 
-		$params = $this->fetchParams($query);
-		$results = $this->getResults($params, 1, 100);
+		$sth = $this->dbh_tools->prepare("SELECT * FROM dumpquerys WHERE hash = ?");
+		$sth->bindParam(1, $query);
+		$sth->execute();
+
+		if (! ($row = $sth->fetch(PDO::FETCH_ASSOC))) return false;
+
+		$params = unserialize($row['params']);
+		$results = $this->getDumpResults($params);
 
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-		$extra = "CategoryWatchlist.php?action=atom&amp;query=$query";
+		$extra = "DumpWatchlist.php?action=atom&amp;query=$query";
 		$protocol = HttpUtil::getProtocol();
-		$wikis = $this->getWikis();
-		$domain = $wikis[$params['wiki']]['domain'];
-		$wikiprefix = "$protocol://$domain/wiki/";
-		$l10n = new L10N($wikis[$params['wiki']]['lang']);
 
-		$updated = gmdate("Y-m-d\TH:i:s\Z");
+		$updated = $row['lastdump'];
+		if (is_null($updated)) $updated = gmdate("Y-m-d\TH:i:s\Z");
+		else $updated = gmdate("Y-m-d\TH:i:s\Z", MySQLDate::toPHP($updated));
 
-		if (empty($params['title'])) {
-			$title = $params['cn1'];
-			if (! empty($params['cn2'])) $title = ', ...';
-		} else {
-			$title = $params['title'];
-		}
-
-		$title = htmlentities($title, ENT_QUOTES, 'UTF-8');
-		$title2 = htmlentities(htmlentities($l10n->get('watchlisttitle'), ENT_COMPAT, 'UTF-8') . " : $title", ENT_COMPAT, 'UTF-8');
+		$title = 'Wikimedia Dump Watchlist';
 
 		$feed = "<?xml version=\"1.0\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xml:lang=\"en\">\n";
 		$feed .= "<id>$protocol://$host$uri/$extra</id>\n";
-		$feed .= "<title type=\"html\">$title2</title>\n";
+		$feed .= "<title type=\"html\">$title</title>\n";
 		$feed .= "<link rel=\"self\" type=\"application/atom+xml\" href=\"$protocol://$host$uri/$extra\" />\n";
-		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
+		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/DumpWatchlist.php?query=$query\" />\n";
 		$feed .= "<updated>$updated</updated>\n";
 
-		// Sort by date, namespace, title
-		$dategroups = array();
-		foreach ($results['results'] as &$result) {
-			$date = $result['diffdate'];
-			unset($result['diffdate']);
-			if (! isset($dategroups[$date])) $dategroups[$date] = array();
-			$dategroups[$date][] = $result;
-		}
-		unset($result);
+		// Reverse sort by file update time
 
-		$redirectmsg = htmlentities(' (' . $l10n->get('redirect') . ')', ENT_COMPAT, 'UTF-8');
+		$results = $results['results'];
+		usort($results, function ($a, $b) {
+		    return -strcmp($a['lastdump'], $b['lastdump']); // reverse
+		});
 
-		$summary = htmlentities($l10n->get('mostrecentresults'), ENT_COMPAT, 'UTF-8') . "<table><thead><tr><th>" .
-			htmlentities($l10n->get('page', true), ENT_COMPAT, 'UTF-8') . "</th><th>+/&ndash;</th><th>" .
-			htmlentities($l10n->get('category', true), ENT_COMPAT, 'UTF-8') . " / " .
-			htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') . "</th></tr></thead><tbody>\n";
+		$summary = "Most recent dump(s)<table><thead><tr><th>" .
+			"Wiki</th><th>Filename</th><th>" .
+			"Last dump</th><th>Filesize</th></tr></thead><tbody>\n";
 
-		foreach ($dategroups as $date => &$dategroup) {
-			usort($dategroup, array($this, 'resultgroupsort'));
-			$displaydate = htmlentities($l10n->formatDate(MySQLDate::toPHP($date), 'datetimefmt'), ENT_COMPAT, 'UTF-8');
-			$summary .= "<tr><td><i>$displaydate</i></td><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
-			$x = 0;
-			$prevtitle = '';
-			$prevaction = '';
+		foreach ($results as $file) {
+		    $wikiname = htmlentities($file['wikiname'], ENT_COMPAT, 'UTF-8');
+		    $filename = htmlentities($file['filename'], ENT_COMPAT, 'UTF-8');
+		    $lastdump = 'unknown';
+		    $filesize = 'unknown';
+		    if (! is_null($file['lastdump'])) $lastdump = $file['lastdump'];
+		    if (! is_null($file['filesize'])) {
+		        $filesize = Convert::formatBytes($file['filesize']);
+		        $filesize = $filesize[0] . ' ' . $filesize[1] . 'B';
+		    }
 
-			foreach ($dategroup as &$result) {
-				$title = $result['title'];
-				$action = $result['plusminus'];
-				$category = htmlentities($result['category'], ENT_COMPAT, 'UTF-8');
-				if ($result['cat_template'] == 'T') $category = '{{' . $category . '}}';
-				$displayaction = ($action == '-') ? '&ndash;' : $action;
-				$flags = $result['flags'];
-
-				if ($title == $prevtitle && $action == $prevaction) {
-					$summary .= "; $category";
-				} elseif ($title == $prevtitle) {
-					$summary .= "</td></tr>\n";
-					$summary .= "<tr><td>&nbsp;</td><td>$displayaction</td><td>$category";
-				} else {
-					if ($x++ > 0) $summary .= "</td></tr>\n";
-					$redirectadd = '';
-					if ($flags & 1) $redirectadd = $redirectmsg;
-
-					$summary .= "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$redirectadd</td><td>$displayaction</td><td>$category";
-				}
-				$prevtitle = $title;
-				$prevaction = $action;
-			}
-
-			if ($x > 0) $summary .= "</td></tr>\n";
+			$summary .= "<tr><td>$wikiname</td><td>$filename</td><td>$lastdump</td><td>$filesize</td></tr>\n";
 		}
 
 		$summary .= "</tbody></table>\n";
 		$summary = htmlentities($summary, ENT_COMPAT, 'UTF-8');
-		unset($dategroup);
-		unset($result);
 
-		foreach ($dategroups as $date => &$dategroup) {
-			$date = MySQLDate::toPHP($date);
-			$humandate = htmlentities(htmlentities($l10n->formatDate($date, 'datetimefmt'), ENT_COMPAT, 'UTF-8'), ENT_COMPAT, 'UTF-8');
-			$updated = gmdate("Y-m-d\TH:i:s\Z", $date);
-			$title = htmlentities(htmlentities($l10n->get('resultsfor'), ENT_COMPAT, 'UTF-8'), ENT_COMPAT, 'UTF-8') . " $humandate";
+		$title = 'Wikimedia dump completion';
 
-			$feed .= "<entry>\n";
-			$feed .= "<id>$protocol://$host$uri/$extra&amp;date=$date</id>\n";
-			$feed .= "<title type=\"html\">$title</title>\n";
-			$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/CategoryWatchlist.php?query=$query\" />\n";
-			$feed .= "<updated>$updated</updated>\n";
-			$feed .= "<summary type=\"html\">$summary</summary>\n";
-			$feed .= "<author><name>CategoryWatchlistBot</name></author>\n";
-			$feed .= "</entry>\n";
-			break; // Only want one entry
-		}
-		unset($dategroup);
+		$feed .= "<entry>\n";
+		$feed .= "<id>$protocol://$host$uri/$extra&amp;date=$updated</id>\n";
+		$feed .= "<title type=\"html\">$title</title>\n";
+		$feed .= "<link rel=\"alternate\" type=\"text/html\" href=\"$protocol://$host$uri/DumpWatchlist.php?query=$query\" />\n";
+		$feed .= "<updated>$updated</updated>\n";
+		$feed .= "<summary type=\"html\">$summary</summary>\n";
+		$feed .= "<author><name>DumpWatchlistBot</name></author>\n";
+		$feed .= "</entry>\n";
 
 		$feed .= '</feed>';
 
-		FileCache::putData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . $query, $feed);
+		FileCache::putData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . 'dump' . $query, $feed);
 
 		echo $feed;
 
 		return true;
 	}
 
-	/**
+    /**
 	 * Sort a result group by namespace, title
 	 *
 	 * @param unknown $a
@@ -467,7 +642,7 @@ class UIHelper
 		$sth = $this->dbh_tools->query('SELECT id, hash, wikiname FROM querys WHERE catcount = ' . QueryCats::CATEGORY_COUNT_UNAPPROVED);
 		$sth->setFetchMode(PDO::FETCH_ASSOC);
 
-		$results = array();
+		$results = [];
 
 		while ($row = $sth->fetch()) {
 			$results[] = $row;

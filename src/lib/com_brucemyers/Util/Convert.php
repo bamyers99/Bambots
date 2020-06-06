@@ -64,4 +64,19 @@ class Convert
 		return $crc;
 	}
 
+	/**
+	 * Format bytes
+	 *
+	 * @param int $size
+	 * @param int $precision
+	 * @return [number, units (K, M, G, T)]
+	 */
+	public static function formatBytes($size, $precision = 1)
+	{
+	    static $suffixes = ['', 'K', 'M', 'G', 'T'];
+	    $base = log($size, 1024);
+
+	    return [round(pow(1024, $base - floor($base)), $precision), $suffixes[floor($base)]];
+	}
+
 }
