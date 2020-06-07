@@ -120,10 +120,12 @@ function display_form()
 				$filename = $params["fn$x"];
 
 				$resultkey = "$wikiname\t$filename";
-				$lastdump = 'unknown';
-				$filesize = 'unknown';
+				$lastdump = '';
+				$filesize = '';
 
 				if (isset($results[$resultkey])) {
+				    $lastdump = 'waiting';
+				    $filesize = 'waiting';
 				    $file = $results[$resultkey];
 				    if (! is_null($file['lastdump'])) $lastdump = $file['lastdump'];
 				    if (! is_null($file['filesize'])) {

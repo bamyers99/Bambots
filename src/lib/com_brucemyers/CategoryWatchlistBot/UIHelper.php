@@ -226,6 +226,15 @@ class UIHelper
 	        return ['errors' => ['Query not found'], 'results' => []];
 	    }
 
+	    $cachekey = WMDumpWatchlist::CACHE_PREFIX_RESULT . $queryid;
+
+	    // Check the cache
+	    $results = FileCache::getData($cachekey);
+	    if (! empty($results)) {
+	        $results = unserialize($results);
+	        return ['errors' => $errors, 'results' => $results];
+	    }
+
 	    $results = [];
 
 	    $sth = $this->dbh_tools->prepare("SELECT * FROM dumpfiles WHERE wikiname = ? AND filename = ?");
@@ -239,6 +248,12 @@ class UIHelper
 	        if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
 	            $results["{$row['wikiname']}\t{$row['filename']}"] = $row;
 	        }
+	    }
+
+	    if (count($results)) {
+    	    $serialized = serialize($results);
+
+    	    FileCache::putData($cachekey, $serialized);
 	    }
 
 	    return ['errors' => $errors, 'results' => $results];
@@ -522,7 +537,7 @@ class UIHelper
 		header('Content-Type: application/atom+xml');
 
 		// Check the cache
-		$feed = FileCache::getData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . 'dump' . $query);
+		$feed = FileCache::getData(WMDumpWatchlist::CACHE_PREFIX_ATOM . $query);
 		if (! empty($feed)) {
 			echo $feed;
 			return true;
@@ -569,8 +584,8 @@ class UIHelper
 		foreach ($results as $file) {
 		    $wikiname = htmlentities($file['wikiname'], ENT_COMPAT, 'UTF-8');
 		    $filename = htmlentities($file['filename'], ENT_COMPAT, 'UTF-8');
-		    $lastdump = 'unknown';
-		    $filesize = 'unknown';
+		    $lastdump = 'waiting';
+		    $filesize = 'waiting';
 		    if (! is_null($file['lastdump'])) $lastdump = $file['lastdump'];
 		    if (! is_null($file['filesize'])) {
 		        $filesize = Convert::formatBytes($file['filesize']);
@@ -596,7 +611,7 @@ class UIHelper
 
 		$feed .= '</feed>';
 
-		FileCache::putData(CategoryWatchlistBot::CACHE_PREFIX_ATOM . 'dump' . $query, $feed);
+		FileCache::putData(WMDumpWatchlist::CACHE_PREFIX_ATOM . $query, $feed);
 
 		echo $feed;
 

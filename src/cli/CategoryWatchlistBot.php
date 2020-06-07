@@ -20,6 +20,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\CategoryWatchlistBot\CategoryWatchlistBot;
+use com_brucemyers\CategoryWatchlistBot\WMDumpWatchlist;
 
 $clidir = dirname(__FILE__);
 $GLOBALS['botname'] = 'CategoryWatchlistBot';
@@ -66,6 +67,12 @@ try {
 		            exit;
 		        }
 		        dumpTemplateRedirects($argv[2]);
+		        exit;
+		        break;
+
+		    case 'wmdumpwatchlist':
+		        $wmdwl = new WMDumpWatchlist();
+		        $wmdwl->process();
 		        exit;
 		        break;
 

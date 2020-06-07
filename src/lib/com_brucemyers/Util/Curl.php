@@ -20,6 +20,7 @@ namespace com_brucemyers\Util;
 class Curl
 {
 	static public $lastError = '';
+	static public $lastResponseCode = 0;
 
 	/**
 	 * Get a urls contents.
@@ -36,6 +37,7 @@ class Curl
 		curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
 		$contents = curl_exec($ch);
 		if ($contents === false) self::$lastError = curl_error($ch);
+		self::$lastResponseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 		curl_close($ch);
 
 		if ($contents) return $contents;
