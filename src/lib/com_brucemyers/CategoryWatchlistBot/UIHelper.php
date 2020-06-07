@@ -146,10 +146,11 @@ class UIHelper
     		$sth->bindParam(1, $accessdate);
     		$sth->execute();
     	} else {
-    		$sth = $this->dbh_tools->prepare("INSERT INTO dumpquerys (hash,params,lastaccess) VALUES (?,?,?)");
+    		$sth = $this->dbh_tools->prepare("INSERT INTO dumpquerys (hash,params,lastaccess,lastdump) VALUES (?,?,?,?)");
     		$sth->bindParam(1, $hash);
     		$sth->bindParam(2, $serialized);
     		$sth->bindParam(3, $accessdate);
+    		$sth->bindParam(4, MySQLDate::toMySQLDatetime(strtotime("-1 hour")));
     		$sth->execute();
     	}
 
