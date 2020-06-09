@@ -143,7 +143,8 @@ function display_form()
         <tr><td colspan='4'><input type="submit" value="Save" />&nbsp;&nbsp;&nbsp;<input type="submit" value="New" onclick="clearForm(this.form);return false;"/></td></tr>
         </table></form>
     <?php
-	echo '<div>If any parameters above are changed, the query id in the url and atom feed will change.</div>';
+    echo '<div>If any parameters above are changed, the query id in the url and atom feed will change.</div>';
+    echo '<div>Update frequency: hourly</div>';
 
 	if (isset($options['query'])) {
 	    $host  = $_SERVER['HTTP_HOST'];
