@@ -458,12 +458,20 @@ class Categories {
 					'group' => 'References',
 					'display' => 'Citation syntax incorrect'
 			],
-			'CS1 errors' => [
-					'type' => 'no-date',
-					'subcats' => 'only',
-					'group' => 'References'
-			],
-			'Invalid conservation status' => [
+	        'CS1 errors' => [
+	               'type' => 'no-date',
+	               'subcats' => 'only',
+	               'group' => 'References'
+	        ],
+	        'Harv and Sfn multiple-target errors' => [
+	               'type' => 'no-date',
+	               'group' => 'References'
+	        ],
+	        'Harv and Sfn no-target errors' => [
+	               'type' => 'no-date',
+	               'group' => 'References'
+	        ],
+	        'Invalid conservation status' => [
 					'type' => 'no-date'
 			],
 			'Missing taxobox' => [
