@@ -68,7 +68,7 @@ class BrokenSectionAnchors extends DatabaseReport
 
 	public function getHeadings()
 	{
-		return array('Redirect', 'Target', 'Incoming<br />links', 'Views', 'Max<br />Views/Links');
+		return array('Redirect', 'Target', 'Incoming<br />links', 'Views', 'Max<br />views/links');
 	}
 
 	public function getRows($apis)
