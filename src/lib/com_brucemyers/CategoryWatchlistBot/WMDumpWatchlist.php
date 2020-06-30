@@ -76,7 +76,7 @@ class WMDumpWatchlist
             $retval = Curl::getUrlContents($url);
             $responseCode = Curl::$lastResponseCode;
 
-            if ($retval === false || $responseCode != 200) {
+            if ($retval === false || ($responseCode != 200 && $responseCode != 404)) {
                 $errormsg = ($retval === false) ? Curl::$lastError : "HTTP status: $responseCode";
 
                 $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lasterror = ? WHERE wikiname = ?');
