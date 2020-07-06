@@ -101,7 +101,7 @@ class WMDumpWatchlist
 
                     $validfilenames[$filename] = true;
 
-                    if (isset($statfile['size'])) {
+                    if (isset($statfile['size']) && isset($statfile['url'])) {
                         foreach ($filerecs as &$filerec) {
                             if ($filename == $filerec['filename']) {
                                 $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lastdump = ?, filesize = ? WHERE wikiname = ? AND filename = ?');
