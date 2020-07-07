@@ -1,6 +1,6 @@
 <?php
 $uri = $_SERVER['REQUEST_URI'];
-$uri = substr($uri, 8);
+#$uri = substr($uri, 8);
 $encodeduri = htmlspecialchars($uri);
 echo '<html><body>';
 echo 'The bambots tools have been moved to a new server.<br />';
