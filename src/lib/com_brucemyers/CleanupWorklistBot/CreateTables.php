@@ -21,10 +21,10 @@ use PDO;
 
 class CreateTables
 {
-	static $CLASSES = array('FA' => '00', 'FL' => '01', 'A' => '02', 'GA' => '03', 'Bplus' => '04', 'B' => '05', 'C' => '06',
-		'Start' => '07', 'Stub' => '08', 'List' => '09', 'Unassessed' => '10', 'NA' => '11', 'Book' => '12',
-		'Category' => '13', 'Current' => '14', 'Disambig' => '15', 'File' => '16', 'Future' => '17', 'Merge' => '18',
-		'Needed' => '19', 'Portal' => '20', 'Project' => '21', 'Redirect' => '22', 'Template' => '23', '' => '24');
+	static $CLASSES = array('FA' => '00', 'FL' => '01', 'A' => '02', 'GA' => '03', 'AL' => '04', 'Bplus' => '05', 'B' => '06', 'BL' => '07', 'C' => '08', 'CL' => '09',
+		'Start' => '10', 'Stub' => '11', 'List' => '12', 'Unassessed' => '13', 'NA' => '14', 'Book' => '15',
+		'Category' => '16', 'Current' => '17', 'Disambig' => '18', 'File' => '19', 'Future' => '20', 'Merge' => '21',
+	    'Needed' => '22', 'Portal' => '23', 'Project' => '24', 'Redirect' => '25', 'SIA' => '26', 'Template' => '27', '' => '28');
 	static $IMPORTANCES = array('Top' => '0', 'High' => '1', 'Mid' => '2', 'Low' => '3', 'Unknown' => '4', 'NA' => '5',
 		'Bottom' => '6', 'No' => '7', '' => '8');
 
