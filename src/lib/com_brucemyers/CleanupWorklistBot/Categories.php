@@ -433,7 +433,12 @@ class Categories {
 			],
 
 			// no-date
-			'All articles needing coordinates' => [
+	        'Accessibility issue tracking categories' => [
+	                'type' => 'no-date',
+	                'subcats' => 'only',
+	                'group' => 'Accessibility'
+	        ],
+	        'All articles needing coordinates' => [
 					'type' => 'no-date',
 					'group' => 'Content',
 					'display' => 'Coordinates needed'
