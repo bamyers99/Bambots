@@ -88,6 +88,8 @@ class WMDumpWatchlist
                 continue;
             }
 
+            if ($responseCode == 404) continue;
+
             $retval = json_decode($retval, true)['jobs'];
 
             $fileprefixlen = strlen("$wikiname-{$dateinfo['year']}{$sqlmonth}{$sqlday}-");
