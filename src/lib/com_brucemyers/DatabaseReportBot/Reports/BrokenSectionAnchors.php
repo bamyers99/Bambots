@@ -155,6 +155,12 @@ class BrokenSectionAnchors extends DatabaseReport
 			$found = preg_match("!id\s*=\s*['\"]{$escfragment}['\"]!u", $page);
 			//echo 'found=' . $found . ' regex=' . "!id\s*=\s*['\"]{$escfragment}['\"]!u\n";
 
+			// try without escaping due to <span id= tag embedded directly into wikitext heading.
+			if (! $found) {
+			    $tempfragment = preg_quote($fragment, '!');
+			    $found = preg_match("!id\s*=\s*['\"]{$tempfragment}['\"]!u", $page);
+			}
+
 			if (! $found) {
 				$sth = null;
 				$dbh_enwiki = null;

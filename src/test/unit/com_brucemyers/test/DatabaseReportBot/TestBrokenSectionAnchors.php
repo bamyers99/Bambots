@@ -34,7 +34,7 @@ DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 class TestBrokenSectionAnchors extends UnitTestCase
 {
 
-    public function testGenerate()
+    public function notestGenerate()
     {
     	$enwiki_host = Config::get(ENWIKI_HOST);
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
@@ -117,5 +117,25 @@ class TestBrokenSectionAnchors extends UnitTestCase
     	$hndl = fopen($outputDir . 'brokensectionanchors', 'w');
     	fwrite($hndl, "Xfburn\n");
     	fclose($hndl);
+    }
+
+    public function testAnchor()
+    {
+        $page = '<span id="Season_3_.281995.E2.80.9396.29"></span><span class="mw-headline" id="Season_3_(1995–96)">Season 3 (1995–96) <span id="Season_3:_1995–96"></span></span>';
+        $fragment = 'Season 3: 1995–96';
+        $fragment = str_replace(' ', '_', $fragment);
+
+        $escfragment = BrokenSectionAnchors::escape_fragment($fragment);
+        $escfragment = preg_quote($escfragment, '!');
+
+        $found = preg_match("!id\s*=\s*['\"]{$escfragment}['\"]!u", $page);
+
+        // try without escaping due to <span id= tag embedded directly into wikitext heading.
+        if (! $found) {
+            $tempfragment = preg_quote($fragment, '!');
+            $found = preg_match("!id\s*=\s*['\"]{$tempfragment}['\"]!u", $page);
+        }
+
+        $this->assertTrue($found, 'Frament not found');
     }
 }
