@@ -39,7 +39,7 @@ class RemovedRedirectPageLister
     {
         $this->mediawiki = $mediawiki;
         $this->params = array(
-            'rcprop' => 'title|user|timestamp',
+            'rcprop' => 'title|user|timestamp|tags',
             'rclimit' => Config::get(MediaWiki::WIKICHANGESINCREMENT),
             'rcdir' => 'newer',
             'rctype' => 'edit',
@@ -66,6 +66,10 @@ class RemovedRedirectPageLister
         if (isset($ret['error'])) throw new Exception('RemovedRedirectPageLister.getNextBatch() failed ' . $ret['error']);
         if (isset($ret['continue'])) $this->continue = $ret['continue'];
         else $this->continue = false;
+
+        foreach ($ret['query']['recentchanges'] as $key => $rc) {
+            if (in_array('mw-rollback', $rc['tags'])) unset($ret['query']['recentchanges'][$key]); // skip revert caused
+        }
 
         return $ret['query']['recentchanges'];
     }

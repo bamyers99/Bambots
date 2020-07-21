@@ -85,7 +85,7 @@ class InceptionBot
 
             while (($triagepages = $lister->getNextBatch()) !== false) {
             	foreach ($triagepages as &$triagepage) {
-            		if (! isset($allpages[$triagepage['title']])) $allpages[$triagepage['title']] = $triagepage;
+            	    $allpages[$triagepage['title']] = $triagepage; // override user/date info if already set
             	}
             }
             unset($triagepage);
@@ -98,7 +98,7 @@ class InceptionBot
 
         while (($rmredirectpages = $lister->getNextBatch()) !== false) {
         	foreach ($rmredirectpages as &$rmredirect) {
-        		if (! isset($allpages[$rmredirect['title']])) $allpages[$rmredirect['title']] = $rmredirect;
+        		$allpages[$rmredirect['title']] = $rmredirect; // override user/date info if already set
         	}
         }
         unset($rmredirect);
