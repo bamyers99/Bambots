@@ -113,8 +113,8 @@ class InceptionBot
 
         while (($movedpages = $lister->getNextBatch()) !== false) {
         	foreach ($movedpages as &$movedpage) {
-                if (! in_array($movedpage['oldns'], $targetns) || ! in_array($movedpage['newns'], $targetns)) {
-                    if ($movedpage['newns'] != '0' || $movedpage['oldns'] == '0') continue;
+                if (! in_array($movedpage['oldns'], $targetns) || ! in_array($movedpage['newns'], $targetns)) { // Move was from/to non article/draft namespaces.
+                    if ($movedpage['newns'] != '0' || $movedpage['oldns'] == '0') continue; // Skip if not moving to article ns or old ns is article.
                     $newtitle = $movedpage['newtitle'];
 
                     if (! isset($allpages[$newtitle])) {
@@ -126,7 +126,10 @@ class InceptionBot
 
                 $oldtitle = $movedpage['oldtitle'];
 
-                if (isset($allpages[$oldtitle]) && $movedpage['oldns'] != '118') { // Want moved drafts to appear as new pages.
+                if (isset($allpages[$oldtitle]) && $movedpage['oldns'] != '118') { // Rename moved page. Want moved drafts to appear as new pages.
+                    // Skip if move happened before new page creation.
+                    if (strnatcmp($movedpage['timestamp'], $allpages[$oldtitle]['timestamp']) <= 0) continue;
+
                     $newtitle = $movedpage['newtitle'];
                     $temppage = $allpages[$oldtitle];
                     $temppage['title'] = $newtitle;
