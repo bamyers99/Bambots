@@ -69,6 +69,7 @@ class RemovedRedirectPageLister
 
         foreach ($ret['query']['recentchanges'] as $key => $rc) {
             if (in_array('mw-rollback', $rc['tags'])) unset($ret['query']['recentchanges'][$key]); // skip revert caused
+            elseif (in_array('mw-undo', $rc['tags'])) unset($ret['query']['recentchanges'][$key]); // skip revert caused
         }
 
         return $ret['query']['recentchanges'];

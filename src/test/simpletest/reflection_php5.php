@@ -195,17 +195,17 @@ class SimpleReflection {
      */
     protected function onlyParents($interfaces) {
         $parents = array();
-        $blacklist = array();
+        $excludelist = array();
         foreach ($interfaces as $interface) {
             foreach($interfaces as $possible_parent) {
                 if ($interface->getName() == $possible_parent->getName()) {
                     continue;
                 }
                 if ($interface->isSubClassOf($possible_parent)) {
-                    $blacklist[$possible_parent->getName()] = true;
+                    $excludelist[$possible_parent->getName()] = true;
                 }
             }
-            if (!isset($blacklist[$interface->getName()])) {
+            if (!isset($excludelist[$interface->getName()])) {
                 $parents[] = $interface->getName();
             }
         }
