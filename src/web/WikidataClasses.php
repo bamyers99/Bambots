@@ -125,7 +125,7 @@ function display_form($subclasses)
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2>Wikidata Class Browser<?php echo $title ?></h2>
+		<h2><a href="WikidataClasses.php">Wikidata Class Browser</a><?php echo $title ?></h2>
         <form action="WikidataClasses.php" method="post"><table class="form">
         <tr><td><b>Class item ID</b></td><td><input id="id" name="id" type="text" size="10" value="Q<?php echo $params['id'] ?>" /></td></tr>
         <tr><td><b>Name/description<br />language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /></td></tr>
@@ -220,7 +220,29 @@ function display_form($subclasses)
 
 					$sparql = "&nbsp;&nbsp;&nbsp;(<a href='$sparql' class='external'>SPARQL query</a>)";
 
-					echo "<tr><td>Lists of:</td><td>" . intl_num_format($subclasses['class'][6]) . "$sparql</td></tr>\n";
+					$sparql2 = <<<EOT
+SELECT ?qualifierLabel ?count ?sample ?sampleLabel
+{
+  {  SELECT (SAMPLE(?item) as ?sample) ?qualifier (COUNT(?item) as ?count)
+  {
+    hint:Query hint:optimizer "None".
+    ?item p:P360 [ ps:P360 wd:Q{$params['id']} ; ?pq ?qv ] .
+    ?qualifier wikibase:qualifier ?pq .
+    ?item wdt:P31 wd:Q13406463
+  }
+  GROUP BY ?qualifier
+  }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],{$params['lang']},en". }
+  FILTER(?count > 4)
+}
+ORDER BY DESC(?count)
+EOT;
+
+					$sparql2 = 'https://query.wikidata.org/#' . rawurlencode($sparql2);
+
+					$sparql2 = "&nbsp;&nbsp;&nbsp;List type qualifiers:&nbsp;<a href='$sparql2' class='external'>SPARQL query</a>";
+
+					echo "<tr><td>Lists of:</td><td>" . intl_num_format($subclasses['class'][6]) . "$sparql$sparql2</td></tr>\n";
 				}
 
 				echo "</tbody></table>\n";
