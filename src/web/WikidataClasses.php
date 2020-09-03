@@ -450,7 +450,7 @@ function display_enum_qualifiers($id, $pid, $lang)
         // Get qualifiers
         $sql = "SELECT qualpid, valcount ";
         $sql .= " FROM s51454__wikidata.subclassvalues ";
-        $sql .= " WHERE qid = ? AND pid = ? AND qualpid <> 0 AND value = 'C' ORDER BY valcount DESC LIMIT 50";
+        $sql .= " WHERE qid = ? AND pid = ? AND qualpid <> 0 AND value = 'C' ORDER BY valcount DESC LIMIT 100";
 
         $sth = $dbh_wiki->prepare($sql);
         $sth->bindValue(1, $numeric_id);
@@ -541,6 +541,7 @@ function display_enum_qualifiers($id, $pid, $lang)
             }
 
             echo "<h2>Qualifiers</h2>\n";
+            echo "Top 100 with 10 or more uses.\n";
 
             echo "<table class='wikitable tablesorter'><thead><tr><th>Qualifier</th><th>Usage<br />count</th><th>Instances<br />with qualifier</th>";
             echo "<th>Enumerated values (count) (SPARQL query)</th></tr></thead><tbody>\n";
