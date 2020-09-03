@@ -385,7 +385,7 @@ function display_enum_qualifiers($id, $pid, $lang)
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
-		<h2>Wikidata Class Browser<?php echo $title ?></h2>
+		<h2><a href="WikidataClasses.php">Wikidata Class Browser</a><?php echo $title ?></h2>
         <br />
 		<?php
         echo "<table><tbody>\n";
