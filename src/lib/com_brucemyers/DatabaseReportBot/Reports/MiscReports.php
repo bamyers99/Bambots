@@ -69,8 +69,13 @@ class MiscReports extends DatabaseReport
 
     		case 'WikidataPropertyCounts':
     		    $this->WikidataPropertyCounts($params[1]);
-    			return false;
-    			break;
+    		    return false;
+    		    break;
+
+    		case 'NRHPID':
+    		    $this->NRHPID($apis['dbh_wiki'], $apis['mediawiki']);
+    		    return false;
+    		    break;
     	}
 
     	return true;
@@ -1344,6 +1349,68 @@ END;
 
 	    // Footer
 	    fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+	    fclose($hndl);
+	}
+
+	/**
+	 * Get a list of NRHP ids and corresponding wikidata item number
+	 *
+	 * @param PDO $dbh_wiki
+	 * @param MediaWiki $mediawiki
+	 */
+	public function NRHPID(PDO $dbh_wiki, MediaWiki $mediawiki)
+	{
+	    $templates = [
+	        'Infobox NRHP' => 'refnum',
+	        'Infobox nrhp' => 'refnum'
+	    ];
+
+	    $sql = "SELECT DISTINCT page_title, pp_value FROM templatelinks, page, page_props " .
+	   	    " WHERE tl_from_namespace = 0 AND tl_namespace = 10 AND tl_title IN ('Infobox_NRHP', 'Infobox_nrhp') " .
+	   	    " AND page_namespace = 0 AND page_id = tl_from AND page_id = pp_page AND pp_propname = 'wikibase_item' ";
+	    $sth = $dbh_wiki->prepare($sql);
+	    $sth->execute();
+	    $sth->setFetchMode(PDO::FETCH_NUM);
+	    $titles = [];
+
+	    while ($row = $sth->fetch()) {
+	        $titles[$row[0]] = $row[1];
+	    }
+
+	    $sth->closeCursor();
+
+	    ksort($titles);
+
+	    $tempfile = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'NRHPID.tsv';
+	    $hndl = fopen($tempfile, 'w');
+	    fwrite($hndl, "NRHPID\tWikidataID\tTitle\n");
+
+	    $mediawiki->cachePages(array_keys($titles));
+
+	    foreach ($titles as $page => $wikidata_id) {
+	        //			echo "$page\n";
+	        $data = $mediawiki->getPageWithCache($page);
+
+	        $parsed_templates = TemplateParamParser::getTemplates($data);
+
+	        $page = str_replace('_', ' ', $page);
+	        $page = ucfirst($page);
+
+	        foreach ($parsed_templates as $parsed_template) {
+	            if (! isset($templates[$parsed_template['name']])) continue;
+	            $paramname = $templates[$parsed_template['name']];
+	            $params = $parsed_template['params'];
+	            //				print_r($params);
+
+	            if (! empty($params[$paramname]) && preg_match('!^\s*(\d+)!', $params[$paramname], $matches)) {
+	                $value = $matches[1];
+
+	                fwrite($hndl, "$value\t$wikidata_id\t$page\n");
+	                break;
+	            }
+	        }
+	    }
+
 	    fclose($hndl);
 	}
 }
