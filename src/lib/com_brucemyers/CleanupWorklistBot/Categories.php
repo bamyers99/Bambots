@@ -186,16 +186,21 @@ class Categories {
 					'type' => 'from-monthly',
 					'display' => 'Excessive see also sections'
 			],
-			'Articles with failed verification' => [
-					'type' => 'from-monthly',
-					'group' => 'References',
-					'display' => 'Failed verification'
-			],
-			'Articles with improper non-free content' => [
+    	    'Articles with failed verification' => [
+    	        'type' => 'from-monthly',
+    	        'group' => 'References',
+    	        'display' => 'Failed verification'
+    	    ],
+	        'Articles with improper non-free content' => [
 					'type' => 'from-monthly',
 					'display' => 'Improper non-free content'
 			],
-			'Articles with limited geographic scope' => [
+    	    'Articles with incomplete citations' => [
+    	        'type' => 'from-monthly',
+    	        'group' => 'References',
+    	        'display' => 'Incomplete citations'
+    	    ],
+	        'Articles with limited geographic scope' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Limited geographic scope'
