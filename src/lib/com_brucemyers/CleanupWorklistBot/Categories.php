@@ -230,7 +230,12 @@ class Categories {
 					'group' => 'Content',
 					'display' => 'Prose needed'
 			],
-			'Articles with specifically marked weasel-worded phrases' => [
+	        'Articles with self-published sources' => [
+    	            'type' => 'from-monthly',
+    	            'group' => 'References',
+    	            'display' => 'Accuracy disputes or self-published'
+    	    ],
+	        'Articles with specifically marked weasel-worded phrases' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
 					'display' => 'Weasel-worded phrases'
