@@ -115,19 +115,74 @@ function display_form($subclasses)
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
     	<script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 		<script type='text/javascript' src='js/jquery.tablesorter.min.js'></script>
+		<script type='text/javascript' src='js/jquery.autocomplete.min.js'></script>
+		<style>
+            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; }
+            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; cursor: pointer; }
+		</style>
 	</head>
 	<body>
 		<script type='text/javascript'>
+    		function escapeHtml(text) {
+    			var map = {
+    			   '&': '&amp;',
+    			    '<': '&lt;',
+    			    '>': '&gt;',
+    			    '"': '&quot;',
+    			    "'": '&#039;'
+    			};
+
+    			return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    		}
+
 			$(document).ready(function()
 			    {
 		        $('.tablesorter').tablesorter();
-			    }
+
+		        $('#labelalias').autocomplete({
+		            serviceUrl: 'https://www.wikidata.org/w/api.php',
+		            paramName: 'search',
+		            dataType: 'json',
+		            params: {action: 'wbsearchentities', format: 'json', origin: '*', type: 'item'},
+		            width: 'flex',
+
+		            onSearchStart: function(params) {
+			            var val = $("#lang").val();
+			            if (val == '') val = 'en';
+			            params.language = val;
+			            params.uselang = val;
+		            },
+
+		            transformResult: function(response) {
+		                return {
+		                    suggestions: $.map(response.search, function(di) {
+			                    var data = {id: di.id, desc: '', alias: ''};
+			                    if (di.description !== undefined) data.desc = di.description;
+			                    if (di.match.type == 'alias') data.alias = di.match.text;
+		                        return { value: di.label, data: data };
+		                    })
+		                };
+		            },
+
+		            formatResult: function(s, cv) {
+			            var ret = '<div><b>' + escapeHtml(s.value);
+			            if (s.data.alias != '') ret += ' <i>(' + escapeHtml(s.data.alias) + ')</i>';
+			            ret += '</b></div>';
+				        if (s.data.desc != '') ret += '<div>' + escapeHtml(s.data.desc) + '</div>';
+				        return ret;
+		            },
+
+		            onSelect: function (suggestion) {
+		            	$("#id").val(suggestion.data.id);
+		            }
+		        });
+		        }
 			);
 		</script>
 		<div style="display: table; margin: 0 auto;">
 		<h2><a href="WikidataClasses.php">Wikidata Class Browser</a><?php echo $title ?></h2>
         <form action="WikidataClasses.php" method="post"><table class="form">
-        <tr><td><b>Class item ID</b></td><td><input id="id" name="id" type="text" size="10" value="Q<?php echo $params['id'] ?>" /></td></tr>
+        <tr><td><b>Class item ID</b></td><td><input id="id" name="id" type="text" size="10" value="Q<?php echo $params['id'] ?>" /> or <b>Label/Alias</b> <input id="labelalias" name="labelalias" type="text" size="15" /></td></tr>
         <tr><td><b>Name/description<br />language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /></td></tr>
         <tr><td><input type="submit" value="Submit" /></td><td><?php echo $rootclasslink ?></td></tr>
         </table>
