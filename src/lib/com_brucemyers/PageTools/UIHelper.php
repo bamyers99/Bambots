@@ -181,6 +181,21 @@ class UIHelper
             }
         }
 
+        // Get the wikidata likely matches
+        if (! $results['wikidata_exact_match']) {
+            $temppage = str_replace('_', ' ', $pagename);
+            // Strip qualifier
+            $temppage = preg_replace('! \([^\)]+\)!', '', $temppage);
+
+            $ret = $wikidatawiki->getSearchEntities($temppage, 'en');
+
+            if (! empty($ret['search'])) {
+                foreach ($ret['search'] as $item) {
+                    $wikidata_ids[$item['id']] = [];
+                }
+            }
+        }
+
         // Retrieve the current wikidata revisions
         $wikidatawiki = $this->serviceMgr->getWikidataWiki();
         $results['wikidata'] = $wikidatawiki->getItemsNoCache(array_keys($wikidata_ids));

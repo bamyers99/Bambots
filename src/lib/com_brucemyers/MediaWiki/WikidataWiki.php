@@ -124,4 +124,41 @@ class WikidataWiki extends MediaWiki
         if (isset($ret['error'])) return $ret['error']['info'];
         return '';
     }
+
+    /**
+     * Get search entities
+     *
+     * @param string $search Text to search for
+     * @param string $language Language code to search in
+     * @param array Query parameters xx...
+     * @throws Exception
+     * @return ..., ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getSearchEntities($search, $language, $params = [])
+    {
+        if (! isset($params['continue'])) {
+            $params['continue'] = '';
+        } elseif (is_array($params['continue'])){
+            $continue = $params['continue'];
+            unset($params['continue']);
+            $params = array_merge($params, $continue);
+        }
+
+        $addparams ='';
+
+        foreach ($params as $key => $value) {
+            $addparams .= "&$key=" . urlencode($value);
+        }
+
+        $search = urlencode($search);
+        $language = urlencode($language);
+
+        $ret = $this->query("?action=wbsearchentities&format=php&search=$search&language=$language" . $addparams);
+
+        if (isset($ret['error'])) {
+            throw new Exception("getWBSearchEntities Error " . $ret['error']['info'] . "\n". print_r($params, true));
+        }
+
+        return $ret;
+    }
 }
