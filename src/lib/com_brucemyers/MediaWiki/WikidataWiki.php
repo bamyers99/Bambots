@@ -17,6 +17,8 @@
 
 namespace com_brucemyers\MediaWiki;
 
+use Exception;
+
 /**
  * Wikidata wrapper
  */
@@ -132,19 +134,11 @@ class WikidataWiki extends MediaWiki
      * @param string $language Language code to search in
      * @param array Query parameters xx...
      * @throws Exception
-     * @return ..., ['continue']; pass ['continue'] back in as a param to get more results
+     * @return ..., ['search-continue']; pass ['search-continue'] back in as a param to get more results
      */
     public function getSearchEntities($search, $language, $params = [])
     {
-        if (! isset($params['continue'])) {
-            $params['continue'] = '';
-        } elseif (is_array($params['continue'])){
-            $continue = $params['continue'];
-            unset($params['continue']);
-            $params = array_merge($params, $continue);
-        }
-
-        $addparams ='';
+        $addparams = '';
 
         foreach ($params as $key => $value) {
             $addparams .= "&$key=" . urlencode($value);
