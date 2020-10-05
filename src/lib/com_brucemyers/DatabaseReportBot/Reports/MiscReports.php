@@ -18,12 +18,14 @@
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
+use com_brucemyers\MediaWiki\AllPagesLister;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\WikidataSPARQL;
 use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\WikitableParser;
 use MediaWiki\Sanitizer;
 use PDO;
 
@@ -68,12 +70,17 @@ class MiscReports extends DatabaseReport
     			break;
 
     		case 'WikidataPropertyCounts':
-    		    $this->WikidataPropertyCounts($params[1]);
-    		    return false;
-    		    break;
+    			    $this->WikidataPropertyCounts($params[1]);
+    			    return false;
+    			    break;
 
     		case 'NRHPID':
     		    $this->NRHPID($apis['dbh_wiki'], $apis['mediawiki']);
+    		    return false;
+    		    break;
+
+    		case 'WikidataEntitySchemaDirectory':
+    		    $this->WikidataEntitySchemaDirectory($params[1]);
     		    return false;
     		    break;
     	}
@@ -1123,7 +1130,7 @@ END;
 	/**
 	 * Wikidata property counts
 	 *
-	 * @param PDO $dbh_wiki
+	 * @param string $language
 	 */
 	public function WikidataPropertyCounts($language)
 	{
@@ -1412,5 +1419,235 @@ END;
 	    }
 
 	    fclose($hndl);
+	}
+
+	/**
+	 * Wikidata EntitySchema Directory
+	 *
+	 * @param string $language
+	 */
+	public function WikidataEntitySchemaDirectory($language)
+	{
+	    FileCache::purgeExpired();
+	    $wdwiki = new WikidataWiki();
+
+	    // Get the schema list
+	    $schemas = [];
+
+	    $lister = new AllPagesLister($wdwiki, '640');
+
+	    while (($pages = $lister->getNextBatch()) !== false) {
+	        foreach ($pages as $page) {
+	            $id = substr($page['title'], 13);
+	            $schemas[$id] = [];
+	        }
+	    }
+
+        // Get the configuration
+        $config = $wdwiki->getPage('Wikidata:Database reports/EntitySchema directory/Configuration');
+
+        $configtable = WikitableParser::getTables($config)[0];
+
+        foreach ($configtable['rows'] as $row) {
+            preg_match('!E\d+!', $row[0], $matches);
+            $id = $matches[0];
+            $classprop = $row[1];
+            $cats = $row[2];
+            $status = $row[3];
+            $lang = $row[4];
+
+            if (isset($schemas[$id])) {
+                $schemas[$id] = ['classprop' => $classprop, 'cats' => $cats, 'status' => $status, 'lang' => $lang, 'imports' => [], 'importedby' => []];
+            }
+        }
+
+        // Retrieve the schema data
+        $ids = [];
+        foreach ($schemas as $id => $attribs) {
+            $ids[] = 'EntitySchema:' . $id;
+        }
+
+        $schemadata = $wdwiki->getItemsWithCache($ids);
+
+        foreach ($schemadata as $schemadatum) {
+            $id = $schemadatum->getId();
+            $schemas[$id]['data'] = $schemadatum;
+
+            if (empty(trim($schemadatum->getSchemaText()))) $schemas[$id]['cats'] = 'Empty schema';
+        }
+
+        // Retrieve the labels for items and properties
+        $labelids = [];
+
+        foreach ($schemas as $id => $schema) {
+            if (! isset($schema['classprop'])) continue; // New schema
+
+            foreach ([$schema['classprop'], $schema['cats'], $schema['status']] as $attrib) {
+                preg_match_all('!(?:Q\d+|P\d+)!', $attrib, $matches);
+
+                foreach ($matches[0] as $match) {
+                    if ($match[0] == 'P') $labelids[] = "Property:$match";
+                    else $labelids[] = $match;
+                }
+            }
+
+            // Calc imports
+            preg_match_all('!IMPORT\s*<\s*https://www.wikidata.org/wiki/Special:EntitySchemaText/(E\d+)\s*>!', $schema['data']->getSchemaText(), $matches);
+
+            foreach ($matches[1] as $match) {
+                $schemas[$id]['imports'][] = $match;
+                if (isset($schemas[$match])) $schemas[$match]['importedby'][] = $id;
+            }
+        }
+
+        $templabeldata = $wdwiki->getItemsWithCache($labelids);
+        $labeldata = [];
+
+        foreach ($templabeldata as $ld) {
+            $id = $ld->getId();
+            $labeldata[$id] = $ld;
+        }
+
+        // Calc categories
+        $categories = [];
+
+        foreach ($schemas as $id => $schema) {
+            $schema['label'] = $schema['data']->getLabelDescription('label', $language);
+            if (! isset($schema['classprop'])) continue; // New schema
+
+            $cats = explode(',', $schema['cats']);
+            $cats = array_map('trim', $cats);
+
+            foreach ($cats as $cat) {
+                $label = $cat;
+                if (isset($labeldata[$cat])) {
+                    $label = $labeldata[$cat]->getLabelDescription('label', $language);
+                }
+
+                if (! isset($categories[$label])) $categories[$label] = [];
+                $categories[$label][] = $schema;
+            }
+        }
+
+        // Write the html
+
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataEntitySchemaDirectory.html';
+        $hndl = fopen($path, 'wb');
+
+        // Header
+
+        fwrite($hndl, "<!DOCTYPE html>
+			<html><head>
+			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+			<title>Wikidata EntitySchema directory</title>
+			<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+			</head><body>
+			<div style='display: table; margin: 0 auto;'>
+			<h1>Wikidata EntitySchema Directory</h1>
+			");
+
+        // Body
+
+        $wikitext = "";
+
+        // Sort the categories
+        uksort($categories, function ($a, $b) { return strcasecmp($a, $b); });
+
+        foreach ($categories as $catname => $catschemas) {
+            usort($catschemas, function ($a, $b) { return strcasecmp($a['label'], $b['label']); });
+
+            $wikitext .= "==$catname==\n";
+
+            $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|alias}}\n! {{I18n|class}}/{{I18n|property}}\n! {{I18n|dependencies}}\n";
+
+            foreach ($catschemas as $schema) {
+                $id = $schema['data']->getId();
+                $description = $schema['data']->getLabelDescription('description', $language);
+                $aliases = $schema['data']->getAliases($language);
+                if (count($aliases) == 0) $aliases = '';
+                else $aliases = implode(' &vert; ', $aliases);
+
+                $lang = trim($schema['lang']);
+                if (! empty($lang)) $lang = "<i>language:&nbsp;$lang</i>";
+
+                // Format class/property, status
+                $cpcs = ['classprop' => '', 'cats' => '', 'status' => ''];
+
+                foreach (['classprop' => $schema['classprop'], 'status' => $schema['status']] as $type => $attrib) {
+                    $attrib = explode(',', $attrib);
+                    $attrib = array_map('trim', $attrib);
+                    $attrib = implode(', ', $attrib);
+
+                    preg_match_all('!(?:Q\d+|P\d+)!', $attrib, $matches);
+
+                    foreach ($matches[0] as $match) {
+                        if ($match[0] == 'P') $labelid = "Property:$match";
+                        else $labelid = $match;
+
+                        if (isset($labeldata[$match])) {
+                            $label = $labeldata[$match]->getLabelDescription('label', $language);
+
+                            if (! empty($label)) {
+                                if ($type == 'status') $attrib = str_replace($match, "<i>$label</i>", $attrib);
+                                else $attrib = str_replace($match, "[[$labelid|$label]] ($match)", $attrib);
+                            }
+                        }
+                    }
+
+                    $cpcs[$type] = $attrib;
+                }
+
+                // Calc dependencies
+                $imports = [];
+                $importedby = [];
+
+                foreach ($schema['imports'] as $import) {
+                    if (isset($schemas[$import])) $imports[] = "[[EntitySchema:$import|" . $schemas[$import]['data']->getLabelDescription('label', $language) . "]] ($import)";
+                    else $imports[] = "<b>Missing schema ($import)<b>";
+                }
+
+                foreach ($schema['importedby'] as $import) {
+                    if (isset($schemas[$import])) $importedby[] = "[[EntitySchema:$import|" .$schemas[$import]['data']->getLabelDescription('label', $language) . "]] ($import)";
+                    else $importedby[] = "<b>Missing schema ($import)<b>";
+                }
+
+                $depenencies = [];
+
+                if (! empty($imports)) {
+                    $depenencies[] = 'Imports: ' . implode(', ', $imports);
+                }
+
+                if (! empty($importedby)) {
+                    $depenencies[] = 'Imported by: ' . implode(', ', $importedby);
+                }
+
+                $depenencies = implode('<br />', $depenencies);
+
+                $wikitext .= "|-\n|[[EntitySchema:$id|{$schema['label']}]] ($id) {$cpcs['status']} $lang ||$description ||$aliases ||{$cpcs['classprop']} ||$depenencies\n";
+            }
+
+            $wikitext .= "|}\n";
+        }
+
+        $wikitext .= "\n[[Category:Database reports]]\n[[Category:WikiProject Schemas]]";
+
+        fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+            '</textarea>');
+
+        $wikitext = '';
+
+        foreach ($schemas as $id => $schema) {
+            if (! isset($schema['classprop'])) $wikitext .= "|-\n| [[EntitySchema:$id|$id]] || || || ||\n";
+        }
+
+        fwrite($hndl, '<textarea rows="40" cols="100" name="newwikitable" id="newwikitable">' . htmlspecialchars($wikitext) .
+            '</textarea></form>');
+
+        // Footer
+
+        fwrite($hndl, '<br />Schema count: ' . count($schemas));
+        fwrite($hndl, '<br />Language: ' . $language);
+        fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+        fclose($hndl);
 	}
 }

@@ -53,8 +53,8 @@ class WikidataItem
 	];
 
 	static $entity_types = [
-			'item' => 'Q',
-			'property' => 'P'
+		'item' => 'Q',
+		'property' => 'P'
 	];
 
 	protected $data;
@@ -276,10 +276,17 @@ class WikidataItem
 
 		if (empty($this->data[$type])) return '';
 
-		foreach ($this->data[$type] as $text) {
-			if ($text['language'] == $lang) return $text['value'];
-			if (in_array($text['language'], self::$preferred_langs)) $retprefs[$text['language']] = $text['value'];
-			elseif (! isset($ret)) $ret = $text['value'];
+		foreach ($this->data[$type] as $language => $text) {
+		    if (is_array($text)) {
+		        $language = $text['language'];
+		        $value = $text['value'];
+		    } else { // Wikidata
+		        $value = $text;
+		    }
+
+		    if ($language == $lang) return $value;
+		    if (in_array($language, self::$preferred_langs)) $retprefs[$language] = $value;
+		    elseif (! isset($ret)) $ret = $value;
 		}
 
 		if (! empty($retprefs)) {
@@ -330,6 +337,7 @@ class WikidataItem
 	 *
 	 * @param string $lang alias language
 	 * @return array ["language", "value"] ...
+	 * @return Wikidata array "alias", ...
 	 */
 	public function getAliases($lang)
 	{
@@ -346,5 +354,15 @@ class WikidataItem
 	{
 	    if (isset($this->data['redirect'])) return $this->data['redirect'];
         return '';
+	}
+
+	/**
+	 *
+	 * @return string schema text
+	 */
+	public function getSchemaText()
+	{
+	    if (isset($this->data['schemaText'])) return $this->data['schemaText'];
+	    return '';
 	}
 }

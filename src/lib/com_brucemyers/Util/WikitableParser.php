@@ -17,8 +17,6 @@
 
 namespace com_brucemyers\Util;
 
-use com_brucemyers\Util\CommonRegex;
-
 /**
  * WikitableParser
  */
@@ -33,6 +31,7 @@ class WikitableParser
 	const REGEX_TABLE_END = '!^\s*\|\}!u';
 	const REGEX_ATTRIBS = '!(\w+)(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\'"\s]+))?!u';
 	const REGEX_ATTRIB_VALUE = '!^\s*=\s*("[^"]*+"|\'[^\']*+\'|[^\'"\s]+)!u';
+	const REGEX_WIKILINK = '/\[\[(?:.(?!\[\[))+?\]\]/s';
 
 	const NO_TABLE = 0;
 	const IN_TABLE = 1;
@@ -46,34 +45,36 @@ class WikitableParser
 	 *
 	 * TODO: colspans are repeated
 	 * TODO: rowspans are duplicated
-	 * TODO: handle nested | ie. |[[File:Symbol b class.svg|16px]]
 	 *
 	 * @param string $origdata
 	 * @return array Tables array('attribs' => array('name' => 'value'), 'headings' => array of string, 'rows' => array of array of string)
 	 */
 	public static function getTables($origdata)
 	{
-		$markers = array();
-		$tables = array();
+		$markers = [];
+		$tables = [];
 		$data = preg_replace(CommonRegex::COMMENT_REGEX, '', $origdata); // Strip comments
 
-		// Replace nowiki with markers
-		$match_cnt = preg_match_all(self::REGEX_NOWIKI, $data, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+		// Replace nowiki/wikilink with markers
 		$offset_adjust = 0;
 
-		if ($match_cnt) {
-			foreach ($matches as $match) {
-				// Replace the match with a marker
-				$marker_id = "\v" . count($markers) . "\f";
-				$content = $match[0][0];
-				$content_len = strlen($content);
-				$offset = $match[0][1] - $offset_adjust;
-				$offset_adjust += $content_len - strlen($marker_id);
+		foreach ([self::REGEX_NOWIKI, self::REGEX_WIKILINK] as $regex) {
+		    $match_cnt = preg_match_all($regex, $data, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 
-				$data = substr_replace($data, $marker_id, $offset, $content_len);
+    		if ($match_cnt) {
+    			foreach ($matches as $match) {
+    				// Replace the match with a marker
+    				$marker_id = "\v" . count($markers) . "\f";
+    				$content = $match[0][0];
+    				$content_len = strlen($content);
+    				$offset = $match[0][1] - $offset_adjust;
+    				$offset_adjust += $content_len - strlen($marker_id);
 
-				$markers[$marker_id] = $content;
-			}
+    				$data = substr_replace($data, $marker_id, $offset, $content_len);
+
+    				$markers[$marker_id] = $content;
+    			}
+    		}
 		}
 
 		// Process each line
@@ -89,9 +90,9 @@ class WikitableParser
 					if (preg_match(self::REGEX_TABLE_START, $line, $matches)) {
 						$line = substr($line, strlen($matches[0]));
 						$attribs = self::getAttribs($line, $markers);
-						$headings = array();
-						$rows = array();
-						$currow = array();
+						$headings = [];
+						$rows = [];
+						$currow = [];
 						$state = self::IN_TABLE;
 						$rowtype = self::ROWTYPE_DATA;
 						$depth = 0;
@@ -106,7 +107,7 @@ class WikitableParser
 						if (! $depth) {
 							self::saveRow($currow, $rowtype, $rows, $headings, $attribs, $markers);
 
-							$tables[] = array('attribs' => $attribs, 'headings' => $headings, 'rows' => $rows);
+							$tables[] = ['attribs' => $attribs, 'headings' => $headings, 'rows' => $rows];
 							$state = self::NO_TABLE;
 							break;
 						}
@@ -195,7 +196,7 @@ class WikitableParser
 		elseif ($rowtype == self::ROWTYPE_CAPTION && ! empty($currow[0])) $attribs['caption'] = $currow[0];
 		else $rows[] = $currow;
 
-		$currow = array();
+		$currow = [];
 	}
 
 	/**
@@ -208,9 +209,9 @@ class WikitableParser
 	protected static function getAttribs($data, $markers)
 	{
 		$match_cnt = preg_match_all(self::REGEX_ATTRIBS, $data, $matches, PREG_SET_ORDER);
-		if (! $match_cnt) return array();
+		if (! $match_cnt) return [];
 
-		$attribs = array();
+		$attribs = [];
 
 		foreach ($matches as $match) {
 			$attrib_name = $match[1];

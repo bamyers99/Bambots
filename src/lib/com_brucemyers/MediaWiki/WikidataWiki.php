@@ -52,7 +52,7 @@ class WikidataWiki extends MediaWiki
     /**
      * Get items with caching
      *
-     * @param array $itemnames Item name Q... or Property:P...
+     * @param array $itemnames Item name Q... or Property:P... or EntitySchema:E...
      * @return array WikidataItem Item data
      */
     public function getItemsWithCache($itemnames)
