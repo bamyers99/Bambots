@@ -79,6 +79,11 @@ class MiscReports extends DatabaseReport
     		    return false;
     		    break;
 
+    		case 'NRHPOther':
+    		    $this->NRHPOther($apis['dbh_wiki'], $apis['mediawiki']);
+    		    return false;
+    		    break;
+
     		case 'WikidataEntitySchemaDirectory':
     		    $this->WikidataEntitySchemaDirectory($params[1]);
     		    return false;
@@ -1413,6 +1418,68 @@ END;
 	                $value = $matches[1];
 
 	                fwrite($hndl, "$value\t$wikidata_id\t$page\n");
+	                break;
+	            }
+	        }
+	    }
+
+	    fclose($hndl);
+	}
+
+	/**
+	 * Get a list of NRHP other ids and corresponding wikidata item number
+	 *
+	 * @param PDO $dbh_wiki
+	 * @param MediaWiki $mediawiki
+	 */
+	public function NRHPOther(PDO $dbh_wiki, MediaWiki $mediawiki)
+	{
+	    $templates = [
+	        'Infobox NRHP' => ['name' => 'designated_other1', 'id' => 'designated_other1_number'],
+	        'Infobox nrhp' => ['name' => 'designated_other1', 'id' => 'designated_other1_number']
+	    ];
+
+	    $sql = "SELECT DISTINCT page_title, pp_value FROM templatelinks, page, page_props " .
+	   	    " WHERE tl_from_namespace = 0 AND tl_namespace = 10 AND tl_title IN ('Infobox_NRHP', 'Infobox_nrhp') " .
+	   	    " AND page_namespace = 0 AND page_id = tl_from AND page_id = pp_page AND pp_propname = 'wikibase_item' ";
+	    $sth = $dbh_wiki->prepare($sql);
+	    $sth->execute();
+	    $sth->setFetchMode(PDO::FETCH_NUM);
+	    $titles = [];
+
+	    while ($row = $sth->fetch()) {
+	        $titles[$row[0]] = $row[1];
+	    }
+
+	    $sth->closeCursor();
+
+	    ksort($titles);
+
+	    $tempfile = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'NRHPOtherID.tsv';
+	    $hndl = fopen($tempfile, 'w');
+	    fwrite($hndl, "NRHPOtherName\tNRHPOtherID\tWikidataID\tTitle\n");
+
+	    $mediawiki->cachePages(array_keys($titles));
+
+	    foreach ($titles as $page => $wikidata_id) {
+	        //			echo "$page\n";
+	        $data = $mediawiki->getPageWithCache($page);
+
+	        $parsed_templates = TemplateParamParser::getTemplates($data);
+
+	        $page = str_replace('_', ' ', $page);
+	        $page = ucfirst($page);
+
+	        foreach ($parsed_templates as $parsed_template) {
+	            if (! isset($templates[$parsed_template['name']])) continue;
+	            $paramdata = $templates[$parsed_template['name']];
+	            $paramname = $paramdata['name'];
+	            $paramid = $paramdata['id'];
+	            $params = $parsed_template['params'];
+	            //				print_r($params);
+
+	            if (! empty($params[$paramname]) && ! empty($params[$paramid])) {
+	                fwrite($hndl, "{$params[$paramname]}\t{$params[$paramid]}\t$wikidata_id\t$page\n");
 	                break;
 	            }
 	        }
