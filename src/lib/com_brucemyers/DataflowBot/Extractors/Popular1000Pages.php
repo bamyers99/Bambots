@@ -135,7 +135,8 @@ class Popular1000Pages extends Extractor
 
 		foreach ($poppages['rows'] as $row) {
 			$page = str_replace(' ', '_', $row[self::HEADING_POS_ARTICLE]);
-			$page = preg_replace('/\\[|\\]/u', '', $page);
+			preg_match('/\\|([^\\]]+)/u', $page, $matches); // [[w:Test|Test]]
+			$page = $matches[1];
 			$pageviews = $row[self::HEADING_POS_VIEWS];
 
 			$ns_name = MediaWiki::getNamespaceName($page);

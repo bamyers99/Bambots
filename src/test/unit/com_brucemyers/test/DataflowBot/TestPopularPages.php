@@ -129,7 +129,7 @@ class TestPopularPages extends UnitTestCase
 EOT;
 
     	Mock::generate('com_brucemyers\\DataflowBot\\io\\FlowWriter', 'MockFlowWriter');
-        $flowWriter = &new \MockFlowWriter();
+        $flowWriter = new \MockFlowWriter();
         $rows = array(array('Article', 'Views'));
         $flowWriter->expectAt(0, 'writeRecords', array($rows));
         $rows = array(array('Captain_America:_Civil_War', '1,284,748'));
@@ -139,11 +139,11 @@ EOT;
         $flowWriter->expectCallCount('writeRecords', 3);
 
         Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
-        $mediaWiki = &new \MockMediaWiki();
+        $mediaWiki = new \MockMediaWiki();
         $mediaWiki->returnsAt(0, 'getpage', $pop_pages);
 
     	Mock::generate('com_brucemyers\\DataflowBot\\ServiceManager', 'MockServiceManager');
-        $serviceMgr = &new \MockServiceManager();
+        $serviceMgr = new \MockServiceManager();
         $serviceMgr->returns('getMediaWiki', $mediaWiki);
 
     	$extractor = new PopularPages($serviceMgr);
