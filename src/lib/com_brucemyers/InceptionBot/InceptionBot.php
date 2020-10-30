@@ -187,8 +187,13 @@ class InceptionBot
         Logger::log('Updated page count w/o redirects = ' . count($updatedpages));
 
         $lister = new OresDraftTopicLister($mediawiki);
-        $oresscores = $lister->getScores(array_merge($newestpages, $updatedpages));
-        Logger::log('Ores scores = ' . count($oresscores));
+        try {
+            $oresscores = $lister->getScores(array_merge($newestpages, $updatedpages));
+            Logger::log('Ores scores = ' . count($oresscores));
+        } catch (Exception $e) {
+            Logger::log('OresDraftTopicLister error, continuing. Error = ' . $e->getMessage());
+            $oresscores = [];
+        }
 
         // relogin - credentials may have expired
         $mediawiki->login(null, null);
