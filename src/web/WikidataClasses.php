@@ -953,12 +953,12 @@ function intl_num_format($number)
 
 /**
  * Suggest a class for an items instanceOf property
+ * outputs JSONP
  *
  * @param string $lang
  * @param string $page
  * @param string $callback
  * @param string $userlang
- * @return JSONP
  */
 function perform_suggest($lang, $page, $callback, $userlang)
 {

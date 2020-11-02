@@ -28,6 +28,10 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\Util\WikitableParser;
 use MediaWiki\Sanitizer;
 use PDO;
+use com_brucemyers\ShEx\ShExDoc\ShExDocLexer;
+use com_brucemyers\ShEx\ShExDoc\ShExDocParser;
+use Antlr\Antlr4\Runtime\CommonTokenStream;
+use Antlr\Antlr4\Runtime\InputStream;
 
 class MiscReports extends DatabaseReport
 {
@@ -1524,7 +1528,7 @@ END;
             $lang = $row[4];
 
             if (isset($schemas[$id])) {
-                $schemas[$id] = ['classprop' => $classprop, 'cats' => $cats, 'status' => $status, 'lang' => $lang, 'imports' => [], 'importedby' => []];
+                $schemas[$id] = ['id' => $id, 'classprop' => $classprop, 'cats' => $cats, 'status' => $status, 'lang' => $lang, 'imports' => [], 'importedby' => []];
             }
         }
 
@@ -1564,6 +1568,18 @@ END;
             foreach ($matches[1] as $match) {
                 $schemas[$id]['imports'][] = $match;
                 if (isset($schemas[$match])) $schemas[$match]['importedby'][] = $id;
+            }
+
+            // Validate the schema
+            $schematext = $schemas[$id]['data']->getSchemaText();
+
+            if (! empty(trim($schematext))) {
+                $input = InputStream::fromString($schematext);
+                $lexer = new ShExDocLexer($input);
+                $tokens = new CommonTokenStream($lexer);
+                $parser = new ShExDocParser($tokens);
+                $ctx = $parser->shExDoc();
+
             }
         }
 
@@ -1621,7 +1637,11 @@ END;
         uksort($categories, function ($a, $b) { return strcasecmp($a, $b); });
 
         foreach ($categories as $catname => $catschemas) {
-            usort($catschemas, function ($a, $b) { return strcasecmp($a['label'], $b['label']); });
+            usort($catschemas, function ($a, $b) {
+                $ret = strcasecmp($a['label'], $b['label']);
+                if ($ret != 0) return $ret;
+                return strcmp($a['id'], $b['id']);
+            });
 
             $wikitext .= "==$catname==\n";
 

@@ -1,0 +1,11 @@
+Generate parser
+---------------
+java -jar /usr/local/lib/antlr-4.8-complete.jar -Dlanguage=PHP -package 'com_brucemyers\ShEx\ShExDoc' ShExDoc.g4
+
+Patch ShExDocLexer::SERIALIZED_ATN
+----------------------------------
+Using text editor:
+search \u{ replace with 0x
+search } replace with ,
+search " replace with <Nothing>
+search . replace with <Nothing>

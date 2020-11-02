@@ -487,8 +487,8 @@ function display_subcats($query)
 /**
  * Sort a result group by namespace, title
  *
- * @param unknown $a
- * @param unknown $b
+ * @param array $a
+ * @param array $b
  * @return number
  */
 function resultgroupsort($a, $b)
