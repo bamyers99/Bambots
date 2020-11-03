@@ -129,7 +129,7 @@ final class ATNDeserializer
         return $actualUuidIndex >= $featureIndex;
     }
 
-    public function deserialize(string $data) : ATN
+    public function deserialize(array $data) : ATN
     {
         $this->reset($data);
         $this->checkVersion();
@@ -170,17 +170,12 @@ final class ATNDeserializer
         return $atn;
     }
 
-    private function reset(string $data) : void
+    private function reset(array $data) : void
     {
-        $characters = \preg_split('//u', $data, -1, \PREG_SPLIT_NO_EMPTY);
 
-        if ($characters === false) {
-            return;
-        }
-
-        $this->data = [StringUtils::codePoint($characters[0])];
-        for ($i = 1, $length = \count($characters); $i < $length; $i++) {
-            $code = StringUtils::codePoint($characters[$i]);
+        $this->data = [$data[0]];
+        for ($i = 1, $length = \count($data); $i < $length; $i++) {
+            $code = $data[$i];
             $this->data[] = $code > 1  ? $code - 2 : $code + 65533;
         }
 

@@ -32,6 +32,9 @@ use com_brucemyers\ShEx\ShExDoc\ShExDocLexer;
 use com_brucemyers\ShEx\ShExDoc\ShExDocParser;
 use Antlr\Antlr4\Runtime\CommonTokenStream;
 use Antlr\Antlr4\Runtime\InputStream;
+use Antlr\Antlr4\Runtime\Error\Listeners\ConsoleErrorListener;
+use com_brucemyers\ShEx\ShExDoc\ShExDocDataCollectorListener;
+use com_brucemyers\ShEx\ShExDoc\ShExDocErrorListener;
 
 class MiscReports extends DatabaseReport
 {
@@ -539,7 +542,7 @@ class MiscReports extends DatabaseReport
 			45206896,44868847,5820690,12255259,5631166,43716686,44210847,3253032,49673186,50729227,12119190,9939398,
 			51410097,1214420,30387944,40245763,51435709,53296694,4293277,54749940,54835048,55914231,11085274,51605368,
 		    53724687,57988713,59825988,9652293,60401574,60523882,61176484,6242139,63283128,63688875,64502019,29607598,
-		    64187214,65375924
+		    64187214,65375924,65556618
 		);
 
 		while (1 == 1) {
@@ -1549,6 +1552,7 @@ END;
 
         // Retrieve the labels for items and properties
         $labelids = [];
+        $skip_validate = ['E67','E80','E81','E133'];
 
         foreach ($schemas as $id => $schema) {
             if (! isset($schema['classprop'])) continue; // New schema
@@ -1571,15 +1575,54 @@ END;
             }
 
             // Validate the schema
+
             $schematext = $schemas[$id]['data']->getSchemaText();
 
-            if (! empty(trim($schematext))) {
+            if (! empty(trim($schematext)) && ! in_array($id, $skip_validate)) {
+                echo "validating schema $id\n";
                 $input = InputStream::fromString($schematext);
                 $lexer = new ShExDocLexer($input);
+                $errorListener = new ShExDocErrorListener();
+                $lexer->addErrorListener($errorListener);
                 $tokens = new CommonTokenStream($lexer);
-                $parser = new ShExDocParser($tokens);
-                $ctx = $parser->shExDoc();
 
+                $parser = new ShExDocParser($tokens);
+                $parser->addErrorListener($errorListener);
+                $dataCollector = new ShExDocDataCollectorListener();
+                $parser->addParseListener($dataCollector);
+                $parser->shExDoc();
+
+                // Check for parsing errors
+                $errors = $errorListener->getErrors();
+
+                // Check for missing prefix
+                $prefixes = $dataCollector->getPrefixes();
+                $names = $dataCollector->getPrefixedNames();
+
+                foreach ($names as $name) {
+                    if (($colonpos = strpos($name['name'], ':')) !== false) {
+                        $prefix = substr($name['name'], 0, $colonpos + 1);
+
+                        if (! isset($prefixes[$prefix])) {
+                            $errors[] = ['line' => $name['line'], 'charpos' => $name['charpos'], 'msg' => "Prefix '$prefix' is not defined"];
+                        }
+                    }
+                }
+
+                // Find the earliest error
+                if (! empty($errors)) {
+                    // Sort by line number and column
+                    usort($errors, function($a, $b) {
+                        if ($a['line'] < $b['line']) return -1;
+                        if ($a['line'] > $b['line']) return 1;
+                        if ($a['charpos'] < $b['charpos']) return -1;
+                        if ($a['charpos'] > $b['charpos']) return 1;
+                        return 0;
+                    });
+
+                    $schemas[$id]['error'] = $errors[0];
+                    echo sprintf("line %d:%d %s\n", $errors[0]['line'], $errors[0]['charpos'], $errors[0]['msg']);
+                }
             }
         }
 
@@ -1711,6 +1754,13 @@ END;
                 $depenencies = implode('<br />', $depenencies);
 
                 $wikitext .= "|-\n|[[EntitySchema:$id|{$schema['label']}]] ($id) {$cpcs['status']} $lang ||$description ||$aliases ||{$cpcs['classprop']} ||$depenencies\n";
+
+                if (isset($schema['error'])) {
+                    $error = $schema['error'];
+                    $errmsg = sprintf("line %d column %d %s", $error['line'], $error['charpos'], $error['msg']);
+                    $editor = "<b>View schema in:</b> [http://wikishape.weso.es/wikidataSchemaInfo?id=$id WikiShape Viewer] wikishape.weso.es";
+                    $wikitext .= "|-\n|colspan='5'| &nbsp;&nbsp;&nbsp;&rdsh; <b>Schema validation error</b>: $errmsg $editor\n";
+                }
             }
 
             $wikitext .= "|}\n";
