@@ -42,7 +42,7 @@ while (! feof($hndl)) {
 	if (++$count % 100000 == 0) echo "Processed $count\n";
 	$buffer = fgets($hndl);
 	if (empty($buffer)) continue;
-	$buffer = str_replace('/mediawiki/page/revision/text=', '', $buffer);
+	$buffer = substr($buffer, 30); // /mediawiki/page/revision/text=
 
 	$data = json_decode($buffer, true);
 	if (! isset($data['id'])) continue;

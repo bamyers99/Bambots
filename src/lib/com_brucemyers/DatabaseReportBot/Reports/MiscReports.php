@@ -1520,6 +1520,9 @@ END;
         // Get the configuration
         $config = $wdwiki->getPage('Wikidata:Database reports/EntitySchema directory/Configuration');
 
+        // Get the see alsos
+        $seealsos = $this->_WDES_calcSeeAlso($config);
+
         $configtable = WikitableParser::getTables($config)[0];
 
         foreach ($configtable['rows'] as $row) {
@@ -1552,7 +1555,7 @@ END;
 
         // Retrieve the labels for items and properties
         $labelids = [];
-        $skip_validate = ['E67','E80','E81','E133'];
+        $skip_validate = ['E67','E80','E81','E133','E263'];
 
         foreach ($schemas as $id => $schema) {
             if (! isset($schema['classprop'])) continue; // New schema
@@ -1650,8 +1653,8 @@ END;
                     $label = $labeldata[$cat]->getLabelDescription('label', $language);
                 }
 
-                if (! isset($categories[$label])) $categories[$label] = [];
-                $categories[$label][] = $schema;
+                if (! isset($categories[$label])) $categories[$label] = ['qid' => $cat, 'schemas' => []];
+                $categories[$label]['schemas'][] = $schema;
             }
         }
 
@@ -1673,14 +1676,20 @@ END;
 			");
 
         // Body
+        date_default_timezone_set('UTC');
 
-        $wikitext = "";
+        $current_date = date('Y-m-d H:i');
+
+        $wikitext = "This is a programmatically generated directory of EntitySchemas. Any changes made to this page will be lost during the next update. To configure how this page is generated see the [[Wikidata:Database reports/EntitySchema directory/Configuration|Configuration]].<br />\n";
+        $wikitext .= "Updated: <onlyinclude>$current_date (UTC)</onlyinclude>\n";
 
         // Sort the categories
         uksort($categories, function ($a, $b) { return strcasecmp($a, $b); });
 
-        foreach ($categories as $catname => $catschemas) {
-            usort($catschemas, function ($a, $b) {
+        foreach ($categories as $catname => $catdata) {
+            $catqid = $catdata['qid'];
+
+            usort($catdata['schemas'], function ($a, $b) {
                 $ret = strcasecmp($a['label'], $b['label']);
                 if ($ret != 0) return $ret;
                 return strcmp($a['id'], $b['id']);
@@ -1688,9 +1697,17 @@ END;
 
             $wikitext .= "==$catname==\n";
 
+            if (! empty($seealsos[$catqid])) {
+                $wikitext .= "See also:\n";
+
+                foreach ($seealsos[$catqid] as $seealso) {
+                    $wikitext .= "*$seealso\n";
+                }
+            }
+
             $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|alias}}\n! {{I18n|class}}/{{I18n|property}}\n! {{I18n|dependencies}}\n";
 
-            foreach ($catschemas as $schema) {
+            foreach ($catdata['schemas'] as $schema) {
                 $id = $schema['data']->getId();
                 $description = $schema['data']->getLabelDescription('description', $language);
                 $aliases = $schema['data']->getAliases($language);
@@ -1786,5 +1803,53 @@ END;
         fwrite($hndl, '<br />Language: ' . $language);
         fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
         fclose($hndl);
+	}
+
+	/**
+	 * Calculate Wikidata EntitySchema category see alsos
+	 *
+	 * @param string $config
+	 * @return array see alsos, key = category qid
+	 */
+	function _WDES_calcSeeAlso($config)
+	{
+        $seealsos = [];
+        $lines = preg_split('!\R!u', $config);
+        $maxlines = count($lines);
+
+        // Find the Categories section
+        $curline = 0;
+        while ($curline < $maxlines && $lines[$curline] != '==Categories==') ++$curline;
+
+        if ($curline == $maxlines) {
+            echo "==Categories== not found\n";
+            exit;
+        }
+
+        ++$curline;
+        $curcat = '';
+
+        for (; $curline < $maxlines && (strlen($lines[$curline]) == 0 || $lines[$curline][0] != '='); ++$curline) {
+            if (strlen($lines[$curline]) < 2) continue;
+            $first2 = substr($lines[$curline], 0, 2);
+            if ($first2[0] != '*') continue;
+
+            if ($first2 == '**') {
+                if (empty($curcat)) {
+                    echo "See also category not found for ({$lines[$curline]})\n";
+                    exit;
+                }
+
+                if (! isset($seealsos[$curcat])) $seealsos[$curcat] = [];
+                $seealsos[$curcat][] = trim(substr($lines[$curline], 2));
+
+            } else {
+                if (preg_match('!\{\{Q\|(\d+)\}\}!', $lines[$curline], $matches)) {
+                    $curcat = 'Q' . $matches[1];
+                }
+            }
+        }
+
+        return $seealsos;
 	}
 }

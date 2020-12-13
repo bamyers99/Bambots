@@ -34,22 +34,24 @@ if ($pass == '1') {
     	if (++$count % 100000 == 0) echo "Processed $count\n";
     	$buffer = fgets($hndl);
     	if (empty($buffer)) continue;
-    	$buffer = str_replace('/mediawiki/page/revision/text=', '', $buffer);
+    	$buffer = substr($buffer, 30); // /mediawiki/page/revision/text=
     	$item = new WikidataItem(json_decode($buffer, true));
 
         $qid = $item->getId();
         if (empty($qid)) continue;
 
-        $instanceof = $item->getStatementsOfType(WikidataItem::TYPE_INSTANCE_OF);
-        if (empty($instanceof)) continue;
+        $instanceofs = $item->getStatementsOfType(WikidataItem::TYPE_INSTANCE_OF);
+        if (empty($instanceofs)) continue;
 
         $checkit = false;
 
         foreach ($classes as $type => $classqids) {
             foreach ($classqids as $classqid) {
-                if ($instanceof == $classqid) {
-                    $checkit = true;
-                    break 2;
+                foreach ($instanceofs as $instanceof) {
+                    if ($instanceof == $classqid) {
+                        $checkit = true;
+                        break 3;
+                    }
                 }
             }
         }
@@ -69,7 +71,51 @@ if ($pass == '1') {
 
     }
 } else { // pass 2
+    $prev_fileid = -1;
 
+    $whndl = fopen('wdrelativeclass.tsv', 'w');
+
+    while (! feof($hndl)) {
+        if (++$count % 100000 == 0) echo "Processed $count\n";
+        $buffer = fgets($hndl);
+        if (empty($buffer)) continue;
+        $buffer = substr($buffer, 30); // /mediawiki/page/revision/text=
+        $item = new WikidataItem(json_decode($buffer, true));
+
+        $qid = $item->getId();
+        if (empty($qid)) continue;
+
+        $instanceofs = $item->getStatementsOfType(WikidataItem::TYPE_INSTANCE_OF);
+        if (empty($instanceofs)) continue;
+
+        $fileid = intval(floor(intval(substr($qid, 1)) / 1000000));
+
+        if ($fileid != $prev_fileid) {
+            $targets = [];
+            $tocheck = file_get_contents("wdr$fileid.tsv");
+            $tocheck = explode("\n", $tocheck);
+
+            foreach ($tocheck as $target) {
+                $target = explode("\t", $target); // "$qid\t$type\t$relation\t$relative\n"
+                $targets[$target[3]] = ['f' => $target[0], 't' => $target[1], 'r' => $target[2]];
+            }
+
+            $prev_fileid = $fileid;
+        }
+
+        if (isset($targets[$qid])) {
+            $type = $targets[$qid]['t'];
+            $validqids = $classes[$type];
+
+            if (empty(array_intersect($validqids, $instanceofs))) {
+                $from = $targets[$qid]['f'];
+                $relation = $targets[$qid]['r'];
+                fwrite($whndl, "$from\t$type\t$relation\t$qid\n");
+            }
+        }
+    }
+
+    fclose($whndl);
 }
 
 echo "Processed $count\n";
