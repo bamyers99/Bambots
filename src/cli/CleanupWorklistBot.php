@@ -61,6 +61,11 @@ try {
 		        exit;
 		        break;
 
+		    case 'dumpLivingPeople':
+		        dumpLivingPeople();
+		        exit;
+		        break;
+
 		    case 'skipCatLoad':
 		    	$skipCatLoad = true;
 		    	break;
@@ -255,4 +260,30 @@ function _test_category($wiki, $category)
     }
 
     return 0;
+}
+
+/**
+ * Dump page titles in category Living_people.
+ */
+function dumpLivingPeople()
+{
+    $outpath = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'LivingPeople.tsv';
+    $hndl = fopen($outpath, 'w');
+
+    $username = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+    $password = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+    $wiki_host = Config::get('CleanupWorklistBot.enwiki_host');
+    $dbh = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $username, $password);
+    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $sql = "SELECT page_title FROM page, categorylinks WHERE cl_from = page_id AND cl_to = 'Living_people' AND cl_type='page'";
+    $stmt = $dbh->query($sql);
+    $stmt->setFetchMode(PDO::FETCH_NUM);
+
+    while (($row = $stmt->fetch()) !== false) {
+        $pagename = str_replace('_', ' ', $row[0]);
+        fwrite($hndl, "$pagename\n");
+    }
+
+    fclose($hndl);
 }
