@@ -49,6 +49,7 @@ class ReportGenerator
 	const KEY_EARLIESTSORT = 9;
 	const KEY_CATS = 10;
 	const KEY_ICOUNT = 11;
+	const KEY_BLP = 12;
 
 	const MAX_PAGE_SIZE = 5000000;
 
@@ -84,7 +85,7 @@ class ReportGenerator
 		$expiry = strtotime('+1 week');
 		$expiry = date('D, d M Y', $expiry) . ' 00:00:00 GMT';
 
-		$results = $dbh_tools->query('SELECT `page_title`, `importance`, `class` FROM `page` p');
+		$results = $dbh_tools->query('SELECT p.`page_title`, `importance`, `class`, lp.`page_title` AS blp FROM `page` p LEFT JOIN `livingpeople` lp ON p.`page_title` = lp.`page_title`');
 
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			$pagetitle = $row['page_title'];
@@ -94,7 +95,8 @@ class ReportGenerator
 
 			if ($row['importance'] == null) $row['importance'] = '';
 			if ($row['class'] == null) $row['class'] = '';
-			$curclean[$pagetitle] = [self::KEY_IMP => $row['importance'], self::KEY_CLS => $row['class'], self::KEY_ISSUES => []];
+			if ($row['blp'] == null) $row['blp'] = 0; else $row['blp'] = 1;
+			$curclean[$pagetitle] = [self::KEY_IMP => $row['importance'], self::KEY_CLS => $row['class'], self::KEY_BLP => $row['blp'], self::KEY_ISSUES => []];
 			++$cleanup_pages;
 
 			while ($clrow = $clquery->fetch(PDO::FETCH_ASSOC)) {
@@ -167,6 +169,7 @@ class ReportGenerator
 		$wikiproject = ($isWikiProject) ? 'WikiProject ' : '';
 		$page_number = 1;
 		$page_size = 0;
+		$blps = [];
 
 		$this->writeAlphaHeader($alphahndl, $expiry, $wikiproject, $project_title, $projecturl, $project_pages, $cleanup_pages,
 		    $artcleanpct, $issue_count, $bycaturl, $csvurl, $histurl, $page_number, $asof_date);
@@ -197,13 +200,19 @@ class ReportGenerator
 			    $page_size = 0;
 			}
 
-			$data_line = "<tr><td><a href=\"$arturl\">" . htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td><td data-sort-value='$impsort'>{$art[self::KEY_IMP]}</td>
+			$blp = '';
+			if ($art[self::KEY_BLP]) {
+			    $blp = ' (BLP)';
+			    $blps[] = $title;
+			}
+
+			$data_line = "<tr><td><a href=\"$arturl\">" . htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td><td data-sort-value='$impsort'>{$art[self::KEY_IMP]}</td>
 				<td data-sort-value='$clssort'>{$art[self::KEY_CLS]}</td><td align='right'>$icount</td>
 				<td data-sort-value='{$consolidated['earliestsort']}'>{$consolidated['earliest']}</td><td>$cats</td></tr>\n";
 			fwrite($alphahndl, $data_line);
 			$page_size += strlen($data_line);
 
-			$titles[$title]= array(self::KEY_CLS => $art[self::KEY_CLS],
+			$titles[$title] = array(self::KEY_CLS => $art[self::KEY_CLS], self::KEY_BLP => $art[self::KEY_BLP],
 				self::KEY_CLSSORT => $clssort, self::KEY_IMP => $art[self::KEY_IMP],
 				self::KEY_IMPSORT => $impsort, self::KEY_EARLIEST => $consolidated['earliest'],
 				self::KEY_EARLIESTSORT => $consolidated['earliestsort'],
@@ -297,8 +306,10 @@ class ReportGenerator
 		            }
 		            $artcats = implode(', ', $keycats);
 
+		            $blp = $art[self::KEY_BLP] ? ' (BLP)' : '';
+
 		            $data_line = "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-		                htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
+		                htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>
 						<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>
 						<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
 						<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
@@ -345,6 +356,16 @@ class ReportGenerator
 			fwrite($bycathndl, "</ul>\n");
 		}
 
+		if (! empty($blps)) {
+		    fwrite($bycathndl, "<li><a href='#Biographies of living persons'>Biographies of living persons</a></li>\n");
+		    fwrite($bycathndl, "<ul>\n");
+
+		    $artcount = count($blps);
+
+		    fwrite($bycathndl, "<li><a href='#BLPs'>BLPs ($artcount)</a></li>\n");
+		    fwrite($bycathndl, "</ul>\n");
+		}
+
 		foreach ($catgroups as $catgroup => &$cats) {
 		    $page_name = '';
 		    if ($section_pages[$catgroup] > 1) $page_name = $filesafe_project . "{$section_pages[$catgroup]}.html";
@@ -382,8 +403,9 @@ class ReportGenerator
 				$artcats = implode(', ', $consolidated['issues']);
 				$clssort = CreateTables::$CLASSES[$art[self::KEY_CLS]];
 				$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
+				$blp = $art[self::KEY_BLP] ? ' (BLP)' : '';
 				fwrite($bycathndl, "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-					htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
+					htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>
 					<td data-sort-value='{$impsort}'>{$art[self::KEY_IMP]}</td>
 					<td data-sort-value='{$clssort}'>{$art[self::KEY_CLS]}</td>
 					<td>{$artcats}</td></tr>\n");
@@ -407,6 +429,36 @@ class ReportGenerator
 			unset($fields);
 
 			fwrite($bycathndl, "</tbody></table>\n");
+		}
+
+		// Write the blps
+
+		if (! empty($blps)) {
+		    sort($blps);
+		    fwrite($bycathndl, "<a name='Biographies of living persons'></a><h2>Biographies of living persons</h2>\n");
+
+		    $artcount = count($blps);
+		    fwrite($bycathndl, "<a name='BLPs'></a><h3>BLPs ($artcount)</h3>\n");
+		    fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>
+				<th class='unsortable'>Issues</th></tr></thead><tbody>\n
+				");
+
+		    foreach ($blps as $title) {
+		        $art = $titles[$title];
+		        $keycats = $art[self::KEY_CATS];
+		        $artcats = implode(', ', $keycats);
+
+		        $data_line = "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
+		  		            htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
+						<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>
+						<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
+						<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
+
+		  		fwrite($bycathndl, $data_line);
+		    }
+		    unset($art);
+
+		    fwrite($bycathndl, "</tbody></table>\n");
 		}
 
 		// Write the cats
@@ -465,8 +517,10 @@ class ReportGenerator
     					$need_cat_heading = false;
 					}
 
+					$blp = $art[self::KEY_BLP] ? ' (BLP)' : '';
+
 					$data_line = "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>
 						<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>
 						<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
 						<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
@@ -541,7 +595,7 @@ class ReportGenerator
 	 * @param bool $shortnames return short category names
 	 * @return array Earliest date 'earliest', 'issues', 'earliestsort' Consolidated issues, one string per category
 	 */
-	function _consolidateCats(&$cat_ids, $shortnames = false)
+	function _consolidateCats($cat_ids, $shortnames = false)
 	{
 		$results = array();
 		$earliestyear = 9999;
@@ -644,7 +698,7 @@ class ReportGenerator
 	        fwrite($alphahndl, "<div><a href=\"$alphaurl\">Next page</a></div>");
 	    }
 
-	    fwrite($alphahndl, "<div><a href='/privacy.html'>Privacy Policy</a> <b>&bull;</b> Generated by <a href='https://en.wikipedia.org/wiki/User:CleanupWorklistBot' class='novisited'>CleanupWorklistBot</a></div></body></html>");
+	    fwrite($alphahndl, "<div>BLP = Biography of a Living Person</div><div><a href='/privacy.html'>Privacy Policy</a> <b>&bull;</b> Generated by <a href='https://en.wikipedia.org/wiki/User:CleanupWorklistBot' class='novisited'>CleanupWorklistBot</a></div></body></html>");
 	}
 
 	function writeBycatHeader($bycathndl, $expiry, $wikiproject, $project_title, $projecturl, $asof_date, $project_pages,
@@ -683,6 +737,6 @@ class ReportGenerator
 	        $bycaturl = $filesafe_project . "{$page_number}.html";
 	        fwrite($bycathndl, "<div><a href=\"$bycaturl\">Next page</a></div>");
 	    }
-	    fwrite($bycathndl, "<div><a href='/privacy.html'>Privacy Policy</a> <b>&bull;</b> Generated by <a href='https://en.wikipedia.org/wiki/User:CleanupWorklistBot' class='novisited'>CleanupWorklistBot</a></div></body></html>");
+	    fwrite($bycathndl, "<div>BLP = Biography of a Living Person</div><div><a href='/privacy.html'>Privacy Policy</a> <b>&bull;</b> Generated by <a href='https://en.wikipedia.org/wiki/User:CleanupWorklistBot' class='novisited'>CleanupWorklistBot</a></div></body></html>");
 	}
 }

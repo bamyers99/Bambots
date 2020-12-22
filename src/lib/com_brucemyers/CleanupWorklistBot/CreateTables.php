@@ -82,5 +82,11 @@ class CreateTables
     	  PRIMARY KEY `name` (`name`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
+
+    	$sql = "CREATE TABLE IF NOT EXISTS `livingpeople` (
+		  `page_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+		  UNIQUE KEY `page_title` (`page_title`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+    	$dbh_tools->exec($sql);
     }
 }

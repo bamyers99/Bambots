@@ -45,6 +45,9 @@ class CreateTables
    		$dbh_tools->exec("INSERT INTO project VALUES ('India', 1, 1)");
    		$dbh_tools->exec("INSERT INTO project VALUES ('WikiProject_Michigan', 1, 0)");
 
+   		$dbh_tools->exec('TRUNCATE livingpeople');
+   		$dbh_tools->exec("INSERT INTO livingpeople VALUES ('Earth')");
+
    		// enwiki
    		Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
    		$this->mediawiki = new \MockMediaWiki();
