@@ -320,10 +320,6 @@ class Categories {
 			'Uncategorized' => [
 					'type' => 'from-monthly'
 			],
-			'Uncategorized stubs' => [
-					'type' => 'from-monthly',
-					'group' => 'References'
-			],
 			'Unreferenced BLPs' => [
 					'type' => 'from-monthly',
 					'group' => 'References'
@@ -518,14 +514,14 @@ class Categories {
 					'type' => 'no-date',
 					'group' => 'Content',
 					'display' => 'Translation cleanup needed'
-			],
+			]
 
 			// since-yearly
-			'Pages with DOIs inactive' => [
-					'type' => 'since-yearly',
-					'group' => 'Links',
-					'display' => 'DOIs inactive'
-			]
+//			'Pages with DOIs inactive' => [
+//					'type' => 'since-yearly',
+//					'group' => 'Links',
+//					'display' => 'DOIs inactive'
+//			]
 	];
 
 	// Short category names for CS1 errors subcats

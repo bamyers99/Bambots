@@ -433,7 +433,7 @@ class ReportGenerator
 
 		// Write the blps
 
-		if (! empty($blps)) {
+		if (! empty($blps) && ! in_array($project_title, ['Biography','Football'])) {
 		    sort($blps);
 		    fwrite($bycathndl, "<a name='Biographies of living persons'></a><h2>Biographies of living persons</h2>\n");
 
