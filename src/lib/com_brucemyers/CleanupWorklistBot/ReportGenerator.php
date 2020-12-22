@@ -356,7 +356,7 @@ class ReportGenerator
 			fwrite($bycathndl, "</ul>\n");
 		}
 
-		if (! empty($blps)) {
+		if (! empty($blps) && ! in_array($project_title, ['Biography','Football'])) {
 		    fwrite($bycathndl, "<li><a href='#Biographies of living persons'>Biographies of living persons</a></li>\n");
 		    fwrite($bycathndl, "<ul>\n");
 
