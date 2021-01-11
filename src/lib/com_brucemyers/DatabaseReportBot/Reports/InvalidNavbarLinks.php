@@ -249,13 +249,23 @@ class InvalidNavbarLinks extends DatabaseReport
 			// Get the redirects to this navbar
 			$navbar_types = $template_type['children'];
 
+			$temps = $navbar_types;
+			$temps[] = $type_name;
+
+			$qcnt = count($temps);
+			$qs = implode(',', array_fill(0, $qcnt, '?'));
+
 			$sql = "SELECT page_title FROM redirect, page " .
-				" WHERE rd_namespace = 10 AND rd_title = ? " .
+				" WHERE rd_namespace = 10 AND rd_title IN ($qs) " .
 				" AND page_id = rd_from";
 			$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
 			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$sth = $dbh_enwiki->prepare($sql);
-			$sth->bindValue(1, str_replace(' ', '_', $type_name));
+
+			for ($x=1; $x <= $qcnt; ++$x) {
+			    $sth->bindValue($x, str_replace(' ', '_', $temps[$x-1]));
+			}
+
 			$sth->execute();
 			$sth->setFetchMode(PDO::FETCH_NUM);
 			$titles = array();
@@ -271,13 +281,23 @@ class InvalidNavbarLinks extends DatabaseReport
 
 			// Retrieve the target navbars
 
+			$temps = $navbar_types;
+			$temps[] = $type_name;
+
+			$qcnt = count($temps);
+			$qs = implode(',', array_fill(0, $qcnt, '?'));
+
 			$sql = "SELECT page_title FROM templatelinks, page " .
-				" WHERE tl_from_namespace = 10 AND tl_namespace = 10 AND tl_title = ? " .
+				" WHERE tl_from_namespace = 10 AND tl_namespace = 10 AND tl_title IN ($qs) " .
 				" AND page_namespace = 10 AND page_id = tl_from";
     		$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$sth = $dbh_enwiki->prepare($sql);
-			$sth->bindValue(1, str_replace(' ', '_', $type_name));
+
+			for ($x=1; $x <= $qcnt; ++$x) {
+			    $sth->bindValue($x, str_replace(' ', '_', $temps[$x-1]));
+			}
+
 			$sth->execute();
 			$sth->setFetchMode(PDO::FETCH_NUM);
 			$titles = array();

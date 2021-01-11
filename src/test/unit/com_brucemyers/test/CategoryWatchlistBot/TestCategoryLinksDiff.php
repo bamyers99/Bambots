@@ -41,7 +41,7 @@ class TestCategoryLinksDiff extends UnitTestCase
     	$outputdir .= DIRECTORY_SEPARATOR;
 
         Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
-        $mediaWiki = &new \MockMediaWiki();
+        $mediaWiki = new \MockMediaWiki();
 
         $mediaWiki->returns('getRevisionsText', array(
         	'Talk:Mackinac Island' => array(1, 1, "<!-- [[Category:New pages]] -->
@@ -58,7 +58,7 @@ class TestCategoryLinksDiff extends UnitTestCase
     	$dbh_tools = $serviceMgr->getDBConnection('tools');
 
     	Mock::generate('com_brucemyers\\CategoryWatchlistBot\\ServiceManager', 'MockServiceManager');
-    	$serviceMgr = &new \MockServiceManager();
+    	$serviceMgr = new \MockServiceManager();
     	$serviceMgr->returns('getMediaWiki', $mediaWiki);
     	$serviceMgr->returns('getDBConnection', $dbh_wiki, array('enwiki'));
     	$serviceMgr->returns('getDBConnection', $dbh_tools, array('tools'));

@@ -59,7 +59,7 @@ class TestInvalidNavbarLinks extends UnitTestCase
     		'Template:NavboxRedirectBad' => '{{Navbox redirect|name=NavboxRedirectbad|title = test 5}}');
 
     	Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
-        $wiki = &new \MockMediaWiki();
+        $wiki = new \MockMediaWiki();
 
         foreach ($testdata as $key => $value) {
         	$wiki->returns('getPageWithCache', $value, array($key));
