@@ -23,6 +23,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\test\DatabaseReportBot\CreateTablesINL;
 use com_brucemyers\RenderedWiki\RenderedWiki;
+use com_brucemyers\Util\TemplateParamParser;
 use UnitTestCase;
 use PDO;
 use Mock;
@@ -34,7 +35,7 @@ DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 class TestInvalidNavbarLinks extends UnitTestCase
 {
 
-    public function testNavbox()
+    public function notestNavbox()
     {
     	$enwiki_host = Config::get(ENWIKI_HOST);
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
@@ -105,5 +106,159 @@ class TestInvalidNavbarLinks extends UnitTestCase
 		$row = $errors[0];
 		$this->assertEqual($row[0], '[[Template:BS-headerBadName|BS-headerBadName]]', 'Wrong BS-header template');
 		$this->assertEqual($row[1], 'BS-headerbadname', 'Wrong BS-header invalid name');
+    }
+
+    public function testTemplate()
+    {
+        $data = $this->_getTemplateData();
+        $parsed_templates = TemplateParamParser::getTemplates($data);
+        print_r($parsed_templates);
+    }
+
+    public function _getTemplateData()
+    {
+        $data = <<<EOT
+{{ sidebar with collapsible lists
+| name       = Jewish cuisine
+| topimage   = [[File:Sabich1.png|250 px]]
+| pretitle   = Part of a series on
+| title      = [[Jewish cuisine]]
+| class      = hlist
+
+| list1name  = Regional cuisines
+| list1title = Regional cuisines
+| list1      =
+; [[Jewish cuisine|Worldwide]]
+* [[American Jewish cuisine|American]]
+* [[Ashkenazi Jewish cuisine|Ashkenazi]]
+* [[Israeli cuisine|Israeli]]
+* [[Sephardi Jewish cuisine|Sephardi]]
+* [[Mizrahi Jewish cuisine|Mizrahi]]
+; [[Jewish cuisine|Europe]]
+* [[Ashkenazi Jewish cuisine|Ashkenazi]]
+* [[Bulgarian Jewish cuisine|Bulgarian Jewish]]
+* [[French Jewish cuisine|French]]
+* [[German Jewish cuisine|German Jewish]]
+* [[Greek Jewish cuisine|Greek Jewish]]
+* [[Italkim cuisine|Italkim (Italian Jewish)]]
+* [[Latvian Jewish cuisine|Latvian Jewish]]
+* [[Lithuanian Jewish cuisine|Litvak]]
+* [[Polish Jewish cuisine|Galician]]
+* [[Romanian Jewish cuisine|Romanian Jewish]]
+* [[Russian Jewish cuisine|Russian Jewish]]
+; [[Cuisine of the Sephardic Jews|Maghreb]]
+* [[Algerian Jewish cuisine|Algerian]]
+* [[Djerban Jewish cuisine|Djerban]]
+* [[Libyan Jewish cuisine|Libyan]]
+* [[Moroccan Jewish cuisine|Moroccan]]
+* [[Tunisian Jewish cuisine|Tunisian]]
+* [[Tripolitan cuisine|Tripolitan]]
+; [[Mizrahi cuisine|Middle East and Central Asia]]
+* [[Bukharan Jewish cuisine|Bukharan]]
+* [[Iraqi Jewish cuisine|Iraqi]]
+* [[Israeli cuisine|Israeli]]
+* [[Persian Jewish cuisine|Persian]]
+* [[Syrian Jewish cuisine|Syrian Jewish]]
+; [[Africa]]
+* [[Egyptian Jewish cuisine|Egyptian]]
+* [[Eritrean Jewish cuisine|Eritrean]]
+* [[Ethiopian Jewish cuisine|Ethiopian]]
+* [[South African Jewish cuisine|South African]]
+* [[Ugandan Jewish cuisine|Ugandan]]
+; [[The Americas]]
+* [[American Jewish cuisine|American]]
+* [[Argentinian Jewish cuisine|Argentinian]]
+* [[Brazilian Jewish cuisine|Brazilian]]
+* [[Canadian Jewish cuisine|Canadian]]
+* [[Mexican Jewish cuisine|Mexican]]
+* [[Peruvian Jewish cuisine|Peruvian]]
+; [[Asia-Pacific]]
+* [[Afghan Jewish cuisine|Afghan]]
+* [[Australian Jewish cuisine|Australian]]
+* [[Chinese cuisine in Jewish culture|Chinese]]
+* [[Indian Jewish cuisine|Indian]]
+
+| list2name = Ingredients
+| list2title = Ingredients
+| list2 =
+;Vegetables
+* [[Artichoke]]
+* [[Bean]]
+* [[Bell pepper]]
+* [[Black eyed pea]]
+* [[Cabbage]]
+* [[Swiss chard|Chard]]
+* [[Chickpea]]
+* [[Eggplant]]
+* [[Leek]]
+* [[Lentil]]
+* [[Pomegranate]]
+* [[Potato]]
+* [[Split pea]]
+* [[Spinach]]
+* [[Tomato]]
+;Herbs & Spices
+* [[Poppy seed]]
+* [[Sumac]]
+
+| list3name = Breads
+| list3title = Breads
+| list3 =
+
+* [[Bagel]]
+* [[Challah]]
+
+
+| list4name  = Beverages
+| list4title = Beverages
+| list4      =
+
+* [[Seltzer]]
+
+| list5name  = Salads
+| list5title = Salads
+| list5      =
+*[[Matbucha]]
+*[[Tabbouleh]]
+
+| list6name = Cheeses
+| list6title = Cheeses
+| list6 =
+
+* [[Cottage cheese]]
+
+| list7name  = Dishes
+| list7title = Dishes
+| list7      =
+
+
+| list8name  =  appetizer
+| list8title =  appetizers
+| list8      =
+
+
+| list9name  = Holidays and festivals
+| list9title = Holidays and festivals
+| list9      =
+
+* [[Rosh Hashanah]]
+* [[Yom Kippur|Break fast]]
+* [[Sukkot]]
+* [[Chanukah]]
+* [[Tu Bishvat]]
+* [[Purim]]
+* [[Passover]]
+* [[Lag b'omer]]
+* [[Shavuot]]
+* [[Yom Ha'atzmaut]]
+
+| below      =
+* {{nowrap|}}
+* {{nowrap|{{portal-inline|Food|size=tiny}}}}
+
+}}<noinclude>{{documentation}}<!-- place category and language links on the /doc sub-page, not here --></noinclude>
+EOT;
+
+        return $data;
     }
 }

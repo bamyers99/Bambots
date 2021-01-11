@@ -26,8 +26,8 @@ class TemplateParamParser
 		'passed_param' => '!\{\{\{(?P<content>[^{}]*?\}\}\})!', // Highest priority
 		'htmlstub' => '!<\s*(?P<content>[\w]+(?:(?:\s+\w+(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\'">\s]+))?)+\s*|\s*)/>)!',
 		'html' => '!<\s*(?P<content>(?P<tag>[\w]+)[^>]*>[^<]*?<\s*/\s*(?P=tag)\s*>)!',
-		'template' => '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?))?\}\})!',
-		'table' => '!\{\|(?P<content>[^{]*?\|\})!',
+	    'template' => '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?)?)?\}\})!',
+	    'table' => '!\{\|(?P<content>[^{]*?\|\})!',
 		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/s'
 	);
 
@@ -51,8 +51,8 @@ class TemplateParamParser
 
 		while ($match_found) {
 			if (++$itercnt > self::MAX_ITERATIONS) {
-				//Logger::log("Max iterations reached data=$origdata");
-				return array();
+			    //Logger::log("Max iterations reached data=$origdata");
+			    return array();
 			}
 			$match_found = false;
 
@@ -61,7 +61,7 @@ class TemplateParamParser
 				$offset_adjust = 0;
 
 				if ($match_cnt) {
-					$match_found = true;
+				    $match_found = true;
 					$replacement_made = false;
 
 					foreach ($matches as $match) {

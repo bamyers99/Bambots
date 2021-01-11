@@ -51,7 +51,7 @@ class TestTemplateParamParser extends UnitTestCase
     			| image = [[File:test.jpg|[[covered bridge|Covered bridge]]]]
     			| title	=	[[Retail stores|Retail Stores]] {{resolve|{{{year}}}}}
     			| cost = <math>{x*2} | <i>5</i></math>
-    			| {{{paramname}}} = {{{{{lefttmpl}}|{{righttmpl}}}}}
+    			| {{{paramname}}} = {{{{{lefttmpl}}|{{righttmpl|}}}}}
     			| brackets = {{{{{tmplname}}}|param={{{paramvalue}}}}}
     			}}
     			{{Navbox
