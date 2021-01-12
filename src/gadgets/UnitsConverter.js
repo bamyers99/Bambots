@@ -39,28 +39,28 @@ Bamyers99.UnitsConverter = {
 	                 'Q25224','Q25344','Q25417','Q259502','Q39099','Q41044','Q4730','Q4916','Q4917','Q80524','Q8146'],
 	unitConverts: {
 		// mass
-		'Q41803': [{'mult':0.0353, 'unit': 'Q48013'}], // gram -> ounce
-		'Q48013': [{'mult':28.35, 'unit': 'Q41803'}], // ounce -> gram
-		'Q11570': [{'mult':2.205, 'unit': 'Q100995'}], // kilogram -> pound
-		'Q100995': [{'mult':0.454, 'unit': 'Q11570'}], // pound -> kilogram
+		'Q41803': [{'mult':0.035274, 'unit': 'Q48013'}], // gram -> ounce
+		'Q48013': [{'mult':28.34952, 'unit': 'Q41803'}], // ounce -> gram
+		'Q11570': [{'mult':2.204622, 'unit': 'Q100995'}], // kilogram -> pound
+		'Q100995': [{'mult':0.453592, 'unit': 'Q11570'}], // pound -> kilogram
 		// dimensions
-		'Q174789': [{'mult':0.0394, 'unit': 'Q218593'}], // millimeter -> inch
-		'Q174728': [{'mult':0.394, 'unit': 'Q218593'}], // centimetre -> inch
+		'Q174789': [{'mult':0.03937, 'unit': 'Q218593'}], // millimeter -> inch
+		'Q174728': [{'mult':0.3937, 'unit': 'Q218593'}], // centimetre -> inch
 		'Q218593': [{'mult':2.54, 'unit': 'Q174728'}], // inch -> centimetre
-		'Q11573': [{'mult':3.28, 'unit': 'Q3710'}], // metre -> foot
-		'Q3710': [{'mult':0.305, 'unit': 'Q11573'}], // foot -> metre
-		'Q482798': [{'mult':0.914, 'unit': 'Q11573'}], // yard -> metre
-		'Q828224': [{'mult':0.621, 'unit': 'Q253276'}], // kilometre -> mile
-		'Q253276': [{'mult':1.609, 'unit': 'Q828224'}], // mile -> kilometre
+		'Q11573': [{'mult':3.28084, 'unit': 'Q3710'}], // metre -> foot
+		'Q3710': [{'mult':0.3048, 'unit': 'Q11573'}], // foot -> metre
+		'Q482798': [{'mult':0.9144, 'unit': 'Q11573'}], // yard -> metre
+		'Q828224': [{'mult':0.621371, 'unit': 'Q253276'}], // kilometre -> mile
+		'Q253276': [{'mult':1.609344, 'unit': 'Q828224'}], // mile -> kilometre
 		// area
 		'Q2489298': [{'mult':0.155, 'unit': 'Q1063786'}], // sq centimetre -> sq inch
-		'Q1063786': [{'mult':6.452, 'unit': 'Q2489298'}], // sq inch -> sq centimetre
-		'Q25343': [{'mult':10.764, 'unit': 'Q857027'}], // sq metre -> sq foot
-		'Q857027': [{'mult':0.0929, 'unit': 'Q25343'}], // sq foot -> sq metre
-		'Q1550511': [{'mult':0.836, 'unit': 'Q11573'}], // sq yard -> sq metre
-		'Q35852': [{'mult':2.471, 'unit': 'Q81292'}], // hectare -> acre
-		'Q81292': [{'mult':0.405, 'unit': 'Q35852'}], // acre -> hectare
-		'Q712226': [{'mult':0.386, 'unit': 'Q232291'}], // sq kilometre -> sq mile
+		'Q1063786': [{'mult':6.4516, 'unit': 'Q2489298'}], // sq inch -> sq centimetre
+		'Q25343': [{'mult':10.7639, 'unit': 'Q857027'}], // sq metre -> sq foot
+		'Q857027': [{'mult':0.092903, 'unit': 'Q25343'}], // sq foot -> sq metre
+		'Q1550511': [{'mult':0.836127, 'unit': 'Q11573'}], // sq yard -> sq metre
+		'Q35852': [{'mult':2.471054, 'unit': 'Q81292'}], // hectare -> acre
+		'Q81292': [{'mult':0.404686, 'unit': 'Q35852'}], // acre -> hectare
+		'Q712226': [{'mult':0.386102, 'unit': 'Q232291'}], // sq kilometre -> sq mile
 		'Q232291': [{'mult':2.59, 'unit': 'Q712226'}], // sq mile -> sq kilometre
 		// temperature
 		'Q25267': [{'mult':1.8, 'addafter':32, 'unit': 'Q42289'}], // C -> F
@@ -68,11 +68,11 @@ Bamyers99.UnitsConverter = {
 		'Q11579': [{'mult':1, 'subafter': 273.15, 'unit': 'Q25267'}, // K -> C
 		           {'mult':1.8, 'subafter': 459.67, 'unit': 'Q42289'}], // K -> F
 		// speed
-		'Q182429': [{'mult':3.281, 'unit': 'Q748716'}], // meter / second -> foot / second
-		'Q748716': [{'mult':0.305, 'unit': 'Q182429'}], // foot / second -> meter / second
-		'Q180154': [{'mult':0.621, 'unit': 'Q211256'}], // kilometer / hour -> mile / hour
-		'Q211256': [{'mult':1.609, 'unit': 'Q180154'}], // mile / hour -> kilometer / hour
-		'Q128822': [{'mult':1.151, 'unit': 'Q211256'}, // knot -> mile / hour
+		'Q182429': [{'mult':3.28084, 'unit': 'Q748716'}], // meter / second -> foot / second
+		'Q748716': [{'mult':0.3048, 'unit': 'Q182429'}], // foot / second -> meter / second
+		'Q180154': [{'mult':0.621371, 'unit': 'Q211256'}], // kilometer / hour -> mile / hour
+		'Q211256': [{'mult':1.609344, 'unit': 'Q180154'}], // mile / hour -> kilometer / hour
+		'Q128822': [{'mult':1.15078, 'unit': 'Q211256'}, // knot -> mile / hour
 		           {'mult':1.852, 'unit': 'Q180154'}], // knot -> kilometer / hour
 	},
 	propPointInTime: 'P585',
