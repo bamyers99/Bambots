@@ -25,3 +25,6 @@ INSERT INTO s51454__wikidata.navelgazer VALUES ('Data as of: 2018-xx-xx', -99, 0
 
 TRUNCATE s51454__wikidata.navelgazerlang;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazerlang.tsv' INTO TABLE s51454__wikidata.navelgazerlang CHARACTER SET binary;
+
+cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
+rm *

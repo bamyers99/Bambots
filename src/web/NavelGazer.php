@@ -370,7 +370,7 @@ function get_navels()
 				if ($key > 0) $prop_ids[] = 'Property:P' . $key;
 			}
 
-			$items = $wdwiki->getItemsNoCache($prop_ids);
+			$items = $wdwiki->getItemsWithCache($prop_ids);
 
 			foreach ($items as $item) {
 				$pid = $item->getId();
@@ -397,7 +397,7 @@ function get_navels()
 		}
 
 	} elseif (! empty($params['property'])) {
-		$items = $wdwiki->getItemsNoCache('Property:P' . $params['property']);
+	    $items = $wdwiki->getItemsWithCache('Property:P' . $params['property']);
 
 		if (! empty($items)) {
 			$property_label = $items[0]->getLabelDescription('label', $params['lang']);
@@ -441,7 +441,7 @@ EOT;
 	        preg_match('!entity/(.+)!', $uri, $matches);
 	        $qid = $matches[1];
 	        $wdwiki = new WikidataWiki();
-	        $items = $wdwiki->getItemsNoCache($qid);
+	        $items = $wdwiki->getItemsWithCache($qid);
 
 	        if (! empty($items)) {
 	            $property_label = $items[0]->getLabelDescription('label', $params['lang']);
