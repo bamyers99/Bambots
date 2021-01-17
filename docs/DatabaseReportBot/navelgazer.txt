@@ -18,6 +18,14 @@ CREATE TABLE s51454__wikidata.`navelgazerlang` (
   KEY `lang_month` (`language`, `month_count`)
 ) ENGINE=Aria DEFAULT CHARSET=utf8
 
+CREATE TABLE s51454__wikidata.`navelgazertagdef` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `displayname` varchar(255) NOT NULL,
+  `description` varchar(2047) NOT NULL,
+  UNIQUE INDEX tagdef_id (`id`)
+) ENGINE=Aria DEFAULT CHARSET=utf8
+
 sql tools
 TRUNCATE s51454__wikidata.navelgazer;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazer.tsv' INTO TABLE s51454__wikidata.navelgazer CHARACTER SET binary;
@@ -25,6 +33,9 @@ INSERT INTO s51454__wikidata.navelgazer VALUES ('Data as of: 2018-xx-xx', -99, 0
 
 TRUNCATE s51454__wikidata.navelgazerlang;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazerlang.tsv' INTO TABLE s51454__wikidata.navelgazerlang CHARACTER SET binary;
+
+TRUNCATE s51454__wikidata.navelgazertagdef;
+LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/changetags.tsv' INTO TABLE s51454__wikidata.navelgazertagdef CHARACTER SET binary;
 
 cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
 rm *

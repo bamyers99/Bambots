@@ -1509,7 +1509,7 @@ END;
 	    $outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
 	    $outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
 	    $outputDir .= DIRECTORY_SEPARATOR;
-	    $hndl = fopen($outputDir . 'changtags.tsv', 'w');
+	    $hndl = fopen($outputDir . 'changetags.tsv', 'w');
 	    $wdwiki = new WikidataWiki();
 
 	    $sql = 'SELECT ctd_id, ctd_name FROM change_tag_def';
@@ -1528,8 +1528,8 @@ END;
 
 	    foreach ($tagmetas['query']['tags'] as $tagmeta) {
 	        $tagname = $tagmeta['name'];
-	        $tagdisplayname = $tagmeta['displayname'];
-	        $tagdesc = $tagmeta['description'];
+	        $tagdisplayname = preg_replace('!\s!', ' ', $tagmeta['displayname']);
+	        $tagdesc = preg_replace('!\s!', ' ', $tagmeta['description']);
 
 	        if (isset($tags[$tagname])) {
                 preg_match('!>([^<]+?)<!', $tagdisplayname, $matches);
