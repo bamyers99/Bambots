@@ -95,6 +95,11 @@ class MiscReports extends DatabaseReport
     		    $this->WikidataEntitySchemaDirectory($params[1]);
     		    return false;
     		    break;
+
+    		case 'dumpChangeTags':
+    		    $this->dumpChangeTags($apis['dbh_wikidata']);
+    		    return false;
+    		    break;
     	}
 
     	return true;
@@ -1489,6 +1494,48 @@ END;
 	                fwrite($hndl, "{$params[$paramname]}\t{$params[$paramid]}\t$wikidata_id\t$page\n");
 	                break;
 	            }
+	        }
+	    }
+
+	    fclose($hndl);
+	}
+
+	/**
+	 * Dump change tags
+	 */
+	public function dumpChangeTags(PDO $dbh_wikidata)
+	{
+	    $outputDir = Config::get(DatabaseReportBot::OUTPUTDIR);
+	    $outputDir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputDir);
+	    $outputDir = preg_replace('!(/|\\\\)$!', '', $outputDir); // Drop trailing slash
+	    $outputDir .= DIRECTORY_SEPARATOR;
+	    $hndl = fopen($outputDir . 'changtags.tsv', 'w');
+	    $wdwiki = new WikidataWiki();
+
+	    $sql = 'SELECT ctd_id, ctd_name FROM change_tag_def';
+	    $result = $dbh_wikidata->query($sql);
+	    $result->setFetchMode(PDO::FETCH_ASSOC);
+
+	    $tags = [];
+
+	    foreach ($result as $tag) {
+	        $tagname = $tag['ctd_name'];
+	        if (strstr($tagname, 'OAuth CID:') === false) continue;
+	        $tags[$tagname] = $tag['ctd_id'];
+	    }
+
+	    $tagmetas = $wdwiki->getList('tags', ['tgprop' => 'description|displayname', 'tglimit' => 'max']);
+
+	    foreach ($tagmetas['query']['tags'] as $tagmeta) {
+	        $tagname = $tagmeta['name'];
+	        $tagdisplayname = $tagmeta['displayname'];
+	        $tagdesc = $tagmeta['description'];
+
+	        if (isset($tags[$tagname])) {
+                preg_match('!>([^<]+?)<!', $tagdisplayname, $matches);
+                $tagdisplayname = $matches[1];
+
+                fwrite($hndl, "{$tags[$tagname]}\t$tagname\t$tagdisplayname\t$tagdesc\n");
 	        }
 	    }
 
