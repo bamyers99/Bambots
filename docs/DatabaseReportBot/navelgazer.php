@@ -173,8 +173,8 @@ while (! feof($hndl)) {
 			}
 		}
 
-		if (strcasecmp(substr($username, -3), 'bot') != 0) {
-		    $isprevmonth = ($timestamp == $prevmonth);
+		if (! empty ($username) && strcasecmp(substr($username, -3), 'bot') != 0) {
+		    $isprevmonth = ($timestamp == $prevmonth) ? '1' : '0';
 		    fwrite($revhndl, "$revid\t$username\t$isprevmonth\n");
 		}
 	}

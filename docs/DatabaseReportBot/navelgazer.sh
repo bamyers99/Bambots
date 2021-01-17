@@ -1,1 +1,1 @@
-gunzip -c /public/dumps/public/wikidatawiki/20190401/wikidatawiki-20190401-stub-meta-history.xml.gz | xml2 | grep '^/mediawiki/page/revision/\(contributor\|comment=\|timestamp=\)' | php navelgazer.php
+gunzip -c /public/dumps/public/wikidatawiki/20190401/wikidatawiki-20190401-stub-meta-history.xml.gz | xml2 | grep '^/mediawiki/page/revision/\(contributor\|comment=\|timestamp=\|id=\)' | php navelgazer.php
