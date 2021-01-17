@@ -93,13 +93,16 @@ DEFINE('GRANDTOTAL_MASK', MONTHLY_INCREMENT - 1);
 $prevmonth = date('Y-m', strtotime('-1 month'));
 
 $hndl = fopen('php://stdin', 'r');
+$revhndl = fopen('navelgazerrev.tsv', 'w');
 
 while (! feof($hndl)) {
 	$buffer = fgets($hndl);
 	if (empty($buffer)) continue;
 	$buffer = substr($buffer, 24); // strip /mediawiki/page/revision
 
-	if (preg_match('!^/contributor/ip=!', $buffer, $matches)) {
+	if (preg_match('!^/id=(\d+)!', $buffer, $matches)) {
+	    $revid = $matches[1];
+	} elseif (preg_match('!^/contributor/ip=!', $buffer, $matches)) {
 	    $username = false;
 	} elseif (preg_match('!^/contributor/@deleted!', $buffer, $matches)) {
 	    $username = false;
@@ -169,12 +172,18 @@ while (! feof($hndl)) {
 				break;
 			}
 		}
+
+		if (strcasecmp(substr($username, -3), 'bot') != 0) {
+		    $isprevmonth = ($timestamp == $prevmonth);
+		    fwrite($revhndl, "$revid\t$username\t$isprevmonth\n");
+		}
 	}
 
 }
 
 echo "Processed " . number_format($count) . "\n";
 
+fclose($revhndl);
 fclose($hndl);
 $hndl = fopen('navelgazer.tsv', 'w');
 
