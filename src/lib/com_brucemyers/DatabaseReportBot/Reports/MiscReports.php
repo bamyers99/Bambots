@@ -1512,7 +1512,7 @@ END;
 	    $hndl = fopen($outputDir . 'changetags.tsv', 'w');
 	    $wdwiki = new WikidataWiki();
 
-	    $sql = 'SELECT ctd_id, ctd_name FROM change_tag_def';
+	    $sql = 'SELECT ctd_id, ctd_name, ctd_count FROM change_tag_def';
 	    $result = $dbh_wikidata->query($sql);
 	    $result->setFetchMode(PDO::FETCH_ASSOC);
 
@@ -1521,7 +1521,7 @@ END;
 	    foreach ($result as $tag) {
 	        $tagname = $tag['ctd_name'];
 	        if (strstr($tagname, 'OAuth CID:') === false) continue;
-	        $tags[$tagname] = $tag['ctd_id'];
+	        $tags[$tagname] = ['id' => $tag['ctd_id'], 'count' => $tag['ctd_count']];
 	    }
 
 	    $tagmetas = $wdwiki->getList('tags', ['tgprop' => 'description|displayname', 'tglimit' => 'max']);
@@ -1535,7 +1535,7 @@ END;
                 preg_match('!>([^<]+?)<!', $tagdisplayname, $matches);
                 $tagdisplayname = $matches[1];
 
-                fwrite($hndl, "{$tags[$tagname]}\t$tagname\t$tagdisplayname\t$tagdesc\n");
+                fwrite($hndl, "{$tags[$tagname]['id']}\t$tagname\t$tagdisplayname\t$tagdesc\t{$tags[$tagname]['count']}\n");
 	        }
 	    }
 
