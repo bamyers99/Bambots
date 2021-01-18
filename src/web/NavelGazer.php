@@ -26,8 +26,8 @@ $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-//ini_set("display_errors", 1);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -120,6 +120,8 @@ function display_form($navels)
 		        	$('.tablesorter').tablesorter({sortList: [[1,1]]});
 				<?php } elseif (! empty($params['langadd'])) { ?>
 		        	$('.tablesorter').tablesorter({sortList: [[2,1]], headers: {3: {sorter: false}}});
+				<?php } elseif ($params['toolid'] != '') { ?>
+		        	$('.tablesorter').tablesorter({sortList: [[2,1]], headers: {3: {sorter: false}}});
 		        <?php } ?>
 			    }
 			);
@@ -149,6 +151,15 @@ function display_form($navels)
         ?></select></td></tr>
         <tr><td colspan='2'>or</td></tr>
         <tr><td><b>Language code</b></td><td><input id="langadd" name="langadd" type="text" size="10" value="<?php echo $params['langadd'] ?>" /> (label, description, alias, sitelink additions)</td></tr>
+        <tr><td colspan='2'>or</td></tr>
+        <tr><td><b>Tool used</b></td><td><select id='toolid' name='toolid'><?php
+            echo "<option value=''>&nbsp;</option>";
+            foreach ($navels['toollist'] as $name => $toolid) {
+                $selected = ($params['toolid'] == $toolid) ? " selected='1'" : '';
+        		echo "<option value='$toolid'$selected>$name</option>";
+        	}
+        	unset($navels['toollist']);
+        ?></select></td></tr>
         <tr><td colspan='2'><hr /></td></tr>
         <tr><td><b>Property label language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /></td></tr>
         <tr><td colspan='2'><input type="submit" value="Submit" /></td></tr>
@@ -167,6 +178,7 @@ function display_form($navels)
 		if (empty($navels['data'])) {
 		    if (! empty($params['username'])) echo 'User does not have any property additions';
 		    elseif (! empty($params['property'])) echo 'Property not found';
+		    elseif (! empty($params['toolid'])) echo 'Tool not found';
 		    else echo 'Language not found';
 
 		} elseif (! empty($params['username'])) {
@@ -220,6 +232,19 @@ function display_form($navels)
 			    echo "</tbody></table>\n";
 			}
 
+			if (! empty($navels['tooldata'])) {
+			    echo '<h3>Tool usage</h3>';
+			    echo "<table class='wikitable tablesorter'><thead><tr><th>Tool</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
+
+			    foreach ($navels['tooldata'] as $row) {
+			        $url = "/NavelGazer.php?toolid=" . $row[0];
+			        echo "<tr><td><a href='$url'>{$row[1]}</a></td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) .
+			        "</td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . "</td></tr>\n";
+			    }
+
+			    echo "</tbody></table>\n";
+			}
+
 			if (! empty($navels['langdata'])) {
 			    echo '<h3>Label, description, alias, sitelink additions</h3>';
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Language</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
@@ -268,49 +293,90 @@ function display_form($navels)
 
 		} elseif (! empty($params['langadd'])) {
 		    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
-    	    echo "<b>Label, description, alias, sitelink additions for '{$params['langadd']}'";
-    	    if (! empty($navels['property_label'])) echo ' (' . $navels['property_label'] . ')';
-            echo "</b><br />\n";
-    	    if (count($navels['data']) == 100) echo "Top 100<br />\n";
+		    echo "<b>Label, description, alias, sitelink additions for '{$params['langadd']}'";
+		    if (! empty($navels['property_label'])) echo ' (' . $navels['property_label'] . ')';
+		    echo "</b><br />\n";
+		    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
-    	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count (rank)</th><th>Last month (rank)</th><th>Property additions</th></tr></thead><tbody>\n";
+		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count (rank)</th><th>Last month (rank)</th><th>Property additions</th></tr></thead><tbody>\n";
 
-    	    foreach ($navels['data'] as $row) {
-    	        if (empty($row[0])) {
-    	            $col1 = 'anonymous';
-    	            $col4 = '&nbsp';
-    	        } else {
-    	            $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
-    	            $url = "https://www.wikidata.org/wiki/User:" . str_replace(' ', '_', $row[0]);
-    	            $col1 = "<a href='$url' class='external'>$user_encoded</a>";
-    	            $userurl = "/NavelGazer.php?username=" . urlencode($row[0]);
-    	            $col4 = "<a href='$userurl'>view</a>";
-    	        }
+		    foreach ($navels['data'] as $row) {
+		        if (empty($row[0])) {
+		            $col1 = 'anonymous';
+		            $col4 = '&nbsp';
+		        } else {
+		            $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+		            $url = "https://www.wikidata.org/wiki/User:" . str_replace(' ', '_', $row[0]);
+		            $col1 = "<a href='$url' class='external'>$user_encoded</a>";
+		            $userurl = "/NavelGazer.php?username=" . urlencode($row[0]);
+		            $col4 = "<a href='$userurl'>view</a>";
+		        }
 
-    	        echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) . '<span style="font-family: monospace;">';
-    	        if ($row[2] != 0) {
-    	            $blankspace = '';
-    	            if ($row[2] < 10) $blankspace = '&numsp;';
-    	            echo " $blankspace($row[2])";
-    	        } else echo ' &numsp;&numsp;&numsp;&numsp;';
+		        echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) . '<span style="font-family: monospace;">';
+		        if ($row[2] != 0) {
+		            $blankspace = '';
+		            if ($row[2] < 10) $blankspace = '&numsp;';
+		            echo " $blankspace($row[2])";
+		        } else echo ' &numsp;&numsp;&numsp;&numsp;';
 
-    	        echo "</span></td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . '<span style="font-family: monospace;">';
-    	        if ($row[4] != 0) {
-    	            $blankspace = '';
-    	            if ($row[4] < 10) $blankspace = '&numsp;';
-    	            echo " $blankspace($row[4])";
-    	        } else echo ' &numsp;&numsp;&numsp;&numsp;';
+		        echo "</span></td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . '<span style="font-family: monospace;">';
+		        if ($row[4] != 0) {
+		            $blankspace = '';
+		            if ($row[4] < 10) $blankspace = '&numsp;';
+		            echo " $blankspace($row[4])";
+		        } else echo ' &numsp;&numsp;&numsp;&numsp;';
 
-    	        echo "</span></td><td style='text-align:center'>$col4</td></tr>\n";
-    	    }
+		        echo "</span></td><td style='text-align:center'>$col4</td></tr>\n";
+		    }
 
-    	    echo "</tbody></table>\n";
-    	    echo "Note: Includes top 50 total count and top 50 last month count<br />\n";
-    	}
-    }
+		    echo "</tbody></table>\n";
+		    echo "Note: Includes top 50 total count and top 50 last month count<br />\n";
+
+	} elseif ($params['toolid'] != '') {
+	    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
+	    echo "<b>Tool usage for '{$navels['property_label']}'</b>";
+	    if (! empty($navels['langdata'])) echo ' (' . htmlentities($navels['langdata']) . ')';
+	    echo "<br />\n";
+	    if (count($navels['data']) == 100) echo "Top 100<br />\n";
+
+	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count (rank)</th><th>Last month (rank)</th><th>Property additions</th></tr></thead><tbody>\n";
+
+	    foreach ($navels['data'] as $row) {
+	        if (empty($row[0])) {
+	            $col1 = 'anonymous';
+	            $col4 = '&nbsp';
+	        } else {
+	            $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+	            $url = "https://www.wikidata.org/wiki/User:" . str_replace(' ', '_', $row[0]);
+	            $col1 = "<a href='$url' class='external'>$user_encoded</a>";
+	            $userurl = "/NavelGazer.php?username=" . urlencode($row[0]);
+	            $col4 = "<a href='$userurl'>view</a>";
+	        }
+
+	        echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) . '<span style="font-family: monospace;">';
+	        if ($row[2] != 0) {
+	            $blankspace = '';
+	            if ($row[2] < 10) $blankspace = '&numsp;';
+	            echo " $blankspace($row[2])";
+	        } else echo ' &numsp;&numsp;&numsp;&numsp;';
+
+	        echo "</span></td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . '<span style="font-family: monospace;">';
+	        if ($row[4] != 0) {
+	            $blankspace = '';
+	            if ($row[4] < 10) $blankspace = '&numsp;';
+	            echo " $blankspace($row[4])";
+	        } else echo ' &numsp;&numsp;&numsp;&numsp;';
+
+	        echo "</span></td><td style='text-align:center'>$col4</td></tr>\n";
+	    }
+
+	    echo "</tbody></table>\n";
+	    echo "Note: Includes top 50 total count and top 50 last month count<br />\n";
+	}
+}
 ?>
         <br /><div><sup>1</sup><a href='https://en.wiktionary.org/wiki/navel-gazing'>navel–gazing</a> (Wiktionary)</div>
-        <div><sup>2</sup>Data derived from database dump wikidatawiki-stub-meta-history.xml revision comments</div>
+        <div><sup>2</sup>Data derived from database dump wikidatawiki-stub-meta-history.xml revision comments and wikidatawiki-change_tag.sql tag usage</div>
         <div><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
@@ -320,12 +386,11 @@ function get_navels()
 	$return = [];
 	$data = [];
 	$langdata = [];
+	$tooldata = [];
 	$property_label = '';
 	$wdwiki = new WikidataWiki();
 	$createtotal = 0;
 	$monthtotal = 0;
-
-	if (empty($params['username']) && empty($params['property']) && empty($params['langadd'])) return $return;
 
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
@@ -340,6 +405,19 @@ function get_navels()
 	}
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+	$sql = 'SELECT id, displayname FROM s51454__wikidata.navelgazertagdef WHERE defcount >= 100 ORDER BY displayname';
+	$sth = $dbh_wiki->query($sql);
+	$sth->setFetchMode(PDO::FETCH_NUM);
+	$tools = [];
+
+	while ($row = $sth->fetch()) {
+	    $tools[$row[1]] = $row[0];
+	}
+
+	$return['toollist'] = $tools;
+
+	if (empty($params['username']) && empty($params['property']) && empty($params['langadd']) && $params['toolid'] == '') return $return;
+
 	$sth = $dbh_wiki->query("SELECT user_name FROM s51454__wikidata.navelgazer WHERE user_name LIKE 'Data as of:%'");
 
 	$row = $sth->fetch(PDO::FETCH_NUM);
@@ -352,8 +430,8 @@ function get_navels()
 		$params['username'] = str_replace('_', ' ', $params['username']);
 
 		$sql = "SELECT property_id, create_count, month_count " .
-				" FROM s51454__wikidata.navelgazer " .
-				" WHERE user_name = ? ";
+			" FROM s51454__wikidata.navelgazer " .
+			" WHERE user_name = ? ";
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, $params['username']);
@@ -384,8 +462,8 @@ function get_navels()
 
 		// load language stats
 		$sql = "SELECT `language`, create_count, month_count " .
-		  		" FROM s51454__wikidata.navelgazerlang " .
-		  		" WHERE user_name = ? ORDER BY `language`";
+		  	" FROM s51454__wikidata.navelgazerlang " .
+		  	" WHERE user_name = ? ORDER BY `language`";
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, $params['username']);
@@ -394,6 +472,20 @@ function get_navels()
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
 		    $langdata[$row['language']] = [$row['language'], $row['create_count'], $row['month_count']]; // removes dups
+		}
+
+		// load tool stats
+		$sql = "SELECT td.id, td.displayname, t.total_count, t.month_count " .
+		  	" FROM s51454__wikidata.navelgazertag t, s51454__wikidata.navelgazertagdef td " .
+		  	" WHERE td.id = t.tag_id AND user_name = ? ORDER BY td.displayname";
+
+		$sth = $dbh_wiki->prepare($sql);
+		$sth->bindValue(1, $params['username']);
+
+		$sth->execute();
+
+		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+		    $tooldata[$row['displayname']] = [$row['id'], $row['displayname'], $row['total_count'], $row['month_count']]; // removes dups
 		}
 
 	} elseif (! empty($params['property'])) {
@@ -454,9 +546,9 @@ EOT;
 	   	    ' WHERE `language` = ? ORDER BY create_count DESC LIMIT 50) ' .
 	   	    ' UNION ' .
 	   	    ' (SELECT user_name, create_count, month_count ' .
-	   	   	' FROM s51454__wikidata.navelgazerlang ' .
-	   	   	' WHERE `language` = ? ORDER BY month_count DESC LIMIT 50) ' .
-	   	   	' ORDER BY create_count DESC';
+	   	    ' FROM s51454__wikidata.navelgazerlang ' .
+	   	    ' WHERE `language` = ? ORDER BY month_count DESC LIMIT 50) ' .
+	   	    ' ORDER BY create_count DESC';
 
 	    $sth = $dbh_wiki->prepare($sql);
 	    $sth->bindValue(1, $params['langadd']);
@@ -509,11 +601,85 @@ EOT;
             $prevcnt = $row[3];
         }
         unset($row);
-	}
 
-	$return = ['data' => $data, 'dataasof' => $dataasof, 'property_label' => $property_label, 'langdata' => $langdata,
-	    'createtotal' => $createtotal, 'monthtotal' => $monthtotal
-	];
+    } elseif ($params['toolid'] != '') {
+        $toolid = (int)$params['toolid'];
+        $sql = "SELECT * FROM navelgazertagdef WHERE id = $toolid";
+        $sth = $dbh_wiki->query($sql);
+
+        if (! ($row = $sth->fetch(PDO::FETCH_NAMED))) return $return;
+        $property_label = $row['displayname'];
+        $langdata = $row['description'];
+
+        $sql = '(SELECT user_name, total_count, month_count ' .
+            ' FROM s51454__wikidata.navelgazertag ' .
+            ' WHERE `tag_id` = ? ORDER BY total_count DESC LIMIT 50) ' .
+            ' UNION ' .
+            ' (SELECT user_name, total_count, month_count ' .
+            ' FROM s51454__wikidata.navelgazertag ' .
+            ' WHERE `tag_id` = ? ORDER BY month_count DESC LIMIT 50) ' .
+            ' ORDER BY total_count DESC';
+
+        $sth = $dbh_wiki->prepare($sql);
+        $sth->bindValue(1, $toolid);
+        $sth->bindValue(2, $toolid);
+
+        $sth->execute();
+
+        while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+            $data[$row['user_name']] = [$row['user_name'], $row['total_count'], 0, $row['month_count'], 0]; // removes dups
+        }
+
+        $rank = 1;
+        $prevcnt = -1;
+        $prevrank = 0;
+
+        foreach ($data as &$row) {
+            if ($row[1] == $prevcnt) {
+                $row[2] = $prevrank;
+            } else {
+                $row[2] = $rank;
+                $prevrank = $rank;
+            }
+
+            if ($rank == 50) break;
+            ++$rank;
+            $prevcnt = $row[1];
+        }
+        unset($row);
+
+        usort($data, function ($a, $b) { //desc
+            if ($a[3] < $b[3]) return 1;
+            if ($a[3] > $b[3]) return -1;
+            return 0;
+        });
+
+        $rank = 1;
+        $prevcnt = -1;
+        $prevrank = 0;
+
+        foreach ($data as &$row) {
+            if ($row[3] == $prevcnt) {
+                $row[4] = $prevrank;
+            } else {
+                $row[4] = $rank;
+                $prevrank = $rank;
+            }
+
+            if ($rank == 50) break;
+            ++$rank;
+            $prevcnt = $row[3];
+        }
+        unset($row);
+    }
+
+	$return['data'] = $data;
+	$return['dataasof'] = $dataasof;
+	$return['property_label'] = $property_label;
+	$return['langdata'] = $langdata;
+	$return['tooldata'] = $tooldata;
+	$return['createtotal'] = $createtotal;
+	$return['monthtotal'] = $monthtotal;
 
 	return $return;
 }
@@ -525,12 +691,13 @@ function get_params()
 {
 	global $params;
 
-	$params = array();
+	$params = [];
 
 	$params['username'] = isset($_REQUEST['username']) ? $_REQUEST['username'] : '';
 	$params['property'] = isset($_REQUEST['property']) ? $_REQUEST['property'] : '';
 	if (! empty($params['property']) && $params['property'][0] == 'P') $params['property'] = substr($params['property'], 1);
 	$params['langadd'] = isset($_REQUEST['langadd']) ? $_REQUEST['langadd'] : '';
+	$params['toolid'] = isset($_REQUEST['toolid']) ? $_REQUEST['toolid'] : '';
 	$params['lang'] = isset($_REQUEST['lang']) ? $_REQUEST['lang'] : '';
 
 	if (! empty($params['lang']) && preg_match('!([a-zA-Z]+)!', $params['lang'], $matches)) {

@@ -27,7 +27,7 @@ $dbh_wikidata = new PDO("mysql:host=127.0.0.1;dbname=s51454__wikidata;charset=ut
 $dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Add the no tool tagdef
-$sql = "INSERT IGNORE INTO navelgazertagdef VALUES (0,'No tool','No tool','')";
+$sql = "INSERT IGNORE INTO navelgazertagdef VALUES (0,'No tool','No tool','',101)";
 $dbh_wikidata->exec($sql);
 
 // Load the tag data
