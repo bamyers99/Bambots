@@ -1539,6 +1539,9 @@ END;
 	        }
 	    }
 
+	    // Add the no tool tagdef
+	    fwrite($hndl, "0\tNo tool\tNo tool\t\t101\n");
+
 	    fclose($hndl);
 	}
 
