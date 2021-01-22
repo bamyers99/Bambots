@@ -99,7 +99,7 @@ Bamyers99.UnitsConverter = {
 				$.each( data.claims || {}, function ( prop, claims ) {
 
 					$.each( claims, function ( index, claim ) {
-						var pointInTimeYear = null;
+						var qpointInTimeYear = null;
 						var qualOffset = 0;
 						var qualifierHits = [];
 
@@ -132,9 +132,9 @@ Bamyers99.UnitsConverter = {
 								}
 
 								if ( prop === self.propPointInTime ) {
-									pointInTimeYear = self.parseDateToYear( qualifier.datavalue );
+									qpointInTimeYear = self.parseDateToYear( qualifier.datavalue );
 									++qualOffset;
-									if ( pointInTimeYear ) return false;
+									if ( qpointInTimeYear ) return false;
 									return true;
 								}
 
@@ -157,7 +157,7 @@ Bamyers99.UnitsConverter = {
 						});
 
 						for ( var i = 0, al = qualifierHits.length; i < al; ++i ) {
-							if ( pointInTimeYear ) qualifierHits[i].pity = pointInTimeYear;
+							if ( qpointInTimeYear ) qualifierHits[i].pity = qpointInTimeYear;
 							propHits.push( qualifierHits[i] );
 						}
 
@@ -172,7 +172,7 @@ Bamyers99.UnitsConverter = {
 						}
 
 						propHits.push( {'cid': claim.id, 'unit': quantity.unit,
-							'amount': quantity.amount} );
+							'amount': quantity.amount, 'pity': qpointInTimeYear} );
 					});
 				});
 
