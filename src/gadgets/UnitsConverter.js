@@ -33,7 +33,7 @@ if (typeof Bamyers99_UnitsConverter_testmode === 'undefined') Bamyers99_UnitsCon
 if (typeof Bamyers99_UnitsConverter_currency === 'undefined') Bamyers99_UnitsConverter_currency = 'EUR';
 
 Bamyers99.UnitsConverter = {
-	commonjs: Bamyers99_UnitsConverter_testmode ? 'https://tools.wmflabs.org/bambots/GadgetCommon.js' :
+	commonjs: Bamyers99_UnitsConverter_testmode ? 'https://bambots.brucemyers.com/GadgetCommon.js' :
 		'https://www.wikidata.org/w/index.php?title=User:Bamyers99/GadgetCommon.js&action=raw&ctype=text/javascript',
 	unitCurrencies: ['Q1104069','Q122922','Q123213','Q131473','Q132643','Q1472704','Q172872','Q173117','Q181907',
 	                 'Q25224','Q25344','Q25417','Q259502','Q39099','Q41044','Q4730','Q4916','Q4917','Q80524','Q8146'],
@@ -311,15 +311,29 @@ Bamyers99.UnitsConverter = {
 					var endCPI = currencies[fromCurUnit].cpis[toYear];
 					var fromRate = currencies[fromCurUnit].rates[fromYear];
 					var toRate = currencies[toCurUnit].rates[toYear];
+					
+					// Calculate from year converted amount
+					if (fromCurUnit != toCurUnit && currencies[toCurUnit].rates[fromYear]) {
+						val = hit.amount / fromRate * currencies[toCurUnit].rates[fromYear];
+						val = Math.round(val);
+						val = mw.language.commafy( val, '#,##0' );
+						
+						h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
+						if ( hit.pity ) h += ' (' + fromYear + ')';
+						h += ')';
+					}
 
 					// Inflate 'from currency' amount
 					val = hit.amount / mults[0] / fromRate * endCPI / startCPI * toRate * mults[1];
-					val = Math.round(val);
-					val = mw.language.commafy( val, '#,##0' );
-
-					h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
-					if ( hit.pity ) h += ' (' + toYear + ')';
-					h += ')';
+					
+					if (! isNaN(val)) {
+					    val = Math.round(val);
+					    val = mw.language.commafy( val, '#,##0' );
+					
+					    h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
+					    if ( hit.pity ) h += ' (' + toYear + ')';
+					    h += ')';
+					}
 				}
 
 				$claimview.find( '.wikibase-snakview-value' ).append( h );
