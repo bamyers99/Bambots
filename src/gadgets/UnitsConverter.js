@@ -319,7 +319,7 @@ Bamyers99.UnitsConverter = {
 						val = mw.language.commafy( val, '#,##0' );
 						
 						h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
-						if ( hit.pity ) h += ' (' + fromYear + ')';
+						if ( hit.pity ) h += ' approximate (' + fromYear + ')';
 						h += ')';
 					}
 
@@ -331,7 +331,7 @@ Bamyers99.UnitsConverter = {
 					    val = mw.language.commafy( val, '#,##0' );
 					
 					    h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
-					    if ( hit.pity ) h += ' (' + toYear + ')';
+					    if ( hit.pity ) h += ' approximate (' + toYear + ')';
 					    h += ')';
 					}
 				}
