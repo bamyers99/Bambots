@@ -49,9 +49,11 @@ LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazerlang.tsv' INT
 TRUNCATE s51454__wikidata.navelgazertagdef;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/changetags.tsv' INTO TABLE s51454__wikidata.navelgazertagdef CHARACTER SET binary;
 
-gunzip -c *change_tag.sql.gz | ./mysqlparse - - | awk -f changetag.awk - >changetag.tsv&
+jsub -N DatabaseReportBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DatabaseReportBot.php MiscReports dumpChangeTags
 jsub -cwd bzip2 -9 navelgazerrev.tsv
+screen gunzip -c *change_tag.sql.gz | ./mysqlparse - - | awk -f changetag.awk - >changetag.tsv&
 sort -k 1,1 changetag.tsv >changetag.tsv.sorted&
+bunzip2 navelgazerrev.tsv.bz2
 sort -k 1,1 navelgazerrev.tsv >navelgazerrev.tsv.sorted&
 join -a 2 -t $'\t' -o '2.2,1.2' --nocheck-order changetag.tsv.sorted navelgazerrev.tsv.sorted >userchangetag.tsv&
 php loadchangetags.php "dbusername" "dbpassword"

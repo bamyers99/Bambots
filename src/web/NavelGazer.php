@@ -443,20 +443,23 @@ function get_navels()
 		}
 
 		if (! empty($data)) {
-			$prop_ids = array();
+			$prop_ids = [];
 			foreach (array_keys($data) as $key) {
 				if ($key > 0) $prop_ids[] = 'Property:P' . $key;
 			}
 
-			$items = $wdwiki->getItemsWithCache($prop_ids);
+			$chunks = array_chunk($prop_ids, 100);
+			foreach ($chunks as $chunk) {
+			    $items = $wdwiki->getItemsWithCache($chunk);
 
-			foreach ($items as $item) {
-				$pid = $item->getId();
-				$pid = substr($pid, 1);
-				$property_label = $item->getLabelDescription('label', $params['lang']);
+    			foreach ($items as $item) {
+    				$pid = $item->getId();
+    				$pid = substr($pid, 1);
+    				$property_label = $item->getLabelDescription('label', $params['lang']);
 
-				if (! empty($property_label)) $data[$pid][3] = $property_label;
-				$data[$pid][4] = $item->getDatatype();
+    				if (! empty($property_label)) $data[$pid][3] = $property_label;
+    				$data[$pid][4] = $item->getDatatype();
+    			}
 			}
 		}
 
