@@ -373,7 +373,7 @@ class InceptionBot
 	    	foreach ($nsresults as $result) {
 	        	$pageinfo = $result['pageinfo'];
 	        	$displayuser = $pageinfo['user'];
-	            $user = str_replace(' ', '_', $displayuser);
+	        	$user = str_replace([' ','>'], ['_',':'], $displayuser); // > is returned by TriagePageLister for interwiki imports which breaks wikitext. ex: de>Avigdor_Blaustein
 	            $urlencodeduser = urlencode($displayuser);
 	            if (isset($creators[$displayuser])) $newpagecnt = $creators[$displayuser];
 	            else $newpagecnt = '0'; // Moved new page, with a change of/or no creator
