@@ -440,7 +440,7 @@ class InceptionBot
 	        	    ++$existingcnt;
 	                $title = $line['title'];
 	                $displayuser = $line['user'];
-	                $user = str_replace(' ', '_', $displayuser);
+	                $user = str_replace([' ','>'], ['_',':'], $displayuser); // > is returned by TriagePageLister for interwiki imports which breaks wikitext. ex: de>Avigdor_Blaustein
 	                $urlencodeduser = urlencode($displayuser);
 	                $timestamp = $line['timestamp'];
 	                $totalScore = $line['totalScore'];
