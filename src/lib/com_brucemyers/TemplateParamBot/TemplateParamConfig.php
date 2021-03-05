@@ -18,6 +18,7 @@
 namespace com_brucemyers\TemplateParamBot;
 
 use com_brucemyers\Util\TemplateParamParser;
+use com_brucemyers\Util\FileCache;
 
 class TemplateParamConfig
 {
@@ -25,8 +26,15 @@ class TemplateParamConfig
 
 	public function __construct(ServiceManager $serviceMgr)
 	{
-		$wiki = $serviceMgr->getMediaWiki('en.wikipedia.org');
-		$text = $wiki->getPageWithCache('User:Bamyers99/TemplateParametersTool');
+	    // check cache directly to avoid excess enwiki logins
+	    $config_page = 'User:Bamyers99/TemplateParametersTool';
+	    $text = FileCache::getData($config_page);
+
+	    if ($text === false) {
+    		$wiki = $serviceMgr->getMediaWiki('en.wikipedia.org');
+    		$text = $wiki->getPageWithCache($config_page);
+	    }
+
 		$templates = TemplateParamParser::getTemplates($text);
 
 		foreach ($templates as $template) {

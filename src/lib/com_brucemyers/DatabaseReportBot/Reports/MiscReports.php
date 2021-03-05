@@ -17,6 +17,7 @@
 
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
+use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\MediaWiki\AllPagesLister;
 use com_brucemyers\MediaWiki\MediaWiki;
@@ -26,6 +27,7 @@ use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\WikitableParser;
+use com_brucemyers\Util\Curl;
 use MediaWiki\Sanitizer;
 use PDO;
 use com_brucemyers\ShEx\ShExDoc\ShExDocLexer;
@@ -77,9 +79,9 @@ class MiscReports extends DatabaseReport
     			break;
 
     		case 'WikidataPropertyCounts':
-    			    $this->WikidataPropertyCounts($params[1]);
-    			    return false;
-    			    break;
+			    $this->WikidataPropertyCounts($params[1]);
+			    return false;
+			    break;
 
     		case 'NRHPID':
     		    $this->NRHPID($apis['dbh_wiki'], $apis['mediawiki']);
@@ -98,6 +100,11 @@ class MiscReports extends DatabaseReport
 
     		case 'dumpChangeTags':
     		    $this->dumpChangeTags($apis['dbh_wikidata']);
+    		    return false;
+    		    break;
+
+    		case 'WikidataGadgetUsage':
+    		    $this->WikidataGadgetUsage($params[1], $apis['dbh_wikidata'], isset($params[2]));
     		    return false;
     		    break;
     	}
@@ -1902,5 +1909,187 @@ END;
         }
 
         return $seealsos;
+	}
+
+	/**
+	 * Wikidata gadget usage
+	 *
+	 * @param string $language
+	 * @param PDO $dbh_wikidata
+	 * @param bool $testing
+	 */
+	public function WikidataGadgetUsage($language, PDO $dbh_wikidata, $testing)
+	{
+	    $sections = [
+	        '=== wikidata ===' => ['type' => 'wikidata'],
+	        '=== general ===' => ['type' => 'general'],
+	        '=== admin-gadgets ===' => ['type' => 'admin'],
+	        '=== hidden ===' => ['type' => 'hidden']
+	    ];
+
+	    $wdwiki = new WikidataWiki();
+
+	    // Get the approved gadget list
+
+	    $text = $wdwiki->getpage('MediaWiki:Gadgets-definition');
+
+	    $gadgets = [];
+	    $pagenames = [];
+
+	    $lines = preg_split('/\\r?\\n/u', $text);
+	    $type = 'skip';
+
+	    foreach ($lines as $line) {
+	        if (isset($sections[$line])) {
+	            $type = $sections[$line]['type'];
+	            continue;
+	        }
+
+	        if ($type == 'skip') continue;
+
+	        if (preg_match('!\*\s*([^\[|]+?)(?:\[|\|)!', $line, $matches)) {
+	            $gadget = $matches[1];
+	            $gadgets[$gadget] = ['type' => $type, 'location' => 'preferences'];
+	            $pagenames[] = "MediaWiki:Gadget-$gadget";
+	        }
+	    }
+
+	    // Get the approved gadget descriptions
+	    $descriptions = $wdwiki->getPagesWithCache($pagenames, ! $testing); // refetch if not testing
+
+	    foreach ($descriptions as $gadget => $description) {
+	        $gadget = substr($gadget, 17);
+	        $description = preg_replace(CommonRegex::COMMENT_REGEX, '', $description);
+
+	        if (preg_match('!<\s*translate\s*>(.+)<\s*/\s*translate\s*>!us', $description, $matches)) {
+	            $gadgets[$gadget]['description'] = trim($matches[1]);
+	        } else {
+	            $gadgets[$gadget]['description'] = $description;
+	        }
+	    }
+
+	    // Get the approved gadget totals
+
+	    $text = Curl::getUrlContents('https://www.wikidata.org/wiki/Special:GadgetUsage');
+
+	    // <tr><td>AuthorityControl</td><td data-sort-value="Infinity">Default</td><td data-sort-value="Infinity">Default</td></tr>
+	    // <tr><td>labelLister</td><td>3,921</td><td>1,056</td></tr>
+
+	    preg_match_all('!<tr><td>([^<]+?)</td><td[^>]*?>([^<]+?)</td><td[^>]*?>([^<]+?)</td></tr>!u', $text, $matches, PREG_SET_ORDER);
+
+	    foreach ($matches as $match) {
+	        $gadget = str_replace('_', ' ', $match[1]);
+	        $numusers = $match[2];
+	        $activeusers = $match[3];
+
+	        if ($numusers == 'Default') {
+	            unset($gadgets[$gadget]);
+	            continue;
+	        }
+
+	        if (! isset($gadgets[$gadget])) {
+	            echo "Special:GadgetUsage '$gadget' not found\n";
+	            continue;
+	        }
+
+	        $gadgets[$gadget]['numusers'] = $numusers;
+	        $gadgets[$gadget]['activeusers'] = $activeusers;
+	    }
+
+        // Get the user scripts
+
+	    $sql = "SELECT page_title FROM page WHERE page_namespace = 2 AND page_title LIKE '%/common.js'";
+
+	    $sth = $dbh_wikidata->query($sql);
+	    $pagenames = [];
+
+	    while ($row = $sth->fetch(PDO::FETCH_NUM)) {
+	        $pagenames[] = 'User:' . $row[0];
+	    }
+
+	    $chunks = array_chunk($pagenames, 100);
+
+	    foreach ($chunks as $chunk) {
+	        $scripts = $wdwiki->getPagesWithCache($chunk, ! $testing); // refetch if not testing
+
+	        foreach ($scripts as $script) {
+	            $user_gadgets = [];
+	            $script = preg_replace(CommonRegex::COMMENT_REGEX, '', $script);
+	            $script = preg_replace('!/\*[\s\S]*?\*/!u', '', $script);
+	            $lines = preg_split('/\\r?\\n/u', $script);
+
+	            foreach ($lines as $line) {
+	                if (! preg_match('!^\s*//!', $line) && preg_match('!User:([^/]+?/[^\.]+?)\.js!u', $line, $matches)) {
+	                    $gadget = $matches[1];
+	                    $user_gadgets[$gadget] = true; // removes dups
+	                }
+	            }
+
+	            foreach (array_keys($user_gadgets) as $gadget) {
+	                if (! isset($gadgets[$gadget])) $gadgets[$gadget] = ['type' => 'wikidata', 'location' => 'common.js', 'numusers' => 0, 'activeusers' => 0, 'description' => ''];
+	                ++$gadgets[$gadget]['numusers'];
+	            }
+	        }
+	    }
+
+        $asof_date = getdate();
+        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataGadgetUsage.html';
+        $hndl = fopen($path, 'wb');
+
+        // Header
+        fwrite($hndl, "<!DOCTYPE html>
+			<html><head>
+			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+			<title>Wikidata gadget usage</title>
+			<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+			</head><body>
+			<div style='display: table; margin: 0 auto;'>
+			<h1>Wikidata gadget usage</h1>
+			<h3>As of $asof_date</h3>
+			");
+
+        // Body
+
+        date_default_timezone_set('UTC');
+        $current_date = date('Y-m-d H:i');
+
+        $wikitext = "This is a programmatically generated summary of gadget usage (includes [[Special:GadgetUsage]] totals and [[Special:MyPage/common.js|common.js]] imports). Any changes made to this page will be lost during the next update.<br />\n";
+        $wikitext .= "Updated: <onlyinclude>$current_date (UTC)</onlyinclude>\n";
+        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|gadget}}\n! {{I18n|description}}\n! {{I18n|type}}\n! {{I18n|location}}\n! {{I18n|number of users}}\n! {{I18n|active users}}\n";
+
+        foreach ($gadgets as $gadget => $data) {
+            if (! isset($data['description'])) {
+                if (! in_array($gadget, ['formWizard-core', 'extJsNotif'])) echo "No description for $gadget\n";
+                continue;
+            }
+
+            $description = $data['description'];
+            $type = $data['type'];
+            $location = $data['location'];
+
+            $numusers = $data['numusers'];
+            if ($numusers < 2) continue;
+            if ($numusers == 0) $numusers = '';
+
+            $activeusers = $data['activeusers'];
+            if ($activeusers == 0) $activeusers = '';
+
+            $gadgetfield = $gadget;
+            if ($location == 'common.js') $gadgetfield = "[[User:$gadget.js|'''$gadget''']]";
+
+            $wikitext .= "|-\n||$gadgetfield||$description||$type||$location||$numusers||$activeusers\n";
+        }
+
+        $wikitext .= "|}\n\n[[Category:Database reports]]\n";
+
+        fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+            '</textarea></form>');
+
+        // Footer
+        fwrite($hndl, '<br />Gadget count: ' . count($gadgets));
+        fwrite($hndl, '<br />Language: ' . $language);
+        fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+        fclose($hndl);
 	}
 }
