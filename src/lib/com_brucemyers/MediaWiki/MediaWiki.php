@@ -469,10 +469,13 @@ class MediaWiki extends wikipedia
                 }
 
                 foreach ($ret['query']['pages'] as $page) {
+                    $pagename = $page['title'];
+                    if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
+
                     if (isset($page['revisions'][0]['slots']['main']['*'])) {
-                        $pagename = $page['title'];
-                        if (isset($normalized[$pagename])) $pagename = $normalized[$pagename];
                         $pages[$pagename] = $page['revisions'][0]['slots']['main']['*'];
+                    } else {
+                        $pages[$pagename] = false;
                     }
                 }
             }
@@ -523,7 +526,7 @@ class MediaWiki extends wikipedia
 
         // Save uncached
         foreach ($uncached as $pagename => $page) {
-            FileCache::putData($pagename, $page);
+            if ($page !== false) FileCache::putData($pagename, $page);
         }
 
         return $cached + $uncached;
@@ -589,7 +592,7 @@ class MediaWiki extends wikipedia
     		$uncached = $this->getPages($pageChunk);
 
 	    	foreach ($uncached as $pagename => $page) {
-	    		FileCache::putData($pagename, $page);
+	    		if ($page !== false) FileCache::putData($pagename, $page);
 	    	}
 	    }
     }
