@@ -283,7 +283,7 @@ class UIHelper
 		if ($type == 'missing') $tablename = 'missings';
 		else $tablename = 'invalids';
 
-		$sql = "SELECT page_id FROM `{$wikiname}_$tablename` " .
+		$sql = "SELECT DISTINCT page_id FROM `{$wikiname}_$tablename` " .
 			" WHERE template_id = ? AND param_name = ? " .
 			" LIMIT $offset,$max_rows";
 

@@ -545,11 +545,11 @@ class MediaWiki extends wikipedia
         $pages = [];
         $pageChunks = array_chunk($pageids, Config::get(self::WIKIPAGEINCREMENT));
         $revisions = '';
-        if ($getcontent) $revisions = '&prop=revisions&rvprop=content';
+        if ($getcontent) $revisions = '&prop=revisions&rvprop=content&rvslots=main';
 
         foreach ($pageChunks as $pageChunk) {
             $pageids = implode('|', $pageChunk);
-            $ret = $this->query("?action=query&format=php$revisions&pageids=" . urlencode($pageids) . '&rvslots=main&continue=');
+            $ret = $this->query("?action=query&format=php$revisions&pageids=" . urlencode($pageids) . '&continue=');
 
             if (isset($ret['error'])) {
                 throw new Exception('Query Error ' . $ret['error']['info']);
