@@ -32,7 +32,8 @@ class WikitableParser
 	const REGEX_ATTRIBS = '!(\w+)(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\'"\s]+))?!u';
 	const REGEX_ATTRIB_VALUE = '!^\s*=\s*("[^"]*+"|\'[^\']*+\'|[^\'"\s]+)!u';
 	const REGEX_WIKILINK = '/\[\[(?:.(?!\[\[))+?\]\]/s';
-
+	const REGEX_TEMPLATE = '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?)?)?\}\})!u';
+	
 	const NO_TABLE = 0;
 	const IN_TABLE = 1;
 
@@ -55,12 +56,12 @@ class WikitableParser
 		$tables = [];
 		$data = preg_replace(CommonRegex::COMMENT_REGEX, '', $origdata); // Strip comments
 
-		// Replace nowiki/wikilink with markers
-		$offset_adjust = 0;
+		// Replace nowiki/wikilink/template with markers
 
-		foreach ([self::REGEX_NOWIKI, self::REGEX_WIKILINK] as $regex) {
+		foreach ([self::REGEX_NOWIKI, self::REGEX_TEMPLATE, self::REGEX_WIKILINK] as $regex) {
 		    $match_cnt = preg_match_all($regex, $data, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
-
+		    $offset_adjust = 0;
+		    
     		if ($match_cnt) {
     			foreach ($matches as $match) {
     				// Replace the match with a marker
@@ -69,7 +70,7 @@ class WikitableParser
     				$content_len = strlen($content);
     				$offset = $match[0][1] - $offset_adjust;
     				$offset_adjust += $content_len - strlen($marker_id);
-
+    				
     				$data = substr_replace($data, $marker_id, $offset, $content_len);
 
     				$markers[$marker_id] = $content;

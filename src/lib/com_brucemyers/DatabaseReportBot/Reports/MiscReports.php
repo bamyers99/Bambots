@@ -1950,7 +1950,7 @@ END;
 	        if (preg_match('!\*\s*([^\[|]+?)(?:\[|\|)!', $line, $matches)) {
 	            $gadget = $matches[1];
 	            $gadgets[$gadget] = ['name' => $gadget,'type' => $type, 'location' => 'preferences'];
-	            $pagenames[] = "MediaWiki:Gadget-$gadget/en";
+	            $pagenames[] = "MediaWiki:Gadget-$gadget/$language";
 	            $pagenames[] = "MediaWiki:Gadget-$gadget"; // fallback
 	        }
 	    }
@@ -1958,11 +1958,13 @@ END;
 	    // Get the approved gadget descriptions
 	    $descriptions = $wdwiki->getPagesWithCache($pagenames, ! $testing); // refetch if not testing
 
-	    foreach ($descriptions as $gadget => $description) {
-	        preg_match('!^MediaWiki:Gadget-([^/]+?)(?:/en)?$!u', $gadget, $matches);
+	    foreach ($descriptions as $page_name => $description) {
+	        preg_match("!^MediaWiki:Gadget-([^/]+?)(?:/$language)?$!u", $page_name, $matches);
 	        $gadget = $matches[1];
-
-	        if (! empty($gadgets[$gadget]['description']) || $description === false) continue;
+	        $lang_found = false;
+	        if (substr($page_name, strlen($language) + 1) == "/$language") $lang_found = true;
+	        
+	        if ((! empty($gadgets[$gadget]['description']) && ! $lang_found) || $description === false) continue;
 
 	        $description = preg_replace('!<noinclude>.*?</noinclude>!us', '', $description);
 	        $gadgets[$gadget]['description'] = $description;
