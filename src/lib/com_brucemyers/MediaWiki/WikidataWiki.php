@@ -61,6 +61,8 @@ class WikidataWiki extends MediaWiki
     	$pages = $this->getPagesWithCache((array)$itemnames);
 
     	foreach ($pages as $page) {
+    	    if ($page === false) continue;
+    	    
     		$ret[] = new WikidataItem(json_decode($page, true));
     	}
 
