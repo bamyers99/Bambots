@@ -28,6 +28,7 @@ use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\WikitableParser;
 use com_brucemyers\Util\Curl;
+use com_brucemyers\Util\ShellExec;
 use MediaWiki\Sanitizer;
 use PDO;
 use com_brucemyers\ShEx\ShExDoc\ShExDocLexer;
@@ -2044,15 +2045,23 @@ END;
 	        }
 	    }
 
-	    // Verify that the user gadgets still exist
+	    // Verify that the user gadgets still exist and run linter
 
 	    $gadget_scripts = $wdwiki->getPagesWithCache(array_keys($script_names), ! $testing); // refetch if not testing
 
 	    foreach ($gadget_scripts as $script_name => $script) {
-	        if ($script !== false && ! empty($script)) continue;
-
 	        preg_match('!User:([^/]+?/[^\.]+?)\.js!u', $script_name, $matches);
 	        $gadget = $matches[1];
+	        
+	        if ($script !== false && ! empty($script)) {
+// 	            $linters = $this->_getUserGadgetLint($script_name);
+	            
+// 	            if (! empty($linters)) {
+// 	            }
+	            
+	            continue;
+	        }
+
 	        unset($gadgets[$gadget]);
 	    }
 
@@ -2221,5 +2230,30 @@ END;
 	            $gadgets[$gadget]['toolpage'] = $tools[$gadget]['pagename'];
 	        }
 	    }
+	}
+	
+	/**
+	 * Get user gadget linters
+	 * 
+	 * @param $script
+	 * @return array
+	 */
+	function _getUserGadgetLint($script_name)
+	{
+	    $cache_dir = FileCache::getCacheDir();
+	    $cache_filepath = $cache_dir . '/' . FileCache::safeKey($script_name);
+	    
+	    $cmd = 'npx eslint --no-eslintrc --parser-options=ecmaVersion:11 -f json ' . $cache_filepath;
+	    
+	    $stdout = ShellExec::exec($cmd);
+	    
+	    $stdout = json_decode($stdout, true);
+	    
+	    if (! empty($stdout[0]['messages'])) {
+	        echo "$script_name\n";
+	        print_r($stdout[0]['messages']);
+	    }
+	    
+	    return $stdout[0]['messages'];
 	}
 }
