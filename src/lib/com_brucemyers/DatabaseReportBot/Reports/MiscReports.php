@@ -1217,7 +1217,7 @@ END;
 	    });
 
         // Get the usage counts
-        $counts = $wdwiki->getPage('Template:Property_uses');
+        $counts = $wdwiki->getPage('Template:Number_of_main_statements_by_property');
         preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
         $counts = [];
         foreach ($matches as $match) {
