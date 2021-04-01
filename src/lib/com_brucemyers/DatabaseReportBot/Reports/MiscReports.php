@@ -1162,10 +1162,10 @@ END;
 	    $type_colors = [
 	        'WikibaseItem' => '',
 	        'CommonsMedia' => 'antiquewhite',
-	        'ExternalId' => '#CDC',
-	        'String' => '#FEF',
-	        'Quantity' => '#FFE',
-	        'Time' => '#EFF',
+	        'ExternalId' => '#CFDBC5',
+	        'String' => 'lavenderblush',
+	        'Quantity' => 'oldlace',
+	        'Time' => 'lightyellow',
 	        'Monolingualtext' => 'mintcream',
 	        'Url' => 'honeydew',
 	        'Math' => '#EBC79E',
@@ -1178,7 +1178,7 @@ END;
 	        'GlobeCoordinate' => 'lavender',
 	        'WikibaseForm' => ''
 	    ];
-
+	    
 	    $deleted = [
 	        'P7628' => true,
 	        'P7664' => true,
@@ -1259,7 +1259,7 @@ END;
             if ($type_colors[$datatype] && ! empty($type_colors[$datatype])) $color = " style=\"background: {$type_colors[$datatype]}\"";
             else $color = '';
 
-            $wikitext .= "|-$color\n|data-sort-value=\"$propid\"|[[Property:P$propid|P$propid]]||$label||$description||$alias||$datatype||";
+            $wikitext .= "|-$color\n|[[Property:P$propid|P$propid]]||$label||$description||$alias||$datatype||";
             $wikitext .= number_format($count, 0) . "\n";
         }
 
