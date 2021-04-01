@@ -1963,7 +1963,7 @@ END;
 	        preg_match("!^MediaWiki:Gadget-([^/]+?)(?:/$language)?$!u", $page_name, $matches);
 	        $gadget = $matches[1];
 	        $lang_found = false;
-	        if (substr($page_name, strlen($language) + 1) == "/$language") $lang_found = true;
+	        if (substr($page_name, -(strlen($language) + 1)) == "/$language") $lang_found = true;
 	        
 	        if ((! empty($gadgets[$gadget]['description']) && ! $lang_found) || $description === false) continue;
 
