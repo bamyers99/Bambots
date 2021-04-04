@@ -88,7 +88,7 @@ function display_form()
 	</head>
 	<body>
 		<div style="display: table; margin: 0 auto;">
-		<h2><a href="TemplateParam.php<?php if (! empty($params['template'])) echo "?template=" . urlencode($params['template']) ?>" class="novisited"><?php echo htmlentities($l10n->get('pagetitle'), ENT_COMPAT, 'UTF-8') . $title ?></a></h2>
+		<h2><a href="TemplateParam.php?wiki=<?php echo $params['wiki']; if (! empty($params['template'])) echo "&template=" . urlencode($params['template']) ?>" class="novisited"><?php echo htmlentities($l10n->get('pagetitle'), ENT_COMPAT, 'UTF-8') . $title ?></a></h2>
         <form action="TemplateParam.php" method="post"><table class="form">
         <tr><td><b><?php echo htmlentities($l10n->get('wiki', true), ENT_COMPAT, 'UTF-8') ?></b> <select name="wiki" onchange="this.form.submit()"><?php
         foreach ($wikis as $wikiname => $wikidata) {
