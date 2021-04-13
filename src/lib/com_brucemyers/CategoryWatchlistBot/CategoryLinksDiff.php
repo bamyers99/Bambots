@@ -62,7 +62,7 @@ class CategoryLinksDiff
 		  	   `id` int unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,
     		   `diffdate` timestamp,
 		       `plusminus` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-			   `pagetitle` varchar(255) binary NOT NULL,
+			   `pagetitle` varbinary(255) NOT NULL,
 		       `cat_template` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 			   `category` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 			   `flags` tinyint NOT NULL DEFAULT 0

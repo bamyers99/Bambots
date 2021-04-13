@@ -29,11 +29,12 @@ use com_brucemyers\Util\TemplateParamParser;
 use UnitTestCase;
 use PDO;
 use Mock;
+use MediaWiki;
 
 class TestCategoryLinksDiff extends UnitTestCase
 {
 
-    public function testDiffLoad()
+    public function notestDiffLoad()
     {
     	$outputdir = Config::get(CategoryWatchlistBot::OUTPUTDIR);
     	$outputdir = str_replace(FileCache::CACHEBASEDIR, Config::get(Config::BASEDIR), $outputdir);
@@ -192,5 +193,29 @@ EOT;
 
     	print_r($templates);
     	print_r($cats);
+    }
+    
+    public function notestUnicodePagetitle(){
+        $serviceMgr = new ServiceManager();
+        $dbh_tools = $serviceMgr->getDBConnection('tools');
+        $enwiki = $serviceMgr->getMediaWiki('en.wikipedia.org');
+        
+        $revisions = $enwiki->getRevisionsText([1017597797]);
+        print_r($revisions);
+        
+        foreach ($revisions as $pagename => $rev) {
+            echo bin2hex($pagename) . "\n";
+            $isth = $dbh_tools->prepare("INSERT INTO enwiki_diffs (diffdate, plusminus, pagetitle, cat_template, category, flags) VALUES (?,?,?,?,?,?)");
+
+            $isth->bindValue(1, MySQLDate::toMySQLDatetime(time()));
+            $isth->bindValue(2, '-');
+            $isth->bindValue(3, $pagename);
+            $isth->bindValue(4, 'C');
+            $isth->bindValue(5, 'Blah');
+            $isth->bindValue(6, 1);
+            
+            $isth->execute();
+        }
+        
     }
 }
