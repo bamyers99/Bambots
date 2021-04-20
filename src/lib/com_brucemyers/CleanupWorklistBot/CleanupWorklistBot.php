@@ -124,8 +124,6 @@ class CleanupWorklistBot
 
 	        	$repgen->generateReports($project, $isWikiProject, $page_count, $member_cat_type);
 
-	        	if ($page_count > 10000) $mediawiki->login(null, null); // re-login
-
         	} catch (CatTypeNotFoundException $ex) {
         		$errorrulsets[] = $project . ' (project category not found)';
         	}

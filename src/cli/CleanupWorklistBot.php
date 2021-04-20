@@ -43,9 +43,6 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 try {
     $url = Config::get(MediaWiki::WIKIURLKEY);
     $wiki = new MediaWiki($url);
-    $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
-    $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
-    $wiki->login($username, $password);
     $skipCatLoad = false;
 
 	if ($argc > 1) {

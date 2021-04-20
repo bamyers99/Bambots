@@ -85,9 +85,6 @@ class ServiceManager
 	{
 	    $url = "https://$domain/w/api.php";
 	    $wiki = new MediaWiki($url);
-	    $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
-	    $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
-	    $wiki->login($username, $password);
 
 		return $wiki;
 	}
