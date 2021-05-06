@@ -71,11 +71,17 @@ class TemplateData
 					unset($this->data['params'][$name]['suggested']);
 					unset($config['suggested']);
 				}
-
+				
 				if (isset($config['aliases'])) {
-					foreach ($config['aliases'] as $offset => $alias) {
-						$this->data['params'][$name]['aliases'][$offset] = trim($alias);
-					}
+				    foreach ($config['aliases'] as $offset => $alias) {
+				        $this->data['params'][$name]['aliases'][$offset] = trim($alias);
+				    }
+				}
+				
+				if (isset($config['suggestedvalues'])) {
+				    $this->data['params'][$name]['values'] = $config['suggestedvalues'];
+				    unset($this->data['params'][$name]['suggestedvalues']);
+				    unset($config['suggestedvalues']);
 				}
 			}
 		}
