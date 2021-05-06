@@ -2005,7 +2005,7 @@ END;
 
         // Get the user gadgets
 
-	    $sql = "SELECT page_title FROM page WHERE page_namespace = 2 AND page_title LIKE '%/common.js'";
+	    $sql = "SELECT page_title FROM page WHERE page_namespace = 2 AND page_title REGEXP '/(common|vector|monobook)\.js$'";
 
 	    $sth = $dbh_wikidata->query($sql);
 	    $pagenames = [];

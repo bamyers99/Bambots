@@ -60,3 +60,4 @@ php loadchangetags.php "dbusername" "dbpassword"
 
 cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
 rm *
+
