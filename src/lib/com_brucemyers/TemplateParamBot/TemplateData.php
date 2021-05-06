@@ -79,7 +79,7 @@ class TemplateData
 				}
 				
 				if (isset($config['suggestedvalues'])) {
-				    $this->data['params'][$name]['values'] = $config['suggestedvalues'];
+				    if (! empty($config['suggestedvalues'])) $this->data['params'][$name]['values'] = $config['suggestedvalues'];
 				    unset($this->data['params'][$name]['suggestedvalues']);
 				    unset($config['suggestedvalues']);
 				}
