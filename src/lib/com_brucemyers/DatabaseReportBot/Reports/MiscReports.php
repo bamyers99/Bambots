@@ -1537,12 +1537,13 @@ END;
 
 	    foreach ($tagmetas['query']['tags'] as $tagmeta) {
 	        $tagname = $tagmeta['name'];
-	        $tagdisplayname = preg_replace('!\s!', ' ', $tagmeta['displayname']);
-	        $tagdesc = preg_replace('!\s!', ' ', $tagmeta['description']);
+	        $tagdisplayname = isset($tagmeta['displayname']) ? preg_replace('!\s!', ' ', $tagmeta['displayname']) : '';
+	        $tagdesc = isset($tagmeta['description']) ? preg_replace('!\s!', ' ', $tagmeta['description']) : '';
 
 	        if (isset($tags[$tagname])) {
-                preg_match('!>([^<]+?)<!', $tagdisplayname, $matches);
-                $tagdisplayname = $matches[1];
+	            if (preg_match('!>([^<]+?)<!', $tagdisplayname, $matches)) {
+                    $tagdisplayname = $matches[1];
+	            }
 
                 fwrite($hndl, "{$tags[$tagname]['id']}\t$tagname\t$tagdisplayname\t$tagdesc\t{$tags[$tagname]['count']}\n");
 	        }
