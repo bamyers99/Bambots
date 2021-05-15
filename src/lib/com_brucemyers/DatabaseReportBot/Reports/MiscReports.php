@@ -1180,9 +1180,11 @@ END;
 	    ];
 	    
 	    $deleted = [
+	        'P7478' => true,
 	        'P7628' => true,
 	        'P7664' => true,
-	        'P9127' => true
+	        'P9127' => true,
+	        'P9499' => true
 	    ];
 
 	    $wdwiki = new WikidataWiki();
