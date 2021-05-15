@@ -104,7 +104,7 @@ class WPPageListBot
                             if (! isset($pages[$ns])) $pages[$ns] = array();
                             $title = preg_replace('/(?:^Talk| talk):/', ':', $cm['title']);
                             if ($title[0] == ':') $title = substr($title, 1);
-                            $pages[$ns][] = $title;
+                            $pages[$ns][$title] = $title; // removes dups
                         }
                     }
                 }
