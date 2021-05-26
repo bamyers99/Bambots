@@ -140,9 +140,9 @@ function display_form($navels)
 		<h3>users edit action counts</h3>
         <form action="NavelGazer.php" method="post">
         <table class="form">
-        <tr><td><b>Username</b></td><td><input id="username" name="username" type="text" size="10" value="<?php echo $params['username'] ?>" /></td></tr>
+        <tr><td><b>Username</b></td><td><input id="username" name="username" type="text" size="10" value="<?php echo $params['username'] ?>" /> url parameter: username</td></tr>
         <tr><td colspan='2'>or</td></tr>
-        <tr><td><b>Property</b></td><td><input id="property" name="property" type="text" size="10" value="<?php if (! empty($params['property'])) echo 'P' . $params['property'] ?>" /> example: P31</td></tr>
+        <tr><td><b>Property</b></td><td><input id="property" name="property" type="text" size="10" value="<?php if (! empty($params['property'])) echo 'P' . $params['property'] ?>" /> example: P31; url parameter: property</td></tr>
         <tr><td>Pseudo properties</td><td><select name='pseudoprop' onchange='$("#property").val($(this).val())'><?php
             echo "<option value=''>&nbsp;</option>";
          	foreach ($edit_types as $key => $edit_type) {
@@ -150,18 +150,18 @@ function display_form($navels)
         	}
         ?></select></td></tr>
         <tr><td colspan='2'>or</td></tr>
-        <tr><td><b>Language code</b></td><td><input id="langadd" name="langadd" type="text" size="10" value="<?php echo $params['langadd'] ?>" /> (label, description, alias, sitelink additions)</td></tr>
+        <tr><td><b>Language code</b></td><td><input id="langadd" name="langadd" type="text" size="10" value="<?php echo $params['langadd'] ?>" /> (label, description, alias, sitelink additions); url parameter: langadd</td></tr>
         <tr><td colspan='2'>or</td></tr>
         <tr><td><b>Tool used</b></td><td><select id='toolid' name='toolid'><?php
             echo "<option value=''>&nbsp;</option>";
             foreach ($navels['toollist'] as $name => $toolid) {
                 $selected = ($params['toolid'] == $toolid) ? " selected='1'" : '';
-        		echo "<option value='$toolid'$selected>$name</option>";
+        		echo "<option value='$toolid'$selected>$name ($toolid)</option>";
         	}
         	unset($navels['toollist']);
-        ?></select></td></tr>
+        ?></select> toolid is in parenthesis (); url parameter: toolid</td></tr>
         <tr><td colspan='2'><hr /></td></tr>
-        <tr><td><b>Property label language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /></td></tr>
+        <tr><td><b>Property label language code</b></td><td><input id="lang" name="lang" type="text" size="4" value="<?php echo $params['lang'] ?>" /> url parameter: lang</td></tr>
         <tr><td colspan='2'><input type="submit" value="Submit" /></td></tr>
         </table>
         </form>
