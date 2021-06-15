@@ -100,6 +100,7 @@ class DatabaseReportBot
 
 		$linktemplate = 'dbr link';
 		$rowstyle = '';
+		$cats = '';
 
     	if (isset($rows['groups'])) {
     		$chunkcount = 1;
@@ -110,16 +111,21 @@ class DatabaseReportBot
 			if (isset($rows['comment'])) $comment = $rows['comment'];
 			if (isset($rows['forceTOC'])) $forceTOC = $rows['forceTOC'];
 			if (isset($rows['rowstyle'])) $rowstyle = $rows['rowstyle'];
+			if (isset($rows['cats'])) $cats = $rows['cats'];
     	} else {
     		if (isset($rows['linktemplate'])) {
     			$linktemplate = $rows['linktemplate'];
     			unset ($rows['linktemplate']);
     		}
     		if (isset($rows['rowstyle'])){
-    			$rowstyle = $rows['rowstyle'];
-    			unset ($rows['rowstyle']);
+    		    $rowstyle = $rows['rowstyle'];
+    		    unset ($rows['rowstyle']);
     		}
-
+    		if (isset($rows['cats'])){
+    		    $cats = $rows['cats'];
+    		    unset ($rows['cats']);
+    		}
+    		
 	    	$rowchunks = array_chunk($rows, self::MAX_ROWS_PER_PAGE);
 	    	$chunkcount = count($rowchunks);
 			$comment = 'Record count: ' . count($rows);
@@ -175,7 +181,9 @@ class DatabaseReportBot
 			}
 
 			unset($group);
-
+			
+			if (! empty($cats)) $output .= "\n$cats\n";
+			
 			if (! isset($comment)) $comment = 'Record count: ' . $recordcnt;
 		    $this->resultWriter->writeResults($outputPage . '/' . $reportTitle, $output, $comment);
 		} else {
@@ -201,6 +209,8 @@ class DatabaseReportBot
 				}
 
 				$output .= $footer;
+				
+				if (! empty($cats)) $output .= "\n$cats\n";
 
 				$pagetitle = $outputPage . '/' . $reportTitle;
 				if ($chunkcount > 1) $pagetitle .= '/' . $pagecnt;

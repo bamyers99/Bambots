@@ -1184,7 +1184,8 @@ END;
 	        'P7628' => true,
 	        'P7664' => true,
 	        'P9127' => true,
-	        'P9499' => true
+	        'P9499' => true,
+	        'P9582' => true
 	    ];
 
 	    $wdwiki = new WikidataWiki();

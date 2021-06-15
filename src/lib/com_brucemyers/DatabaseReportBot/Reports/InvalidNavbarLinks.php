@@ -235,6 +235,7 @@ class InvalidNavbarLinks extends DatabaseReport
 		);
 
 		$groups = array('linktemplate' => false,
+		        'cats' => '[[Category:Active Wikipedia database reports]]',
 				'groups' => array());
 
 		$wiki_host = $apis['wiki_host'];
