@@ -35,7 +35,7 @@ DEFINE('WIKIDATA_HOST', 'DatabaseReportBot.wikidata_host');
 class TestInvalidNavbarLinks extends UnitTestCase
 {
 
-    public function notestNavbox()
+    public function testNavbox()
     {
     	$enwiki_host = Config::get(ENWIKI_HOST);
     	$user = Config::get(DatabaseReportBot::LABSDB_USERNAME);
@@ -57,7 +57,10 @@ class TestInvalidNavbarLinks extends UnitTestCase
     		'Template:BS-headerBadName' => '{{BS-header|BS-header title|BS-headerbadname}}',
     		'Template:BS-mapNoTitle' => '{{BS-map|navbar=BS-mapBadTitle}}',
     		'Template:SidebarNavbarOff' => '{{Sidebar|name=SidebarBadName|navbar=off}}',
-    		'Template:NavboxRedirectBad' => '{{Navbox redirect|name=NavboxRedirectbad|title = test 5}}');
+    		'Template:NavboxRedirectBad' => '{{Navbox redirect|name=NavboxRedirectbad|title = test 5}}',
+    	    'Template:ModuleSidebarGoodName' => '{{#invoke:Sidebar|collapsible|name = ModuleSidebarGoodName|title = test 6}}',
+    	    'Template:ModuleSidebarBadName' => '{{#invoke:sidebar|collapsible|name = ModuleSidebarbadname|title = test 7}}'
+    	);
 
     	Mock::generate('com_brucemyers\\MediaWiki\\MediaWiki', 'MockMediaWiki');
         $wiki = new \MockMediaWiki();
@@ -98,17 +101,25 @@ class TestInvalidNavbarLinks extends UnitTestCase
 		$row = $errors[1];
 		$this->assertEqual($row[0], '[[Template:NavboxRedirectBad|NavboxRedirectBad]]', 'Wrong Navbox template 2');
 		$this->assertEqual($row[1], 'NavboxRedirectbad', 'Wrong Navbox invalid name 2');
-
+		
 		$errors = $rows['groups']['{{tlp|BS-header|2&#61;}}'];
-
+		
 		$this->assertEqual(count($errors), 1, 'Wrong number of invalid BS-header links');
-
+		
 		$row = $errors[0];
 		$this->assertEqual($row[0], '[[Template:BS-headerBadName|BS-headerBadName]]', 'Wrong BS-header template');
 		$this->assertEqual($row[1], 'BS-headerbadname', 'Wrong BS-header invalid name');
+		
+		$errors = $rows['groups']['{{tlp|Sidebar|name&#61;}}'];
+		
+		$this->assertEqual(count($errors), 1, 'Wrong number of invalid Sidebar links');
+		
+		$row = $errors[0];
+		$this->assertEqual($row[0], '[[Template:ModuleSidebarBadName|ModuleSidebarBadName]]', 'Wrong Sidebar template');
+		$this->assertEqual($row[1], 'ModuleSidebarbadname', 'Wrong Sidebar invalid name');
     }
 
-    public function testTemplate()
+    public function notestTemplate()
     {
         $data = $this->_getTemplateData();
         $parsed_templates = TemplateParamParser::getTemplates($data);

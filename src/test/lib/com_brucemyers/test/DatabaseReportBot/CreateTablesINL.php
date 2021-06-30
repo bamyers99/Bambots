@@ -97,5 +97,13 @@ class CreateTablesINL
     	$dbh_enwiki->exec("INSERT INTO page VALUES (9,10,'Navbox_redirect')");
     	$dbh_enwiki->exec("INSERT INTO templatelinks VALUES (8,10,10,'Navbox')");
     	$dbh_enwiki->exec("INSERT INTO redirect VALUES (9,10,'Navbox','','')");
+    	
+    	// ModuleSidebarGoodName - Good name
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (10,10,'ModuleSidebarGoodName')");
+    	$dbh_enwiki->exec("INSERT INTO templatelinks VALUES (10,10,828,'Sidebar')");
+    	
+    	// ModuleSidebarBadName - Bad name
+    	$dbh_enwiki->exec("INSERT INTO page VALUES (11,10,'ModuleSidebarBadName')");
+    	$dbh_enwiki->exec("INSERT INTO templatelinks VALUES (11,10,828,'Sidebar')");
     }
 }

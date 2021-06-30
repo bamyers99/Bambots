@@ -47,6 +47,7 @@ class InvalidNavbarLinks extends DatabaseReport
 		$template_types = array(
 			'Sidebar' => array(
 				'children' => array('Sidebar', 'Sidebar with collapsible lists'),
+			    'modules' => ['Sidebar'],
 				'name_param' => 'name',
 				'exclude_empty' => array(),
 				'exclude_values' => array(
@@ -225,6 +226,7 @@ class InvalidNavbarLinks extends DatabaseReport
 
 			'Navbox' => array( // Must be last because 'MySQL server has gone away' happens after this is run
 		    	'children' => array('Navbox', 'Navbox with collapsible groups', 'Navbox with columns', 'Navbox with collapsible sections'),
+			    'modules' => ['Navbox'],
 		    	'name_param' => 'name',
 		    	'exclude_empty' => array('title'),
 		    	'exclude_values' => array(
@@ -291,6 +293,7 @@ class InvalidNavbarLinks extends DatabaseReport
 			$sql = "SELECT DISTINCT page_title FROM templatelinks, page " .
 				" WHERE tl_from_namespace = 10 AND tl_namespace = 10 AND tl_title IN ($qs) " .
 				" AND page_namespace = 10 AND page_id = tl_from";
+			
     		$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$sth = $dbh_enwiki->prepare($sql);
@@ -306,10 +309,42 @@ class InvalidNavbarLinks extends DatabaseReport
 			while ($row = $sth->fetch()) {
 				$titles[] = 'Template:' . $row[0];
 			}
-
+			
 			$sth->closeCursor();
 			$sth = null;
 			$dbh_enwiki = null;
+			
+			// Retrieve Module invocations
+			
+			if (isset($template_type['modules'])) {
+			    $temps = $template_type['modules'];
+    			
+    			$qcnt = count($temps);
+    			$qs = implode(',', array_fill(0, $qcnt, '?'));
+    			
+    			$sql = "SELECT DISTINCT page_title FROM templatelinks, page " .
+    			 			" WHERE tl_from_namespace = 10 AND tl_namespace = 828 AND tl_title IN ($qs) " .
+    			 			" AND page_namespace = 10 AND page_id = tl_from";
+
+    			$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+    			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    			$sth = $dbh_enwiki->prepare($sql);
+    			
+    			for ($x=1; $x <= $qcnt; ++$x) {
+    			    $sth->bindValue($x, str_replace(' ', '_', $temps[$x-1]));
+    			}
+    			
+    			$sth->execute();
+    			$sth->setFetchMode(PDO::FETCH_NUM);
+    			
+    			while ($row = $sth->fetch()) {
+    			    $titles[] = 'Template:' . $row[0];
+    			}
+    			
+    			$sth->closeCursor();
+    			$sth = null;
+    			$dbh_enwiki = null;
+			}
 
 			sort($titles);
 
@@ -318,7 +353,7 @@ class InvalidNavbarLinks extends DatabaseReport
 			$mediawiki->cachePages($titles);
 
 			foreach ($titles as $template) {
-				//echo "$template\n";
+				// echo "$template\n";
 				$data = $mediawiki->getPageWithCache($template);
 
 				$parsed_templates = TemplateParamParser::getTemplates($data);
@@ -330,7 +365,17 @@ class InvalidNavbarLinks extends DatabaseReport
 				if (in_array($template, $template_type['exclude_templates'])) continue;
 
 				foreach ($parsed_templates as $parsed_template) {
-					if (! in_array($parsed_template['name'], $navbar_types)) continue;
+				    $parsed_name = $parsed_template['name'];
+				    
+				    if (strpos($parsed_name, '#invoke:') === 0) {
+				        $parsed_name = substr($parsed_name, 8);
+				        $parsed_name = ucfirst($parsed_name);
+				        
+				        if (! in_array($parsed_name, $template_type['modules'])) continue;
+				    } else {
+				        if (! in_array($parsed_name, $navbar_types)) continue;
+				    }
+				    
 					$params = $parsed_template['params'];
 //					print_r($params);
 
