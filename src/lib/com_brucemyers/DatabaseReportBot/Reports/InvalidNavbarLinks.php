@@ -290,7 +290,7 @@ class InvalidNavbarLinks extends DatabaseReport
 			$titles = [];
 
 			while ($row = $sth->fetch()) {
-				$titles[] = 'Template:' . $row[0];
+			    $titles['Template:' . $row[0]] = true; // Removes dups
 			}
 			
 			$sth->closeCursor();
@@ -321,7 +321,7 @@ class InvalidNavbarLinks extends DatabaseReport
     			$sth->setFetchMode(PDO::FETCH_NUM);
     			
     			while ($row = $sth->fetch()) {
-    			    $titles[] = 'Template:' . $row[0];
+    			    $titles['Template:' . $row[0]] = true; // Removes dups
     			}
     			
     			$sth->closeCursor();
@@ -329,14 +329,14 @@ class InvalidNavbarLinks extends DatabaseReport
     			$dbh_enwiki = null;
 			}
 
-			sort($titles);
+			ksort($titles);
 
 			$results = [];
 			$total_scanned = 0;
 
-			$mediawiki->cachePages($titles);
+			$mediawiki->cachePages(array_keys($titles));
 
-			foreach ($titles as $template) {
+			foreach (array_keys($titles) as $template) {
 				// echo "$template\n";
 				$data = $mediawiki->getPageWithCache($template);
 
@@ -358,6 +358,9 @@ class InvalidNavbarLinks extends DatabaseReport
 				    } else {
 				        if (! in_array($parsed_name, $navbar_types)) continue;
 				    }
+				    
+				    ++$total_scanned;
+				    ++$grand_total_scanned;
 				    
 					$params = $parsed_template['params'];
 					// print_r($params);
@@ -393,15 +396,12 @@ class InvalidNavbarLinks extends DatabaseReport
 		    		if (strpos($name, '{') !== false) continue;
 		    		if (strpos($name, '<') !== false) continue;
 		    		
-		    		++$total_scanned;
-		    		++$grand_total_scanned;
-
 		    		if ($name != $template) $results[] = ["[[Template:$template|$template]]", $name];
 				}
 			}
 
 			$groups['groups'][$groupname] = $results;
-			$groups['groups'][$groupname]['group_footer'] = "Templates scanned: " . number_format($total_scanned);
+			$groups['groups'][$groupname]['group_footer'] = "Templates scanned: " . number_format($total_scanned) . "\n";
 			$error_count += count($results);
 		}
 
