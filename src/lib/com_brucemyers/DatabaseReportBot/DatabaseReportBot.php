@@ -158,7 +158,13 @@ class DatabaseReportBot
 			$output = $intro;
 			if ($forceTOC) $output .= "__FORCETOC__\n";
 
-			foreach ($rows['groups'] as $groupname => &$group) {
+			foreach ($rows['groups'] as $groupname => $group) {
+			    $group_footer = '';
+			    if (isset($group['group_footer'])) {
+			        $group_footer = $group['group_footer'];
+			        unset($group['group_footer']);
+			    }
+			    
 				$recordcnt += count($group);
 				$output .= "==$groupname==\n" . $header;
 				$rowcnt = 1;
@@ -178,9 +184,8 @@ class DatabaseReportBot
 				}
 
 				$output .= $footer;
+				if (! empty($group_footer)) $output .= $group_footer;
 			}
-
-			unset($group);
 			
 			if (! empty($cats)) $output .= "\n$cats\n";
 			

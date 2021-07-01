@@ -97,6 +97,12 @@ EOT;
 		$this->_performMultipleTemplateTest('Infinite', $data, $expected_templates);
     }
 
+    /**
+     * performMultipleTemplateTest
+     * @param unknown $testname
+     * @param unknown $data
+     * @param unknown $expected_templates
+     */
     function _performMultipleTemplateTest($testname, &$data, &$expected_templates)
     {
     	$templates = TemplateParamParser::getTemplates($data);
@@ -328,54 +334,9 @@ EOT;
     function testModuleCall()
     {
         $data = <<<EOT
-{{#invoke:sidebar_or false|collapsible
+{{#invoke: sidebar_or false|collapsible|paramnum1
 | name         = Coronavirus
 | title        = [[Coronaviruses]]
-| image        = [[File:Coronaviruses 004 lores.jpg|160px|HCoV-229E virus]]
-| headingclass = navbox-title
-| contentclass = hlist
-| expanded       = {{lc:{{{expanded|}}}}}
-|titlestyle = background:
-|listtitlestyle = text-align:center; background: 
-
-|list1name = types
-|list1title = [[Coronavirus#Classification|Types]]
-|list1 =
-* [[Alphacoronavirus]]
-* [[Betacoronavirus]]
-* [[Gammacoronavirus]]
-* [[Deltacoronavirus]]
-
-|list2name = Diseases
-|list2title = [[Coronavirus diseases|Diseases]]
-|list2 = 
-* [[Common cold]]
-* [[Severe acute respiratory syndrome|SARS]]
-* [[Middle East respiratory syndrome|MERS]]
-* [[COVID-19]]
-
-|list3name = Vaccines
-|list3title = Vaccines
-|list3 =
-* [[COVID-19 vaccine]]
-
-|list4name = Outbreaks, epidemics, and pandemics
-|list4title = Epidemics and pandemics
-|list4 =
-* [[2002–2004 SARS outbreak|SARS]] <small>(2002–2004)</small>
-* MERS
-** [[2012 Middle East respiratory syndrome coronavirus outbreak|2012]]
-** [[2015 Middle East respiratory syndrome outbreak in South Korea|2015]]
-** [[2018 Middle East respiratory syndrome outbreak|2018]]
-* [[COVID-19 pandemic|COVID-19]] <small>(2019–2021)</small>
-
-|list5name = seealso
-|list5title = See also
-|list5 = 
-* [[Coronaviridae]]
-* [[Novel coronavirus]]
-* [[History of coronavirus]]
-
 }}
 <noinclude>
 [[Category:Virus templates]]
@@ -383,6 +344,13 @@ EOT;
 EOT;
         
         $templatedata = TemplateParamParser::getTemplates($data);
-        print_r($templatedata);
+        $template1 = $templatedata[0];
+        $this->assertEqual($template1['type'], TemplateParamParser::TEMPLATE_TYPE_MODULE, 'Module call expected type: ' . TemplateParamParser::TEMPLATE_TYPE_MODULE);
+        $this->assertEqual($template1['module_function'], 'collapsible', 'Module call expected function: collapsible');
+        
+        $template_name = 'Sidebar or false';
+        $params = ['1' => 'paramnum1', 'name' => 'Coronavirus', 'title' => '[[Coronaviruses]]'];
+        $expected_templates = [['name' => $template_name, 'params' => $params]];
+        $this->_performMultipleTemplateTest('Test module call', $data, $expected_templates);
     }
 }

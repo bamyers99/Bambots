@@ -39,206 +39,189 @@ class InvalidNavbarLinks extends DatabaseReport
 
 	public function getHeadings()
 	{
-		return array('Template', 'Invalid name');
+		return ['Template', 'Invalid name'];
 	}
 
 	public function getRows($apis)
 	{
-		$template_types = array(
-			'Sidebar' => array(
-				'children' => array('Sidebar', 'Sidebar with collapsible lists'),
+		$template_types = [
+			'Sidebar' => [
+				'children' => ['Sidebar', 'Sidebar with collapsible lists'],
 			    'modules' => ['Sidebar'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(
-					'navbar' => array('none', 'off')
-				),
-				'exclude_templates' => array('Politics of Canada/proposed split')
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [
+					'navbar' => ['none', 'off']
+				],
+				'exclude_templates' => ['Politics of Canada/proposed split']
+			],
 
-			'Infobox' => array(
-				'children' => array('Infobox'),
+			'Infobox' => [
+				'children' => ['Infobox'],
+			    'modules' => ['Infobox'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Infobox3cols' => array(
-				'children' => array('Infobox3cols'),
+			'Infobox3cols' => [
+				'children' => ['Infobox3cols'],
+			    'modules' => ['Infobox3cols'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'BS-map' => array(
-				'children' => array('BS-map'),
+			'BS-map' => [
+				'children' => ['BS-map'],
 				'name_param' => 'navbar',
-				'exclude_empty' => array('title'),
-				'exclude_values' => array(),
-				'exclude_templates' => array('Arbatsko-Pokrovskaya Line','Filyovskaya Line','Kalininskaya Line','Kaluzhsko-Rizhskaya Line')
-			),
+				'exclude_empty' => ['title'],
+				'exclude_values' => [],
+				'exclude_templates' => ['Arbatsko-Pokrovskaya Line','Filyovskaya Line','Kalininskaya Line','Kaluzhsko-Rizhskaya Line']
+			],
 
-			'BS-header' => array(
-				'children' => array('BS-header'),
+			'BS-header' => [
+				'children' => ['BS-header'],
 				'name_param' => 2,
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Election table' => array(
-				'children' => array('Election table', 'Election Table', 'Electiontable'),
+			'Election table' => [
+				'children' => ['Election table', 'Election Table', 'Electiontable'],
 				'name_param' => 1,
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Football squad' => array(
-				'children' => array('Football squad'),
+			'Football squad' => [
+				'children' => ['Football squad'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Fs2' => array(
-				'children' => array('Fs2'),
+			'Fs2' => [
+				'children' => ['Fs2'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Navbox rugby league squad' => array(
-				'children' => array('Navbox rugby league squad'),
+			'Navbox rugby league squad' => [
+				'children' => ['Navbox rugby league squad'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Rugby union squad' => array(
-				'children' => array('Rugby union squad'),
+			'Rugby union squad' => [
+				'children' => ['Rugby union squad'],
 				'name_param' => 'templatename',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Campaignbox' => array(
-				'children' => array('Campaignbox'),
+			'Campaignbox' => [
+				'children' => ['Campaignbox'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Team roster navbox' => array(
-				'children' => array('Team roster navbox', 'Baseball navbox', 'Baseball roster navbox', 'MLB roster navbox'),
+			'Team roster navbox' => [
+				'children' => ['Team roster navbox', 'Baseball navbox', 'Baseball roster navbox', 'MLB roster navbox'],
+			    'modules' => ['Team roster navbox'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'National squad' => array(
-				'children' => array('National squad'),
+			'National squad' => [
+			    'children' => ['National squad', 'National basketball squad', 'National field hockey squad', 'National handball squad'],
+			    'modules' => ['National squad'],
+			    'name_param' => 'name',
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
+
+			'National squad no numbers' => [
+				'children' => ['National squad no numbers'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'National handball squad' => array(
-				'children' => array('National handball squad'),
+			'NRHP navigation box' => [
+				'children' => ['NRHP navigation box'],
 				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'National basketball squad' => array(
-				'children' => array('National basketball squad'),
-				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
-
-			'National field hockey squad' => array(
-				'children' => array('National field hockey squad'),
-				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
-
-			'National squad no numbers' => array(
-				'children' => array('National squad no numbers'),
-				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
-
-			'NRHP navigation box' => array(
-				'children' => array('NRHP navigation box'),
-				'name_param' => 'name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
-
-			'US county navigation box' => array(
-				'children' => array('US county navigation box'),
+			'US county navigation box' => [
+				'children' => ['US county navigation box'],
 				'name_param' => 'template_name',
-				'exclude_empty' => array(),
-				'exclude_values' => array(),
-				'exclude_templates' => array()
-			),
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Graphical timeline' => array(
-					'children' => array('Graphical timeline'),
-					'name_param' => 'link-to',
-					'exclude_empty' => array(),
-					'exclude_values' => array(),
-					'exclude_templates' => array()
-			),
+			'Graphical timeline' => [
+				'children' => ['Graphical timeline'],
+				'name_param' => 'link-to',
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Routemap' => array(
-					'children' => array('Routemap'),
-					'name_param' => 'navbar',
-					'exclude_empty' => array(),
-					'exclude_values' => array(),
-					'exclude_templates' => array()
-			),
+			'Routemap' => [
+				'children' => ['Routemap'],
+			    'modules' => ['Routemap'],
+				'name_param' => 'navbar',
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Navbar-collapsible' => array(
-					'children' => array('Navbar-collapsible', 'Tnavbar-collapsible'),
-					'name_param' => 2,
-					'exclude_empty' => array(),
-					'exclude_values' => array(),
-					'exclude_templates' => array()
-			),
+			'Navbar-collapsible' => [
+				'children' => ['Navbar-collapsible', 'Tnavbar-collapsible'],
+				'name_param' => 2,
+				'exclude_empty' => [],
+				'exclude_values' => [],
+				'exclude_templates' => []
+			],
 
-			'Navbox' => array( // Must be last because 'MySQL server has gone away' happens after this is run
-		    	'children' => array('Navbox', 'Navbox with collapsible groups', 'Navbox with columns', 'Navbox with collapsible sections'),
+			'Navbox' => [ // Must be last because 'MySQL server has gone away' happens after this is run
+		    	'children' => ['Navbox', 'Navbox with collapsible groups', 'Navbox with columns', 'Navbox with collapsible sections'],
 			    'modules' => ['Navbox'],
 		    	'name_param' => 'name',
-		    	'exclude_empty' => array('title'),
-		    	'exclude_values' => array(
-		        	'navbar' => array('plain', 'off')
-		    	),
-				'exclude_templates' => array()
-		    )
-		);
+		    	'exclude_empty' => ['title'],
+		    	'exclude_values' => [
+		        	'navbar' => ['plain', 'off']
+		    	],
+				'exclude_templates' => []
+		    ]
+		];
 
-		$groups = array('linktemplate' => false,
+		$groups = ['linktemplate' => false,
 		        'cats' => '[[Category:Active Wikipedia database reports]]',
-				'groups' => array());
+				'groups' => []];
+		$grand_total_scanned = 0;
+		$error_count = 0;
 
 		$wiki_host = $apis['wiki_host'];
 		$user = $apis['user'];
@@ -271,7 +254,7 @@ class InvalidNavbarLinks extends DatabaseReport
 
 			$sth->execute();
 			$sth->setFetchMode(PDO::FETCH_NUM);
-			$titles = array();
+			$titles = [];
 
 			while ($row = $sth->fetch()) {
 				$redir_title = str_replace('_', ' ', $row[0]);
@@ -304,7 +287,7 @@ class InvalidNavbarLinks extends DatabaseReport
 
 			$sth->execute();
 			$sth->setFetchMode(PDO::FETCH_NUM);
-			$titles = array();
+			$titles = [];
 
 			while ($row = $sth->fetch()) {
 				$titles[] = 'Template:' . $row[0];
@@ -348,7 +331,8 @@ class InvalidNavbarLinks extends DatabaseReport
 
 			sort($titles);
 
-			$results = array();
+			$results = [];
+			$total_scanned = 0;
 
 			$mediawiki->cachePages($titles);
 
@@ -365,19 +349,18 @@ class InvalidNavbarLinks extends DatabaseReport
 				if (in_array($template, $template_type['exclude_templates'])) continue;
 
 				foreach ($parsed_templates as $parsed_template) {
+				    // print_r($parsed_template);
 				    $parsed_name = $parsed_template['name'];
+				    $parsed_template_type = $parsed_template['type'];
 				    
-				    if (strpos($parsed_name, '#invoke:') === 0) {
-				        $parsed_name = substr($parsed_name, 8);
-				        $parsed_name = ucfirst($parsed_name);
-				        
+				    if ($parsed_template_type == TemplateParamParser::TEMPLATE_TYPE_MODULE) {
 				        if (! in_array($parsed_name, $template_type['modules'])) continue;
 				    } else {
 				        if (! in_array($parsed_name, $navbar_types)) continue;
 				    }
 				    
 					$params = $parsed_template['params'];
-//					print_r($params);
+					// print_r($params);
 
 					// Exclude if template name is empty
 					$name_param = $template_type['name_param'];
@@ -409,15 +392,22 @@ class InvalidNavbarLinks extends DatabaseReport
 
 		    		if (strpos($name, '{') !== false) continue;
 		    		if (strpos($name, '<') !== false) continue;
+		    		
+		    		++$total_scanned;
+		    		++$grand_total_scanned;
 
-		    		if ($name != $template) $results[] = array("[[Template:$template|$template]]", $name);
+		    		if ($name != $template) $results[] = ["[[Template:$template|$template]]", $name];
 				}
 			}
 
 			$groups['groups'][$groupname] = $results;
+			$groups['groups'][$groupname]['group_footer'] = "Templates scanned: " . number_format($total_scanned);
+			$error_count += count($results);
 		}
 
 		ksort($groups['groups']);
+		$groups['cats'] = "\nGrand total templates scanned: "  . number_format($grand_total_scanned) . "\n" . $groups['cats'];
+		$groups['comment'] = "Record count: $error_count Templates scanned: " . number_format($grand_total_scanned);
 
 		return $groups;
 	}

@@ -91,6 +91,7 @@ class TestInvalidNavbarLinks extends UnitTestCase
 		$report = new InvalidNavbarLinks();
 		$rows = $report->getRows($apis);
 		$errors = $rows['groups']['{{tlp|Navbox|name&#61;}}'];
+		unset($errors['group_footer']);
 
 		$this->assertEqual(count($errors), 2, 'Wrong number of invalid Navbox links');
 
@@ -103,6 +104,7 @@ class TestInvalidNavbarLinks extends UnitTestCase
 		$this->assertEqual($row[1], 'NavboxRedirectbad', 'Wrong Navbox invalid name 2');
 		
 		$errors = $rows['groups']['{{tlp|BS-header|2&#61;}}'];
+		unset($errors['group_footer']);
 		
 		$this->assertEqual(count($errors), 1, 'Wrong number of invalid BS-header links');
 		
@@ -111,6 +113,7 @@ class TestInvalidNavbarLinks extends UnitTestCase
 		$this->assertEqual($row[1], 'BS-headerbadname', 'Wrong BS-header invalid name');
 		
 		$errors = $rows['groups']['{{tlp|Sidebar|name&#61;}}'];
+		unset($errors['group_footer']);
 		
 		$this->assertEqual(count($errors), 1, 'Wrong number of invalid Sidebar links');
 		

@@ -22,37 +22,39 @@ namespace com_brucemyers\Util;
  */
 class TemplateParamParser
 {
-	static $regexs = array(
+	static $regexs = [
 		'passed_param' => '!\{\{\{(?P<content>[^{}]*?\}\}\})!', // Highest priority
 		'htmlstub' => '!<\s*(?P<content>[\w]+(?:(?:\s+\w+(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\'">\s]+))?)+\s*|\s*)/>)!',
 		'html' => '!<\s*(?P<content>(?P<tag>[\w]+)[^>]*>[^<]*?<\s*/\s*(?P=tag)\s*>)!',
 	    'template' => '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?)?)?\}\})!',
 	    'table' => '!\{\|(?P<content>[^{]*?\|\})!',
 		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/s'
-	);
+	];
 
 	const MAX_ITERATIONS = 10000;
-
+	const TEMPLATE_TYPE_TEMPLATE = 'T';
+	const TEMPLATE_TYPE_MODULE = 'M';
+	
 	/**
 	 * Get template names and parameters in a string.
 	 * Numbered params are relative to 1
 	 *
 	 * @param string $origdata
-	 * @return array Templates array('name' => string, 'params' = array('name' => 'value')
+	 * @return array Templates ['name' => string, 'type' => 'Template' or 'Module', 'module_function' => 'function name' ,'params' = ['name' => 'value']]
 	 */
 	public static function getTemplates($origdata)
 	{
 		$itercnt = 0;
 		$match_found = true;
-		$markers = array();
-		$templates = array();
+		$markers = [];
+		$templates = [];
 		$data = preg_replace(CommonRegex::COMMENT_REGEX, '', $origdata); // Strip comments
 		$data = preg_replace(CommonRegex::BR_REGEX, ' ', $data); // Strip BRs
 
 		while ($match_found) {
 			if (++$itercnt > self::MAX_ITERATIONS) {
 			    //Logger::log("Max iterations reached data=$origdata");
-			    return array();
+			    return [];
 			}
 			$match_found = false;
 
@@ -102,11 +104,13 @@ class TemplateParamParser
 			}
 		}
 
-		$results = array();
+		$results = [];
 
 		// Parse the template names and parameters
 		foreach ($templates as $template) {
-			preg_match(self::$regexs['template'], $template, $matches);
+		    $template_type = self::TEMPLATE_TYPE_TEMPLATE;
+		    
+		    preg_match(self::$regexs['template'], $template, $matches);
 			$tmpl_name = $matches['name'];
 
 			// Replace any markers in the name
@@ -119,10 +123,17 @@ class TemplateParamParser
 			if (strpos($tmpl_name, 'Template:') === 0) {
 				$tmpl_name = ucfirst(ltrim(substr($tmpl_name, 9)));
 			}
+			
+			if (strpos($tmpl_name, '#invoke:') === 0) {
+			    $tmpl_name = ucfirst(ltrim(substr($tmpl_name, 8)));
+			    $template_type = self::TEMPLATE_TYPE_MODULE;
+			}
 
-			$tmpl_params = array();
+			$tmpl_params = [];
 			if (isset($matches['params'])) {
-				$numbered_param = 1;
+			    if ($template_type == self::TEMPLATE_TYPE_TEMPLATE) $numbered_param = 1;
+				else $numbered_param = 0; // Module function is the first param
+				
 				$params = explode('|', $matches['params']);
 
 				foreach ($params as $param) {
@@ -150,8 +161,14 @@ class TemplateParamParser
 					if (strlen($param_name)) $tmpl_params[$param_name] = trim($param_value);
 				}
 			}
+			
+			$module_function = '';
+			if ($template_type == self::TEMPLATE_TYPE_MODULE) {
+			    $module_function = $tmpl_params["0"];
+			    unset($tmpl_params["0"]);
+			}
 
-			$results[] = array('name' => $tmpl_name, 'params' => $tmpl_params);
+			$results[] = ['name' => $tmpl_name, 'type' => $template_type, 'module_function' => $module_function, 'params' => $tmpl_params];
 		}
 
 		return $results;
