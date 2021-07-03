@@ -194,10 +194,15 @@ EOT;
 
 	foreach ($results['results'] as $result) {
 		$tmplname = $result['name'];
+		
+		$excluded_template = '';
+		if ($result['file_offset'] < -1) {
+		    $excluded_template = '<div style="float: right;">.</div>';
+		}
 
 		$extra = "TemplateParam.php?wiki=" . urlencode($params['wiki']) . "&template=" . urlencode($tmplname);
 		echo "<td><a href=\"$protocol://$host$uri/$extra\">" .
-			htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a></td>";
+			htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a>$excluded_template</td>";
 
 		echo "<td style='text-align:right'>{$result['page_count']}&nbsp;</td><td style='text-align:right'>{$result['instance_count']}&nbsp;</td></tr>";
 	}

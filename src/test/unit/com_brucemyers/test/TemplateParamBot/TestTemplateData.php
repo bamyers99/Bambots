@@ -18,6 +18,7 @@
 namespace com_brucemyers\test\TemplateParamBot;
 
 use com_brucemyers\TemplateParamBot\TemplateData;
+use com_brucemyers\TemplateParamBot\ServiceManager;
 use UnitTestCase;
 
 class TestTemplateData extends UnitTestCase
@@ -25,7 +26,12 @@ class TestTemplateData extends UnitTestCase
 
 	public function testInitTemplateData()
 	{
-		$json = <<<END
+	    $serviceMgr = new ServiceManager();
+	    $dbh_wiki = $serviceMgr->getDBConnection('enwiki');
+	    $dbh_tools = $serviceMgr->getDBConnection('tools');
+	    new CreateTables($dbh_wiki, $dbh_tools);
+	    
+	    $json = <<<END
 {
 	"description": "This template displays a wikilinked flag of the named parameter in 'icon' size, currently 23×15 pixels (defined in Template:Flagicon/core) plus a one-pixel border.",
 	"params": {
