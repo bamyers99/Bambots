@@ -196,7 +196,7 @@ EOT;
 		$tmplname = $result['name'];
 		
 		$excluded_template = '';
-		if ($result['file_offset'] < -1) {
+		if ($result['file_offset'] < 0) {
 		    $excluded_template = '<div style="float: right;">.</div>';
 		}
 
