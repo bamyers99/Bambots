@@ -94,7 +94,8 @@ class ProjectPages
     	foreach ($categories as $cat) {
         	$continue = '';
 
-        	while ($members = $this->getChunk($member_cat_type, $cat, $continue)) {
+        	while ($continue !== false) {
+        	    $members = $this->getChunk($member_cat_type, $cat, $continue);
         	    $dbh_tools->beginTransaction();
 
         	    foreach ($members as $title) {
@@ -104,8 +105,6 @@ class ProjectPages
         	    }
 
         	    $dbh_tools->commit();
-
-        	    if ($continue === false) break;
         	}
     	}
 
@@ -122,7 +121,8 @@ class ProjectPages
     	$isth = $dbh_tools->prepare('UPDATE page SET class = ?, importance = ? WHERE page_title = ?');
     	$continue = '';
 
-    	while ($members = $this->getAssessmentChunk($category, $continue)) {
+    	while ($continue !== false) {
+    	    $members = $this->getAssessmentChunk($category, $continue);
     	    $dbh_tools->beginTransaction();
 
     	    foreach ($members as $attribs) {
@@ -130,8 +130,6 @@ class ProjectPages
     	    }
 
     	    $dbh_tools->commit();
-
-    	    if ($continue === false) break;
     	}
 
     	$dbh_tools = null;

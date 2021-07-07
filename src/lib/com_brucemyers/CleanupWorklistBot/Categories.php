@@ -717,7 +717,8 @@ class Categories {
 		$isth = $dbh_tools->prepare ( 'INSERT INTO categorylinks VALUES (?,?)' );
 		$continue = '';
 
-		while ($members = $this->getChunk($cat, $continue)) {
+		while ($continue !== false) {
+		    $members = $this->getChunk($cat, $continue);
 		    $dbh_tools->beginTransaction();
 
 		    foreach ($members as $page) {
@@ -726,8 +727,6 @@ class Categories {
 		    }
 
 		    $dbh_tools->commit();
-
-		    if ($continue === false) break;
 		}
 
 		$isth = null;
