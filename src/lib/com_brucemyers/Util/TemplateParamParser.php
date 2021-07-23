@@ -164,6 +164,9 @@ class TemplateParamParser
 			
 			$module_function = '';
 			if ($template_type == self::TEMPLATE_TYPE_MODULE) {
+			    if (! isset($tmpl_params["0"])) {
+			        print_r($template);
+			    }
 			    $module_function = $tmpl_params["0"];
 			    unset($tmpl_params["0"]);
 			}
