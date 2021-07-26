@@ -225,24 +225,17 @@ class MediaWiki extends wikipedia
 
     	$ret = $this->query('?action=edit&format=php'.$tmaxlag,$params);
 
-    	if (isset($ret['error']) && $ret['error']['info'] == 'Invalid token') {
+    	if (isset($ret['error'])) {
     		if ($repeat < 5) {
-			    Logger::log("*** edit retry #$repeat $page errortext:Invalid token");
-			    sleep($repeat * 10);
+			    Logger::log("*** edit retry #$repeat $page errortext:{$ret['error']['info']}");
+			    sleep($repeat * 60);
 			    $this->token = null;
 			    $this->login(null, null);
 
 				return $this->edit($page, $data, $summary, $minor, $bot, $section, $detectEC, $maxlag, ++$repeat);
 			} else {
-				throw new Exception('Edit Error Invalid token');
+				throw new Exception("Edit Error : {$ret['error']['info']}");
 			}
-     	} elseif (isset($ret['error'])) {
-     		if ($repeat < 5) {
-     			Logger::log("*** edit retry #$repeat $page errortext:{$ret['error']['info']}");
-     			sleep($repeat * 60);
-
-     			return $this->edit($page, $data, $summary, $minor, $bot, $section, $detectEC, $maxlag, ++$repeat);
-     		}
      	}
 
     	return $ret;
