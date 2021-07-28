@@ -1155,7 +1155,7 @@ END;
 	    $type_colors = [
 	        'WikibaseItem' => '',
 	        'CommonsMedia' => 'antiquewhite',
-	        'ExternalId' => '#DC8',
+	        'ExternalId' => '#CDC',
 	        'String' => 'lavenderblush',
 	        'Quantity' => 'oldlace',
 	        'Time' => 'lightyellow',
