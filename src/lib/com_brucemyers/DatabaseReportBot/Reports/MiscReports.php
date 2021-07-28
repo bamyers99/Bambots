@@ -1155,7 +1155,7 @@ END;
 	    $type_colors = [
 	        'WikibaseItem' => '',
 	        'CommonsMedia' => 'antiquewhite',
-	        'ExternalId' => '#CFDBC5',
+	        'ExternalId' => '#DC8',
 	        'String' => 'lavenderblush',
 	        'Quantity' => 'oldlace',
 	        'Time' => 'lightyellow',
@@ -1252,10 +1252,10 @@ END;
             if (isset($counts[$propid])) $count = $counts[$propid];
             else $count = 0;
 
-            if ($type_colors[$datatype] && ! empty($type_colors[$datatype])) $color = " style=\"background: {$type_colors[$datatype]}\"";
+            if ($type_colors[$datatype] && ! empty($type_colors[$datatype])) $color = " style=\"background:{$type_colors[$datatype]}\"";
             else $color = '';
 
-            $wikitext .= "|-$color\n|[[Property:P$propid|P$propid]]||$label||$description||$alias||$datatype||";
+            $wikitext .= "|-$color\n|[[P:P$propid|P$propid]]||$label||$description||$alias||$datatype||";
             $wikitext .= number_format($count, 0) . "\n";
         }
 
