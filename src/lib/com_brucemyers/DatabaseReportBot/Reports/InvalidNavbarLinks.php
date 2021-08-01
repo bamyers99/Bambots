@@ -354,7 +354,7 @@ class InvalidNavbarLinks extends DatabaseReport
 				    $parsed_template_type = $parsed_template['type'];
 				    
 				    if ($parsed_template_type == TemplateParamParser::TEMPLATE_TYPE_MODULE) {
-				        if (! in_array($parsed_name, $template_type['modules'])) continue;
+				        if (! isset($template_type['modules']) || ! in_array($parsed_name, $template_type['modules'])) continue;
 				    } else {
 				        if (! in_array($parsed_name, $navbar_types)) continue;
 				    }
