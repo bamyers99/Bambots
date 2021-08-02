@@ -139,7 +139,6 @@ class BrokenSectionAnchors extends DatabaseReport
     	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$sth = $dbh_enwiki->prepare($sql);
-		$readcount = 0;
 
 		while (! feof($hndl)) {
 			$buffer = fgets($hndl);
@@ -162,11 +161,16 @@ class BrokenSectionAnchors extends DatabaseReport
 			}
 
 			if (! $found) {
-				$sth = null;
-				$dbh_enwiki = null;
-				$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
-				$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-				$sth = $dbh_enwiki->prepare($sql);
+			    // Test the connection
+			    try {
+			        $dbh_enwiki->query('SELECT 1+1');
+			    } catch (PDOException $e) {
+			        $sth = null;
+			        $dbh_enwiki = null;
+			        $dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+			        $dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			        $sth = $dbh_enwiki->prepare($sql);
+			    }
 
 				$sth->bindParam(1, $source);
 				$sth->execute();
