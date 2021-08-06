@@ -218,7 +218,6 @@ class BrokenSectionAnchors extends DatabaseReport
 				'linktemplate' => false,
 				'forceTOC' => true,
 				'rowstyle' => 'style="vertical-align: top;"',
-		        'cats' => '[[Category:Active Wikipedia database reports]]',
 				'groups' => array());
 
 		// Group by target page

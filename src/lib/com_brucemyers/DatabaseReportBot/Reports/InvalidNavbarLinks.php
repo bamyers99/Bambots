@@ -218,7 +218,6 @@ class InvalidNavbarLinks extends DatabaseReport
 		];
 
 		$groups = ['linktemplate' => false,
-		        'cats' => '[[Category:Active Wikipedia database reports]]',
 				'groups' => []];
 		$grand_total_scanned = 0;
 		$error_count = 0;
