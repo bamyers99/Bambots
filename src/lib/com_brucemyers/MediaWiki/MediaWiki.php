@@ -316,6 +316,7 @@ class MediaWiki extends wikipedia
        			$pagetitle = $page['title'];
        			$ns = $page['ns'];
        			if (! isset($page['revisions'])) continue;
+       			if (! isset($page['revisions'][0])) continue;
 
        			$pagetext = (isset($page['revisions'][0]['slots']['main']['*'])) ? $page['revisions'][0]['slots']['main']['*'] : '';
          		$revs[$pagetitle] = array($ns, $page['revisions'][0]['revid'], $pagetext);
