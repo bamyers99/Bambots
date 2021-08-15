@@ -313,33 +313,33 @@ function display_data()
 
 				case 'ISNI':
 					$definition = 'International Standard Name Identifier';
-					$idurl = 'http://isni.org/isni/$1';
-					$searchurl= 'http://isni.oclc.org/DB=1.2/CMD?ACT=SRCHA&IKT=8006&SRT=&TRM=$1';
+					$idurl = 'https://isni.org/isni/$1';
+					$searchurl= 'https://isni.oclc.org/DB=1.2/CMD?ACT=SRCHA&IKT=8006&SRT=&TRM=$1';
 					break;
 
 				case 'ORCID':
 					if ($is_person == 'N') continue 2;
 					$definition = 'Open Researcher and Contributor ID';
-					$idurl = 'http://orcid.org/$1';
+					$idurl = 'https://orcid.org/$1';
 					$searchurl= 'https://orcid.org/orcid-search/quick-search/?searchQuery=$1';
 					break;
 
 				case 'LCCN':
 					$definition = 'Library of Congress Control Number';
-					$idurl = 'http://id.loc.gov/authorities/$1';
-					$searchurl= 'http://id.loc.gov/search/?q=$1';
+					$idurl = 'https://id.loc.gov/authorities/$1';
+					$searchurl= 'https://id.loc.gov/search/?q=$1';
 					break;
 
 				case 'ULAN':
 					$definition = 'Union List of Artist Names';
-					$idurl = 'http://vocab.getty.edu/page/ulan/$1';
-					$searchurl= 'http://www.getty.edu/vow/ULANServlet?english=Y&find=$1&role=&page=1&nation=';
+					$idurl = 'https://vocab.getty.edu/page/ulan/$1';
+					$searchurl= 'https://www.getty.edu/vow/ULANServlet?english=Y&find=$1&role=&page=1&nation=';
 					break;
 
 				case 'IMDb':
 					$definition = 'Internet Movie Database';
-					$idurl = 'http://www.imdb.com/Name?$1';
-					$searchurl= 'http://www.imdb.com/find?ref_=nv_sr_fn&q=$1&s=all';
+					$idurl = 'https://www.imdb.com/Name?$1';
+					$searchurl= 'https://www.imdb.com/find?ref_=nv_sr_fn&q=$1&s=all';
 					break;
 
 				case 'MusicBrainz':
