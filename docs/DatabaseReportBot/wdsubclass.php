@@ -29,6 +29,7 @@ define('INDIRECT_CHILD_COUNT', 'd');
 define('ISLISTOF_COUNT', 'e');
 define('CLASS_FOUND', 'f');
 define('PARENTS', 'p');
+define('INSTANCE_OF', 'i');
 
 $count = 0;
 $classes = [];
@@ -68,6 +69,16 @@ while (! feof($hndl)) {
 
 	    	fwrite($whndl, "$parentqid\t$qid\n");
 		}
+		
+		if (isset($data['claims'][PROP_INSTANCEOF])) {
+		    foreach ($data['claims'][PROP_INSTANCEOF] as $instanceof) {
+		        if (! isset($instanceof['mainsnak']['datavalue']['value']['numeric-id'])) continue;
+		        $instanceqid = (int)$instanceof['mainsnak']['datavalue']['value']['numeric-id'];
+		        
+		        if (! isset($classes[$qid][INSTANCE_OF])) $classes[$qid][INSTANCE_OF] = [];
+		        $classes[$qid][INSTANCE_OF][] = $instanceqid;
+		    }
+		}
 	}
 
 	if (isset($data['claims'][PROP_INSTANCEOF])) {
@@ -98,6 +109,7 @@ echo "Class count " . count($classes) . "\n";
 
 fclose($hndl);
 fclose($whndl);
+$whndl = fopen('wdsubclassinstof.tsv', 'w');
 
 // Calc totals
 $count = 0;
@@ -110,7 +122,7 @@ foreach ($classes as $classqid => $class) {
 		continue;
 	}
 
-	$parents = array();
+	$parents = [];
 	foreach ($class[PARENTS] as $parentqid) {
 		recurse_parents($parentqid, $parents, $classes, 0);
 	}
@@ -118,10 +130,15 @@ foreach ($classes as $classqid => $class) {
 	foreach ($parents as $parentqid => $dummy) {
 		$classes[$parentqid][INDIRECT_CHILD_COUNT] += $class[DIRECT_CHILD_COUNT];
 		$classes[$parentqid][INDIRECT_INSTANCE_CNT] += $class[DIRECT_INSTANCE_CNT];
+		
+		if (isset($class[INSTANCE_OF]) && in_array($parentqid, $class[INSTANCE_OF])) {
+		    fwrite($whndl, "$classqid\t$parentqid\n");
+		}
 	}
 }
 
 // Write totals
+fclose($whndl);
 $whndl = fopen('wdsubclasstotals.tsv', 'w');
 
 foreach ($classes as $classqid => $class) {
@@ -163,7 +180,7 @@ echo "Finished\n";
  * @param unknown $classes
  * @param unknown $depth
  */
-function recurse_parents($parentqid, &$parents, &$classes, $depth)
+function recurse_parents($parentqid, &$parents, $classes, $depth)
 {
 	++$depth;
 	if ($depth > 100) return;
@@ -183,8 +200,8 @@ function recurse_parents($parentqid, &$parents, &$classes, $depth)
  */
 function init_class()
 {
-	return array(DIRECT_CHILD_COUNT => 0,  INDIRECT_CHILD_COUNT => 0, PARENTS => array(), DIRECT_INSTANCE_CNT => 0,
-		INDIRECT_INSTANCE_CNT => 0, ISLISTOF_COUNT => 0, CLASS_FOUND => false);
+	return [DIRECT_CHILD_COUNT => 0,  INDIRECT_CHILD_COUNT => 0, PARENTS => [], DIRECT_INSTANCE_CNT => 0,
+	    INDIRECT_INSTANCE_CNT => 0, ISLISTOF_COUNT => 0, CLASS_FOUND => false];
 }
 
 /**
