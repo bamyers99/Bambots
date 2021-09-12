@@ -70,7 +70,7 @@ while (! feof($hndl)) {
 	    	fwrite($whndl, "$parentqid\t$qid\n");
 		}
 		
-		if (isset($data['claims'][PROP_INSTANCEOF])) {
+		if (isset($data['claims'][PROP_INSTANCEOF]) && isset($classes[$qid])) {
 		    foreach ($data['claims'][PROP_INSTANCEOF] as $instanceof) {
 		        if (! isset($instanceof['mainsnak']['datavalue']['value']['numeric-id'])) continue;
 		        $instanceqid = (int)$instanceof['mainsnak']['datavalue']['value']['numeric-id'];

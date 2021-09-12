@@ -72,7 +72,7 @@
 	{
 	    "name" : "WikidataClassBrowser",
 	    "title" : "Wikidata class browser",
-	    "description" : "Displays wikidata class information including subclass and instance totals. Includes common class properties, qualifiers, enumerated values.",
+	    "description" : "Displays wikidata class information including subclass and instance totals. Includes common class properties, qualifiers, enumerated values, instance of super class.",
 	    "url" : "https://bambots.brucemyers.com/WikidataClasses.php",
 	    "keywords" : "wikidata,class,statistics,stats",
 	    "author" : "bamyers99",

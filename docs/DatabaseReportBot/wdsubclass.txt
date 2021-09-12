@@ -41,6 +41,9 @@ LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassclasses.tsv
 TRUNCATE s51454__wikidata.subclassvalues;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassvalues.tsv' INTO TABLE s51454__wikidata.subclassvalues CHARACTER SET binary;
 
+TRUNCATE s51454__wikidata.superclassinstanceof;
+LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassinstof.tsv' INTO TABLE s51454__wikidata.superclassinstanceof CHARACTER SET binary;
+
 TRUNCATE s51454__wikidata.subclasstotals;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclasstotals.tsv' INTO TABLE s51454__wikidata.subclasstotals CHARACTER SET binary;
 SELECT COUNT(*) FROM s51454__wikidata.subclasstotals WHERE root = 'Y';
