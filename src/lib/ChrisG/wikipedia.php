@@ -341,9 +341,7 @@ class wikipedia {
      **/
     function getedittoken () {
         $x = $this->query('?action=query&meta=tokens&type=csrf&format=php');
-        foreach ($x['query']['tokens'] as $ret) {
-            return $ret['csrftoken'];
-        }
+        return $x['query']['tokens']['csrftoken'];
     }
 
     /**
