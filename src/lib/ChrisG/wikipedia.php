@@ -340,9 +340,9 @@ class wikipedia {
      * @return edit token.
      **/
     function getedittoken () {
-        $x = $this->query('?action=query&prop=info&intoken=edit&titles=Main%20Page&format=php');
-        foreach ($x['query']['pages'] as $ret) {
-            return $ret['edittoken'];
+        $x = $this->query('?action=query&meta=tokens&type=csrf&format=php');
+        foreach ($x['query']['tokens'] as $ret) {
+            return $ret['csrftoken'];
         }
     }
 
