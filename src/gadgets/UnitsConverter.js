@@ -269,7 +269,7 @@ Bamyers99.UnitsConverter = {
 						if ( val < 5 ) val = val.toFixed(1);
 						else val = Math.round(val);
 
-						val = mw.language.commafy( val, '#,##0.#' );
+						val = mw.language.convertNumber( val );
 
 						h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>)';
 					})
