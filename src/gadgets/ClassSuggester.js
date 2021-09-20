@@ -62,7 +62,7 @@ Bamyers99.ClassSuggester = {
 
 		$.when(
 			$.ajax( { url: self.commonjs, dataType: 'script', cache: true } ),
-			mw.loader.using( 'jquery.ui.dialog' )
+			mw.loader.using( 'jquery.ui' )
 		).done( function() {
 			self.gc = Bamyers99.GadgetCommon;
 
