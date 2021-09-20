@@ -324,7 +324,11 @@ Bamyers99.UnitsConverter = {
 					}
 
 					// Inflate 'from currency' amount
-					val = hit.amount / mults[0] / fromRate * endCPI / startCPI * toRate * mults[1];
+					if (fromCurUnit == toCurUnit) {
+					    val = hit.amount / mults[0] * endCPI / startCPI * mults[1];
+					} else {
+					    val = hit.amount / mults[0] / fromRate * endCPI / startCPI * toRate * mults[1];
+					}
 					
 					if (! isNaN(val)) {
 					    val = Math.round(val);
