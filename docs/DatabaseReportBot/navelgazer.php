@@ -303,7 +303,6 @@ function parseMetaHistory()
                     if (! isset($edits[$username][$key])) $edits[$username][$key] = 0;
                     $edits[$username][$key] += 1;
                     ++$count;
-                    if ($count == 1000) break 2;
                 }
             }
 
@@ -323,18 +322,4 @@ function parseMetaHistory()
     }
     
     fclose($hndl);
-
-    /*
-    $originalJson = '{"type":"item","id":"Q518475","labels":{"hu":{"language":"hu","value":"2011\u20132012-es f\u00e9rfi EHF-kupa"},"de":{"language":"de","value":"EHF-Pokal 2011\/12"},"en":{"language":"en","value":"2011\u201312 EHF Cup"},"fr":{"language":"fr","value":"Coupe EHF 2011-2012"},"it":{"language":"it","value":"EHF Cup 2011-2012"}},"descriptions":{"fr":{"language":"fr","value":"comp\u00e9tition de handball"}},"aliases":[],"claims":[],"sitelinks":{"huwiki":{"site":"huwiki","title":"2011\u20132012-es f\u00e9rfi EHF-kupa","badges":[]},"dewiki":{"site":"dewiki","title":"EHF-Pokal 2011\/12","badges":[]},"enwiki":{"site":"enwiki","title":"2011\u201312 EHF Cup","badges":[]},"frwiki":{"site":"frwiki","title":"Coupe EHF 2011-2012","badges":[]},"itwiki":{"site":"itwiki","title":"EHF Cup 2011-2012 (pallamano maschile)","badges":[]}}}';
-    
-    $newJson = '{"type":"item","id":"Q518475","labels":{"hu":{"language":"hu","value":"2011\u20132012-es f\u00e9rfi EHF-kupa"},"de":{"language":"de","value":"EHF-Pokal 2011\/12"},"en":{"language":"en","value":"2011\u201312 EHF Cup"},"fr":{"language":"fr","value":"Coupe EHF 2011-2012"},"it":{"language":"it","value":"EHF Cup 2011-2012"}},"descriptions":{"fr":{"language":"fr","value":"comp\u00e9tition de handball"}},"aliases":[],"claims":{"P646":[{"mainsnak":{"snaktype":"value","property":"P646","hash":"e7b27072bc4563912164b62c8af54db229c371ba","datavalue":{"value":"\/m\/0j289ln","type":"string"}},"type":"statement","id":"Q518475$F3973CD0-B8E3-4078-BF7E-A54A045D0DB3","rank":"normal"}]},"sitelinks":{"huwiki":{"site":"huwiki","title":"2011\u20132012-es f\u00e9rfi EHF-kupa","badges":[]},"dewiki":{"site":"dewiki","title":"EHF-Pokal 2011\/12","badges":[]},"enwiki":{"site":"enwiki","title":"2011\u201312 EHF Cup","badges":[]},"frwiki":{"site":"frwiki","title":"Coupe EHF 2011-2012","badges":[]},"itwiki":{"site":"itwiki","title":"EHF Cup 2011-2012 (pallamano maschile)","badges":[]}}}';
-        
-    $r = new Swaggest\JsonDiff\JsonDiff(
-        json_decode($originalJson),
-        json_decode($newJson),
-        Swaggest\JsonDiff\JsonDiff::SKIP_JSON_MERGE_PATCH + Swaggest\JsonDiff\JsonDiff::SKIP_JSON_PATCH
-        );
-    
-    print_r($r->getAddedPaths());
-    */
 }
