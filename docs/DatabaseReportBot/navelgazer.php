@@ -97,6 +97,11 @@ if ($argc > 1) {
             parseMetaHistory();
             exit;
             break;
+            
+        case 'testMetaHistory':
+            testMetaHistory();
+            exit;
+            break;
     }
 }
 
@@ -267,8 +272,8 @@ function parseMetaHistory()
         
         if (preg_match('!^/title=(.*)!', $buffer, $matches)) {
             $prev_json = '{}';
-            if (preg_match('!^Q\d+$!', $matches[1])) $skip_text = false;
-            else $skip_text = true;
+            if (preg_match('!^Q\d+$!', $matches[1])) $skip_title = false;
+            else $skip_title = true;
         } elseif (preg_match('!^/contributor/ip=!', $buffer)) {
              $username = false;
         } elseif (preg_match('!^/contributor/@deleted!', $buffer)) {
@@ -277,15 +282,28 @@ function parseMetaHistory()
             $username = $matches[1];
         } elseif (preg_match('!^/comment=/\\* (.*)!', $buffer, $matches)) {
             $comment = $matches[1];
+            $skip_text = false;
             
             foreach ($edittypes as $edittype => $typevalue) {
                 if (preg_match($edittype, $comment)) {
+                    if ($typevalue === 0) {
+                        if (! preg_match('!\\[\\[Property:P(\d+)!', $comment, $matches)){
+                            if (! preg_match('!^wbcreateclaim:1 \\*/ p(\d+)!', $comment, $matches)) {
+                                break;
+                            }
+                        }
+                    }
+                    
                     $skip_text = true;
                     break; // skip recognized comment format
                 }
             }
         } elseif (preg_match('!^/text=(.*)!', $buffer, $matches)) {
-            if ($skip_text) continue;
+            if ($skip_title || $skip_text) {
+                $prev_json = $matches[1];
+                continue;
+            }
+            
             if ($username === false) $username = ''; // anonymous edit
             
             $r = new Swaggest\JsonDiff\JsonDiff(
@@ -322,4 +340,29 @@ function parseMetaHistory()
     }
     
     fclose($hndl);
+}
+
+function testMetaHistory() {
+    include 'Swaggest/JsonDiff/JsonDiff.php';
+    
+    spl_autoload_register(function ($class) {
+        $file = str_replace('\\', DIRECTORY_SEPARATOR, $class).'.php';
+        if (file_exists($file)) {
+            require $file;
+            return true;
+        }
+        return false;
+    });
+        
+    $originalJson = '{"entities":{"Q1024969":{"pageid":974286,"ns":0,"title":"Q1024969","lastrevid":239710767,"modified":"2015-08-10T02:54:25Z","type":"item","id":"Q1024969","labels":{"de":{"language":"de","value":"Cabrillo College"},"en":{"language":"en","value":"Cabrillo College"},"ja":{"language":"ja","value":"\u30ab\u30d6\u30ea\u30aa\u30ab\u30ec\u30c3\u30b8"},"nl":{"language":"nl","value":"Cabrillo College"},"fr":{"language":"fr","value":"Cabrillo College"}},"descriptions":{},"aliases":{"de":[{"language":"de","value":"Cabrillo Community College"}]},"claims":{"P625":[{"mainsnak":{"snaktype":"value","property":"P625","hash":"520576a19ccc52277cd45ddb3a542ec7eba4f926","datavalue":{"value":{"latitude":36.9883,"longitude":-121.925,"altitude":null,"precision":0.0001,"globe":"http://www.wikidata.org/entity/Q2"},"type":"globecoordinate"},"datatype":"globe-coordinate"},"type":"statement","id":"q1024969$60307310-1BE8-4CA9-AD52-DE7D2A5C0224","rank":"normal","references":[{"hash":"fa278ebfc458360e5aed63d5058cca83c46134f1","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"e4f6d9441d0600513c4533c672b5ab472dc73694","datavalue":{"value":{"entity-type":"item","numeric-id":328,"id":"Q328"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P17":[{"mainsnak":{"snaktype":"value","property":"P17","hash":"be4c6eafa2984964f04be85667263f5642ba1a72","datavalue":{"value":{"entity-type":"item","numeric-id":30,"id":"Q30"},"type":"wikibase-entityid"},"datatype":"wikibase-item"},"type":"statement","id":"q1024969$E8D55822-0CB0-44BC-900E-E44122A1ECB2","rank":"normal","references":[{"hash":"fa278ebfc458360e5aed63d5058cca83c46134f1","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"e4f6d9441d0600513c4533c672b5ab472dc73694","datavalue":{"value":{"entity-type":"item","numeric-id":328,"id":"Q328"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P131":[{"mainsnak":{"snaktype":"value","property":"P131","hash":"5f9fc09b78eb5ba7a7baeaa87b2e1d398bcd1ed3","datavalue":{"value":{"entity-type":"item","numeric-id":99,"id":"Q99"},"type":"wikibase-entityid"},"datatype":"wikibase-item"},"type":"statement","id":"q1024969$4FFE9E25-A7B5-46CA-8E71-EC72A1893AC0","rank":"normal","references":[{"hash":"fa278ebfc458360e5aed63d5058cca83c46134f1","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"e4f6d9441d0600513c4533c672b5ab472dc73694","datavalue":{"value":{"entity-type":"item","numeric-id":328,"id":"Q328"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]},{"mainsnak":{"snaktype":"value","property":"P131","hash":"ec364bac8df0e128719ab8cc89c311e2c4d76aa4","datavalue":{"value":{"entity-type":"item","numeric-id":622269,"id":"Q622269"},"type":"wikibase-entityid"},"datatype":"wikibase-item"},"type":"statement","id":"Q1024969$2f5479e9-4252-a894-f1cf-af5203c2d998","rank":"normal"}],"P1566":[{"mainsnak":{"snaktype":"value","property":"P1566","hash":"fbccbcbf6b3a23c0999a1bbdb49c601a17831f16","datavalue":{"value":"5332433","type":"string"},"datatype":"external-id"},"type":"statement","id":"Q1024969$EC5B95C9-EA93-45D0-BC56-5DC4E6CA90DC","rank":"normal","references":[{"hash":"64133510dcdf15e7943de41e4835c673fc5d6fe4","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"3439bea208036ec33ec3fba8245410df3efb8044","datavalue":{"value":{"entity-type":"item","numeric-id":830106,"id":"Q830106"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P18":[{"mainsnak":{"snaktype":"value","property":"P18","hash":"e527bc636161ae5a9d5cbd4f18b48d3c127eed1c","datavalue":{"value":"Cabrillo College2.jpg","type":"string"},"datatype":"commonsMedia"},"type":"statement","id":"Q1024969$316051D7-D7CC-4F6D-81D0-CB0BF9E07A2E","rank":"normal"}],"P214":[{"mainsnak":{"snaktype":"value","property":"P214","hash":"5c17422648cb1101d7fbf31629f5b7d410d24e95","datavalue":{"value":"127130543","type":"string"},"datatype":"external-id"},"type":"statement","id":"Q1024969$68E73BA4-BE53-4102-837D-1BD83AC3959E","rank":"normal","references":[{"hash":"9a24f7c0208b05d6be97077d855671d1dfdbc0dd","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"d38375ffe6fe142663ff55cd783aa4df4301d83d","datavalue":{"value":{"entity-type":"item","numeric-id":48183,"id":"Q48183"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P244":[{"mainsnak":{"snaktype":"value","property":"P244","hash":"f92d4b3ca3b2cca669fef6345cb616e18bf9592e","datavalue":{"value":"nr99025965","type":"string"},"datatype":"external-id"},"type":"statement","id":"Q1024969$32C47B33-1833-4A75-814D-9E4805EC1A9F","rank":"normal","references":[{"hash":"9a24f7c0208b05d6be97077d855671d1dfdbc0dd","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"d38375ffe6fe142663ff55cd783aa4df4301d83d","datavalue":{"value":{"entity-type":"item","numeric-id":48183,"id":"Q48183"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}]},"sitelinks":{"dewiki":{"site":"dewiki","title":"Cabrillo College","badges":[],"url":"https://de.wikipedia.org/wiki/Cabrillo_College"},"enwiki":{"site":"enwiki","title":"Cabrillo College","badges":[],"url":"https://en.wikipedia.org/wiki/Cabrillo_College"},"jawiki":{"site":"jawiki","title":"\u30ab\u30d6\u30ea\u30aa\u30ab\u30ec\u30c3\u30b8","badges":[],"url":"https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%96%E3%83%AA%E3%82%AA%E3%82%AB%E3%83%AC%E3%83%83%E3%82%B8"}}}}}';
+    
+    $newJson = '{"entities":{"Q1024969":{"pageid":974286,"ns":0,"title":"Q1024969","lastrevid":239710771,"modified":"2015-08-10T02:54:35Z","type":"item","id":"Q1024969","labels":{"de":{"language":"de","value":"Cabrillo College"},"en":{"language":"en","value":"Cabrillo College"},"ja":{"language":"ja","value":"\u30ab\u30d6\u30ea\u30aa\u30ab\u30ec\u30c3\u30b8"},"nl":{"language":"nl","value":"Cabrillo College"},"fr":{"language":"fr","value":"Cabrillo College"}},"descriptions":{},"aliases":{"de":[{"language":"de","value":"Cabrillo Community College"}]},"claims":{"P625":[{"mainsnak":{"snaktype":"value","property":"P625","hash":"520576a19ccc52277cd45ddb3a542ec7eba4f926","datavalue":{"value":{"latitude":36.9883,"longitude":-121.925,"altitude":null,"precision":0.0001,"globe":"http://www.wikidata.org/entity/Q2"},"type":"globecoordinate"},"datatype":"globe-coordinate"},"type":"statement","id":"q1024969$60307310-1BE8-4CA9-AD52-DE7D2A5C0224","rank":"normal","references":[{"hash":"fa278ebfc458360e5aed63d5058cca83c46134f1","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"e4f6d9441d0600513c4533c672b5ab472dc73694","datavalue":{"value":{"entity-type":"item","numeric-id":328,"id":"Q328"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P17":[{"mainsnak":{"snaktype":"value","property":"P17","hash":"be4c6eafa2984964f04be85667263f5642ba1a72","datavalue":{"value":{"entity-type":"item","numeric-id":30,"id":"Q30"},"type":"wikibase-entityid"},"datatype":"wikibase-item"},"type":"statement","id":"q1024969$E8D55822-0CB0-44BC-900E-E44122A1ECB2","rank":"normal","references":[{"hash":"fa278ebfc458360e5aed63d5058cca83c46134f1","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"e4f6d9441d0600513c4533c672b5ab472dc73694","datavalue":{"value":{"entity-type":"item","numeric-id":328,"id":"Q328"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P131":[{"mainsnak":{"snaktype":"value","property":"P131","hash":"5f9fc09b78eb5ba7a7baeaa87b2e1d398bcd1ed3","datavalue":{"value":{"entity-type":"item","numeric-id":99,"id":"Q99"},"type":"wikibase-entityid"},"datatype":"wikibase-item"},"type":"statement","id":"q1024969$4FFE9E25-A7B5-46CA-8E71-EC72A1893AC0","rank":"normal","references":[{"hash":"fa278ebfc458360e5aed63d5058cca83c46134f1","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"e4f6d9441d0600513c4533c672b5ab472dc73694","datavalue":{"value":{"entity-type":"item","numeric-id":328,"id":"Q328"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]},{"mainsnak":{"snaktype":"value","property":"P131","hash":"ec364bac8df0e128719ab8cc89c311e2c4d76aa4","datavalue":{"value":{"entity-type":"item","numeric-id":622269,"id":"Q622269"},"type":"wikibase-entityid"},"datatype":"wikibase-item"},"type":"statement","id":"Q1024969$2f5479e9-4252-a894-f1cf-af5203c2d998","rank":"normal"}],"P1566":[{"mainsnak":{"snaktype":"value","property":"P1566","hash":"fbccbcbf6b3a23c0999a1bbdb49c601a17831f16","datavalue":{"value":"5332433","type":"string"},"datatype":"external-id"},"type":"statement","id":"Q1024969$EC5B95C9-EA93-45D0-BC56-5DC4E6CA90DC","rank":"normal","references":[{"hash":"64133510dcdf15e7943de41e4835c673fc5d6fe4","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"3439bea208036ec33ec3fba8245410df3efb8044","datavalue":{"value":{"entity-type":"item","numeric-id":830106,"id":"Q830106"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P18":[{"mainsnak":{"snaktype":"value","property":"P18","hash":"e527bc636161ae5a9d5cbd4f18b48d3c127eed1c","datavalue":{"value":"Cabrillo College2.jpg","type":"string"},"datatype":"commonsMedia"},"type":"statement","id":"Q1024969$316051D7-D7CC-4F6D-81D0-CB0BF9E07A2E","rank":"normal"}],"P214":[{"mainsnak":{"snaktype":"value","property":"P214","hash":"5c17422648cb1101d7fbf31629f5b7d410d24e95","datavalue":{"value":"127130543","type":"string"},"datatype":"external-id"},"type":"statement","id":"Q1024969$68E73BA4-BE53-4102-837D-1BD83AC3959E","rank":"normal","references":[{"hash":"9a24f7c0208b05d6be97077d855671d1dfdbc0dd","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"d38375ffe6fe142663ff55cd783aa4df4301d83d","datavalue":{"value":{"entity-type":"item","numeric-id":48183,"id":"Q48183"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P244":[{"mainsnak":{"snaktype":"value","property":"P244","hash":"f92d4b3ca3b2cca669fef6345cb616e18bf9592e","datavalue":{"value":"nr99025965","type":"string"},"datatype":"external-id"},"type":"statement","id":"Q1024969$32C47B33-1833-4A75-814D-9E4805EC1A9F","rank":"normal","references":[{"hash":"9a24f7c0208b05d6be97077d855671d1dfdbc0dd","snaks":{"P143":[{"snaktype":"value","property":"P143","hash":"d38375ffe6fe142663ff55cd783aa4df4301d83d","datavalue":{"value":{"entity-type":"item","numeric-id":48183,"id":"Q48183"},"type":"wikibase-entityid"},"datatype":"wikibase-item"}]},"snaks-order":["P143"]}]}],"P1771":[{"mainsnak":{"snaktype":"value","property":"P1771","hash":"3d5ce8def0a41d2d1c216ce07f99f1296b1686e5","datavalue":{"value":"110334","type":"string"},"datatype":"external-id"},"type":"statement","id":"Q1024969$4B8EC8BB-51FF-46F2-943D-0E5F12922D86","rank":"normal"}]},"sitelinks":{"dewiki":{"site":"dewiki","title":"Cabrillo College","badges":[],"url":"https://de.wikipedia.org/wiki/Cabrillo_College"},"enwiki":{"site":"enwiki","title":"Cabrillo College","badges":[],"url":"https://en.wikipedia.org/wiki/Cabrillo_College"},"jawiki":{"site":"jawiki","title":"\u30ab\u30d6\u30ea\u30aa\u30ab\u30ec\u30c3\u30b8","badges":[],"url":"https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%96%E3%83%AA%E3%82%AA%E3%82%AB%E3%83%AC%E3%83%83%E3%82%B8"}}}}}';
+    
+    $r = new Swaggest\JsonDiff\JsonDiff(
+        json_decode($originalJson),
+        json_decode($newJson),
+        Swaggest\JsonDiff\JsonDiff::SKIP_JSON_MERGE_PATCH + Swaggest\JsonDiff\JsonDiff::SKIP_JSON_PATCH
+        );
+    
+    print_r($r->getAddedPaths());
 }
