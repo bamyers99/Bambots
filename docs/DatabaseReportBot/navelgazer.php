@@ -90,6 +90,16 @@ DEFINE('GRANDTOTAL_MASK', MONTHLY_INCREMENT - 1);
 /* wbsetaliases-add:1|sv */
 /* wbsetsitelink-add:1|nlwikinews */
 
+if ($argc > 1) {
+    $action = $argv[1];
+    switch ($action) {
+        case 'parseMetaHistory':
+            parseMetaHistory();
+            exit;
+            break;
+    }
+}
+
 $prevmonth = date('Y-m', strtotime('-1 month'));
 
 $hndl = fopen('php://stdin', 'r');
@@ -102,9 +112,9 @@ while (! feof($hndl)) {
 
 	if (preg_match('!^/id=(\d+)!', $buffer, $matches)) {
 	    $revid = $matches[1];
-	} elseif (preg_match('!^/contributor/ip=!', $buffer, $matches)) {
+	} elseif (preg_match('!^/contributor/ip=!', $buffer)) {
 	    $username = false;
-	} elseif (preg_match('!^/contributor/@deleted!', $buffer, $matches)) {
+	} elseif (preg_match('!^/contributor/@deleted!', $buffer)) {
 	    $username = false;
 	} elseif (preg_match('!^/contributor/username=([^\n]+)!', $buffer, $matches)) {
 		$username = $matches[1];
@@ -208,3 +218,123 @@ foreach ($langs as $lang => $totals) {
 }
 
 fclose($hndl);
+exit;
+
+/**
+ * Parse revision change text for non-standard comments.
+ */
+function parseMetaHistory()
+{
+    global $edittypes;
+    include 'Swaggest/JsonDiff/JsonDiff.php';
+    
+    spl_autoload_register(function ($class) {
+        $file = str_replace('\\', DIRECTORY_SEPARATOR, $class).'.php';
+        if (file_exists($file)) {
+            require $file;
+            return true;
+        }
+        return false;
+    });
+    
+    $hndl = fopen('navelgazernoncomment.tsv', 'r');
+    $edits = [];
+        
+    while (! feof($hndl)) {
+        $buffer = fgets($hndl);
+        $buffer = rtrim($buffer);
+        if (empty($buffer)) continue;
+        list($username,$key,$grandtotal) = explode("\t", $buffer);
+        if (! isset($edits[$username])) $edits[$username] = [];
+        $edits[$username][$key] = (int)$grandtotal;
+    }
+    
+    echo "Loaded previous totals count: " . number_format(count($edits)) . "\n";
+    
+    fclose($hndl);
+    $hndl = fopen('php://stdin', 'r');
+    $count = 0;
+    
+    while (! feof($hndl)) {
+        $buffer = fgets($hndl);
+        $buffer = rtrim($buffer);
+        if (empty($buffer)) continue;
+        
+        if (strpos($buffer, '/mediawiki/page/revision') === 0)
+            $buffer = substr($buffer, 24); // strip /mediawiki/page/revision
+        else
+            $buffer = substr($buffer, 15); // strip /mediawiki/page
+        
+        if (preg_match('!^/title=(.*)!', $buffer, $matches)) {
+            $prev_json = '{}';
+            if (preg_match('!^Q\d+$!', $matches[1])) $skip_text = false;
+            else $skip_text = true;
+        } elseif (preg_match('!^/contributor/ip=!', $buffer)) {
+             $username = false;
+        } elseif (preg_match('!^/contributor/@deleted!', $buffer)) {
+            $username = false;
+        } elseif (preg_match('!^/contributor/username=(.*)!', $buffer, $matches)) {
+            $username = $matches[1];
+        } elseif (preg_match('!^/comment=/\\* (.*)!', $buffer, $matches)) {
+            $comment = $matches[1];
+            
+            foreach ($edittypes as $edittype => $typevalue) {
+                if (preg_match($edittype, $comment)) {
+                    $skip_text = true;
+                    break; // skip recognized comment format
+                }
+            }
+        } elseif (preg_match('!^/text=(.*)!', $buffer, $matches)) {
+            if ($skip_text) continue;
+            if ($username === false) $username = ''; // anonymous edit
+            
+            $r = new Swaggest\JsonDiff\JsonDiff(
+                json_decode($prev_json),
+                json_decode($matches[1]),
+                Swaggest\JsonDiff\JsonDiff::SKIP_JSON_MERGE_PATCH + Swaggest\JsonDiff\JsonDiff::SKIP_JSON_PATCH
+                );
+            
+            $paths = $r->getAddedPaths();
+            
+            foreach ($paths as $path) {
+                if (preg_match('!^/claims/P(\d+)$!', $path, $matches2)) {
+                    $key = $matches2[1];
+                    if (! isset($edits[$username])) $edits[$username] = [];
+                    if (! isset($edits[$username][$key])) $edits[$username][$key] = 0;
+                    $edits[$username][$key] += 1;
+                    ++$count;
+                    if ($count == 1000) break 2;
+                }
+            }
+
+            $prev_json = $matches[1];
+        }
+    }
+    
+    echo " Processed " . number_format($count) . "\n";
+    
+    fclose($hndl);
+    $hndl = fopen('navelgazernoncomment.tsv', 'w');
+    
+    foreach ($edits as $username => $totals) {
+        foreach ($totals as $key => $total) {
+            fwrite($hndl, "$username\t$key\t$total\n");
+        }
+    }
+    
+    fclose($hndl);
+
+    /*
+    $originalJson = '{"type":"item","id":"Q518475","labels":{"hu":{"language":"hu","value":"2011\u20132012-es f\u00e9rfi EHF-kupa"},"de":{"language":"de","value":"EHF-Pokal 2011\/12"},"en":{"language":"en","value":"2011\u201312 EHF Cup"},"fr":{"language":"fr","value":"Coupe EHF 2011-2012"},"it":{"language":"it","value":"EHF Cup 2011-2012"}},"descriptions":{"fr":{"language":"fr","value":"comp\u00e9tition de handball"}},"aliases":[],"claims":[],"sitelinks":{"huwiki":{"site":"huwiki","title":"2011\u20132012-es f\u00e9rfi EHF-kupa","badges":[]},"dewiki":{"site":"dewiki","title":"EHF-Pokal 2011\/12","badges":[]},"enwiki":{"site":"enwiki","title":"2011\u201312 EHF Cup","badges":[]},"frwiki":{"site":"frwiki","title":"Coupe EHF 2011-2012","badges":[]},"itwiki":{"site":"itwiki","title":"EHF Cup 2011-2012 (pallamano maschile)","badges":[]}}}';
+    
+    $newJson = '{"type":"item","id":"Q518475","labels":{"hu":{"language":"hu","value":"2011\u20132012-es f\u00e9rfi EHF-kupa"},"de":{"language":"de","value":"EHF-Pokal 2011\/12"},"en":{"language":"en","value":"2011\u201312 EHF Cup"},"fr":{"language":"fr","value":"Coupe EHF 2011-2012"},"it":{"language":"it","value":"EHF Cup 2011-2012"}},"descriptions":{"fr":{"language":"fr","value":"comp\u00e9tition de handball"}},"aliases":[],"claims":{"P646":[{"mainsnak":{"snaktype":"value","property":"P646","hash":"e7b27072bc4563912164b62c8af54db229c371ba","datavalue":{"value":"\/m\/0j289ln","type":"string"}},"type":"statement","id":"Q518475$F3973CD0-B8E3-4078-BF7E-A54A045D0DB3","rank":"normal"}]},"sitelinks":{"huwiki":{"site":"huwiki","title":"2011\u20132012-es f\u00e9rfi EHF-kupa","badges":[]},"dewiki":{"site":"dewiki","title":"EHF-Pokal 2011\/12","badges":[]},"enwiki":{"site":"enwiki","title":"2011\u201312 EHF Cup","badges":[]},"frwiki":{"site":"frwiki","title":"Coupe EHF 2011-2012","badges":[]},"itwiki":{"site":"itwiki","title":"EHF Cup 2011-2012 (pallamano maschile)","badges":[]}}}';
+        
+    $r = new Swaggest\JsonDiff\JsonDiff(
+        json_decode($originalJson),
+        json_decode($newJson),
+        Swaggest\JsonDiff\JsonDiff::SKIP_JSON_MERGE_PATCH + Swaggest\JsonDiff\JsonDiff::SKIP_JSON_PATCH
+        );
+    
+    print_r($r->getAddedPaths());
+    */
+}
