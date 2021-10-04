@@ -47,6 +47,8 @@ while (! feof($hndl)) {
     if (count($parts) == 1) $parts[1] = 0; // No tool
     $username = $parts[0];
     $toolid = (int)$parts[1];
+    
+    if ($toolid == 708) $toolid = 0; // wikidata-ui
 
     if (! in_array($toolid, $tagdefs)) continue;
     if (! isset($users[$username])) $users[$username] = [];
