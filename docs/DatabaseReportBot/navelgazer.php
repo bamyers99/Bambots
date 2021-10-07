@@ -294,7 +294,7 @@ function parseMetaHistory()
                         }
                     }
                     
-                    $skip_text = true;
+                    if ($typevalue !== -18 && $typevalue !== -19) $skip_text = true;
                     break; // skip recognized comment format
                 }
             }
