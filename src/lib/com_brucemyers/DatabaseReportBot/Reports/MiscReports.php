@@ -1537,8 +1537,10 @@ END;
 	        $tagdesc = isset($tagmeta['description']) ? preg_replace('!\s!', ' ', $tagmeta['description']) : '';
 
 	        if (isset($tags[$tagname])) {
-	            if (preg_match('!>([^<]+?)<!', $tagdisplayname, $matches)) {
-                    $tagdisplayname = $matches[1];
+	            if (preg_match('!>OpenRefine</a>(.+)!', $tagdisplayname, $matches)) { // OpenRefine
+	                $tagdisplayname = "OpenRefine{$matches[1]}";
+	            } elseif (preg_match('!>([^<]+?)<!', $tagdisplayname, $matches)) { // OAuth
+	                $tagdisplayname = $matches[1];
 	            }
 
                 fwrite($hndl, "{$tags[$tagname]['id']}\t$tagname\t$tagdisplayname\t$tagdesc\t{$tags[$tagname]['count']}\n");
