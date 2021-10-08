@@ -1525,7 +1525,7 @@ END;
 
 	    foreach ($result as $tag) {
 	        $tagname = $tag['ctd_name'];
-	        if (strstr($tagname, 'OAuth CID:') === false) continue;
+	        if (strstr($tagname, 'OAuth CID:') === false && strstr($tagname, 'openrefine') === false) continue;
 	        $tags[$tagname] = ['id' => $tag['ctd_id'], 'count' => $tag['ctd_count']];
 	    }
 
