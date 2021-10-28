@@ -30,6 +30,8 @@ class RuleSet
     const TITLE_REGEX = '!^/\\s*\\$TITLE\\s*:(.+)/$!u';
     const LEAD_REGEX = '!^/\\s*\\$LEAD\\s*:(.+)/$!u';
     const ORES_REGEX = '!^/\\s*\\$ORES\\s*:([^>]+)>\\s*([0-9.]+)\\s*/$!u';
+    const CURRENT_YEAR_REGEX = '!\\$CURRENTYEAR(?:-\\d+:)?!u';
+    const CURRENT_DECADE_REGEX = '!\\$CURRENTDECADE(?:-\\d+:)?!u';
     const INIHIBITOR_REGEX = '!\\s*,\\s*(/.*?/)!u';
     const JAVA_UNICODE_REGEX = '/(\\\\[pP]\\{)[iI]s/';
     const OPTION_REGEX = '!^##(\w+\s*=?[^#]*)##$!';
@@ -149,12 +151,34 @@ class RuleSet
         	$regex = '/' . $titlematches[1] . '/';
         	$type = 'title';
         }
-
+        
         if (preg_match(self::LEAD_REGEX, $regex, $leadmatches)) {
-        	$regex = '/' . $leadmatches[1] . '/';
-        	$type = 'lead';
+            $regex = '/' . $leadmatches[1] . '/';
+            $type = 'lead';
         }
-
+        
+        if (preg_match(self::CURRENT_YEAR_REGEX, $regex, $curyearmatches)) {
+            $year = (int)date('Y');
+            
+            if (preg_match('!\\$CURRENTYEAR-(\\d+):!', $regex, $curyearmatches2)) {
+                $year -= $curyearmatches2[1];
+            }
+            
+            $regex = str_replace($curyearmatches[0], $year, $regex);
+        }
+        
+        if (preg_match(self::CURRENT_DECADE_REGEX, $regex, $curdecadematches)) {
+            $year = date('Y');
+            $year[3] = '0';
+            
+            if (preg_match('!\\$CURRENTDECADE-(\\d+):!', $regex, $curdecadematches2)) {
+                $year = (int)$year;
+                $year -= 10 * $curdecadematches2[1];
+            }
+            
+            $regex = str_replace($curdecadematches[0], $year, $regex);
+        }
+        
         if (! $size && ! $ores) {
             $regex = preg_replace(self::JAVA_UNICODE_REGEX, '$1', $regex);
             $regex .= 'ui'; // Add Unicode, ignore case options

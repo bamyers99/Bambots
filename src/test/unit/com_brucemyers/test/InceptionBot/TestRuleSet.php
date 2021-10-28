@@ -38,6 +38,10 @@ class TestRuleSet extends UnitTestCase
         /$TITLE:National Park/
         /$LEAD:\([^)]*(born|b\.)/ , /Borneo/
         /$ORES:STEM.Medicine > 0.5/
+        /Category:$CURRENTYEAR births/
+        /$CURRENTYEAR-1: births/
+        /$CURRENTDECADEs births/
+        /$CURRENTDECADE-1:s births/
         5 /Bay\W*of\W*Plenty\P{M}\x{2460}\p{Greek}\p{isCyrillic}\P{IsArmenian}/ <!-- Tests Unicode -->
         /Northland\Wgeo\Wstub/
         6  /\WOtago\W/ , /Australia/ , /Tasmania/ , /Hobart/
@@ -60,7 +64,7 @@ EOT;
         }
         $this->assertEqual($inhibitcnt, 5, 'Missing inhibitors');
 
-        //print_r($ruleset->rules);
+        print_r($ruleset->rules);
     }
 
     public function testBadRules()
@@ -77,8 +81,9 @@ EOT;
 
         $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
-        $realerrors = 9; // Includes 'No rules found'
+        $realerrors = 7;
         $this->assertEqual($errorcnt, $realerrors);
         if ($errorcnt != $realerrors) print_r($ruleset->errors);
+        //print_r($ruleset->rules);
     }
 }
