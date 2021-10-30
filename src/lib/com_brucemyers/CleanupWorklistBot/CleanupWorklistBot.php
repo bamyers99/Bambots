@@ -43,7 +43,7 @@ class CleanupWorklistBot
 
     public function __construct(&$ruleconfigs, ResultWriter $resultWriter, $skipCatLoad)
     {
-    	$errorrulsets = array();
+    	$errorrulsets = [];
         $this->resultWriter = $resultWriter;
         $totaltimer = new Timer();
         $totaltimer->start();
@@ -123,7 +123,9 @@ class CleanupWorklistBot
 	        	}
 
 	        	$repgen->generateReports($project, $isWikiProject, $page_count, $member_cat_type);
-
+	        	
+	        	$this->_generateGraph($project, $outputdir, $tools_host, $user, $pass);
+	        	
         	} catch (CatTypeNotFoundException $ex) {
         		$errorrulsets[] = $project . ' (project category not found)';
         	}
