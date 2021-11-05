@@ -429,17 +429,24 @@ function get_navels()
 		$params['username'] = ucfirst($params['username']);
 		$params['username'] = str_replace('_', ' ', $params['username']);
 
-		$sql = "SELECT property_id, create_count, month_count " .
-			" FROM s51454__wikidata.navelgazer " .
-			" WHERE user_name = ? ";
+		$sql = '(SELECT property_id, create_count, month_count ' .
+			' FROM s51454__wikidata.navelgazer ' .
+			' WHERE user_name = ? )' .
+	        ' UNION ' .
+		    '(SELECT property_id, create_count, 0 ' .
+			' FROM s51454__wikidata.navelgazernoncom ' .
+			' WHERE user_name = ?)';
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, $params['username']);
-
+		$sth->bindValue(2, $params['username']);
+		
 		$sth->execute();
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-			$data[$row['property_id']] = [$row['property_id'], $row['create_count'], $row['month_count'], '', '']; // removes dups
+		    if (! isset($data[$row['property_id']])) $data[$row['property_id']] = [$row['property_id'], 0, 0, '', ''];
+		    $data[$row['property_id']][1] += $row['create_count'];
+		    $data[$row['property_id']][2] += $row['month_count'];
 		}
 
 		if (! empty($data)) {
@@ -498,24 +505,33 @@ function get_navels()
 			$property_label = $items[0]->getLabelDescription('label', $params['lang']);
 		}
 
-		$sql = 'SELECT user_name, create_count, month_count ' .
+		$sql = '(SELECT user_name, create_count, month_count ' .
 				' FROM s51454__wikidata.navelgazer ' .
-				' WHERE property_id = ? ORDER by create_count DESC';
+				' WHERE property_id = ?)' .
+		        ' UNION ' .
+		        '(SELECT user_name, create_count, 0 ' .
+				' FROM s51454__wikidata.navelgazernoncom ' .
+				' WHERE property_id = ?)' .
+		        ' ORDER by create_count DESC';
 
 		$sth = $dbh_wiki->prepare($sql);
 		$sth->bindValue(1, (int)$params['property']);
-
+		$sth->bindValue(2, (int)$params['property']);
+		
 		$sth->execute();
 		$count = 0;
 
 		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-		    if ($count < 100) {
-			    $data[] = [$row['user_name'], $row['create_count'], $row['month_count']];
-		    }
+		    if (! isset($data[$row['user_name']])) $data[$row['user_name']] = [$row['user_name'], 0, 0];
+		    $data[$row['user_name']][1] += $row['create_count'];
+		    $data[$row['user_name']][2] += $row['month_count'];
+		    
 		    $createtotal += $row['create_count'];
 		    $monthtotal += $row['month_count'];
 		    ++$count;
 		}
+		
+		$data = array_slice($data, 0, 100);
 
 	} elseif (! empty($params['langadd'])) {
 	    $sparql = <<<EOT
@@ -752,18 +768,32 @@ function getCSV()
 	echo CSVString::format(array('Username', 'Total count', 'Last month'));
 	echo "\n";
 
-	$sql = "SELECT user_name, create_count, month_count " .
-			" FROM s51454__wikidata.navelgazer " .
-			" WHERE property_id = ? ORDER by create_count DESC";
+	$sql = '(SELECT user_name, create_count, month_count ' .
+	   	' FROM s51454__wikidata.navelgazer ' .
+	   	' WHERE property_id = ?)' .
+	   	' UNION ' .
+	   	'(SELECT user_name, create_count, 0 ' .
+	   	' FROM s51454__wikidata.navelgazernoncom ' .
+	   	' WHERE property_id = ?)' .
+	   	' ORDER by create_count DESC';
 
 	$sth = $dbh_wiki->prepare($sql);
 	$sth->bindValue(1, (int)$params['property']);
-
+	$sth->bindValue(2, (int)$params['property']);
+	
 	$sth->execute();
+	
+	$data = [];
 
 	while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-		echo CSVString::format(array($row['user_name'], $row['create_count'], $row['month_count']));
-		echo "\n";
+	    if (! isset($data[$row['user_name']])) $data[$row['user_name']] = [$row['user_name'], 0, 0];
+	    $data[$row['user_name']][1] += $row['create_count'];
+	    $data[$row['user_name']][2] += $row['month_count'];
+	}
+	
+	foreach ($data as $datum) {
+	    echo CSVString::format([$datum[0], $datum[1], $datum[2]]);
+	    echo "\n";
 	}
 }
 
