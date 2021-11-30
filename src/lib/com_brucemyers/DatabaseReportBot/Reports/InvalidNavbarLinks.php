@@ -381,7 +381,7 @@ class InvalidNavbarLinks extends DatabaseReport
 						}
 					}
 
-		    		if (preg_match('!/(archive|child|doc|drafts|main|more|sandbox|shell|testcase|table|box|lua)!i', $template)) continue;
+		    		if (preg_match('!/(archive|child|doc|drafts|main|more|sandbox|shell|testcase|table|box|lua|header)!i', $template)) continue;
 
 		    		$name = str_replace('_', ' ', $params[$name_param]);
 		    		$name = preg_replace('!\s+!', ' ', $name);
