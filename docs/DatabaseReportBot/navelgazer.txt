@@ -6,7 +6,7 @@ CREATE TABLE s51454__wikidata.`navelgazer` (
   `month_count` int(11) NOT NULL,
   KEY `username` (`user_name`),
   KEY `property_id` (`property_id`)
-) ENGINE=Aria DEFAULT CHARSET=utf8
+) ENGINE=Aria DEFAULT CHARSET=utf8mb4
 
 CREATE TABLE s51454__wikidata.`navelgazerlang` (
   `language` varchar(32) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE s51454__wikidata.`navelgazerlang` (
   KEY `username` (`user_name`),
   KEY `lang_create` (`language`, `create_count`),
   KEY `lang_month` (`language`, `month_count`)
-) ENGINE=Aria DEFAULT CHARSET=utf8
+) ENGINE=Aria DEFAULT CHARSET=utf8mb4
 
 CREATE TABLE s51454__wikidata.`navelgazertagdef` (
   `id` int(11) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE s51454__wikidata.`navelgazertagdef` (
   `defcount` int(11) UNSIGNED NOT NULL,
   UNIQUE INDEX `tagdef_id` (`id`),
   UNIQUE INDEX `tag_displayname` (`displayname`,`id`,`defcount`)
-) ENGINE=Aria DEFAULT CHARSET=utf8
+) ENGINE=Aria DEFAULT CHARSET=utf8mb4
 
 CREATE TABLE s51454__wikidata.`navelgazertag` (
   `tag_id` int(11) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE s51454__wikidata.`navelgazertag` (
   UNIQUE INDEX `username` (`user_name`, `tag_id`),
   KEY `tag_id_total` (`tag_id`, `total_count`),
   KEY `tag_id_month` (`tag_id`, `month_count`)
-) ENGINE=Aria DEFAULT CHARSET=utf8
+) ENGINE=Aria DEFAULT CHARSET=utf8mb4
 
 CREATE TABLE s51454__wikidata.`navelgazernoncom` (
   `user_name` varchar(255) NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE s51454__wikidata.`navelgazernoncom` (
   `create_count` int(11) NOT NULL,
   KEY `username` (`user_name`),
   KEY `property_id` (`property_id`)
-) ENGINE=Aria DEFAULT CHARSET=utf8
+) ENGINE=Aria DEFAULT CHARSET=utf8mb4
 
 sql tools
 TRUNCATE s51454__wikidata.navelgazer;

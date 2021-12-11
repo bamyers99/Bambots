@@ -48,15 +48,15 @@ class InceptionBot
         $this->existingResultParser = new ExistingResultParser();
         $totaltimer = new Timer();
         $totaltimer->start();
-        $errorrulsets = array();
-        $creators =  array();
+        $errorrulsets = [];
+        $creators =  [];
         $startProject = Config::get(self::CURRENTPROJECT);
 
         $restarted = '';
         if (! empty($startProject)) $restarted = ' (restarted)';
 
         // Retrieve the rulesets
-        $rulesets = array();
+        $rulesets = [];
         foreach ($ruleconfigs as $rulename => $portal) {
             $rulesets[$rulename] = new RuleSet($rulename, $mediawiki->getpage('User:AlexNewArtBot/' . $rulename));
         }
@@ -64,18 +64,17 @@ class InceptionBot
         // Retrieve the new pages in namespaces: Article, Template, Category, Draft
         $lister = new NewPageLister($mediawiki, $earliestTimestamp, $latestTimestamp, '0|10|14|118');
 
-        $temppages = array();
+        $temppages = [];
 
         while (($pages = $lister->getNextBatch()) !== false) {
             $temppages = array_merge($temppages, $pages);
         }
 
         // Get rid of duplicates
-        $allpages = array();
-        foreach ($temppages as &$newpage) {
+        $allpages = [];
+        foreach ($temppages as $newpage) {
             $allpages[$newpage['title']] = $newpage;
         }
-        unset($newpage);
 
         unset($temppages); // Free-up the memory
 
@@ -107,54 +106,62 @@ class InceptionBot
 
         // Rename moved pages
         $movedpagecnt = 0;
-        $oldtitles = array();
-        $targetns = array('0','118'); // Article, Draft
+        $oldtitles = [];
         $lister = new MovedPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
         while (($movedpages = $lister->getNextBatch()) !== false) {
         	foreach ($movedpages as &$movedpage) {
-                if (! in_array($movedpage['oldns'], $targetns) || ! in_array($movedpage['newns'], $targetns)) { // Move was from/to non article/draft namespaces.
-                    if ($movedpage['newns'] != '0' || $movedpage['oldns'] == '0') continue; // Skip if not moving to article ns or old ns is article.
-                    $newtitle = $movedpage['newtitle'];
-
-                    if (! isset($allpages[$newtitle])) {
-                        $allpages[$newtitle] = array('ns' => '0', 'title' => $newtitle, 'user' => $movedpage['user'],
-                            'timestamp' => $movedpage['timestamp']);
-                    }
-                    continue;
-                }
-
-                $oldtitle = $movedpage['oldtitle'];
-
-                if (isset($allpages[$oldtitle]) && $movedpage['oldns'] != '118') { // Rename moved page. Want moved drafts to appear as new pages.
-                    // Skip if move happened before new page creation.
-                    if (strnatcmp($movedpage['timestamp'], $allpages[$oldtitle]['timestamp']) <= 0) continue;
-
-                    $newtitle = $movedpage['newtitle'];
-                    $temppage = $allpages[$oldtitle];
-                    $temppage['title'] = $newtitle;
-                    $temppage['ns'] = $movedpage['newns'];
-
-                    if (! isset($temppage['oldtitles'])) $temppage['oldtitles'] = array();
-                    $temppage['oldtitles'][] = $oldtitle;
-
-                    unset($allpages[$oldtitle]);
-                    $allpages[$newtitle] = $temppage;
-
-                    $oldtitles[] = $oldtitle;
-                    ++$movedpagecnt;
-                } elseif ($movedpage['newns'] == '0' && $movedpage['oldns'] != '0' && ! isset($allpages[$movedpage['newtitle']])) {
-                    $allpages[$movedpage['newtitle']] = array('ns' => '0', 'title' => $movedpage['newtitle'], 'user' => $movedpage['user'],
-                    	'timestamp' => $movedpage['timestamp']);
-                }
+        	    $oldtitle = $movedpage['oldtitle'];
+        	    $newtitle = $movedpage['newtitle'];
+        	    
+        	    if ($movedpage['oldns'] == $movedpage['newns']) $move_type = 'rename';
+        	    elseif ($movedpage['newns'] == 118) $move_type = 'to_draft';
+        	    elseif ($movedpage['newns'] == 0) $move_type = 'to_article';
+        	    else continue;
+        	    
+        	    switch ($move_type) {
+        	        case 'rename':
+        	            if (! isset($allpages[$oldtitle])) break;
+        	            
+        	            // Skip if move happened before new page creation.
+        	            if (strnatcmp($movedpage['timestamp'], $allpages[$oldtitle]['timestamp']) <= 0) break;
+        	            
+        	            $temppage = $allpages[$oldtitle];
+        	            $temppage['title'] = $newtitle;
+        	            $temppage['ns'] = $movedpage['newns'];
+        	            
+        	            if (! isset($temppage['oldtitles'])) $temppage['oldtitles'] = [];
+        	            $temppage['oldtitles'][] = $oldtitle;
+        	            
+        	            unset($allpages[$oldtitle]);
+        	            $allpages[$newtitle] = $temppage;
+        	            
+        	            $oldtitles[] = $oldtitle;
+        	            ++$movedpagecnt;
+        	            break;
+        	            
+        	        case 'to_draft':
+        	            if (isset($allpages[$newtitle])) break;
+        	            
+        	            $allpages[$newtitle] = ['ns' => '118', 'title' => $newtitle, 'user' => $movedpage['user'],
+        	                'timestamp' => $movedpage['timestamp']];
+        	            break;
+        	            
+        	        case 'to_article':
+        	            if (isset($allpages[$newtitle])) break;
+        	            
+        	            $allpages[$newtitle] = ['ns' => '0', 'title' => $newtitle, 'user' => $movedpage['user'],
+        	                'timestamp' => $movedpage['timestamp']];
+        	            break;
+        	    }
         	}
         }
         unset($movedpage);
 
         Logger::log("Moved page count = $movedpagecnt");
 
-        $pagenames = array();
-        $newestpages = array();
+        $pagenames = [];
+        $newestpages = [];
         foreach ($allpages as &$newpage) {
         	if (! isset($newpage['user'])) $newpage['user'] = 'Unknown';
             $creator = $newpage['user'];
@@ -162,7 +169,7 @@ class InceptionBot
             else $creators[$creator] = 1;
 
             $pagenames[] = $newpage['title'];
-            if (strcmp(str_replace(array('-',':','T','Z'), '', $newpage['timestamp']), $lastrun) > 0) $newestpages[] = $newpage['title'];
+            if (strcmp(str_replace(['-',':','T','Z'], '', $newpage['timestamp']), $lastrun) > 0) $newestpages[] = $newpage['title'];
         }
         unset($newpage);
         Logger::log('Newest page count = ' . count($newestpages));
@@ -172,10 +179,10 @@ class InceptionBot
         // Retrieve the pages that have changed since the last run
         $revisions = $mediawiki->getPagesLastRevision($pagenames);
 
-        $updatedpages = array();
+        $updatedpages = [];
         foreach ($revisions as $pagename => $revision) {
             if (in_array($pagename, $newestpages)) continue;
-            if (strcmp(str_replace(array('-',':','T','Z'), '', $revision['timestamp']), $lastrun) > 0) $updatedpages[] = $pagename;
+            if (strcmp(str_replace(['-',':','T','Z'], '', $revision['timestamp']), $lastrun) > 0) $updatedpages[] = $pagename;
         }
         Logger::log('Updated page count = ' . count($updatedpages));
 
@@ -207,7 +214,7 @@ class InceptionBot
             Config::set(self::CURRENTPROJECT, $rulename, true);
 
             $timer->start();
-            $rulesetresult = array();
+            $rulesetresult = [];
             $processor = new RuleSetProcessor($ruleset);
             if (count($ruleset->errors)) $errorrulsets[] = $rulename;
 
@@ -228,7 +235,7 @@ class InceptionBot
                     $data = $mediawiki->getPageWithCache($title);
 
                     if (isset($oresscores[$title])) $oresscore = $oresscores[$title];
-                    else $oresscore = array();
+                    else $oresscore = [];
 
                     $results = $processor->processData($data, $title, $oresscore);
 
@@ -239,7 +246,7 @@ class InceptionBot
                     unset($result);
 
                     if ($totalScore >= $ruleset->minScore) {
-                        $rulesetresult[] = array('pageinfo' => $newpage, 'scoring' => $results, 'totalScore' => $totalScore);
+                        $rulesetresult[] = ['pageinfo' => $newpage, 'scoring' => $results, 'totalScore' => $totalScore];
                     }
                 }
             }
@@ -346,7 +353,7 @@ class InceptionBot
 ";
 
     	// Determine suppressed namespaces
-    	$suppressedNS = array();
+    	$suppressedNS = [];
     	if (isset($ruleset->options['SuppressNS'])) {
             foreach ($ruleset->options['SuppressNS'] as $snsoption) {
                 if ($snsoption == 'Category') $suppressedNS[] = '14';
@@ -358,12 +365,12 @@ class InceptionBot
     	if (! empty($newresults)) $output .= "<ul>\n";
 
     	// group by namespace
-    	$namespaces = array();
+    	$namespaces = [];
 
     	foreach ($newresults as $result) {
     		$pageinfo = $result['pageinfo'];
     		$ns = $pageinfo['ns'];
-    		if (! isset($namespaces[$ns])) $namespaces[$ns] = array();
+    		if (! isset($namespaces[$ns])) $namespaces[$ns] = [];
     		$namespaces[$ns][] = $result;
     	}
 
@@ -422,12 +429,12 @@ class InceptionBot
     	    $output .= "<ul>\n";
 
     	    // Group by line type and namespace suppress
-    	    $namespaces = array();
+    	    $namespaces = [];
     	    foreach ($section as $line) {
     	    	$linetype = $line['type'];
                 $wikipediaNS = $line['WikipediaNS'];
                 $akey = "$linetype|$wikipediaNS";
-    			if (! isset($namespaces[$akey])) $namespaces[$akey] = array();
+    			if (! isset($namespaces[$akey])) $namespaces[$akey] = [];
     			$namespaces[$akey][] = $line;
     	    }
 
