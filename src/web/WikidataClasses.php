@@ -270,9 +270,11 @@ function display_form($subclasses)
 				}
 				
 				if ($subclasses['subclassinstofcnt'] != 0) {
-				    $sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
-				        "  ?s wdt:P31 wd:Q{$params['id']} .\n" .
-				        "  ?s wdt:P279+ wd:Q{$params['id']} .\n" .
+				    $sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel ?isTruthy WHERE {\n" .
+				        "  ?s wdt:P31 ?stmt .\n" .
+				        "  ?stmt ps:P31 wd:Q{$params['id']} .\n" .
+				        "  ?stmt ps:P279+ wd:Q{$params['id']} .\n" .
+				        "  BIND( EXISTS { ?stmt a wikibase:BestRank } AS ?isTruthy ) .\n" .
 				        "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
 				        "}\nORDER BY ?sLabel");
 				    
@@ -281,9 +283,11 @@ function display_form($subclasses)
 				    echo "<tr><td>Subclass is instance of:</td><td>" . intl_num_format($subclasses['subclassinstofcnt']) . "$sparql</td></tr>\n";
 				}
 				
-				$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
-					"  ?s wdt:P279 wd:Q{$params['id']} .\n" .
-					"  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
+				$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel ?isTruthy WHERE {\n" .
+				    "  ?s p:P279 ?stmt .\n" .
+				    "  ?stmt ps:P279 wd:Q{$params['id']} .\n" .
+				    "  BIND( EXISTS { ?stmt a wikibase:BestRank } AS ?isTruthy ) .\n" .
+				    "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
 					"}\nORDER BY ?sLabel");
 
 				$sparql = "&nbsp;&nbsp;&nbsp;(<a href='$sparql' class='external'>SPARQL query</a>)";
@@ -291,9 +295,11 @@ function display_form($subclasses)
 				echo "<tr><td>Direct subclasses:</td><td>" . intl_num_format($subclasses['class'][2]) . "$sparql</td></tr>\n";
 				echo "<tr><td>Indirect subclasses:</td><td>" . intl_num_format($subclasses['class'][3]) . "</td></tr>\n";
 
-				$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel WHERE {\n" .
-					"  ?s wdt:P31 wd:Q{$params['id']} .\n" .
-					"  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
+				$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel ?isTruthy WHERE {\n" .
+				    "  ?s p:P31 ?stmt .\n" .
+				    "  ?stmt ps:P31 wd:Q{$params['id']} .\n" .
+				    "  BIND( EXISTS { ?stmt a wikibase:BestRank } AS ?isTruthy ) .\n" .
+				    "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
 					"}\nORDER BY ?sLabel");
 
 				$sparql = "&nbsp;&nbsp;&nbsp;(<a href='$sparql' class='external'>SPARQL query</a>)";
