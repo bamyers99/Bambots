@@ -560,8 +560,8 @@ class TemplateParamBot
     		`page_id` int unsigned NOT NULL,
 	    	`template_id` int unsigned NOT NULL,
     		`instance_num` int unsigned NOT NULL,
-    		`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-    		`param_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    		`param_name` varbinary(255) NOT NULL,
+    		`param_value` varbinary(500) NOT NULL,
     		KEY `template_id` (`template_id`, `param_name`),
     		KEY `page_id` (`page_id`)
     		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -569,7 +569,7 @@ class TemplateParamBot
 
 		$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_totals` (
     		`template_id` int unsigned NOT NULL,
-    		`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    		`param_name` varbinary(255) NOT NULL,
     		`value_count` int unsigned NOT NULL,
     		`unique_values` blob NOT NULL,
     		KEY `template_id` (`template_id`)
@@ -680,15 +680,15 @@ class TemplateParamBot
     	`page_id` int unsigned NOT NULL,
     	`template_id` int unsigned NOT NULL,
     	`instance_num` int unsigned NOT NULL,
-    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-    	`param_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`param_name` varbinary(255) NOT NULL,
+    	`param_value` varbinary(500) NOT NULL,
     	KEY `template_id` (`template_id`, `param_name`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     	$dbh_tools->exec($sql);
 
     	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_totals` (
     	`template_id` int unsigned NOT NULL,
-    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`param_name` varbinary(255) NOT NULL,
     	`value_count` int unsigned NOT NULL,
     	`unique_values` blob NOT NULL,
     	KEY `template_id` (`template_id`)
@@ -697,7 +697,7 @@ class TemplateParamBot
 
     	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_missings` (
     	`template_id` int unsigned NOT NULL,
-    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`param_name` varbinary(255) NOT NULL,
     	`page_id` int unsigned NOT NULL,
     	KEY `template_id` (`template_id`, `param_name`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -705,7 +705,7 @@ class TemplateParamBot
 
     	$sql = "CREATE TABLE IF NOT EXISTS `{$wikiname}_invalids` (
     	`template_id` int unsigned NOT NULL,
-    	`param_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+    	`param_name` varbinary(255) NOT NULL,
     	`page_id` int unsigned NOT NULL,
     	KEY `template_id` (`template_id`, `param_name`)
     	) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
