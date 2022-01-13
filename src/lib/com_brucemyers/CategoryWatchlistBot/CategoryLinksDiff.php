@@ -64,7 +64,7 @@ class CategoryLinksDiff
 		       `plusminus` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 			   `pagetitle` varbinary(255) NOT NULL,
 		       `cat_template` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-			   `category` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+			   `category` varchar(500) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 			   `flags` tinyint NOT NULL DEFAULT 0
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
         $dbh_tools->exec($sql);
