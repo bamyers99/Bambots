@@ -23,6 +23,7 @@ use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\TemplateParamParser;
+use Exception;
 
 class CategoryLinksDiff
 {
@@ -352,7 +353,12 @@ class CategoryLinksDiff
 		    		$isth->bindValue(4, $watchtype);
 		    		$isth->bindValue(5, $category);
 		    		$isth->bindValue(6, $flags);
-		    		$isth->execute();
+		    		try {
+		    		    $isth->execute();
+		    		} catch (Exception $e) {
+		    		    Logger::log('processRevisions error, continuing. Error = ' . $e->getMessage());
+		    		    Logger::log("  category=$category (" . strlen($category) . ')');
+		    		}
 				}
 			}
 
