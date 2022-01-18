@@ -118,7 +118,7 @@ class ProjectPages
     	$dbh_tools->exec($sql);
 
     	// Get article assessments
-    	$isth = $dbh_tools->prepare('UPDATE page SET class = ?, importance = ? WHERE page_title = ?');
+    	$isth = $dbh_tools->prepare('UPDATE IGNORE page SET class = ?, importance = ? WHERE page_title = ?');
     	$continue = '';
 
     	while ($continue !== false) {
