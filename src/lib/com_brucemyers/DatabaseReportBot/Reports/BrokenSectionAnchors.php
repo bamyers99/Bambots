@@ -103,7 +103,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		$tempfile = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'DatabaseReportBotBSA.tmp';
 		$hndl = fopen($tempfile, 'w');
 
-    	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+    	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$sth = $dbh_enwiki->query($sql);
 		$sth->setFetchMode(PDO::FETCH_NUM);
@@ -136,7 +136,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		$hndl = fopen($tempfile, 'r');
 
 		$sql = 'SELECT COUNT(*) as linkcount FROM pagelinks WHERE pl_namespace = 0 AND pl_title = ? GROUP BY pl_namespace';
-    	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+    	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$sth = $dbh_enwiki->prepare($sql);
 
@@ -167,7 +167,7 @@ class BrokenSectionAnchors extends DatabaseReport
 			    } catch (PDOException $e) {
 			        $sth = null;
 			        $dbh_enwiki = null;
-			        $dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+			        $dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $user, $pass);
 			        $dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			        $sth = $dbh_enwiki->prepare($sql);
 			    }

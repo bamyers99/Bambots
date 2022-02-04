@@ -33,7 +33,7 @@ class TestCategories extends UnitTestCase
     	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
 
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     	$tables = new CreateTables($dbh_tools);

@@ -234,7 +234,7 @@ SET circ.page_title2 = cats.page_title WHERE circ.page_id2 = cats.page_id;
 		$tools_host = $apis['tools_host'];
 		$user = $apis['user'];
 		$pass = $apis['pass'];
-		$dbh_tools2 = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot;charset=utf8", $user, $pass);
+		$dbh_tools2 = new PDO("mysql:host=$tools_host;dbname=s51454__DatabaseReportBot;charset=utf8mb4", $user, $pass);
 		$dbh_tools2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$sql = 'INSERT INTO CC_subcats VALUES (?,?),(?,?)';

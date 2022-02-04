@@ -68,7 +68,7 @@ class CategoryLinksDiff
 		       `cat_template` char(1) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
 			   `category` varbinary(500) NOT NULL,
 			   `flags` tinyint NOT NULL DEFAULT 0
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
         $dbh_tools->exec($sql);
 
         // Add the wiki table entry if needed

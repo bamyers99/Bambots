@@ -69,7 +69,7 @@ class ReportGenerator
 
 	function generateReports($project, $isWikiProject, $project_pages, $member_cat_type)
 	{
-    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $this->user, $this->pass);
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$cleanup_pages = 0;
@@ -762,7 +762,7 @@ class ReportGenerator
 	    // Insert points
 	    $issue_counts = [];
 	    
-	    $dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+	    $dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $this->user, $this->pass);
 	    $dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	    $sth = $dbh_tools->prepare("SELECT YEAR(time) as `year`, issues FROM history WHERE project = ? ORDER BY time");
 	    $sth->execute([$project]);

@@ -64,7 +64,7 @@ class ProjectPages
     	$category = str_replace('_', ' ', $category);
 
     	// Load the pages
-    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8", $this->user, $this->pass);
+    	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $this->user, $this->pass);
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$dbh_tools->exec('TRUNCATE page');
     	$page_count = 0;

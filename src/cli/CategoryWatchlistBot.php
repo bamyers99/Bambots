@@ -123,7 +123,7 @@ function printCatTree($wikiname, $category)
     if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
     $user = Config::get(CategoryWatchlistBot::LABSDB_USERNAME);
     $pass = Config::get(CategoryWatchlistBot::LABSDB_PASSWORD);
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8mb4", $user, $pass);
     $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     echo "Category tree for $wikiname - $category\n";;
@@ -197,7 +197,7 @@ function dumpTemplateRedirects($wikiname)
     if (empty($wiki_host)) $wiki_host = "$wikiname.analytics.db.svc.eqiad.wmflabs";
     $user = Config::get('CategoryWatchlistBot.labsdb_username');
     $pass = Config::get('CategoryWatchlistBot.labsdb_password');
-    $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+    $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8mb4", $user, $pass);
     $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $outpath = FileCache::getCacheDir() . DIRECTORY_SEPARATOR . $wikiname . 'TemplateRedirects.tsv';

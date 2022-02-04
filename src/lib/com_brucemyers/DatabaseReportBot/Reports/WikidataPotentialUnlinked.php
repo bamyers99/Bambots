@@ -286,7 +286,7 @@ class WikidataPotentialUnlinked extends DatabaseReport
     	$pass = Config::get('DatabaseReportBot.labsdb_password');
     	$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
 
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki;charset=utf8", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki;charset=utf8mb4", $user, $pass);
     	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     	// Load enwiki pagenames
@@ -436,7 +436,7 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 		$pass = Config::get('DatabaseReportBot.labsdb_password');
 		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
 
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki;charset=utf8", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=missingenwiki;charset=utf8mb4", $user, $pass);
 		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$sql = 'SELECT title FROM hitlist ORDER by title';
@@ -493,7 +493,7 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 		$pass = Config::get('DatabaseReportBot.labsdb_password');
 		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
 
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8mb4", $user, $pass);
 		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$startid = 0;
@@ -547,7 +547,7 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 		$pass = Config::get('DatabaseReportBot.labsdb_password');
 		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
 
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8mb4", $user, $pass);
 		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$sql = "SELECT undiacritic, GROUP_CONCAT(ips_item_id SEPARATOR ',') AS ids
@@ -588,7 +588,7 @@ WHERE hitlist.title = ep.page_title AND ep.page_namespace = 0 AND ep.page_is_red
 		$pass = Config::get('DatabaseReportBot.labsdb_password');
 		$wiki_host = Config::get('DatabaseReportBot.enwiki_host');
 
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=wikidatawiki_p;charset=utf8mb4", $user, $pass);
 		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$hndl = fopen(FileCache::getCacheDir() . DIRECTORY_SEPARATOR . 'tempload', 'r');

@@ -313,7 +313,7 @@ function get_changes()
 	if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
 
 	try {
-	   $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+	   $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8mb4", $user, $pass);
 	} catch (PDOException $e) {
 	    Logger::log($e->getMessage());
 	    throw new Exception('Connection error, see log for details');

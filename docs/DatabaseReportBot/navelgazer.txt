@@ -22,15 +22,15 @@ CREATE TABLE s51454__wikidata.`navelgazertagdef` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `displayname` varchar(255) NOT NULL,
-  `description` varchar(2047) NOT NULL,
+  `description` varchar(2047) NOT NULL charset utf8mb4,
   `defcount` int(11) UNSIGNED NOT NULL,
   UNIQUE INDEX `tagdef_id` (`id`),
   UNIQUE INDEX `tag_displayname` (`displayname`,`id`,`defcount`)
-) ENGINE=Aria DEFAULT CHARSET=utf8mb4
+) ENGINE=Aria
 
 CREATE TABLE s51454__wikidata.`navelgazertag` (
   `tag_id` int(11) NOT NULL,
-  `user_name` varchar(255) NOT NULL,
+  `user_name` varchar(246) charset utf8mb4,
   `total_count` int(11) NOT NULL,
   `month_count` int(11) NOT NULL,
   UNIQUE INDEX `username` (`user_name`, `tag_id`),

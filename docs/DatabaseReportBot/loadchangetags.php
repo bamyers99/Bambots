@@ -23,7 +23,7 @@ if ($argc < 3) {
 $user = $argv[1];
 $pass = $argv[2];
 
-$dbh_wikidata = new PDO("mysql:host=127.0.0.1;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+$dbh_wikidata = new PDO("mysql:host=127.0.0.1;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
 $dbh_wikidata->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Load the tag data

@@ -40,7 +40,7 @@ $user = $_SERVER['argv'][3];
 $password = $_SERVER['argv'][4];
 $outdir = $_SERVER['argv'][5];
 
-$dbh_wiki = new PDO("mysql:host={$host};dbname={$database};charset=utf8", $user, $password);
+$dbh_wiki = new PDO("mysql:host={$host};dbname={$database};charset=utf8mb4", $user, $password);
 $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $sth = $dbh_wiki->query('SELECT * FROM currency_curs');

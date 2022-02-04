@@ -52,7 +52,7 @@ class CleanupWorklistBot
     	$tools_host = Config::get(self::TOOLS_HOST);
     	$user = Config::get(self::LABSDB_USERNAME);
     	$pass = Config::get(self::LABSDB_PASSWORD);
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         new CreateTables($dbh_tools);
@@ -164,7 +164,7 @@ class CleanupWorklistBot
         <ul>\n
         ");
 
-    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
+    	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $results = $dbh_tools->query('SELECT * FROM `project` WHERE wiki_too_big = 1 ORDER BY `name`');
 

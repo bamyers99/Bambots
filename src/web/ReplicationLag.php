@@ -103,7 +103,7 @@ function get_replag()
 	if (empty($wiki_host)) $wiki_host = "$wikiname.web.db.svc.eqiad.wmflabs";
 
 	try {
-		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8", $user, $pass);
+		$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname={$wikiname}_p;charset=utf8mb4", $user, $pass);
 		$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		$sth = $dbh_wiki->query('SELECT MAX(rc_timestamp), UNIX_TIMESTAMP() - UNIX_TIMESTAMP(MAX(rc_timestamp)) FROM recentchanges');

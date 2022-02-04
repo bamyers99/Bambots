@@ -398,7 +398,7 @@ function get_navels()
 	if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
 
 	try {
-	   $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+	   $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
 	} catch (PDOException $e) {
 	    Logger::log($e->getMessage());
 	    throw new Exception('Connection error, see log for details');
@@ -752,7 +752,7 @@ function getCSV()
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
 
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$sth = $dbh_wiki->query("SELECT user_name FROM s51454__wikidata.navelgazer WHERE user_name LIKE 'Data as of:%'");

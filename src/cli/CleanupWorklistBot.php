@@ -123,7 +123,7 @@ function checkWPCategory($wiki)
     $enwiki_host = Config::get(CleanupWorklistBot::ENWIKI_HOST);
     $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8", $user, $pass);
+	$dbh_enwiki = new PDO("mysql:host=$enwiki_host;dbname=enwiki_p;charset=utf8mb4", $user, $pass);
 	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $data = $wiki->getpage('User:CleanupWorklistBot/Master');
@@ -166,7 +166,7 @@ function calcMemberCatType($wiki)
     $tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
     $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
-    $dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8", $user, $pass);
+    $dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $user, $pass);
     $dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $data = $wiki->getpage('User:CleanupWorklistBot/Master');
@@ -270,7 +270,7 @@ function dumpLivingPeople()
     $username = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     $password = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
     $wiki_host = Config::get('CleanupWorklistBot.enwiki_host');
-    $dbh = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8", $username, $password);
+    $dbh = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $username, $password);
     $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $sql = "SELECT page_title FROM page, categorylinks WHERE cl_from = page_id AND cl_to = 'Living_people' AND cl_type='page'";

@@ -502,7 +502,7 @@ function display_enum_qualifiers($id, $pid, $lang)
         if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
 
         try {
-            $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+            $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
         } catch (PDOException $e) {
             Logger::log($e->getMessage());
             throw new Exception('Connection error, see log for details');
@@ -742,7 +742,7 @@ function get_subclasses()
 	if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
 
 	try {
-	   $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+	   $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
 	} catch (PDOException $e) {
 	    Logger::log($e->getMessage());
 	    throw new Exception('Connection error, see log for details');
@@ -1204,7 +1204,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 	$wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
 	if (empty($wiki_host)) $wiki_host = "tools.db.svc.eqiad.wmflabs";
 
-	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8", $user, $pass);
+	$dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
 	$dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$num_qids = array();
