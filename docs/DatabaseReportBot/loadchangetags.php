@@ -60,6 +60,9 @@ fclose($hndl);
 
 // Update navelgazertag table
 
+$sql = 'UPDATE navelgazertag SET month_count = 0';
+$dbh_wikidata->exec($sql);
+
 foreach ($users as $username => $totals) {
     foreach ($totals as $toolid => $count) {
         $sql = "INSERT INTO navelgazertag VALUES ($toolid,?,$count,$count) ON DUPLICATE KEY UPDATE month_count = $count, total_count = total_count + $count";
