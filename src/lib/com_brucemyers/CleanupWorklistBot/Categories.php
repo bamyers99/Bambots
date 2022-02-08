@@ -714,7 +714,7 @@ class Categories {
 	 */
 	function loadCategoryMembers($catid, $cat, PDO $dbh_tools)
 	{
-		$isth = $dbh_tools->prepare ( 'INSERT INTO categorylinks VALUES (?,?)' );
+		$isth = $dbh_tools->prepare ( 'INSERT IGNORE INTO categorylinks VALUES (?,?)' );
 		$continue = '';
 
 		while ($continue !== false) {
