@@ -63,7 +63,7 @@ class BrokenSectionAnchors extends DatabaseReport
 
 	public function getIntro()
 	{
-		return 'Broken section anchors (excludes unused redirects); data as of <onlyinclude>%s</onlyinclude>.';
+		return 'Broken section anchors on redirect pages (excludes unused redirects); data as of <onlyinclude>%s</onlyinclude>.';
 	}
 
 	public function getHeadings()
