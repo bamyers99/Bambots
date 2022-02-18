@@ -41,10 +41,10 @@ class TestCategories extends UnitTestCase
 
     	$categories = new Categories($mediawiki, $user, $pass, $tools_host);
     	$count = $categories->load(false);
-    	$this->assertEqual($count, 6, "Wrong category count $count != 6");
+    	$this->assertEqual($count, 5, "Wrong category count $count != 5");
 
     	$result = $dbh_tools->query('SELECT count(*) as linkcount FROM categorylinks', PDO::FETCH_ASSOC);
     	$row = $result->fetch();
-    	$this->assertEqual($row['linkcount'], 10, "Wrong category link count {$row['linkcount']} != 10");
+    	$this->assertEqual($row['linkcount'], 8, "Wrong category link count {$row['linkcount']} != 8");
     }
 }

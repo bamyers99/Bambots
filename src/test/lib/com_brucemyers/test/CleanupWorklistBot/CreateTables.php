@@ -754,6 +754,7 @@ class CreateTables
     	    ['categorymembers', ['continue' => '', 'cmlimit' => 'max', 'cmtype' => 'page', 'cmtitle' => 'Category:Featured articles']]
     	    );
 
+    	/*
     	$this->mediawiki->returns('getProp',
     	    ['query' => ['pages' =>  [
     	        '305' => ['title' =>'Category:Pages with DOIs inactive as of 2013', 'categoryinfo' => ['pages' => 2]]
@@ -768,6 +769,7 @@ class CreateTables
     	    ]]],
     	    ['categorymembers', ['continue' => '', 'cmtitle' => 'Category:Pages with DOIs inactive as of 2013', 'cmlimit' => 'max', 'cmtype' => 'page']]
     	    );
+*/
 
     	// Dummys
 

@@ -36,7 +36,7 @@ class CreateTables
     public function __construct(PDO $dbh_tools)
     {
     	$sql = "CREATE TABLE IF NOT EXISTS `categorylinks` (
-		  `cl_from` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+		  `cl_from` varbinary(255) NOT NULL,
 		  `cat_id` int(10) unsigned NOT NULL,
 		  UNIQUE KEY `cl_from` (`cl_from`,`cat_id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -56,7 +56,7 @@ class CreateTables
 		$importances_string = "'" . implode("', '", array_keys(self::$IMPORTANCES)) . "'";
 
     	$sql = "CREATE TABLE IF NOT EXISTS `page` (
-		  `page_title` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+		  `page_title` varbinary(255) NOT NULL,
           `importance` ENUM($importances_string),
           `class` ENUM($classes_string),
     	  PRIMARY KEY (`page_title`)
