@@ -1663,7 +1663,9 @@ END;
 	    foreach ($chunks as $chunk) {
 	        $scripts = $wdwiki->getPagesWithCache($chunk, ! $testing); // refetch if not testing
 
-	        foreach ($scripts as $script) {
+	        foreach ($scripts as $pagename => $script) {
+	            preg_match('!^User:([^/]+)/!', $pagename, $matches);
+	            $username = $matches[1];
 	            $user_gadgets = [];
 	            $script = preg_replace(CommonRegex::COMMENT_REGEX, '', $script);
 	            $script = preg_replace('!/\*[\s\S]*?\*/!u', '', $script);
@@ -1678,10 +1680,14 @@ END;
 
 	            foreach (array_keys($user_gadgets) as $gadget) {
 	                if (! isset($gadgets[$gadget])) {
-	                    $gadgets[$gadget] = ['name' => $gadget, 'type' => 'wikidata', 'location' => 'common.js', 'numusers' => 0, 'activeusers' => 0, 'description' => ''];
+	                    $gadgets[$gadget] = ['name' => $gadget, 'type' => 'wikidata', 'location' => 'common.js', 'numusers' => 0, 'activeusers' => 0, 'description' => '', 'usernames' => []];
 	                    $script_names["User:$gadget.js"] = true;
 	                }
-	                ++$gadgets[$gadget]['numusers'];
+	                
+	                if (! in_array($username, $gadgets[$gadget]['usernames'])) {
+	                   ++$gadgets[$gadget]['numusers'];
+	                   $gadgets[$gadget]['usernames'][] = $username;
+	                }
 	            }
 	        }
 	    }
@@ -1736,6 +1742,9 @@ END;
 
 	        if (empty($gadgets[$gadget]['description'])) $gadgets[$gadget]['description'] = $description;
 	    }
+	    
+	    // Get the user gadget active user counts
+	    $this->_getUserGadgetActiveUsers($dbh_wikidata, $gadgets);
 
 	    // Sort by number of uses
 
@@ -1896,5 +1905,52 @@ END;
 	    }
 	    
 	    return $stdout[0]['messages'];
+	}
+	
+	/**
+	 * Get user gadget active user counts
+	 *
+	 * @param PDO $dbh_wikidata
+	 * @param array $gadgets
+	 */
+	function _getUserGadgetActiveUsers(PDO $dbh_wikidata, &$gadgets)
+	{
+	    $usernames = [];
+	    
+	    foreach ($gadgets as $gadget) {
+	        if ($gadget['location'] == 'common.js') {
+    	        foreach ($gadget['usernames'] as $username) {
+    	            $usernames[$username] = false;
+    	        }
+	        }
+	    }
+	    
+	    $chunks = array_chunk(array_keys($usernames), 100);
+	    
+	    foreach ($chunks as $chunk) {
+	        $chunknames = [];
+	        
+	        foreach ($chunk as $username) {
+	            $chunknames[] = $dbh_wikidata->quote($username);
+	        }
+	        
+	        $sql = "SELECT actor_name FROM actor_recentchanges WHERE actor_name IN ( "  . implode(',', $chunknames) . ")";
+    	    
+    	    $sth = $dbh_wikidata->query($sql);
+    	    
+    	    while ($row = $sth->fetch(PDO::FETCH_NUM)) {
+    	        $usernames[$row[0]] = true;
+    	    }
+	    }
+	    
+	    foreach ($gadgets as $gadget => $data) {
+	        if ($data['location'] == 'common.js') {
+	            foreach ($data['usernames'] as $username) {
+    	            if ($usernames[$username] === true) {
+    	                ++$gadgets[$gadget]['activeusers'];
+    	            }
+    	        }
+	        }
+	    }
 	}
 }
