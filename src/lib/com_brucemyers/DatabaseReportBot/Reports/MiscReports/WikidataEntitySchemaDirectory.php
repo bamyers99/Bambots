@@ -88,7 +88,7 @@ class WikidataEntitySchemaDirectory
         
         // Retrieve the labels for items and properties
         $labelids = [];
-        $skip_validate = ['E67','E80','E81','E133','E263'];
+        $skip_validate = ['E67','E80','E81','E133','E263','E342'];
         
         foreach ($schemas as $id => $schema) {
             if (! isset($schema['classprop'])) continue; // New schema

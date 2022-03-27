@@ -1,0 +1,28 @@
+# kubernetes job creator with working directory
+# Usage: ksub <working directory path or cwd> jobname "command" <optional toolforge-jobs run parameters>
+case $1 in
+	cwd)
+		WD=$PWD
+		;;
+		
+	execute)
+		shift
+		cd $1
+		shift
+		$@
+		
+		exit
+		;;
+		
+	*)
+		WD=$1
+		;;
+esac
+
+JOBNAME=$2
+COMMAND=$3
+shift 3
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+toolforge-jobs run $JOBNAME --command "$SCRIPT_DIR/ksub execute $WD $COMMAND" --image tf-php74 $@
