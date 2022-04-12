@@ -1,5 +1,7 @@
-# kubernetes job creator with working directory
+# Kubernetes job creator with working directory
 # Usage: ksub <working directory path or cwd> jobname "command" <optional toolforge-jobs run parameters>
+# Yaml usage: bin/ksub execute <working directory> command
+
 case $1 in
 	cwd)
 		WD=$PWD

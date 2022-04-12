@@ -1,1 +1,10 @@
+# Kubernetes job status
+# Usage: kstat <optional job name>
+
+if [ $# -eq 1 ]
+  then
+    toolforge-jobs show $1
+    exit
+fi
+
 toolforge-jobs list
