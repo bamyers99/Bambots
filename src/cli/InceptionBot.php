@@ -121,5 +121,6 @@ try {
     Logger::log($msg);
     $headers  = 'MIME-Version: 1.0' . "\r\n";
     $headers .= 'From: InceptionBot <admin@brucemyers.com>' . "\r\n";
-    mail(Config::get(InceptionBot::ERROREMAIL), 'InceptionBot failed', $msg, $headers);
+    $retval = mail(Config::get(InceptionBot::ERROREMAIL), 'InceptionBot failed', $msg, $headers);
+    if (! $retval) throw new Exception($ex->getMessage());
 }
