@@ -3,27 +3,32 @@
   image: tf-php74
   schedule: "17 22 1 * *"
   emails: onfailure
+  cpu: 250m
 
 - name: age-anomaly
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php DatabaseReportBot.php MiscReports AgeAnomaly
   image: tf-php74
   schedule: "17 2 2 * *"
   emails: onfailure
+  cpu: 250m
   
 - name: most-edited
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php DataflowBot.php
   image: tf-php74
   schedule: "10 1 * * sun"
   emails: onfailure
+  cpu: 250m
   
 - name: popular-low-quality
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php DataflowBot.php PopularLowQuality
   image: tf-php74
   schedule: "17 3 * * tue"
   emails: onfailure
+  cpu: 250m
   
 - name: inception-bot
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php InceptionBot.php
   image: tf-php74
   schedule: "00 19 * * *"
   emails: onfailure
+  cpu: 750m
