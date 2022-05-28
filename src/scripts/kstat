@@ -4,7 +4,9 @@
 if [ $# -eq 1 ]
   then
     toolforge-jobs show $1
+    kubectl get events --sort-by=.metadata.creationTimestamp | grep --color=never $1
     exit
 fi
 
 toolforge-jobs list
+kubectl get pods
