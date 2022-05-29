@@ -129,8 +129,6 @@ function cat_test($project, $category_override)
 		$project_cat = urlencode($result['project_cat']);
 		$project_members = htmlspecialchars($result['project_members']);
 		$output .= "Project articles category: <a href='https://en.wikipedia.org/wiki/Category:$project_cat'>$project_members</a><br />";
-		$output .= 'Project class categories found: ' . (($result['found_class']) ? 'Yes' : 'No') . '<br />';
-		$output .= 'Project importance categories found: ' . (($result['found_importance']) ? 'Yes' : 'No') . '<br />';
 		$output .= 'Project member category type: ' . $result['member_cat_type'] . '<br />';
 	} else {
 		$output .= 'Project articles category: <span style="font-style: italic;">Not found</span><br />';
@@ -213,54 +211,6 @@ function _test_category($category)
 			$project_cat = $param;
 			$member_cat_type = 3;
 		}
-	}
-
-
-	if (! empty($project_members)) {
-		$result['project_members'] = $project_members;
-		$result['project_cat'] = $project_cat;
-		$result['member_cat_type'] = $member_cat_type;
-
-		// Check importance categories
-		$found_importance = false;
-
-		foreach (array_keys(CreateTables::$IMPORTANCES) as $importance) {
-			$ret = $mediawiki->getList('categorymembers', [
-			    'cmtitle' => "Category:{$importance}-importance_{$category}_articles",
-			    'cmtype' => 'page',
-			    'cmlimit' => 1
-			]);
-
-			if (! empty($ret['query']['categorymembers'])) {
-			    $found_importance = true;
-				break;
-			}
-		}
-
-		$result['found_importance'] = $found_importance;
-
-		// Check class categories
-		$found_class = false;
-
-		foreach (array_keys(CreateTables::$CLASSES) as $class) {
-			if ($class == 'Unassessed')
-				$theclass = "{$class}_{$category}_articles";
-			else
-				$theclass = "{$class}-Class_{$category}_articles";
-
-			$ret = $mediawiki->getList('categorymembers', [
-			    'cmtitle' => "Category:$theclass",
-			    'cmtype' => 'page',
-			    'cmlimit' => 1
-			    ]);
-
-			if (! empty($ret['query']['categorymembers'])) {
-			    $found_class = true;
-				break;
-			}
-		}
-
-		$result['found_class'] = $found_class;
 	}
 
 	return $result;

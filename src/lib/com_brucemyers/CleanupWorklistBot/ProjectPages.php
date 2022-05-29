@@ -56,12 +56,14 @@ class ProjectPages
      *
      * @param string $category
      * @param int $member_cat_type
+     * @param string $project
      * @return int Pages loaded
      * @throws Exception
      */
-    public function load($category, $member_cat_type)
+    public function load($category, $member_cat_type, $project)
     {
     	$category = str_replace('_', ' ', $category);
+    	$project = str_replace('_', ' ', $project);
 
     	// Load the pages
     	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $this->user, $this->pass);
@@ -122,7 +124,7 @@ class ProjectPages
     	$continue = '';
 
     	while ($continue !== false) {
-    	    $members = $this->getAssessmentChunk($category, $continue);
+    	    $members = $this->getAssessmentChunk($project, $continue);
     	    $dbh_tools->beginTransaction();
 
     	    foreach ($members as $attribs) {
@@ -196,16 +198,16 @@ class ProjectPages
     /**
      * Get a chunk of project member assessments.
      *
-     * @param string $category
+     * @param string $project
      * @param mixed $continue
      * @return mixed
      */
-    function getAssessmentChunk($category, &$continue)
+    function getAssessmentChunk($project, &$continue)
     {
         $result = [];
 
         $params = ['continue' => $continue];
-        $params['wppprojects'] = ucfirst($category);
+        $params['wppprojects'] = $project;
         $params['wpplimit'] = 'max';
         $params['wppassessments'] = 'true';
         $ret = $this->mediawiki->getList('projectpages', $params);

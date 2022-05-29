@@ -113,7 +113,7 @@ class CleanupWorklistBot
         	if (empty($category)) $category = $project;
 
         	try {
-        	    $page_count = $project_pages->load($category, $member_cat_type);
+        	    $page_count = $project_pages->load($category, $member_cat_type, $project);
 
 	        	if ($page_count < 10 && $project != 'Bhubaneswar') {
 	        		$errorrulsets[] = $project . ' (< 10 pages in project)';
