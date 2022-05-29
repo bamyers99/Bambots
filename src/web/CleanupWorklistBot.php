@@ -109,11 +109,11 @@ function cat_test($project, $category_override)
     $result = _test_category($category);
 
     // Try lowercase project name
-    if (empty($category_override) && (empty($result['project_members']) || ! $result['found_class'])) {
+    if (empty($category_override) && empty($result['project_members'])) {
     	$test_category = strtolower($project);
     	$result2 = _test_category($test_category);
 
-    	if (! empty($result2['project_members']) && (empty($result['project_members']) || $result2['found_class'])) {
+    	if (! empty($result2['project_members'])) {
 			$result = $result2;
 			$category_override = $test_category;
     	}
