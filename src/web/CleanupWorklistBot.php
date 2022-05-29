@@ -212,6 +212,12 @@ function _test_category($category)
 			$member_cat_type = 3;
 		}
 	}
-
+	
+	if (! empty($project_members)) {
+	    $result['project_members'] = $project_members;
+	    $result['project_cat'] = $project_cat;
+	    $result['member_cat_type'] = $member_cat_type;
+	}
+	
 	return $result;
 }
