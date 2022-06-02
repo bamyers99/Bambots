@@ -405,7 +405,7 @@ class InvalidNavbarLinks extends DatabaseReport
 		}
 
 		ksort($groups['groups']);
-		$groups['cats'] = "\nGrand total templates scanned: "  . number_format($grand_total_scanned) . "\n" . $groups['cats'];
+		$groups['cats'] = "\nGrand total templates scanned: "  . number_format($grand_total_scanned) . "\n";
 		$groups['comment'] = "Record count: $error_count Templates scanned: " . number_format($grand_total_scanned);
 
 		return $groups;
