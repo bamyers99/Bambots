@@ -31,4 +31,4 @@
   image: tf-php74
   schedule: "00 19 * * *"
   emails: onfailure
-  cpu: 750m
+  cpu: 499m
