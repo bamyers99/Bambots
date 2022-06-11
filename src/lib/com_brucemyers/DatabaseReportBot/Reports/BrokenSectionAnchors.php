@@ -159,7 +159,13 @@ class BrokenSectionAnchors extends DatabaseReport
 			    $tempfragment = preg_quote($fragment, '!');
 			    $found = preg_match("!id\s*=\s*['\"]{$tempfragment}['\"]!u", $page);
 			}
-
+			
+			// try escaping 's
+			if (! $found) {
+			    $tempfragment = preg_quote(str_replace("'", '&#39;', $fragment), '!');
+			    $found = preg_match("!id\s*=\s*['\"]{$tempfragment}['\"]!u", $page);
+			}
+			
 			if (! $found) {
 			    // Test the connection
 			    try {

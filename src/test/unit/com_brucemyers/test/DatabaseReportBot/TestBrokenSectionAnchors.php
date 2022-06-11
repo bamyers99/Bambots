@@ -118,24 +118,50 @@ class TestBrokenSectionAnchors extends UnitTestCase
     	fwrite($hndl, "Xfburn\n");
     	fclose($hndl);
     }
-
+    
     public function testAnchor()
     {
         $page = '<span id="Season_3_.281995.E2.80.9396.29"></span><span class="mw-headline" id="Season_3_(1995–96)">Season 3 (1995–96) <span id="Season_3:_1995–96"></span></span>';
         $fragment = 'Season 3: 1995–96';
         $fragment = str_replace(' ', '_', $fragment);
-
+        
         $escfragment = BrokenSectionAnchors::escape_fragment($fragment);
         $escfragment = preg_quote($escfragment, '!');
-
+        
         $found = preg_match("!id\s*=\s*['\"]{$escfragment}['\"]!u", $page);
-
+        
         // try without escaping due to <span id= tag embedded directly into wikitext heading.
         if (! $found) {
             $tempfragment = preg_quote($fragment, '!');
             $found = preg_match("!id\s*=\s*['\"]{$tempfragment}['\"]!u", $page);
         }
-
+        
+        $this->assertTrue($found, 'Frament not found');
+    }
+    
+    public function testAnchor2()
+    {
+        $page = '<span id=".22If_it_ain.27t_broke.2C_don.27t_fix_it.22"></span><span class="mw-headline" id="&quot;If_it_ain\'t_broke,_don\'t_fix_it&quot;"><span class="anchor" id="If_it_ain&#39;t_broke,_don&#39;t_fix_it"></span>';
+        $fragment = 'If it ain\'t broke, don\'t fix it';
+        $fragment = str_replace(' ', '_', $fragment);
+        
+        $escfragment = BrokenSectionAnchors::escape_fragment($fragment);
+        $escfragment = preg_quote($escfragment, '!');
+        
+        $found = preg_match("!id\s*=\s*['\"]{$escfragment}['\"]!u", $page);
+        
+        // try without escaping due to <span id= tag embedded directly into wikitext heading.
+        if (! $found) {
+            $tempfragment = preg_quote($fragment, '!');
+            $found = preg_match("!id\s*=\s*['\"]{$tempfragment}['\"]!u", $page);
+        }
+        
+        // try escaping 's
+        if (! $found) {
+            $tempfragment = preg_quote(str_replace("'", '&#39;', $fragment), '!');
+            $found = preg_match("!id\s*=\s*['\"]{$tempfragment}['\"]!u", $page);
+        }
+        
         $this->assertTrue($found, 'Frament not found');
     }
 }
