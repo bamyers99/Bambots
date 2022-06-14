@@ -42,7 +42,7 @@ case $1 in
 		shift
 		cd $1
 		shift
-		$@
+		bash -c "$(printf ' %q' "$@")"
 		
 		exit
 		;;
