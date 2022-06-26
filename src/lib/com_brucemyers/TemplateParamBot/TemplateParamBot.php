@@ -1149,17 +1149,17 @@ class TemplateParamBot
      */
     function autoprocess($wiki, $date)
     {
+        $wikidir = '/wiki';
+        $datadir = '/var/www/projects/bambots/Bambots/data/TemplateParamBot';
         if (! isset($this->ruleconfigs[$wiki])) return "wiki not supported = $wiki";
         $ruleconfig = $this->ruleconfigs[$wiki];
         
         Logger::log("Start autoprocess: $wiki $date");
-        $totaltimer = new Timer();
-        $totaltimer->start();
         
         // Curl
         
         $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-articles.xml.bz2";
-        $outfile = '/wiki/pages-articles.xml.bz2';
+        $outfile = "$wikidir/pages-articles.xml.bz2";
         
         Logger::log("  Start curl $url");
         $retval = Curl::saveUrlContents($url, $outfile);
@@ -1170,7 +1170,7 @@ class TemplateParamBot
         
         // Retrieve TemplateData
         
-        $outfile = '/wiki/TemplateIds.tsv';
+        $outfile = "$wikidir/TemplateIds.tsv";
         Logger::log("  Start TemplateData retrieval to $outfile");
         $retval = $this->retrieveTemplateIds($ruleconfig, $outfile);
         
@@ -1178,57 +1178,53 @@ class TemplateParamBot
         
         // rm data files to free up space
         
-        $command = "rm /var/www/projects/Bambots/data/TemplateParamBot/$wiki-*";
+        $command = "rm $datadir/$wiki-*";
         Logger::log("  $command");
         system($command);
         
         // Parse page template parameters
         
-        $command = "cd /wiki; bunzip2 -c pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - TemplateParams TemplateTotals";
+        $command = "cd $wikidir; bunzip2 -c pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - TemplateParams TemplateTotals";
         Logger::log("  $command");
         system($command);
         
         // Sort the parameters
         
-        $command = "cd /wiki; LC_ALL=C sort -n -k 1,1 -k 2,2 TemplateParams >TemplateParams.sorted";
+        $command = "cd $wikidir; LC_ALL=C sort -n -k 1,1 -k 2,2 TemplateParams >TemplateParams.sorted";
         Logger::log("  $command");
         system($command);
         
         // Calc the template offsets
         
-        $command = "cd /wiki; ./MWDumpTemplateParser -offsets TemplateParams.sorted TemplateOffsets";
+        $command = "cd $wikidir; ./MWDumpTemplateParser -offsets TemplateParams.sorted TemplateOffsets";
         Logger::log("  $command");
         system($command);
         
         // Move the data files to the data directory
         
-        $command = "mv /wiki/TemplateParams.sorted /var/www/projects/bambots/Bambots/data/TemplateParamBot/$wiki-$date-TemplateParams";
+        $command = "mv $wikidir/TemplateParams.sorted $datadir/$wiki-$date-TemplateParams";
         Logger::log("  $command");
         system($command);
         
-        $command = "mv /wiki/TemplateTotals /var/www/projects/bambots/Bambots/data/TemplateParamBot/$wiki-$date-TemplateTotals";
+        $command = "mv $wikidir/TemplateTotals $datadir/$wiki-$date-TemplateTotals";
         Logger::log("  $command");
         system($command);
         
-        $command = "mv /wiki/TemplateOffsets /var/www/projects/bambots/Bambots/data/TemplateParamBot/$wiki-$date-TemplateOffsets";
+        $command = "mv $wikidir/TemplateOffsets $datadir/$wiki-$date-TemplateOffsets";
         Logger::log("  $command");
         system($command);
         
         // Load the template info into the database
         
-        $retval = $this->loadTotalsOffsets("/var/www/projects/Bambots/data/TemplateParamBot/$wiki-$date-TemplateTotals",
-            "/var/www/projects/Bambots/data/TemplateParamBot/$wiki-$date-TemplateOffsets");
+        $retval = $this->loadTotalsOffsets("$datadir/$wiki-$date-TemplateTotals",
+            "$datadir/$wiki-$date-TemplateOffsets");
         
         if (! empty($retval)) return $retval;
         
         // Cleanup
         
-        $command = "cd /wiki; rm TemplateParams; rm TemplateIds.tsv";
+        $command = "cd $wikidir; rm TemplateParams; rm TemplateIds.tsv";
         system($command);
-        
-        $ts = $totaltimer->stop();
-        $totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
-        Logger::log("Elapsed time: $totaltime");
         
         return '';
     }
