@@ -21,7 +21,8 @@ class Curl
 {
 	static public $lastError = '';
 	static public $lastResponseCode = 0;
-
+	const USER_AGENT = 'WMFLabs tools.bambots';
+	
 	/**
 	 * Get a urls contents.
 	 *
@@ -30,17 +31,44 @@ class Curl
 	 */
 	static public function getUrlContents($URL)
 	{
-		self::$lastError = '';
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_URL, $URL);
-		curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
-		$contents = curl_exec($ch);
-		if ($contents === false) self::$lastError = curl_error($ch);
-		self::$lastResponseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-		curl_close($ch);
-
-		if ($contents) return $contents;
-		return false;
+	    self::$lastError = '';
+	    $ch = curl_init();
+	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	    curl_setopt($ch, CURLOPT_URL, $URL);
+	    curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+	    $contents = curl_exec($ch);
+	    if ($contents === false) self::$lastError = curl_error($ch);
+	    self::$lastResponseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+	    curl_close($ch);
+	    
+	    if ($contents) return $contents;
+	    return false;
+	}
+	
+	/**
+	 * Save a urls contents.
+	 *
+	 * @param string $URL
+	 * @param string $outfile
+	 * @return bool success or failure
+	 */
+	static public function saveUrlContents($URL, $outfile)
+	{
+	    self::$lastError = '';
+	    $fp = fopen($outfile, 'w');
+	    $ch = curl_init();
+	    curl_setopt($ch, CURLOPT_FILE, $fp);
+	    curl_setopt($ch, CURLOPT_URL, $URL);
+	    curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+	    
+	    $retval = curl_exec($ch);
+	    
+	    if ($retval === false) self::$lastError = curl_error($ch);
+	    self::$lastResponseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+	    
+	    fclose($fp);
+	    curl_close($ch);
+	    
+	    return $retval;
 	}
 }

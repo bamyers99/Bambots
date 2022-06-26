@@ -23,6 +23,8 @@ use com_brucemyers\Util\Convert;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\MySQLDate;
 use com_brucemyers\Util\Timer;
+use com_brucemyers\Util\Curl;
+use com_brucemyers\Util\Logger;
 use PDO;
 use Exception;
 
@@ -111,6 +113,14 @@ class TemplateParamBot
 
 		    	$errmsg = $this->dumpTemplateIds($argv[2]);
 		    	break;
+		    	
+		    case 'autoprocess':
+		        if ($argc < 4) {
+		            return 'No wikiname and/or dump date supplied';
+		        }
+		        
+		        $errmsg = $this->autoprocess($argv[2], $argv[3]);
+		        break;
 
 		    default:
 		    	return 'Unknown action = ' . $action;
@@ -149,19 +159,14 @@ class TemplateParamBot
         	$templid = $row['template_id'];
 
         	// Get the template data
-        	$wikilang = substr($wikiname, 0, -4);
-        	if ($wikilang == 'commons') {
-        	    $domain = "commons.wikimedia.org";
-        	} else {
-        	    $domain = "$wikilang.wikipedia.org";
-        	}
-        	$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
+        	$ruleconfig = $this->ruleconfigs[$wikiname];
+        	$mediawiki = $this->serviceMgr->getMediaWiki($ruleconfig['domain'], false);
 
         	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
         	$template = $sth->fetch(PDO::FETCH_ASSOC);
         	$templname = $template['name'];
 
-        	$query = '?action=templatedata&format=php&titles=' . urlencode('Template:' . $templname);
+        	$query = '?action=templatedata&format=php&titles=' . urlencode($ruleconfig['templateNS'] . ':' . $templname);
 
         	$ret = $mediawiki->query($query);
 
@@ -1125,5 +1130,222 @@ class TemplateParamBot
     	$dbh_tools = null;
 
     	echo "Template IDs written to $outpath\n";
+    }
+    
+    /**
+     * Autoprocess a dump file.
+     * 
+     * curl pages-articles.xml.bz2
+     * retrieve TemplateData into TemplateIds.tsv
+     * rm /var/www/projects/Bambots/data/TemplateParamBot/enwiki*
+     * bunzip2 -c *pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - enwikiTemplateParams enwikiTemplateTotals
+     * LC_ALL=C sort -n -k 1,1 -k 2,2 enwikiTemplateParams >enwikiTemplateParams.sorted
+     * ./MWDumpTemplateParser -offsets enwikiTemplateParams.sorted enwikiTemplateOffsets
+     * mv enwiki* /var/www/projects/bambots/Bambots/data/TemplateParamBot
+     * php TemplateParamBot.php loadtotalsoffsets /var/www/projects/Bambots/data/TemplateParamBot/enwiki-20180101-TemplateTotals /var/www/projects/Bambots/data/TemplateParamBot/enwiki-20180101-TemplateOffsets
+     *
+     * @param string $wiki
+     * @param string $date yyyymmdd
+     */
+    function autoprocess($wiki, $date)
+    {
+        if (! isset($this->ruleconfigs[$wiki])) return "wiki not supported = $wiki";
+        $ruleconfig = $this->ruleconfigs[$wiki];
+        
+        Logger::log("Start autoprocess: $wiki $date");
+        $totaltimer = new Timer();
+        $totaltimer->start();
+        
+        // Curl
+        
+        $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-articles.xml.bz2";
+        $outfile = '/wiki/pages-articles.xml.bz2';
+        
+        Logger::log("  Start curl $url");
+        $retval = Curl::saveUrlContents($url, $outfile);
+        
+        if (! $retval || ! empty(Curl::$lastError) || Curl::$lastResponseCode < 200 || Curl::$lastResponseCode >= 300) {
+            return "curl error ($url) " . Curl::$lastError . " responsecode:" . Curl::$lastResponseCode;
+        }
+        
+        // Retrieve TemplateData
+        
+        $outfile = '/wiki/TemplateIds.tsv';
+        Logger::log("  Start TemplateData retrieval to $outfile");
+        $retval = $this->retrieveTemplateIds($ruleconfig, $outfile);
+        
+        if (! empty($retval)) return $retval;
+        
+        // rm data files to free up space
+        
+        $command = "rm /var/www/projects/Bambots/data/TemplateParamBot/$wiki-*";
+        Logger::log("  $command");
+        system($command);
+        
+        // Parse page template parameters
+        
+        $command = "cd /wiki; bunzip2 -c pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - TemplateParams TemplateTotals";
+        Logger::log("  $command");
+        system($command);
+        
+        // Sort the parameters
+        
+        $command = "cd /wiki; LC_ALL=C sort -n -k 1,1 -k 2,2 TemplateParams >TemplateParams.sorted";
+        Logger::log("  $command");
+        system($command);
+        
+        // Calc the template offsets
+        
+        $command = "cd /wiki; ./MWDumpTemplateParser -offsets TemplateParams.sorted TemplateOffsets";
+        Logger::log("  $command");
+        system($command);
+        
+        // Move the data files to the data directory
+        
+        $command = "mv /wiki/TemplateParams.sorted /var/www/projects/bambots/Bambots/data/TemplateParamBot/$wiki-$date-TemplateParams";
+        Logger::log("  $command");
+        system($command);
+        
+        $command = "mv /wiki/TemplateTotals /var/www/projects/bambots/Bambots/data/TemplateParamBot/$wiki-$date-TemplateTotals";
+        Logger::log("  $command");
+        system($command);
+        
+        $command = "mv /wiki/TemplateOffsets /var/www/projects/bambots/Bambots/data/TemplateParamBot/$wiki-$date-TemplateOffsets";
+        Logger::log("  $command");
+        system($command);
+        
+        // Load the template info into the database
+        
+        $retval = $this->loadTotalsOffsets("/var/www/projects/Bambots/data/TemplateParamBot/$wiki-$date-TemplateTotals",
+            "/var/www/projects/Bambots/data/TemplateParamBot/$wiki-$date-TemplateOffsets");
+        
+        if (! empty($retval)) return $retval;
+        
+        // Cleanup
+        
+        $command = "cd /wiki; rm TemplateParams; rm TemplateIds.tsv";
+        system($command);
+        
+        $ts = $totaltimer->stop();
+        $totaltime = sprintf("%d:%02d:%02d", $ts['hours'], $ts['minutes'], $ts['seconds']);
+        Logger::log("Elapsed time: $totaltime");
+        
+        return '';
+    }
+    
+    /**
+     * Retrieve template data via api and save to file.
+     * 
+     * @param array $ruleconfig
+     * @param string $outfile
+     * @return string error message
+     */
+    function retrieveTemplateIds($ruleconfig, $outfile)
+    {
+        $mediawiki = $this->serviceMgr->getMediaWiki($ruleconfig['domain'], false);
+        $templateParamConfig = new TemplateParamConfig($this->serviceMgr);
+        $templateNS = $ruleconfig['templateNS'];
+        $hndl = fopen($outfile, 'w');
+        
+        // Get TemplateData
+        
+        $tdparams = [
+            'generator' => 'pageswithprop',
+            'gpwppropname' => 'templatedata',
+            'gpwpprop' => 'ids',
+            'gpwplimit' => 'max'
+        ];
+        
+        $continue = ['continue' => ''];
+        
+        while ($continue !== false) {
+            $tdparams = array_merge($tdparams, $continue);
+            
+            $ret = $mediawiki->getTemplateData($tdparams);
+            
+            if (isset($ret['error'])) return 'retrieveTemplateIds Get TemplateData failed ' . $ret['error'];
+            if (isset($ret['continue'])) $continue = $ret['continue'];
+            else $continue = false;
+            
+            if (! empty($ret['pages'])) {
+                foreach ($ret['pages'] as $templid => $pagedata) {
+                    $templname = str_replace('_', ' ', $pagedata['title']);
+                    if (strpos($templname, "$templateNS:") !== 0) continue;
+                    $templname = str_replace("$templateNS:", '', $templname);
+                    if (strpos($templname, '/doc') !== false) continue;
+                    if (strpos($templname, '/sandbox') !== false) continue;
+                    if (strpos($templname, '/testcases') !== false) continue;
+                    if (strpos($templname, '/lua') !== false) continue;
+                    
+                    $templatedata = new TemplateData(null, $pagedata);
+                    $templatedata->enhanceConfig($templateParamConfig->getTemplate($templname));
+                    $paramdef = $templatedata->getParams();
+                    
+                    fwrite($hndl, "$templname\t$templid");
+                    
+                    foreach ($paramdef as $paramname => $config) {
+                        if (isset($config['deprecated'])) $validparamname = 'D';
+                        else {
+                            $validparamname = 'Y';
+                            if (isset($config['required'])) $validparamname = 'R';
+                            elseif (isset($config['suggested'])) $validparamname = 'S';
+                        }
+                        
+                        $aliases = '';
+                        if (isset($config['aliases']) && ! empty($config['aliases'])) {
+                            $aliases = '|' . implode('|', $config['aliases']);
+                        }
+                        
+                        fwrite($hndl, "\t$paramname$aliases\t$validparamname\t");
+                        
+                        if ($config['type'] == 'yesno') fwrite($hndl, 'Y');
+                        elseif (isset($config['regex'])) fwrite($hndl, "R\t" . $config['regex']);
+                        elseif (isset($config['values'])) fwrite($hndl, "V\t" . implode(';', $config['values']));
+                        else fwrite($hndl, '-');
+                    }
+                    
+                    fwrite($hndl, "\n");
+                }
+            }
+        }
+        
+        // Get template redirects
+        
+        $tdparams = [
+            'rdnamespace' => '10',
+            'rdlimit' => 'max',
+            'generator' => 'pageswithprop',
+            'gpwppropname' => 'templatedata',
+            'gpwpprop' => 'ids',
+            'gpwplimit' => 'max'
+        ];
+        
+        $continue = ['continue' => ''];
+        
+        while ($continue !== false) {
+            $tdparams = array_merge($tdparams, $continue);
+            
+            $ret = $mediawiki->getProp('redirects', $tdparams);
+            
+            if (isset($ret['error'])) return 'retrieveTemplateIds Get template redirects failed ' . $ret['error'];
+            if (isset($ret['continue'])) $continue = $ret['continue'];
+            else $continue = false;
+            
+            if (! empty($ret['query']['pages'])) {
+                foreach ($ret['query']['pages'] as $templid => $pagedata) {
+                    if (! empty($pagedata['redirects'])) {
+                        foreach ($pagedata['redirects'] as $redirectdata) {
+                            $templname = str_replace('_', ' ', $redirectdata['title']);
+                            $templname = str_replace("$templateNS:", '', $templname);
+                            fwrite($hndl, "$templname\t$templid\n");
+                        }
+                    }
+                }
+            }
+        }
+        
+        fclose($hndl);
+        
+        return '';
     }
 }

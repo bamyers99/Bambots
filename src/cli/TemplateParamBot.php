@@ -25,9 +25,10 @@ $GLOBALS['botname'] = 'TemplateParamBot';
 
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
-    $activerules = array(
-    	'commonswiki' => array('title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'templateNS' => 'Template', 'lang' => 'en'),
-    	'enwiki' => array('title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en')
+    $activerules = [
+    	'commonswiki' => ['title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'templateNS' => 'Template', 'lang' => 'en'],
+        'enwiki' => ['title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en'],
+    	'enwiktionary' => ['title' => 'English Wiktionary', 'domain' => 'en.wiktionary.org', 'templateNS' => 'Template', 'lang' => 'en']
 //    	'svwiki' => array('title' => 'Svenska Wikipedia', 'domain' => 'sv.wikipedia.org'),
 //        'nlwiki' => array('title' => 'Nederlands Wikipedia', 'domain' => 'nl.wikipedia.org'),
 //        'dewiki' => array('title' => 'Deutsch Wikipedia', 'domain' => 'de.wikipedia.org'),
@@ -43,7 +44,7 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 //        'ptwiki' => array('title' => 'Português Wikipedia', 'domain' => 'pt.wikipedia.org', 'lang' => 'pt')
 //        'zhwiki' => array('title' => '中文 Wikipedia', 'domain' => 'zh.wikipedia.org'),
 //        'ukwiki' => array('title' => 'Українська Wikipedia', 'domain' => 'uk.wikipedia.org')
-    );
+    ];
 
 try {
     $timer = new Timer();

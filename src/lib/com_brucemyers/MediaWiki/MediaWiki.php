@@ -683,7 +683,7 @@ class MediaWiki extends wikipedia
 
         return $ret;
     }
-
+    
     /**
      * Get property list
      *
@@ -694,29 +694,61 @@ class MediaWiki extends wikipedia
      */
     public function getProp($proptype, $params)
     {
-    	if (! isset($params['continue'])) {
-    		$params['continue'] = '';
-    	} elseif (is_array($params['continue'])){
-    		$continue = $params['continue'];
-    		unset($params['continue']);
-    		$params = array_merge($params, $continue);
-    	}
-
-    	$addparams ='';
-
-    	foreach ($params as $key => $value) {
-    		$addparams .= "&$key=" . urlencode($value);
-    	}
-
-    	$ret = $this->query("?action=query&format=php&prop=$proptype" . $addparams);
-
-    	if (isset($ret['error'])) {
-    	    throw new Exception("$proptype Error " . $ret['error']['info'] . "\n". print_r($params, true));
-    	}
-
-    	return $ret;
+        if (! isset($params['continue'])) {
+            $params['continue'] = '';
+        } elseif (is_array($params['continue'])){
+            $continue = $params['continue'];
+            unset($params['continue']);
+            $params = array_merge($params, $continue);
+        }
+        
+        $addparams ='';
+        
+        foreach ($params as $key => $value) {
+            $addparams .= "&$key=" . urlencode($value);
+        }
+        
+        $ret = $this->query("?action=query&format=php&prop=$proptype" . $addparams);
+        
+        if (isset($ret['error'])) {
+            throw new Exception("$proptype Error " . $ret['error']['info'] . "\n". print_r($params, true));
+        }
+        
+        return $ret;
     }
-
+    
+    /**
+     * Get TemplateData
+     *
+     * @param array Query parameters xx...
+     * @throws Exception
+     * @return ..., ['continue']; pass ['continue'] back in as a param to get more results
+     */
+    public function getTemplateData($params)
+    {
+        if (! isset($params['continue'])) {
+            $params['continue'] = '';
+        } elseif (is_array($params['continue'])){
+            $continue = $params['continue'];
+            unset($params['continue']);
+            $params = array_merge($params, $continue);
+        }
+        
+        $addparams ='';
+        
+        foreach ($params as $key => $value) {
+            $addparams .= "&$key=" . urlencode($value);
+        }
+        
+        $ret = $this->query("?action=templatedata&format=php" . $addparams);
+        
+        if (isset($ret['error'])) {
+            throw new Exception("getTemplateData Error " . $ret['error']['info'] . "\n". print_r($params, true));
+        }
+        
+        return $ret;
+    }
+    
     /**
      * Get namespace prefix.
      *
