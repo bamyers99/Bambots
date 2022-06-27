@@ -1188,6 +1188,9 @@ class TemplateParamBot
         Logger::log("  $command");
         system($command);
         
+        $command = "cd $wikidir; rm pages-articles.xml.bz2";
+        system($command);
+        
         // Sort the parameters
         
         $command = "cd $wikidir; LC_ALL=C sort -n -k 1,1 -k 2,2 TemplateParams >TemplateParams.sorted";

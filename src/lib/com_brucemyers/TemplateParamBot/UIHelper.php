@@ -90,8 +90,9 @@ class UIHelper
 	 */
 	public function getTemplate($params)
 	{
-		$info = array();
-		$errors = array();
+	    $wikis = $this->getWikis();
+	    $info = [];
+		$errors = [];
 		$wikiname = $params['wiki'];
 
 		$sth = $this->dbh_tools->prepare("SELECT * FROM `{$wikiname}_templates` WHERE `name` = ?");
@@ -115,16 +116,12 @@ class UIHelper
 			}
 
 			// Fetch the TemplateData
-			$wikilang = substr($wikiname, 0, -4);
-			if ($wikilang == 'commons') {
-			    $domain = "commons.wikimedia.org";
-			} else {
-			    $domain = "$wikilang.wikipedia.org";
-			}
+			$domain = $wikis[$wikiname]['domain'];
+			$templateprefix = $wikis[$wikiname]['templateNS'];
 
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
-			$query = '?action=templatedata&format=php&titles=' . urlencode('Template:' . $params['template']);
+			$query = '?action=templatedata&format=php&titles=' . urlencode("$templateprefix:" . $params['template']);
 
 			$ret = $mediawiki->query($query);
 
@@ -136,17 +133,15 @@ class UIHelper
 			if (! empty($ret) && ! empty($ret['pages'])) {
 			    $info['TemplateData'] = new TemplateData(null, reset($ret['pages']));
 			} else {
-				$wikis = $this->getWikis();
 				$l10n = new L10N($wikis[$wikiname]['lang']);
 				$errors[] = htmlentities($l10n->get('templatedatanotfound', true), ENT_COMPAT, 'UTF-8');
 			}
 		} else {
-			$wikis = $this->getWikis();
 			$l10n = new L10N($wikis[$wikiname]['lang']);
 			$errors[] = htmlentities($l10n->get('templatenotfound', true), ENT_COMPAT, 'UTF-8');
 		}
 
-		return array('errors' => $errors, 'info' => $info);
+		return ['errors' => $errors, 'info' => $info];
 	}
 
 	/**
@@ -198,8 +193,9 @@ class UIHelper
 	 */
 	public function getPages($type, $params, $max_rows)
 	{
-		$results = array();
-		$errors = array();
+	    $wikis = $this->getWikis();
+	    $results = [];
+		$errors = [];
 		$wikiname = $params['wiki'];
 
 		$page = $params['page'];
@@ -233,12 +229,7 @@ class UIHelper
 				$page_ids[] = $row[0];
 			}
 
-			$wikilang = substr($wikiname, 0, -4);
-			if ($wikilang == 'commons') {
-			    $domain = "commons.wikimedia.org";
-			} else {
-			    $domain = "$wikilang.wikipedia.org";
-			}
+			$domain = $wikis[$wikiname]['domain'];
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
 			$ret = $mediawiki->getPagesByID($page_ids, false);
@@ -252,7 +243,7 @@ class UIHelper
 			unset($result);
 		}
 
-		return array('errors' => $errors, 'results' => $results);
+		return ['errors' => $errors, 'results' => $results];
 	}
 
 	/**
@@ -265,8 +256,9 @@ class UIHelper
 	 */
 	public function getMissing($params, $max_rows, $type)
 	{
-		$results = array();
-		$errors = array();
+	    $wikis = $this->getWikis();
+	    $results = [];
+		$errors = [];
 		$wikiname = $params['wiki'];
 
 		$page = $params['page'];
@@ -298,12 +290,7 @@ class UIHelper
 				$page_ids[] = $row[0];
 			}
 
-			$wikilang = substr($wikiname, 0, -4);
-			if ($wikilang == 'commons') {
-			    $domain = "commons.wikimedia.org";
-			} else {
-			    $domain = "$wikilang.wikipedia.org";
-			}
+			$domain = $wikis[$wikiname]['domain'];
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
 			$ret = $mediawiki->getPagesByID($page_ids, false);
@@ -317,7 +304,7 @@ class UIHelper
 			unset($result);
 		}
 
-		return array('errors' => $errors, 'results' => $results);
+		return ['errors' => $errors, 'results' => $results];
 	}
 
 	/**
@@ -330,8 +317,9 @@ class UIHelper
 	 */
 	public function getInvalids($invalid_params, $params, $max_rows)
 	{
-		$results = array();
-		$errors = array();
+	    $wikis = $this->getWikis();
+	    $results = [];
+		$errors = [];
 		$wikiname = $params['wiki'];
 
 		$sth = $this->dbh_tools->prepare("SELECT id FROM `{$wikiname}_templates` WHERE `name` = ?");
@@ -362,12 +350,7 @@ class UIHelper
 				$page_ids[$row['page_id']] = true; // removes dups
 			}
 
-			$wikilang = substr($wikiname, 0, -4);
-			if ($wikilang == 'commons') {
-			    $domain = "commons.wikimedia.org";
-			} else {
-			    $domain = "$wikilang.wikipedia.org";
-			}
+			$domain = $wikis[$wikiname]['domain'];
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
 			$ret = $mediawiki->getPagesByID(array_keys($page_ids), false);
@@ -385,7 +368,7 @@ class UIHelper
 			unset($result);
 		}
 
-		return array('errors' => $errors, 'results' => $results);
+		return ['errors' => $errors, 'results' => $results];
 	}
 
 	/**
