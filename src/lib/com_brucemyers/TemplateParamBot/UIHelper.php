@@ -134,7 +134,7 @@ class UIHelper
 
 			if (! empty($ret) && ! empty($ret['pages'])) {
 			    $info['TemplateData'] = new TemplateData(null, reset($ret['pages']));
-			    $templname = str_replace("$templateprefix:", '', $info['TemplateData']['title']);
+			    $templname = str_replace("$templateprefix:", '', $info['TemplateData']->getTitle());
 			    $info['name'] = $templname; // reset incase lowercase name
 			} else {
 				$l10n = new L10N($wikis[$wikiname]['lang']);

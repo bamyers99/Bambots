@@ -165,8 +165,10 @@ class TemplateParamBot
         	$sth = $dbh_tools->query("SELECT * FROM `{$wikiname}_templates` WHERE id = $templid");
         	$template = $sth->fetch(PDO::FETCH_ASSOC);
         	$templname = $template['name'];
-
-        	$query = '?action=templatedata&format=php&titles=' . urlencode($ruleconfig['templateNS'] . ':' . $templname);
+        	$lctemplate = lcfirst($template['name']);
+        	
+        	$query = '?action=templatedata&format=php&titles=' . urlencode($ruleconfig['templateNS'] . ':' . $lctemplate . '|' .
+        	    $ruleconfig['templateNS'] . ':' . $templname);
 
         	$ret = $mediawiki->query($query);
 
@@ -1227,7 +1229,7 @@ class TemplateParamBot
         // Cleanup
         
         $command = "cd $wikidir; rm {$wiki}TemplateParams; rm TemplateIds.tsv";
-        //system($command);
+        system($command);
         
         return '';
     }

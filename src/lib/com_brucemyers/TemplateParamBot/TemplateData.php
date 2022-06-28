@@ -122,4 +122,10 @@ class TemplateData
 		if (isset($this->data['params'])) return $this->data['params'];
 		return array();
 	}
+	
+	public function getTitle()
+	{
+	    if (isset($this->data['title'])) return $this->data['title'];
+	    return '';
+	}
 }
