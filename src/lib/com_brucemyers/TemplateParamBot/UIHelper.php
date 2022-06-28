@@ -50,7 +50,7 @@ class UIHelper
 			$wikiname = $row['wikiname'];
 
 			$wikis[$wikiname] = array('title' => $row['wikititle'], 'domain' => $row['wikidomain'], 'lang' => $row['lang'],
-				'lastdumpdate' => $row['lastdumpdate']);
+			    'lastdumpdate' => $row['lastdumpdate'], 'templateNS' => $row['templateNS']);
 		}
 
 		return $wikis;
@@ -118,10 +118,12 @@ class UIHelper
 			// Fetch the TemplateData
 			$domain = $wikis[$wikiname]['domain'];
 			$templateprefix = $wikis[$wikiname]['templateNS'];
+			$lctemplate = lcfirst($params['template']);
 
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
-			$query = '?action=templatedata&format=php&titles=' . urlencode("$templateprefix:" . $params['template']);
+			$query = '?action=templatedata&format=php&titles=' . urlencode("$templateprefix:" . $lctemplate . '|' .
+			    "$templateprefix:" . $params['template']);
 
 			$ret = $mediawiki->query($query);
 
@@ -132,6 +134,8 @@ class UIHelper
 
 			if (! empty($ret) && ! empty($ret['pages'])) {
 			    $info['TemplateData'] = new TemplateData(null, reset($ret['pages']));
+			    $templname = str_replace("$templateprefix:", '', $info['TemplateData']['title']);
+			    $info['name'] = $templname; // reset incase lowercase name
 			} else {
 				$l10n = new L10N($wikis[$wikiname]['lang']);
 				$errors[] = htmlentities($l10n->get('templatedatanotfound', true), ENT_COMPAT, 'UTF-8');

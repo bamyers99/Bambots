@@ -255,10 +255,12 @@ EOT;
 
 	$protocol = HttpUtil::getProtocol();
 	$domain = $wikis[$params['wiki']]['domain'];
-	$wikiprefix = "$protocol://$domain/wiki/Template:";
+	$templateNS = $wikis[$params['wiki']]['templateNS'];
+	$wikiprefix = "$protocol://$domain/wiki/$templateNS:";
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 	$tmplname = $params['template'];
+	$lctmplname = $results['info']['name']; // Use info name because first letter may be lowercase
 	$wikitext = '';
 
 	if (isset($results['info']['TemplateData'])) $templatedata = $results['info']['TemplateData'];
@@ -272,12 +274,12 @@ EOT;
 	else $paramdef = false;
 
 	echo '<div><b>' . htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') .
-			"</b>: <a class=\"external\" href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $tmplname)) . "\">" .
-			htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a>";
+	   "</b>: <a class=\"external\" href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $lctmplname)) . "\">" .
+	   htmlentities($lctmplname, ENT_COMPAT, 'UTF-8') . "</a>";
 	echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['page_count'] . '</div>';
 	echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['instance_count'] . '</div>';
 
-	$wikitext .= $l10n->get('template', true) . ": [[Template:$tmplname|$tmplname]]<br />\n";
+	$wikitext .= $l10n->get('template', true) . ": [[$templateNS:$lctmplname|$lctmplname]]<br />\n";
 	$wikitext .= $l10n->get('pagecount', true) . ": {$results['info']['page_count']}<br />\n";
 	$wikitext .= $l10n->get('transclusioncount', true) . ": {$results['info']['instance_count']}<br />\n";
 	$asof = $wikis[$params['wiki']]['lastdumpdate'];

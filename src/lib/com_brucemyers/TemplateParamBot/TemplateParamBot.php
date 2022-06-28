@@ -1184,7 +1184,7 @@ class TemplateParamBot
         
         // Parse page template parameters
         
-        $command = "cd $wikidir; bunzip2 -c pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - TemplateParams TemplateTotals";
+        $command = "cd $wikidir; bunzip2 -c pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - {$wiki}TemplateParams {$wiki}TemplateTotals";
         Logger::log("  $command");
         system($command);
         
@@ -1193,27 +1193,27 @@ class TemplateParamBot
         
         // Sort the parameters
         
-        $command = "cd $wikidir; LC_ALL=C sort -n -k 1,1 -k 2,2 TemplateParams >TemplateParams.sorted";
+        $command = "cd $wikidir; bash -c \"LC_ALL=C sort -n -k 1,1 -k 2,2 {$wiki}TemplateParams >{$wiki}TemplateParams.sorted\"";
         Logger::log("  $command");
         system($command);
         
         // Calc the template offsets
         
-        $command = "cd $wikidir; ./MWDumpTemplateParser -offsets TemplateParams.sorted TemplateOffsets";
+        $command = "cd $wikidir; ./MWDumpTemplateParser -offsets {$wiki}TemplateParams.sorted {$wiki}TemplateOffsets";
         Logger::log("  $command");
         system($command);
         
         // Move the data files to the data directory
         
-        $command = "mv $wikidir/TemplateParams.sorted $datadir/$wiki-$date-TemplateParams";
+        $command = "mv $wikidir/{$wiki}TemplateParams.sorted $datadir/$wiki-$date-TemplateParams";
         Logger::log("  $command");
         system($command);
         
-        $command = "mv $wikidir/TemplateTotals $datadir/$wiki-$date-TemplateTotals";
+        $command = "mv $wikidir/{$wiki}TemplateTotals $datadir/$wiki-$date-TemplateTotals";
         Logger::log("  $command");
         system($command);
         
-        $command = "mv $wikidir/TemplateOffsets $datadir/$wiki-$date-TemplateOffsets";
+        $command = "mv $wikidir/{$wiki}TemplateOffsets $datadir/$wiki-$date-TemplateOffsets";
         Logger::log("  $command");
         system($command);
         
@@ -1226,8 +1226,8 @@ class TemplateParamBot
         
         // Cleanup
         
-        $command = "cd $wikidir; rm TemplateParams; rm TemplateIds.tsv";
-        system($command);
+        $command = "cd $wikidir; rm {$wiki}TemplateParams; rm TemplateIds.tsv";
+        //system($command);
         
         return '';
     }
@@ -1271,6 +1271,7 @@ class TemplateParamBot
                     $templname = str_replace('_', ' ', $pagedata['title']);
                     if (strpos($templname, "$templateNS:") !== 0) continue;
                     $templname = str_replace("$templateNS:", '', $templname);
+                    $templname = ucfirst($templname);
                     if (strpos($templname, '/doc') !== false) continue;
                     if (strpos($templname, '/sandbox') !== false) continue;
                     if (strpos($templname, '/testcases') !== false) continue;
@@ -1336,6 +1337,7 @@ class TemplateParamBot
                         foreach ($pagedata['redirects'] as $redirectdata) {
                             $templname = str_replace('_', ' ', $redirectdata['title']);
                             $templname = str_replace("$templateNS:", '', $templname);
+                            $templname = ucfirst($templname);
                             fwrite($hndl, "$templname\t$templid\n");
                         }
                     }
