@@ -1163,11 +1163,13 @@ class TemplateParamBot
         $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-articles.xml.bz2";
         $outfile = "$wikidir/pages-articles.xml.bz2";
         
-        Logger::log("  Start curl $url");
-        $retval = Curl::saveUrlContents($url, $outfile);
-        
-        if (! $retval || ! empty(Curl::$lastError) || Curl::$lastResponseCode < 200 || Curl::$lastResponseCode >= 300) {
-            return "curl error ($url) " . Curl::$lastError . " responsecode:" . Curl::$lastResponseCode;
+        if (! file_exists($outfile)) {
+            Logger::log("  Start curl $url");
+            $retval = Curl::saveUrlContents($url, $outfile);
+            
+            if (! $retval || ! empty(Curl::$lastError) || Curl::$lastResponseCode < 200 || Curl::$lastResponseCode >= 300) {
+                return "curl error ($url) " . Curl::$lastError . " responsecode:" . Curl::$lastResponseCode;
+            }
         }
         
         // Retrieve TemplateData
@@ -1260,9 +1262,9 @@ class TemplateParamBot
         $continue = ['continue' => ''];
         
         while ($continue !== false) {
-            $tdparams = array_merge($tdparams, $continue);
+            $temptdparams = array_merge($tdparams, $continue);
             
-            $ret = $mediawiki->getTemplateData($tdparams);
+            $ret = $mediawiki->getTemplateData($temptdparams);
             
             if (isset($ret['error'])) return 'retrieveTemplateIds Get TemplateData failed ' . $ret['error'];
             if (isset($ret['continue'])) $continue = $ret['continue'];
@@ -1325,9 +1327,9 @@ class TemplateParamBot
         $continue = ['continue' => ''];
         
         while ($continue !== false) {
-            $tdparams = array_merge($tdparams, $continue);
+            $temptdparams = array_merge($tdparams, $continue);
             
-            $ret = $mediawiki->getProp('redirects', $tdparams);
+            $ret = $mediawiki->getProp('redirects', $temptdparams);
             
             if (isset($ret['error'])) return 'retrieveTemplateIds Get template redirects failed ' . $ret['error'];
             if (isset($ret['continue'])) $continue = $ret['continue'];
