@@ -374,34 +374,6 @@ class UIHelper
 
 		return ['errors' => $errors, 'results' => $results];
 	}
-	
-	/**
-	 * Get a sample of > 50 unique values
-	 * 
-	 * @param string $wikiname
-	 * @param string $template
-	 * @param string $paramname
-	 * @return array string
-	 */
-	public function getUniqueSample($wikiname, $template, $paramname)
-	{
-	    $sth = $this->dbh_tools->prepare("SELECT id FROM `{$wikiname}_templates` WHERE `name` = ?");
-	    $sth->execute([$template]);
-	    
-	    $row = $sth->fetch(PDO::FETCH_NUM);
-	    $templid = $row[0];
-	    
-	    $sql = "SELECT DISTINCT param_value FROM `{$wikiname}_values` " .
-	    " WHERE template_id = ? AND param_name = ? AND param_value <> '' " .
-	    " ORDER BY param_value LIMIT 50 ";
-	    
-	    $sth = $this->dbh_tools->prepare($sql);
-	    $sth->execute([$templid, $paramname]);
-	    
-	    $results = $sth->fetchAll(PDO::FETCH_NUM);
-	    
-	    return $results;
-	}
 
 	/**
 	 * Get the TemplateParamConfig

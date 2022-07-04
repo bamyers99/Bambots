@@ -361,6 +361,12 @@ EOT;
 		if ($cnt > 1) {
 			$uniquedata = '';
 			$wuniquedata = '';
+			
+			if ($cnt == 100) {
+			    $uniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8') . '<br />';
+			    $wuniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8') . '<br />';
+			}
+			
 			for ($x = 0; $x < $cnt; $x += 2) {
 				$val = htmlentities($uniques[$x], ENT_COMPAT, 'UTF-8');
 				$count = $uniques[$x + 1];
@@ -380,14 +386,6 @@ EOT;
 		} else {
 			$uniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
 			$wuniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
-			
-			$sample = $uihelper->getUniqueSample($params['wiki'], $params['template'], $param['param_name']);
-			
-			foreach ($sample as $unique) {
-			    $val = htmlentities($unique[0], ENT_COMPAT, 'UTF-8');
-			    $uniquedata .= "<br />$val";
-			    $wuniquedata .= "<br /><nowiki>$val</nowiki>";
-			}
 		}
 
 		$preparam = $postparam = '';
