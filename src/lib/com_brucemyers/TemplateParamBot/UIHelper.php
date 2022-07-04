@@ -392,7 +392,8 @@ class UIHelper
 	    $templid = $row[0];
 	    
 	    $sql = "SELECT DISTINCT param_value FROM `{$wikiname}_values` " .
-	    " WHERE template_id = ? AND param_name = ? AND param_value <> '' ORDER BY param_value ";
+	    " WHERE template_id = ? AND param_name = ? AND param_value <> '' " .
+	    " ORDER BY param_value LIMIT 50 ";
 	    
 	    $sth = $this->dbh_tools->prepare($sql);
 	    $sth->execute([$templid, $paramname]);
