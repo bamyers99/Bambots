@@ -386,13 +386,13 @@ class UIHelper
 	public function getUniqueSample($wikiname, $template, $paramname)
 	{
 	    $sth = $this->dbh_tools->prepare("SELECT id FROM `{$wikiname}_templates` WHERE `name` = ?");
-	    $sth->execute($template);
+	    $sth->execute([$template]);
 	    
 	    $row = $sth->fetch(PDO::FETCH_NUM);
 	    $templid = $row[0];
 	    
 	    $sql = "SELECT DISTINCT param_value FROM `{$wikiname}_values` " .
-	    " WHERE template_id = ? AND param_name = ? ORDER BY param_value ";
+	    " WHERE template_id = ? AND param_name = ? AND param_value <> '' ORDER BY param_value ";
 	    
 	    $sth = $this->dbh_tools->prepare($sql);
 	    $sth->execute([$templid, $paramname]);
