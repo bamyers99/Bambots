@@ -380,6 +380,14 @@ EOT;
 		} else {
 			$uniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
 			$wuniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
+			
+			$sample = $uihelper->getUniqueSample($params['wiki'], $params['template'], $param['param_name']);
+			
+			foreach ($sample as $unique) {
+			    $val = htmlentities($unique[0], ENT_COMPAT, 'UTF-8');
+			    $uniquedata .= "<br />$val";
+			    $wuniquedata .= "<br /><nowiki>$val</nowiki>";
+			}
 		}
 
 		$preparam = $postparam = '';

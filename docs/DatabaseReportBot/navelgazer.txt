@@ -59,6 +59,7 @@ LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/changetags.tsv' INTO TA
 
 jsub -N DatabaseReportBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DatabaseReportBot.php MiscReports dumpChangeTags
 jsub -cwd bzip2 -9 navelgazerrev.tsv
+curl https://dumps.wikimedia.org/wikidatawiki/20220701/wikidatawiki-20220701-change_tag.sql.gz >wikidatawiki-20220701-change_tag.sql.gz&
 screen gunzip -c *change_tag.sql.gz | ./mysqlparse - - | awk -f changetag.awk - >changetag.tsv&
 sort -k 1,1 changetag.tsv >changetag.tsv.sorted&
 bunzip2 navelgazerrev.tsv.bz2
