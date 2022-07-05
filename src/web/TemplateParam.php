@@ -214,7 +214,9 @@ EOT;
 		echo "<td><a href=\"$protocol://$host$uri/$extra\">" .
 			htmlentities($tmplname, ENT_COMPAT, 'UTF-8') . "</a>$excluded_template</td>";
 
-		echo "<td style='text-align:right'>{$result['page_count']}&nbsp;</td><td style='text-align:right'>{$result['instance_count']}&nbsp;</td></tr>";
+			echo "<td style='text-align:right' data-sort-value='{$result['page_count']}'>" .
+			 intl_num_format($result['page_count']) . "&nbsp;</td><td style='text-align:right' data-sort-value='{$result['instance_count']}'>" .
+			 intl_num_format($result['instance_count']) . "&nbsp;</td></tr>";
 	}
 
 	echo "</tbody></table>\n";
@@ -286,8 +288,8 @@ EOT;
 	echo '<div><b>' . htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') .
 	   "</b>: <a class=\"external\" href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $lctmplname)) . "\">" .
 	   htmlentities($lctmplname, ENT_COMPAT, 'UTF-8') . "</a>";
-	echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['page_count'] . '</div>';
-	echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . $results['info']['instance_count'] . '</div>';
+	   echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['page_count']) . '</div>';
+	   echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['instance_count']) . '</div>';
 
 	$wikitext .= $l10n->get('template', true) . ": [[$templateNS:$lctmplname|$lctmplname]]<br />\n";
 	$wikitext .= $l10n->get('pagecount', true) . ": {$results['info']['page_count']}<br />\n";
@@ -416,7 +418,8 @@ EOT;
 			$postparam = '</span>';
 		}
 
-		echo "<td>$preparam$paramname$postparam$parmpageslink</td><td style='text-align:center'>$validparamname</td><td style='text-align:right'>{$param['value_count']}&nbsp;</td><td>$uniquedata</td></tr>";
+		echo "<td>$preparam$paramname$postparam$parmpageslink</td><td style='text-align:center'>$validparamname</td><td style='text-align:right' data-sort-value='{$param['value_count']}'>" .
+		  intl_num_format($param['value_count']) . "&nbsp;</td><td>$uniquedata</td></tr>";
 		$csvdata = implode('||', array($paramname, $validparamname, $param['value_count'], $wuniquedata));
 		$wikitext .= "|-\n|$csvdata\n";
 		
@@ -872,6 +875,16 @@ function get_params()
 	$params['param'] = isset($_REQUEST['param']) ? $_REQUEST['param'] : '';
 	$params['value'] = isset($_REQUEST['value']) ? $_REQUEST['value'] : '';
 
+}
+
+/**
+ * Format an integer
+ *
+ * @param int $number
+ */
+function intl_num_format($number)
+{
+    return number_format($number, 0, '', '&thinsp;');
 }
 
 ?>
