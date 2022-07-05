@@ -28,8 +28,9 @@ require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
     $activerules = [
     	'commonswiki' => ['title' => 'Wikipedia Commons', 'domain' => 'commons.wikimedia.org', 'templateNS' => 'Template', 'lang' => 'en'],
         'enwiki' => ['title' => 'English Wikipedia', 'domain' => 'en.wikipedia.org', 'templateNS' => 'Template', 'lang' => 'en'],
-    	'enwiktionary' => ['title' => 'English Wiktionary', 'domain' => 'en.wiktionary.org', 'templateNS' => 'Template', 'lang' => 'en']
-//    	'svwiki' => array('title' => 'Svenska Wikipedia', 'domain' => 'sv.wikipedia.org'),
+        'enwiktionary' => ['title' => 'English Wiktionary', 'domain' => 'en.wiktionary.org', 'templateNS' => 'Template', 'lang' => 'en'],
+        'enwikisource' => ['title' => 'English Wikisource', 'domain' => 'en.wikisource.org', 'templateNS' => 'Template', 'lang' => 'en']
+        //    	'svwiki' => array('title' => 'Svenska Wikipedia', 'domain' => 'sv.wikipedia.org'),
 //        'nlwiki' => array('title' => 'Nederlands Wikipedia', 'domain' => 'nl.wikipedia.org'),
 //        'dewiki' => array('title' => 'Deutsch Wikipedia', 'domain' => 'de.wikipedia.org'),
 //        'frwiki' => array('title' => 'Français Wikipedia', 'domain' => 'fr.wikipedia.org'),

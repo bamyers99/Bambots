@@ -85,6 +85,16 @@ function display_form()
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
     	<script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 		<script type='text/javascript' src='js/jquery.tablesorter.min.js'></script>
+		<script type='text/javascript'>
+			function toggleExpander(id) {
+				var ei = $('#expandericon' + id);
+				if (ei == null) return;
+				ei = ei.children(":first-child");
+				var value = (ei.contents().first().text() == '+') ? '-&nbsp;' : '+';
+				ei.html(value);
+				$('#expanderbody' + id).toggle();
+			}
+		</script>
 	</head>
 	<body>
 		<div style="display: table; margin: 0 auto;">
@@ -298,6 +308,8 @@ EOT;
 	));
 
 	$wikitext .= "{| class=\"wikitable sortable\"\n|-\n!$headings\n";
+	
+	$paramnum = 1;
 
 	foreach ($results['info']['params'] as $param) {
 		$paramname = htmlentities($param['param_name'], ENT_COMPAT, 'UTF-8');
@@ -367,9 +379,16 @@ EOT;
 			    $wuniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8') . '<br />';
 			}
 			
+			$uniquedata .= '<div>';
+			$uniquedata .= "<span id='expandericon$paramnum' class='expandericon'><a href='#' onclick='toggleExpander(\"$paramnum\"); return false'>+</a></span><a class='expandertitle' href='#' onclick='toggleExpander(\"$paramnum\"); return false'> Click to show</a>";
+			$uniquedata .= '</div>';
+			$uniquedata .= "<div id='expanderbody$paramnum' style='display: none'>";
+			
 			for ($x = 0; $x < $cnt; $x += 2) {
 				$val = htmlentities($uniques[$x], ENT_COMPAT, 'UTF-8');
-				$count = $uniques[$x + 1];
+				
+				if ($cnt == 100) $count = '';
+				else $count = '(' . $uniques[$x + 1] . ')';
 
 				$valuepageslink = '';
 				if ($pagelinks && ! $isexcluded) {
@@ -379,10 +398,12 @@ EOT;
 					$valuepageslink = " <a href='$protocol://$host$uri/$extra'>(page&nbsp;links)</a>";
 				}
 
-				$uniquedata .= "$val&nbsp;&nbsp;($count)$valuepageslink<br />";
-				$wuniquedata .= "<nowiki>$val</nowiki>&nbsp;&nbsp;($count)<br />";
+				$uniquedata .= "$val&nbsp;&nbsp;$count$valuepageslink<br />";
+				$wuniquedata .= "<nowiki>$val</nowiki>&nbsp;&nbsp;$count<br />";
 			}
-
+			
+			$uniquedata .= '</div>';
+			
 		} else {
 			$uniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
 			$wuniquedata = htmlentities('> 50 ' . $l10n->get('uniquevalues'), ENT_COMPAT, 'UTF-8');
@@ -398,6 +419,8 @@ EOT;
 		echo "<td>$preparam$paramname$postparam$parmpageslink</td><td style='text-align:center'>$validparamname</td><td style='text-align:right'>{$param['value_count']}&nbsp;</td><td>$uniquedata</td></tr>";
 		$csvdata = implode('||', array($paramname, $validparamname, $param['value_count'], $wuniquedata));
 		$wikitext .= "|-\n|$csvdata\n";
+		
+		++$paramnum;
 	}
 
 	echo '</tbody></table>';
