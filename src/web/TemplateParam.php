@@ -696,7 +696,7 @@ function display_invalidlinks()
 		$paramname = $param['param_name'];
 		$uniques = explode("\t", $param['unique_values']);
 		$cnt = count($uniques);
-		if ($cnt < 2) continue; // > 50 uniques
+		if ($cnt == 100) continue; // > 50 uniques
 
 		if (! isset($paramdef[$paramname])) {
 			$invalid_params[] = $paramname;

@@ -63,7 +63,9 @@ class TestTemplateParamParser extends UnitTestCase
     			| a || b
     			|}
     			}}
-    			{{math|\'\'g\'\' : [[interval (mathematics)#Infinite endpoints|(−∞,+9] or [0,+∞)]] → ℝ}}';
+    			{{math|\'\'g\'\' : [[interval (mathematics)#Infinite endpoints|(−∞,+9] or [0,+∞)]] → ℝ}}
+                {{c|WATER LEVELS IN LAKE MEAD<ref name=D32>Water levels in lake mead<p></ref>}}';
+    	
     	$expected_templates = array(
     		array('name' => 'Nihongo',
     			'params' => array('1' => 'Cindy Aurum',
@@ -86,8 +88,10 @@ class TestTemplateParamParser extends UnitTestCase
     			|-
     			| a || b
     			|}')),
-    		array('name' => 'Math', 'params' => array('1' => "''g'' : [[interval (mathematics)#Infinite endpoints|(−∞,+9] or [0,+∞)]] → ℝ"))
+    		['name' => 'Math', 'params' => ['1' => "''g'' : [[interval (mathematics)#Infinite endpoints|(−∞,+9] or [0,+∞)]] → ℝ"]],
+    	    ['name' => 'C', 'params' => ['1' => "WATER LEVELS IN LAKE MEAD<ref name=D32>Water levels in lake mead<p></ref>"]]
     	);
+    	
 		$this->_performMultipleTemplateTest($testname, $data, $expected_templates);
 
 		$data = <<<EOT

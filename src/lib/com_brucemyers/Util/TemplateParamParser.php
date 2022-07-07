@@ -25,7 +25,7 @@ class TemplateParamParser
 	static $regexs = [
 		'passed_param' => '!\{\{\{(?P<content>[^{}]*?\}\}\})!', // Highest priority
 		'htmlstub' => '!<\s*(?P<content>[\w]+(?:(?:\s+\w+(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\'">\s]+))?)+\s*|\s*)/>)!',
-		'html' => '!<\s*(?P<content>(?P<tag>[\w]+)[^>]*>[^<]*?<\s*/\s*(?P=tag)\s*>)!',
+	    'html' => '!<\s*(?P<tag>[\w]+)[^>]*>(?P<content>.*?<\s*/\s*(?P=tag)\s*>)!s',
 	    'template' => '!\{\{\s*(?P<content>(?P<name>[^{}\|]+?)(?:\|(?P<params>[^{}]+?)?)?\}\})!',
 	    'table' => '!\{\|(?P<content>[^{]*?\|\})!',
 		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/s'
@@ -56,52 +56,8 @@ class TemplateParamParser
 			    //Logger::log("Max iterations reached data=$origdata");
 			    return [];
 			}
-			$match_found = false;
-
-			foreach (self::$regexs as $type => $regex) {
-				$match_cnt = preg_match_all($regex, $data, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
-				$offset_adjust = 0;
-
-				if ($match_cnt) {
-				    $match_found = true;
-					$replacement_made = false;
-
-					foreach ($matches as $match) {
-						// See if there are any containers inside
-						$content = $match['content'][0];
-
-						foreach (self::$regexs as $regex2) {
-							if (preg_match($regex2, $content)) {
-//								echo "$regex2\n";
-//								echo "$content\n";
-								continue 2;
-							}
-						}
-
-						// Replace the match with a marker
-						$marker_id = "\x02" . count($markers) . "\x03";
-						$content = $match[0][0];
-						$content_len = strlen($content);
-						$offset = $match[0][1] - $offset_adjust;
-						$offset_adjust += $content_len - strlen($marker_id);
-
-						$data = substr_replace($data, $marker_id, $offset, $content_len);
-
-						if ($type == 'template') $templates[] = $content;
-
-						// Replace any markers in the content
-						preg_match_all("!\\x02\\d+\\x03!", $content, $marker_matches);
-						foreach ($marker_matches[0] as $marker_match) {
-							$content = str_replace($marker_match, $markers[$marker_match], $content);
-						}
-
-						$markers[$marker_id] = $content;
-						$replacement_made = true;
-					}
-
-					if ($replacement_made) continue 2; // restart with the first regex
-				}
-			}
+			
+			$match_found = self::_getTemplates($data, $markers, $templates, 0, strlen($data));
 		}
 
 		$results = [];
@@ -140,10 +96,17 @@ class TemplateParamParser
 					if (strpos($param, '=') !== false) {
 						list($param_name, $param_value) = explode('=', $param, 2);
 
-						// Replace any markers in the name
-						preg_match_all("!\\x02\\d+\\x03!", $param_name, $marker_matches);
-						foreach ($marker_matches[0] as $marker_match) {
-							$param_name = str_replace($marker_match, $markers[$marker_match], $param_name);
+						if (strlen($param_name) && substr($param_name, -1) == "\n") { // = must be on same line as param name
+						    $param_name = "$numbered_param";
+						    $param_value = $param;
+						    ++$numbered_param;
+						    
+						} else {
+						    // Replace any markers in the name
+    						preg_match_all("!\\x02\\d+\\x03!", $param_name, $marker_matches);
+    						foreach ($marker_matches[0] as $marker_match) {
+    							$param_name = str_replace($marker_match, $markers[$marker_match], $param_name);
+    						}
 						}
 					} else {
 						$param_name = "$numbered_param";
@@ -174,5 +137,51 @@ class TemplateParamParser
 		}
 
 		return $results;
+	}
+	
+	static function _getTemplates(&$data, &$markers, &$templates, $start, $length)
+	{
+	    echo "data= " . substr($data, $start, $length) . "\n";
+	    
+	    foreach (self::$regexs as $type => $regex) {
+	        echo "\ttype= $type\n";
+	        $match_cnt = preg_match_all($regex, substr($data, $start, $length), $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+	        
+	        if ($match_cnt) {
+	            $offset_adjust = 0;
+	            
+	            foreach ($matches as $match) {
+	                echo "\tmatched= {$match[0][0]}\n";
+	                // See if there are any containers inside
+	                $matchfound = self::_getTemplates($data, $markers, $templates, $start + $match['content'][1] - $offset_adjust,
+	                    strlen($match['content'][0]));
+	                if ($matchfound) return true; // Restart because $data changed
+	                
+	                echo "\tno container inside\n";
+	                // Replace the match with a marker
+	                $marker_id = "\x02" . count($markers) . "\x03";
+	                $content = $match[0][0];
+	                $content_len = strlen($content);
+	                $offset = $start + $match[0][1] - $offset_adjust;
+	                $offset_adjust += $content_len - strlen($marker_id);
+	                
+	                $data = substr_replace($data, $marker_id, $offset, $content_len);
+	                
+	                if ($type == 'template') $templates[] = $content;
+	                
+	                // Replace any markers in the content
+	                preg_match_all("!\\x02\\d+\\x03!", $content, $marker_matches);
+	                foreach ($marker_matches[0] as $marker_match) {
+	                    $content = str_replace($marker_match, $markers[$marker_match], $content);
+	                }
+	                
+	                $markers[$marker_id] = $content;
+	            }
+	            
+	            return true; // Restart because $data changed
+	        }
+	    }
+	    
+	    return false;
 	}
 }
