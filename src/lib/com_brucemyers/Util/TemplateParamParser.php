@@ -141,23 +141,23 @@ class TemplateParamParser
 	
 	static function _getTemplates(&$data, &$markers, &$templates, $start, $length)
 	{
-	    echo "data= " . substr($data, $start, $length) . "\n";
+//	    echo "data= " . substr($data, $start, $length) . "\n";
 	    
 	    foreach (self::$regexs as $type => $regex) {
-	        echo "\ttype= $type\n";
+//	        echo "\ttype= $type\n";
 	        $match_cnt = preg_match_all($regex, substr($data, $start, $length), $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 	        
 	        if ($match_cnt) {
 	            $offset_adjust = 0;
 	            
 	            foreach ($matches as $match) {
-	                echo "\tmatched= {$match[0][0]}\n";
+//	                echo "\tmatched= {$match[0][0]}\n";
 	                // See if there are any containers inside
 	                $matchfound = self::_getTemplates($data, $markers, $templates, $start + $match['content'][1] - $offset_adjust,
 	                    strlen($match['content'][0]));
 	                if ($matchfound) return true; // Restart because $data changed
 	                
-	                echo "\tno container inside\n";
+//	                echo "\tno container inside\n";
 	                // Replace the match with a marker
 	                $marker_id = "\x02" . count($markers) . "\x03";
 	                $content = $match[0][0];
