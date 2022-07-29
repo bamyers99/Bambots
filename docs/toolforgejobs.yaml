@@ -27,7 +27,7 @@
   cpu: 250m
   
 - name: inception-bot-launch
-  command: bin/ksub execute /data/project/bambots/Bambots/src/cli php /data/project/bambots/bin/ksub.php inception-bot "cd /data/project/bambots/Bambots/src/cli; php InceptionBot.php" --cpu 750m 
+  command: bin/ksub execute /data/project/bambots/Bambots/src/cli php /data/project/bambots/bin/ksub.php inception-bot "cd /data/project/bambots/Bambots/src/cli; php InceptionBot.php" --cpu 750m --emails onfailure 
   image: tf-php74
   schedule: "00 19 * * *"
   emails: none
