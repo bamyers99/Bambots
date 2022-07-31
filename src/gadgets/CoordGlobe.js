@@ -165,18 +165,16 @@ Bamyers99.CoordGlobe = {
 					$( '#Bamyers99_CoordGlobe_msg' ).html( data );
 					return;
 				}
+				
+				if (! data.mainsnak || ! data.mainsnak.datavalue || ! data.mainsnak.datavalue.value ||
+					! data.mainsnak.datavalue.value.globe) {
+					$( '#Bamyers99_CoordGlobe_msg' ).html( 'current value is missing globe' );
+					return;						
+				}
 
-				var lat = data.mainsnak.datavalue.value.latitude;
-				var lng = data.mainsnak.datavalue.value.longitude;
-				var prec = data.mainsnak.datavalue.value.precision;
-				var rank = data.rank;
-
-				claim = '{"id":"' + claimId + '", "rank":"' + rank +
-					'", "type":"statement", "mainsnak":{"snaktype":"value","property":"P625","datatype":"globe-coordinate", ' +
-				    '"datavalue":{"type":"globecoordinate", "value": {"latitude":' + lat + ',"longitude":' + lng +
-	                ', "precision":' + prec + ', "globe": "http://www.wikidata.org/entity/' + selectedQid + '"}}}}';
+				data.mainsnak.datavalue.value.globe = 'http://www.wikidata.org/entity/' + selectedQid;
 	
-				self.gc.wdSetClaim(self.qid, claim, function( success, msg ) {
+				self.gc.wdSetClaim(self.qid, JSON.stringify(data), function( success, msg ) {
 					msg = success ? 'Globe set. <a href="/wiki/' + self.qid + '">Reload page</a>' : msg;
 					$( '#Bamyers99_CoordGlobe_msg' ).html( msg );
 	
