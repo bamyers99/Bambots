@@ -162,6 +162,98 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 	},
 
 	/**
+	 * Set a claim
+	 *
+	 * @param entityId
+	 * @param claim json formatted claim
+	 * @param callback(bool success, string errormsg) (optional)
+	 */
+	wdSetClaim: function( entityId, claim, callback ) {
+		var self = this;
+
+		var opts = {
+			lang: 'wikidata',
+			prop: 'info',
+			titles : entityId
+		};
+
+		// Get lastrevid
+		self.mwApiQuery( opts, function( data ) {
+			var lastrevid;
+
+			if ( data.error ) {
+				if ( callback ) callback( false, 'Error: "' + data.error.code + '": ' + data.error.info );
+				return;
+			}
+
+			$.each ( ( data.query.pages || []) , function ( k , v ) {
+				lastrevid = v.lastrevid;
+			} );
+
+			// Get the csrf token
+
+			var opts = {
+				lang: 'wikidata',
+				meta: 'tokens'
+			};
+
+			self.mwApiQuery( opts, function( data ) {
+				var csrftoken;
+				if ( data.query && data.query.tokens && data.query.tokens.csrftoken ) {
+					csrftoken = data.query.tokens.csrftoken ;
+				} else {
+					if ( callback ) callback( false, 'Editing not allowed' );
+					return;
+				}
+
+				var opts = {
+					lang: 'wikidata',
+					action: 'wbsetclaim',
+					claim : claim,
+					token : csrftoken,
+					baserevid : lastrevid
+				};
+
+				// Set the claim
+				self.mwApiQuery( opts, function( data ) {
+					if ( data.success ) {
+						if ( callback ) callback( true, '' );
+					} else {
+						if ( callback ) callback( false, 'Error: "' + data.error.code + '": ' + data.error.info );
+					}
+				} );
+			} );
+		} );
+	},
+
+	/**
+	 * Get a claim
+	 *
+	 * @param claimId
+	 * @param callback(bool success, string errormsg or object json claim)
+	 */
+	wdGetClaim: function( claimId, callback ) {
+		var self = this;
+
+		var opts = {
+			lang: 'wikidata',
+			action: 'wbgetclaims',
+			claim: claimId
+		};
+
+		self.mwApiQuery( opts, function( result ) {
+			if ( result.error ) {
+				callback( false, 'Error: "' + result.error.code + '": ' + result.error.info );
+				return;
+			}
+
+			$.each( result.claims, function( propid, claims ) {
+				callback( true, claims[0]);
+			} );
+		} );
+	},
+
+	/**
 	 * html encode a string
 	 *
 	 * @param str

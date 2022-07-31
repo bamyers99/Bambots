@@ -38,7 +38,7 @@ var Bamyers99 = Bamyers99 || {};
 if (typeof Bamyers99_ClassSuggester_testmode === 'undefined') Bamyers99_ClassSuggester_testmode = false;
 
 Bamyers99.ClassSuggester = {
-	commonjs: Bamyers99_ClassSuggester_testmode ? 'https://tools.wmflabs.org/bambots/GadgetCommon.js' :
+	commonjs: Bamyers99_ClassSuggester_testmode ? 'https://bambots.brucemyers.com/GadgetCommon.js' :
 		'https://www.wikidata.org/w/index.php?title=User:Bamyers99/GadgetCommon.js&action=raw&ctype=text/javascript',
 	propInstanceof: 'P31',
 	propSubclass: 'P279',
