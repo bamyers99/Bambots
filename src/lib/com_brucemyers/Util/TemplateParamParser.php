@@ -31,7 +31,7 @@ class TemplateParamParser
 		'link' => '/\[\[(?P<content>(?:.(?!\[\[))+?\]\])/s'
 	];
 
-	const MAX_ITERATIONS = 10000;
+	const MAX_ITERATIONS = 1000;
 	const TEMPLATE_TYPE_TEMPLATE = 'T';
 	const TEMPLATE_TYPE_MODULE = 'M';
 	
