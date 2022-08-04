@@ -44,6 +44,7 @@ Bamyers99.CoordGlobe = {
 	globes: { // source: https://github.com/wikimedia/Wikibase/blob/master/repo/config/Wikibase.default.php globeUris
 		'Q3343': 'ariel',
 		'Q3134': 'callisto',
+		'Q596': 'ceres',
 		'Q6604': 'charon',
 		'Q7548': 'deimos',
 		'Q15040': 'dione',
