@@ -17,7 +17,6 @@
 
 namespace com_brucemyers\DatabaseReportBot\Reports;
 
-use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\WikidataSPARQL;
@@ -25,7 +24,6 @@ use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
-use com_brucemyers\Util\ShellExec;
 use MediaWiki\Sanitizer;
 use PDO;
 

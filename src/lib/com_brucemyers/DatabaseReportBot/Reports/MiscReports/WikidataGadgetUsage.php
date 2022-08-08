@@ -21,6 +21,8 @@ use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Curl;
 use com_brucemyers\Util\WikitableParser;
+use com_brucemyers\Util\CommonRegex;
+use com_brucemyers\Util\ShellExec;
 use PDO;
 
 class WikidataGadgetUsage
