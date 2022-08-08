@@ -17,6 +17,7 @@
 
 namespace com_brucemyers\DatabaseReportBot\Reports\MiscReports;
 
+use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\Util\Curl;
@@ -24,6 +25,7 @@ use com_brucemyers\Util\WikitableParser;
 use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\Util\ShellExec;
 use com_brucemyers\Util\TemplateParamParser;
+use com_brucemyers\Util\Config;
 use PDO;
 
 class WikidataGadgetUsage
