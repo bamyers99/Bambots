@@ -23,6 +23,7 @@ use com_brucemyers\Util\Curl;
 use com_brucemyers\Util\WikitableParser;
 use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\Util\ShellExec;
+use com_brucemyers\Util\TemplateParamParser;
 use PDO;
 
 class WikidataGadgetUsage
