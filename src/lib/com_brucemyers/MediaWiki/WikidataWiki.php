@@ -102,7 +102,7 @@ class WikidataWiki extends MediaWiki
 
         return $ret;
     }
-
+    
     /**
      * Set a claim
      *
@@ -122,6 +122,39 @@ class WikidataWiki extends MediaWiki
             'token' => $csrftoken,
             'claim' => $claim
         ];
+        
+        $ret = $this->query('', $opts);
+        
+        if (isset($ret['error'])) return $ret['error']['info'];
+        return '';
+    }
+    
+    /**
+     * Create a claim
+     *
+     * @param int $baserevid
+     * @param string $username
+     * @param string $csrftoken
+     * @param string $entity QID
+     * @param string $snaktype 'value', 'novalue', 'somevalue'
+     * @param string $propid PID
+     * @param string $propvalue JSON value
+     * @return string empty = success, else error info
+     */
+    public function createCreateClaim($baserevid, $username, $csrftoken, $entity, $snaktype, $propid, $propvalue)
+    {
+        $opts = [
+            'action' => 'wbcreateclaim',
+            'format' => 'json',
+            'baserevid' => $baserevid,
+            'assertuser' => $username,
+            'token' => $csrftoken,
+            'entity' => $entity,
+            'snaktype' => $snaktype,
+            'property' => $propid
+        ];
+        
+        if ($snaktype == 'value') $opts['value'] = $propvalue;
 
         $ret = $this->query('', $opts);
 

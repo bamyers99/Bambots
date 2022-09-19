@@ -17,6 +17,9 @@
 
 namespace com_brucemyers\WikidataBot;
 
+use com_brucemyers\MediaWiki\MediaWiki;
+use com_brucemyers\Util\Config;
+
 class WikidataBot
 {
 	const ERROREMAIL = 'WikidataBot.erroremail';
@@ -28,8 +31,56 @@ class WikidataBot
     	$this->serviceMgr = new ServiceManager();
     }
 
-    public function run($taskid)
+    public function run($taskid, $params)
     {
-
+        switch ($taskid) {
+            case 1:
+                if (count($params) != 2) throw new \Exception('task 1, 2 params required');
+                
+                $this->importTSV($params[0], $params[1]);
+                break;
+        }
+    }
+    
+    public function importTSV($tsvpath, $propid)
+    {
+        $mywikiname = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+        if ($propid[0] != 'P') $propid = 'P' . $propid;
+        
+        $wdwiki = $this->serviceMgr->getMediaWiki('wikidatawiki');
+        
+        $prop = $wdwiki->getItemWithCache("Property:$propid");
+        $datatype = $prop->getDatatype();
+        
+        if ($datatype != 'external-id' && $datatype != 'string') throw new \Exception('only datatypes: external-id, string');
+        
+        $rhndl = fopen($tsvpath, 'r');
+        
+        while (! feof($rhndl)) {
+            sleep(1);
+            $buffer = trim(fgets($rhndl));
+            if (empty($buffer)) continue;
+            list($qid, $propvalue) = explode("\t", $buffer);
+            
+            $items = $wdwiki->getItemsNoCache($qid);
+            
+            if (empty($items)) throw new \Exception("item $qid not found");
+            $item = $items[0];
+            
+            $existingvalues = $item->getStatementsOfType($propid);
+            if (! empty($existingvalues)) {
+                continue;
+            }
+            
+            echo "$qid\t$propvalue\n";
+            
+            $lastrevid = $wdwiki->getLastRevID($qid);
+            $csrftoken = $wdwiki->getCSRFToken();
+                                    
+            // Create the claim
+            $ret = $wdwiki->createCreateClaim($lastrevid, $mywikiname, $csrftoken, $qid, 'value', $propid, "\"$propvalue\"");
+            
+            if (! empty($ret)) throw new \Exception('createCreateClaim error = ' . $ret);
+        }
     }
 }

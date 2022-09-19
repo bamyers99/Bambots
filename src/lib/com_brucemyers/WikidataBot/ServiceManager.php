@@ -21,6 +21,7 @@ use com_brucemyers\Util\Config;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\WikiResultWriter;
 use com_brucemyers\MediaWiki\FileResultWriter;
+use com_brucemyers\MediaWiki\WikidataWiki;
 use Exception;
 
 class ServiceManager
@@ -28,7 +29,7 @@ class ServiceManager
 	const OUTPUTTYPE = 'WikidataBot.outputtype';
 	const OUTPUTDIR = 'WikidataBot.outputdir';
 
-	protected $dbdata = array();
+	protected $dbdata = [];
 	protected $dbuser;
 	protected $dbpass;
 
@@ -43,13 +44,12 @@ class ServiceManager
 	 * Get a MediaWiki instance.
 	 *
 	 * @param String $wiki
-	 * @return MediaWiki
+	 * @return WikidataWiki
 	 */
 	public function getMediaWiki($wiki)
 	{
 		if ($wiki != 'wikidatawiki') throw new Exception('ServiceManager.getMediaWiki - only wikidatawiki supported');
-		$url = Config::get(MediaWiki::WIKIURLKEY);
-		$wiki = new MediaWiki($url);
+		$wiki = new WikidataWiki();
 		$username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
 		$password = Config::get(MediaWiki::WIKIPASSWORDKEY);
 		$wiki->login($username, $password);

@@ -33,17 +33,18 @@ try {
     Logger::log('Started');
     FileCache::purgeExpired();
 
-    if ($argc != 2) {
-    	echo "Usage: WikidataBot.php <taskid>\n";
-    	echo "\ttaskid 1 - LCAuth from VIAF\n";
+    if ($argc < 2) {
+    	echo "Usage: WikidataBot.php <taskid> <params...>\n";
+    	echo "\ttaskid 1 - Import TSV, params: <TSV file path (QID TAB property value)> <property ID>\n";
     	exit;
     }
 
     $taskid = $argv[1];
 
     $bot = new WikidataBot();
-
-    $bot->run($taskid);
+    $params = array_slice($argv, 2);
+    
+    $bot->run($taskid, $params);
 
     $ts = $timer->stop();
 
