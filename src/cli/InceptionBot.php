@@ -24,6 +24,7 @@ use com_brucemyers\Util\Timer;
 use com_brucemyers\Util\Config;
 use com_brucemyers\Util\Logger;
 use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\Email;
 
 $clidir = dirname(__FILE__);
 $GLOBALS['botname'] = 'InceptionBot';
@@ -119,8 +120,7 @@ try {
 } catch (Exception $ex) {
     $msg = $ex->getMessage() . "\n" . $ex->getTraceAsString();
     Logger::log($msg);
-    $headers  = 'MIME-Version: 1.0' . "\r\n";
-    $headers .= 'From: InceptionBot <admin@brucemyers.com>' . "\r\n";
-    $retval = mail(Config::get(InceptionBot::ERROREMAIL), 'InceptionBot failed', $msg, $headers);
+    $email = new Email();
+    $retval = $email->sendEmail('admin@brucemyers.com', Config::get(InceptionBot::ERROREMAIL), 'InceptionBot failed', $msg);
     if (! $retval) throw new Exception($ex->getMessage());
 }
