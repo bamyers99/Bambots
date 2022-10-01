@@ -272,9 +272,9 @@ class InvalidNavbarLinks extends DatabaseReport
 			$qcnt = count($temps);
 			$qs = implode(',', array_fill(0, $qcnt, '?'));
 
-			$sql = "SELECT DISTINCT page_title FROM templatelinks, page " .
-				" WHERE tl_from_namespace = 10 AND tl_namespace = 10 AND tl_title IN ($qs) " .
-				" AND page_namespace = 10 AND page_id = tl_from";
+			$sql = "SELECT DISTINCT page_title FROM templatelinks, page, linktarget " .
+				" WHERE tl_from_namespace = 10 AND lt_namespace = 10 AND lt_title IN ($qs) " .
+				" AND page_namespace = 10 AND page_id = tl_from AND tl_target_id = lt_id ";
 			
     		$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $user, $pass);
     		$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -304,9 +304,9 @@ class InvalidNavbarLinks extends DatabaseReport
     			$qcnt = count($temps);
     			$qs = implode(',', array_fill(0, $qcnt, '?'));
     			
-    			$sql = "SELECT DISTINCT page_title FROM templatelinks, page " .
-    			 			" WHERE tl_from_namespace = 10 AND tl_namespace = 828 AND tl_title IN ($qs) " .
-    			 			" AND page_namespace = 10 AND page_id = tl_from";
+    			$sql = "SELECT DISTINCT page_title FROM templatelinks, page, linktarget " .
+    			 			" WHERE tl_from_namespace = 10 AND lt_namespace = 828 AND lt_title IN ($qs) " .
+    			 			" AND page_namespace = 10 AND page_id = tl_from AND tl_target_id = lt_id ";
 
     			$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $user, $pass);
     			$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
