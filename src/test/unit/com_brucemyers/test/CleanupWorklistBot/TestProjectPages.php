@@ -25,7 +25,7 @@ use com_brucemyers\test\CleanupWorklistBot\CreateTables;
 use UnitTestCase;
 use PDO;
 
-class TestProjectPage extends UnitTestCase
+class TestProjectPages extends UnitTestCase
 {
 
     public function testPageLoad()

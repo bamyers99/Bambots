@@ -102,12 +102,33 @@ class ProjectPages
 
         	    foreach ($members as $title) {
         	        ++$page_count;
-
         	        $isth->execute([$title, '', '']);
         	    }
 
         	    $dbh_tools->commit();
         	}
+    	}
+    	
+    	$assessments_loaded = false;
+    	
+    	// If < 10 pages found, use WikiProject assessements
+    	if ($page_count < 10) {
+    	    $dbh_tools->exec('TRUNCATE page');
+    	    $page_count = 0;
+    	    $assessments_loaded = true;
+    	    $continue = '';
+    	    
+    	    while ($continue !== false) {
+    	        $members = $this->getAssessmentChunk($project, $continue);
+    	        $dbh_tools->beginTransaction();
+    	        
+    	        foreach ($members as $attribs) {
+    	            ++$page_count;
+    	            $isth->execute([$attribs['pt'], $attribs['i'], $attribs['c']]);
+    	        }
+    	        
+    	        $dbh_tools->commit();
+    	    }
     	}
 
     	// Delete the pages with no issues
@@ -121,7 +142,9 @@ class ProjectPages
 
     	// Get article assessments
     	$isth = $dbh_tools->prepare('UPDATE IGNORE page SET class = ?, importance = ? WHERE page_title = ?');
-    	$continue = '';
+    	
+    	if ($assessments_loaded) $continue = false;
+    	else $continue = '';
 
     	while ($continue !== false) {
     	    $members = $this->getAssessmentChunk($project, $continue);
