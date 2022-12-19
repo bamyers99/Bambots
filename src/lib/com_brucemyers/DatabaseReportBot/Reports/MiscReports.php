@@ -1523,7 +1523,10 @@ END;
 
 	    foreach ($result as $tag) {
 	        $tagname = $tag['ctd_name'];
-	        if (strstr($tagname, 'OAuth CID:') === false && strstr($tagname, 'openrefine') === false) continue;
+	        if (strstr($tagname, 'OAuth CID:') === false && strstr($tagname, 'openrefine') === false
+	            && strstr($tagname, 'WikibaseJS-cli') === false && strstr($tagname, 'WikibaseJS-edit') === false
+	            && strstr($tagname, 'InfoboxExport gadget') === false && strstr($tagname, 'wwwyzzerdd') === false
+	            && strstr($tagname, 'wikidata-for-firefox')) continue;
 	        $tags[$tagname] = ['id' => $tag['ctd_id'], 'count' => $tag['ctd_count']];
 	    }
 
@@ -1537,10 +1540,10 @@ END;
 	        if (isset($tags[$tagname])) {
 	            if (preg_match('!>OpenRefine</a>(.+)!', $tagdisplayname, $matches)) { // OpenRefine
 	                $tagdisplayname = "OpenRefine{$matches[1]}";
-	            } elseif (preg_match('!>([^<]+?)<!', $tagdisplayname, $matches)) { // OAuth
+	            } elseif (preg_match('!>([^<]+?)<!', $tagdisplayname, $matches)) { // OAuth or anchor
 	                $tagdisplayname = $matches[1];
 	            }
-
+	            
                 fwrite($hndl, "{$tags[$tagname]['id']}\t$tagname\t$tagdisplayname\t$tagdesc\t{$tags[$tagname]['count']}\n");
 	        }
 	    }
