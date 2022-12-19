@@ -1526,7 +1526,7 @@ END;
 	        if (strstr($tagname, 'OAuth CID:') === false && strstr($tagname, 'openrefine') === false
 	            && strstr($tagname, 'WikibaseJS-cli') === false && strstr($tagname, 'WikibaseJS-edit') === false
 	            && strstr($tagname, 'InfoboxExport gadget') === false && strstr($tagname, 'wwwyzzerdd') === false
-	            && strstr($tagname, 'wikidata-for-firefox')) continue;
+	            && strstr($tagname, 'wikidata-for-firefox') === false) continue;
 	        $tags[$tagname] = ['id' => $tag['ctd_id'], 'count' => $tag['ctd_count']];
 	    }
 
