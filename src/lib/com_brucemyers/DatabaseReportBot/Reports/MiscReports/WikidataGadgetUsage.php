@@ -68,7 +68,7 @@ class WikidataGadgetUsage
             if ($type == 'skip') continue;
             
             if (preg_match('!\*\s*([^\[|]+?)(?:\[|\|)!', $line, $matches)) {
-                $gadget = $matches[1];
+                $gadget = trim($matches[1]);
                 $gadgets[$gadget] = ['name' => $gadget,'type' => $type, 'location' => 'preferences'];
                 $pagenames[] = "MediaWiki:Gadget-$gadget/$language";
                 $pagenames[] = "MediaWiki:Gadget-$gadget"; // fallback

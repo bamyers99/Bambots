@@ -267,5 +267,43 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 		.replace( /`/g, '&#39;' )
 		.replace( /</g, '&lt;' )
 		.replace( />/g, '&gt;' );
- 	}
+ 	},
+ 	
+ 	/**
+ 	 * Convert degrees to radians
+ 	 */
+ 	deg2rad: function ( degrees ) {
+  		return degrees * Math.PI / 180;
+	},
+ 
+ 	/**
+ 	 * Convert radians to degrees
+ 	 */
+	rad2deg: function ( radians ) {
+	  return radians * 180 / Math.PI;
+	},
+ 	
+ 	/**
+     * Calculate a bearing in degrees.
+     *
+     * @param float lat1 Latitide 1
+     * @param float long1 Longitude 1
+     * @param float lat2 Latitude 2
+     * @param float long2 Longitude 2
+     * @return int Bearing in degrees
+     */
+	bearing: function (lat1, long1, lat2, long2)
+	{
+	    lat1 = self.deg2rad(lat1);
+	    lat2 = self.deg2rad(lat2);
+	    var dLon = self.deg2rad(long2 - long1);
+	
+	    var bearing = Math.atan2(Math.sin(dLon) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * 
+	    	Math.cos(lat2) * Math.cos(dLon));
+	
+	    bearing = (self.rad2deg(bearing) + 360) % 360;
+	
+	    return bearing;
+	}
+ 	
 };
