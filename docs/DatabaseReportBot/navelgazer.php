@@ -13,6 +13,8 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+ 
+ https://github.com/wikimedia/Wikibase/blob/master/lib/i18n/en.json
  */
 
 $count = 0;
@@ -27,7 +29,7 @@ $edittypes = [
 	'!^wbsetdescription-add:!' => -2,
 	'!^wbsetaliases-add:!' => -3,
     '!^wbsetaliases-set:!' => -3,
-    '!^wbsetsitelink-add:!' => -4,
+    '!^wbsetsitelink-add!' => -4, // no : because matches multiple actions
 	'!^wbmergeitems-from:!' => -5,
     '!^add-form:!' => -6,
     '!^wbeditentity-create-form:!' => -6,
@@ -58,7 +60,7 @@ $edittypes = [
     '!^wbsetaliases-remove:!' => -22,
     '!^restore:!' => -23,
     '!^wbsetlabel-remove:!' => -24,
-    '!^wbsetsitelink-set:!' => -25,
+    '!^wbsetsitelink-set!' => -25, // no : because matches multiple actions
     '!^wbremovereferences-remove:!' => -26,
     '!^wbsetaliases-update:!' => -27,
     '!^wbsetreference-set:!' => -28,
