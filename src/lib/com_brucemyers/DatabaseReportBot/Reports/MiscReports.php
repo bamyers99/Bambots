@@ -1151,23 +1151,23 @@ END;
 	public function WikidataPropertyCounts($language)
 	{
 	    $type_colors = [
-	        'WikibaseItem' => '',
-	        'CommonsMedia' => 'antiquewhite',
-	        'ExternalId' => '#CDC',
-	        'String' => 'lavenderblush',
-	        'Quantity' => 'oldlace',
-	        'Time' => 'lightyellow',
-	        'Monolingualtext' => 'mintcream',
-	        'Url' => 'honeydew',
-	        'Math' => '#EBC79E',
-	        'GeoShape' => '',
-	        'WikibaseSense' => '',
-	        'WikibaseLexeme' => '',
-	        'MusicalNotation' => '',
-	        'WikibaseProperty' => '',
-	        'TabularData' => '',
-	        'GlobeCoordinate' => 'lavender',
-	        'WikibaseForm' => ''
+	        'WikibaseItem' => ['color' => '', 'abbrev' => 'WI'],
+	        'CommonsMedia' => ['color' => '#faebd7', 'abbrev' => 'CM'], // antiquewhite
+	        'ExternalId' => ['color' => '#CDC', 'abbrev' => 'EI'],
+	        'String' => ['color' => '#fff0f5', 'abbrev' => 'S'], // lavenderblush
+	        'Quantity' => ['color' => 'oldlace', 'abbrev' => 'Q'],
+	        'Time' => ['color' => '#ffffe0', 'abbrev' => 'T'], // lightyellow
+	        'Monolingualtext' => ['color' => 'mintcream', 'abbrev' => 'MT'],
+	        'Url' => ['color' => 'honeydew', 'abbrev' => 'U'],
+	        'Math' => ['color' => '#EBC79E', 'abbrev' => 'M'],
+	        'GeoShape' => ['color' => '', 'abbrev' => 'GS'],
+	        'WikibaseSense' => ['color' => '', 'abbrev' => 'WS'],
+	        'WikibaseLexeme' => ['color' => '', 'abbrev' => 'WL'],
+	        'MusicalNotation' => ['color' => '', 'abbrev' => 'MN'],
+	        'WikibaseProperty' => ['color' => '', 'abbrev' => 'WP'],
+	        'TabularData' => ['color' => '', 'abbrev' => 'TD'],
+	        'GlobeCoordinate' => ['color' => 'lavender', 'abbrev' => 'GC'],
+	        'WikibaseForm' => ['color' => '', 'abbrev' => 'WF']
 	    ];
 	    
 	    $deleted = [
@@ -1177,6 +1177,12 @@ END;
 	        'P9127' => true,
 	        'P9499' => true,
 	        'P9582' => true
+	    ];
+	    
+	    $constraints = [
+	        'Q54828448' => ['abbrev' => 'M', 'page' => 'Template:Number_of_main_statements_by_property', 'counts' => []],
+	        'Q54828449' => ['abbrev' => 'Q', 'page' => 'Template:Number_of_qualifiers_by_property', 'counts' => []],
+	        'Q54828450' => ['abbrev' => 'R', 'page' => 'Template:Number_of_references_by_property', 'counts' => []]
 	    ];
 
 	    $wdwiki = new WikidataWiki();
@@ -1201,9 +1207,20 @@ END;
 	        $alias = isset($row['propAltLabel']['value']) ? $row['propAltLabel']['value'] : '';
 	        $datatype = $row['type']['value'];
 
-	        $props[] = ['id' => $propid, 'label' => $label, 'description' => $description, 'alias' => $alias, 'datatype' => $datatype];
+	        $props[$propid] = ['id' => $propid, 'label' => $label, 'description' => $description, 'alias' => $alias, 'datatype' => $datatype];
 	    }
-
+	    
+	    // Get the scope constraints
+	    
+	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20(GROUP_CONCAT(CONCAT('Q'%2C%20STRAFTER(STR(%3Fconstraint)%2C%20'Q'))%3B%20SEPARATOR%20%3D%20'|')%20AS%20%3Fconstraints)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20%3Fprop%20wdt%3AP2302%20wd%3AQ53869507%20.%0A%20%20%3Fprop%20p%3AP2302%20[pq%3AP5314%20%3Fconstraint]%20.%0A}%0AGROUP%20BY%20%3Fprop";
+	    
+	    $rows = $sparql->query($query);
+	    
+	    foreach ($rows as $row) {
+	        $propid = (int)$row['id']['value'];
+	        $props[$propid]['constraints'] = array_unique(explode('|', $row['constraints']['value']));
+	    }
+	        
 	    usort($props, function ($a, $b) {
 	        if ($a['id'] > $b['id']) return 1;
 	        if ($a['id'] < $b['id']) return -1;
@@ -1211,12 +1228,17 @@ END;
 	    });
 
         // Get the usage counts
-        $counts = $wdwiki->getPage('Template:Number_of_main_statements_by_property');
-        preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
-        $counts = [];
-        foreach ($matches as $match) {
-            $counts[$match[1]] = $match[2];
-        }
+        
+	    foreach ($constraints as &$constaint) {
+	        $counts = $wdwiki->getPage($constaint['page']);
+            preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
+            
+            foreach ($matches as $match) {
+                $constaint['counts'][$match[1]] = $match[2];
+            }
+	    }
+	    
+	    unset($constaint);
 
         $asof_date = getdate();
         $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
@@ -1236,9 +1258,9 @@ END;
 				");
 
         // Body
-
+        $typeref = '<ref>Datatype key: CM = CommonsMedia, EI = ExternalId, GC = GlobeCoordinate, GS = GeoShape, M = Math, MN = MusicalNotation, MT = Monolingualtext, Q = Quantity, S = String, T = Time, TD = TabularData, U = Url, WF = WikibaseForm, WI = WikibaseItem, WL = WikibaseLexeme, WP = WikibaseProperty, WS = WikibaseSense</ref>';
         $wikitext = "{{Languages|en=Wikidata:Database reports/List of properties/all}}\n";
-        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|alias}}\n! {{I18n|datatype}}\n! Count\n";
+        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|datatype}}$typeref\n! data-sort-type=\"number\" | Counts<ref>Count type key: M = Main value, Q = Qualifier, R = Reference</ref>\n";
 
         foreach ($props as $prop) {
             $propid = $prop['id'];
@@ -1247,18 +1269,42 @@ END;
             $alias = $prop['alias'];
             $datatype = $prop['datatype'];
 
-            if (isset($counts[$propid])) $count = $counts[$propid];
-            else $count = 0;
-
-            if ($type_colors[$datatype] && ! empty($type_colors[$datatype])) $color = " style=\"background:{$type_colors[$datatype]}\"";
+            if (isset($type_colors[$datatype]) && ! empty($type_colors[$datatype]['color'])) $color = " style=\"background:{$type_colors[$datatype]['color']}\"";
             else $color = '';
+            
+            if (isset($type_colors[$datatype])) $datatype = $type_colors[$datatype]['abbrev'];
 
-            $wikitext .= "|-$color\n|[[P:P$propid|P$propid]]||$label||$description||$alias||$datatype||";
-            $wikitext .= number_format($count, 0) . "\n";
+            $counts = [];
+            
+            foreach ($constraints as $qid => $constraint) {
+                if ((! isset($prop['constraints']) || in_array($qid, $prop['constraints'])) && isset($constraint['counts'][$propid]) ) {
+                    if ($constraint['counts'][$propid] != 0) $counts[$constraint['abbrev']] = $constraint['counts'][$propid];
+                }
+            }
+            
+            arsort($counts, SORT_NUMERIC);
+            
+            foreach ($counts as $abbrev => &$count) {
+                $count = number_format($count, 0) . ' ' . $abbrev;
+            }
+            
+            unset($count);
+            
+            if (empty($counts)) {
+                $counts[] = '0';
+            }
+            
+            $wikitext .= "|-$color\n|[[P:P$propid|P$propid]]||$label||$description||$datatype||";
+            
+            $wikitext .= implode('<br />', $counts);
+            $wikitext .= "\n";
         }
+        
+        // Footnotes
+        $wikitext .= "|}\n\n{{reflist}}";
 
-        $wikitext .= "|}\n\n[[Category:Database reports]]\n[[Category:Properties]]";
-
+        $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Properties]]";
+        
         fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
             '</textarea></form>');
 
