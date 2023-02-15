@@ -40,12 +40,16 @@ class WikidataEntitySchemaDirectory
         
         // Get the schema list
         $schemas = [];
+        $deleted = [
+            'E363' => true
+        ];
         
         $lister = new AllPagesLister($wdwiki, '640');
         
         while (($pages = $lister->getNextBatch()) !== false) {
             foreach ($pages as $page) {
                 $id = substr($page['title'], 13);
+                if (isset($deleted[$id])) continue;
                 $schemas[$id] = [];
             }
         }
