@@ -121,7 +121,11 @@ class TemplateParamBot
 		        
 		        $errmsg = $this->autoprocess($argv[2], $argv[3]);
 		        break;
-
+		        
+		    case 'autoextract':
+		        $errmsg = $this->autoextract();
+		        break;
+		        
 		    default:
 		    	return 'Unknown action = ' . $action;
 		    	break;
@@ -1352,5 +1356,54 @@ class TemplateParamBot
         fclose($hndl);
         
         return '';
+    }
+    
+    /**
+     * Auto extract dump files
+     */
+    function autoextract()
+    {
+        date_default_timezone_set('America/New_York');
+        // Get the list of wikis to check
+        $dbh_tools = $this->serviceMgr->getDBConnection('tools', 's51454__CategoryWatchlistBot');
+        $sth = $dbh_tools->query("SELECT params FROM dumpquerys WHERE id = 3");
+        $rows = $sth->fetchAll(PDO::FETCH_ASSOC);
+        $params = unserialize($rows[0]['params']);
+        $wikis = [];
+        
+        for ($x=1; $x <= 10; ++$x) {
+            $wikiname = $params["wn$x"];
+            if (empty($wikiname)) break;
+            $wikis[] = $wikiname;
+        }
+        
+        $rowsfound = true;
+        
+        while ($rowsfound) {
+            $sth = $dbh_tools->query("SELECT wikiname FROM dumpfiles WHERE lastdump > lastextract AND filename = 'pages-articles.xml.bz2'");
+            $rows = $sth->fetchAll(PDO::FETCH_ASSOC);
+            $rowsfound = false;
+            
+            foreach ($rows as $row) {
+                $wikiname = $row['wikiname'];
+                if (! in_array($wikiname, $wikis)) continue;
+                $rowsfound = true;
+                $date = date('Ym') . '01'; // 1st of month
+                
+                $this->autoprocess($wikiname, $date);
+                
+                // Set last extract to end of month, so don't extract 20ths dump
+                $dbh_tools = $this->serviceMgr->getDBConnection('tools', 's51454__CategoryWatchlistBot');
+                $date = date('Y-m-') . '28 23:59:59'; // 28th of month
+                $sth = $dbh_tools->prepare("UPDATE dumpfiles SET lastextract = ? WHERE wikiname = ? AND filename = 'pages-articles.xml.bz2'");
+                $sth->execute([$date, $wikiname]);
+            }
+        }
+        
+        // Update last access
+        $accessdate = MySQLDate::toMySQLDate(time());
+        $sth = $dbh_tools->prepare("UPDATE dumpquerys SET lastaccess = ? WHERE id = 3");
+        $sth->bindParam(1, $accessdate);
+        $sth->execute();
     }
 }

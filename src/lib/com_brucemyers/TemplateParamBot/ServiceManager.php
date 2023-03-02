@@ -52,13 +52,14 @@ class ServiceManager
 	 * User is responsible for setting connection to null when done.
 	 *
 	 * @param string $wikiname
+	 * @param string $database (optional for tools wiki) default = s51454__TemplateParamBot_p
 	 * @return PDO DB connection
 	 */
-	public function getDBConnection($wikiname)
+	public function getDBConnection($wikiname, $database = 's51454__TemplateParamBot_p')
 	{
 	    try {
     		if ($wikiname == 'tools') {
-    			$dbh = new PDO("mysql:host={$this->tools_host};dbname=s51454__TemplateParamBot_p;charset=utf8mb4", $this->dbuser, $this->dbpass);
+    			$dbh = new PDO("mysql:host={$this->tools_host};dbname=$database;charset=utf8mb4", $this->dbuser, $this->dbpass);
 
     		} else {
         		$wiki_host = $this->wiki_host;

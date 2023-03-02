@@ -175,6 +175,10 @@ class WMDumpWatchlist
 
             // Purge unused files
             $this->purge_unused_files($serviceMgr, $usedfiles);
+            
+            // Tickle the auto extractor
+            $command = '/var/www/projects/bambots/Bambots/src/scripts/TemplateParamBotAutoLoad.sh';
+            exec($command);
         }
 
         // Purge old queries
