@@ -215,10 +215,10 @@ class WikidataWiki extends MediaWiki
             $description = $row[2];
             
             $page = '{"type":"property","datatype":"deleted","id":"' . $pid . '",' .
-                '"labels":{"en":{"language":"en","value":"' . json_encode($label) . '"}},' .
-                '"descriptions":{"en":{"language":"en","value":"' . json_encode($description) . '"}}}';
+                '"labels":{"en":{"language":"en","value":' . json_encode($label) . '}},' .
+                '"descriptions":{"en":{"language":"en","value":' . json_encode($description) . '}}}';
             
-            FileCache::putData($sentinel_file, $page);
+            FileCache::putData("Property:P$pid", $page);
         }
     }
 }
