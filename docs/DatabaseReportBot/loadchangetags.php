@@ -74,6 +74,6 @@ foreach ($users as $username => $totals) {
 
 // Backup navelgazertag table
 $backupFile = 'navelgazertag.sql.bz2';
-$command = "mysqldump -h 127.0.0.1 -u {$user} -p{$pass} s51454__wikidata navelgazertag | bzip2 -9 > $backupFile";
+$command = "mysqldump -h 127.0.0.1 -u {$user} -p{$pass} s51454__wikidata navelgazertag navelgazernoncom | bzip2 -9 > $backupFile";
 $ret = system($command, $return_var);
 

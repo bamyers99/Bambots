@@ -21,9 +21,12 @@ use com_brucemyers\DatabaseReportBot\DatabaseReportBot;
 use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\MediaWiki\WikidataSPARQL;
 use com_brucemyers\MediaWiki\WikidataWiki;
+use com_brucemyers\MediaWiki\AllPagesLister;
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\WikitableParser;
+use com_brucemyers\Util\Curl;
 use MediaWiki\Sanitizer;
 use PDO;
 
@@ -96,6 +99,11 @@ class MiscReports extends DatabaseReport
     		case 'WikidataGadgetUsage':
     		    $obj = new MiscReports\WikidataGadgetUsage();
     		    $obj->main($params[1], $apis['dbh_wikidata'], isset($params[2]), $apis['user'], $apis['pass']);
+    		    return false;
+    		    break;
+    		    
+    		case 'WikidataDeletedProperties':
+    		    $this->WikidataDeletedProperties();
     		    return false;
     		    break;
     	}
@@ -1314,7 +1322,211 @@ END;
         fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
         fclose($hndl);
 	}
+	
+	/**
+	 * Wikidata deleted properties
+	 *
+	 * @param string $language
+	 */
+	public function WikidataDeletedProperties()
+	{
+	    $suppress = [67, 104, 145, 152, 153, 174, 182, 226, 250, 252, 253, 254, 255, 257, 259, 290, 292, 293, 294, 362, 363, 365,
+	        383, 384, 385, 386, 445, 446, 581, 848, 1009, 1105, 1328, 1426, 1452, 1719, 1720, 1742, 2420, 2609, 2932, 3278, 4499,
+	        7082, 8288, 9582, 11142
+	    ];
+	    
+	    $wdwiki = new WikidataWiki();
+	    
+	    // Get the current properties
+	    
+	    $curprops = [];
+	    
+	    $lister = new AllPagesLister($wdwiki, '120');
+	    
+	    while (($pages = $lister->getNextBatch()) !== false) {
+	        foreach ($pages as $page) {
+	            $id = (int)substr($page['title'], 10);
+	            $curprops[] = $id;
+	        }
+	    }
+	    
+	    echo 'Current props = ' . count($curprops) . "\n";
+	    
+	    $allprops = range(6, max($curprops));
+	    $delpropids = array_diff($allprops, $curprops);
+	    
+	    echo 'Deleted props = ' . count($delpropids) . "\n";
+	    
+	    // Get the configuration
+	    $delprops = [];
+	    $config = $wdwiki->getPage('Wikidata:Database reports/Deleted properties');
+	    //$config = file_get_contents('/home/bruce/Downloads/DelPropConfig.txt');
+	    
+	    $configtable = WikitableParser::getTables($config)[0];
+	    
+	    foreach ($configtable['rows'] as $row) {
+	        preg_match('!P\d+!', $row[0], $matches);
+	        $pid = $matches[0];
+	        $label = $row[1];
+	        $description = $row[2];
+	        $deldate = $row[3];
+	        $count = $row[4];
+	        $proposalpage = $row[5];
+	        $deletepage = $row[6];
+	        
+	        $delprops[$pid] = ['id' => $pid, 'proposalpage' => $proposalpage, 'deletepage' => $deletepage, 'label' => $label,
+	            'description' => $description, 'deldate' => $deldate, 'count' => $count
+	        ];
+	    }
+	    
+	    // See if can find property proposals
+	    $newconfig = [];
+	    
+	    foreach ($delpropids as $pid) {
+	        if (isset($delprops["P$pid"])) continue;
+	        if (in_array($pid, $suppress)) continue;
+	        
+	        // See if any were added
+	        $url = "https://bambots.brucemyers.com/NavelGazer.php?action=getCount&property=P$pid";
+	        $count = Curl::getUrlContents($url);
+	        if ($count == 0) continue;
+	        
+	        $title = "Property:P$pid";
+	        
+	        // Get the deletion date
+	        
+	        $ret = $wdwiki->getList('logevents', ['letitle' => $title, 'letype' => 'delete']);
+	        $logevent = reset($ret['query']['logevents']);
+	        if ($logevent === false) continue;
+	        
+	        $deldate = substr($logevent['timestamp'], 0, 10);
+	        
+	        echo "Processing P$pid\n";
+	        $ret = $wdwiki->getList('backlinks', ['bltitle' => $title, 'blnamespace' => '4', 'bllimit' => 'max']); // Wikidata namespace
+	        
+	        $proposalpages = [];
+	        $deletepage = '';
+	        $proposalpage = '';
+	        $label = '';
+	        $description = '';
+	        
+	        if (isset($ret['query']['backlinks'])) {
+    	        foreach ($ret['query']['backlinks'] as $backlink) {
+    	            $bltitle = $backlink['title'];
+    	            if (strpos($bltitle, 'Wikidata:Property proposal/') === 0 && strpos($bltitle, 'Archive') === false) $proposalpages[] = $bltitle;
+    	            if ($bltitle == "Wikidata:Properties for deletion/P$pid") $deletepage = $bltitle;
+    	        }
+	        }
+	        
+	        // Find the right proposal
+	        
+	        foreach ($proposalpages as $pp) {
+	            $page = $wdwiki->getPageWithCache($pp);
+	            $templates = TemplateParamParser::getTemplates($page);
+	            
+	            foreach ($templates as $template) {
+	                if ($template['name'] == 'Property proposal') {
+	                    if ($template['params']['status'] == $pid) {
+	                        $proposalpage = $pp;
+	                        $label = substr($pp, 27);
+	                        
+	                        $templates = TemplateParamParser::getTemplates($template['params']['description']);
+	                        foreach ($templates as $template) {
+	                            if ($template['name'] == 'TranslateThis') {
+	                                if (isset($template['params']['en'])) $description = $template['params']['en'];
+	                                break;
+	                            }
+	                        }
+	                        
+	                        break 2;
+	                    }
+	                }
+	            }
+	        }
+	        
+	        $newconfig[] = ['id' => $pid, 'proposalpage' => $proposalpage, 'deletepage' => $deletepage, 'label' => $label,
+	            'description' => $description, 'deldate' => $deldate, 'count' => $count
+	        ];
+	    }
+        
+        $asof_date = getdate();
+        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataDeletedProperties.html';
+        $hndl = fopen($path, 'wb');
+        
+        // Header
+        fwrite($hndl, "<!DOCTYPE html>
+			<html><head>
+			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+			<title>Wikidata deleted properties</title>
+			<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+			</head><body>
+			<div style='display: table; margin: 0 auto;'>
+			<h1>Wikidata deleted properties</h1>
+			<h3>As of $asof_date</h3>
+			");
+        
+        // Body
+        date_default_timezone_set('UTC');
+        
+        $current_date = date('Y-m-d H:i');
+        
+        $wikitext = "Deleted properties that were used in items.\n\n";
+        
+        $wikitext .= "Updated: <onlyinclude>$current_date (UTC)</onlyinclude>\n";
+        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! Deletion Date\n! Uses\n! Creation Proposal\n! Deletion\n";
+        
+        foreach ($delprops as $prop) {
+            $propid = $prop['id'];
+            $label = $prop['label'];
+            $description = $prop['description'];
+            $proposalpage = $prop['proposalpage'];
+            $deletepage = $prop['deletepage'];
+            $deletedate = $prop['deldate'];
+            $count = $prop['count'];
+            
+            $wikitext .= "|-\n|[[Property:$propid|$propid]] || $label || $description || $deletedate || $count || $proposalpage || $deletepage";
 
+            $wikitext .= "\n";
+        }
+        
+        // Footnotes
+        
+        $wikitext .= "|}";
+        
+        $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Properties]]";
+        
+        fwrite($hndl, '<textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+            '</textarea>');
+        
+        $wikitext = '';
+        
+        foreach ($newconfig as $prop) {
+            $pid = $prop['id'];
+            $label = $prop['label'];
+            $description = $prop['description'];
+            $proposalpage = $prop['proposalpage'];
+            $deletepage = $prop['deletepage'];
+            $deletedate = $prop['deldate'];
+            $count = $prop['count'];
+            
+            $wikitext .= "|-\n| [[Property:P$pid|P$pid]] || $label || $description || $deletedate || $count || ";
+            if (! empty($proposalpage)) echo "[[$proposalpage|Proposal]]";
+            $wikitext .= " || ";
+            if (! empty($deletepage)) echo "[[$deletepage|Deletion]]";
+            echo "\n";
+        }
+        
+        fwrite($hndl, '<textarea rows="40" cols="100" name="newwikitable" id="newwikitable">' . htmlspecialchars($wikitext) .
+            '</textarea></form>');
+        
+        
+        // Footer
+        fwrite($hndl, '<br />Deleted count: ' . count($delprops));
+        fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+        fclose($hndl);
+	}
+	    
 	/**
 	 * Get a list of template parameters
 	 *

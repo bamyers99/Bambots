@@ -17,6 +17,8 @@
 
 namespace com_brucemyers\MediaWiki;
 
+use com_brucemyers\Util\FileCache;
+use com_brucemyers\Util\WikitableParser;
 use Exception;
 
 /**
@@ -189,5 +191,34 @@ class WikidataWiki extends MediaWiki
         }
 
         return $ret;
+    }
+
+    /**
+     * Cache deleted properties
+     */
+    public function cacheDeletedProperties()
+    {
+        // Check for the sentinel file
+        $sentinel_file = 'Property:P2439';
+        $page = FileCache::getData($sentinel_file);
+        
+        if ($page !== false) return;
+        
+        $config = $this->getPage('Wikidata:Database reports/Deleted properties');
+        
+        $configtable = WikitableParser::getTables($config)[0];
+        
+        foreach ($configtable['rows'] as $row) {
+            preg_match('!P\d+!', $row[0], $matches);
+            $pid = $matches[0];
+            $label = $row[1];
+            $description = $row[2];
+            
+            $page = '{"type":"property","datatype":"deleted","id":"' . $pid . '",' .
+                '"labels":{"en":{"language":"en","value":"' . json_encode($label) . '"}},' .
+                '"descriptions":{"en":{"language":"en","value":"' . json_encode($description) . '"}}}';
+            
+            FileCache::putData($sentinel_file, $page);
+        }
     }
 }

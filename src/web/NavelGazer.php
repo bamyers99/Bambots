@@ -41,6 +41,10 @@ switch ($action) {
 	case 'getCSV':
 		getCSV();
 		exit;
+		
+	case 'getCount':
+	    getCount();
+	    exit;
 }
 
 $navels = get_navels();
@@ -391,6 +395,8 @@ function get_navels()
 	$wdwiki = new WikidataWiki();
 	$createtotal = 0;
 	$monthtotal = 0;
+	
+	$wdwiki->cacheDeletedProperties();
 
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
@@ -795,6 +801,46 @@ function getCSV()
 	    echo CSVString::format([$datum[0], $datum[1], $datum[2]]);
 	    echo "\n";
 	}
+}
+
+/**
+ * Return property count
+ */
+function getCount()
+{
+    global $params;
+    $wikiname = 'tools';
+    $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+    $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+    $wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
+    if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+    
+    $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
+    $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    header('Content-Type: text/plain');
+        
+    $sql = '(SELECT SUM(create_count) ' .
+        ' FROM s51454__wikidata.navelgazer ' .
+        ' WHERE property_id = ?)' .
+        ' UNION ' .
+        '(SELECT SUM(create_count) ' .
+        ' FROM s51454__wikidata.navelgazernoncom ' .
+        ' WHERE property_id = ?)';
+    
+    $sth = $dbh_wiki->prepare($sql);
+    $sth->bindValue(1, (int)$params['property']);
+    $sth->bindValue(2, (int)$params['property']);
+    
+    $sth->execute();
+    
+    $createtotal = 0;
+    
+    while ($row = $sth->fetch(PDO::FETCH_NUM)) {
+        $createtotal += $row[0];
+    }
+    
+    echo $createtotal;
 }
 
 ?>
