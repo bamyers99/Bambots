@@ -218,7 +218,7 @@ class WikidataWiki extends MediaWiki
                 '"labels":{"en":{"language":"en","value":' . json_encode($label) . '}},' .
                 '"descriptions":{"en":{"language":"en","value":' . json_encode($description) . '}}}';
             
-            FileCache::putData("Property:P$pid", $page);
+            FileCache::putData("Property:$pid", $page);
         }
     }
 }
