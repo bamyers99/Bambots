@@ -20,6 +20,7 @@
 define('PROP_SUBCLASSOF', 'P279');
 define('PROP_INSTANCEOF', 'P31');
 define('PROP_ISLISTOF', 'P360');
+define('PROP_COUNTRY', 'P17');
 
 define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
 define('DIRECT_INSTANCE_CNT', 'a');
@@ -30,6 +31,7 @@ define('ISLISTOF_COUNT', 'e');
 define('CLASS_FOUND', 'f');
 define('PARENTS', 'p');
 define('INSTANCE_OF', 'i');
+define('COUNTRIES', 'o');
 
 $count = 0;
 $classes = [];
@@ -90,6 +92,16 @@ while (! feof($hndl)) {
 			++$classes[$instanceqid][DIRECT_INSTANCE_CNT];
 
 			processvalues($instanceqid, $data);
+			
+			if (isset($data['claims'][PROP_COUNTRY])) {
+			    foreach ($data['claims'][PROP_COUNTRY] as $country) {
+			        if (! isset($country['mainsnak']['datavalue']['value']['numeric-id'])) continue;
+			        $countryqid = (int)$country['mainsnak']['datavalue']['value']['numeric-id'];
+			        
+			        if (! isset($classes[$instanceqid][COUNTRIES][$countryqid])) $classes[$instanceqid][COUNTRIES][$countryqid] = 0;
+			        ++$classes[$instanceqid][COUNTRIES][$countryqid];
+			    }
+			}
 		}
 	}
 
@@ -140,14 +152,20 @@ foreach ($classes as $classqid => $class) {
 // Write totals
 fclose($whndl);
 $whndl = fopen('wdsubclasstotals.tsv', 'w');
+$whndlcty = fopen('wdsubclasscountry.tsv', 'w');
 
 foreach ($classes as $classqid => $class) {
     $isroot = count($class[PARENTS]) ? 'N' : 'Y';
 
     fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$class[INDIRECT_CHILD_COUNT]}\t{$class[DIRECT_INSTANCE_CNT]}\t{$class[INDIRECT_INSTANCE_CNT]}\t{$class[ISLISTOF_COUNT]}\n");
+    
+    foreach ($class[COUNTRIES] as $country_qid => $instcnt) {
+        fwrite($whndlcty, "$classqid\t$country_qid\t$instcnt\n");
+    }
 }
 
 fclose($whndl);
+fclose($whndlcty);
 
 // Write value counts
 $whndl = fopen('wdsubclassvalues.tsv', 'w');
@@ -201,7 +219,7 @@ function recurse_parents($parentqid, &$parents, $classes, $depth)
 function init_class()
 {
 	return [DIRECT_CHILD_COUNT => 0,  INDIRECT_CHILD_COUNT => 0, PARENTS => [], DIRECT_INSTANCE_CNT => 0,
-	    INDIRECT_INSTANCE_CNT => 0, ISLISTOF_COUNT => 0, CLASS_FOUND => false];
+	    INDIRECT_INSTANCE_CNT => 0, ISLISTOF_COUNT => 0, CLASS_FOUND => false, COUNTRIES => []];
 }
 
 /**

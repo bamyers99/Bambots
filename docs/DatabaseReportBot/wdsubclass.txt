@@ -34,6 +34,14 @@ CREATE TABLE s51454__wikidata.`superclassinstanceof` (
   KEY `super_qid` (`super_qid`)
 ) ENGINE=Aria DEFAULT CHARSET=utf8
 
+CREATE TABLE s51454__wikidata.`subclasscountry` (
+  `class_qid` int(11) unsigned NOT NULL,
+  `country_qid` int(11) unsigned NOT NULL,
+  `instcount` int(11) unsigned NOT NULL,
+  KEY `class_qid` (`class_qid`),
+  KEY `country_qid` (`country_qid`)
+) ENGINE=Aria DEFAULT CHARSET=utf8
+
 sql tools
 TRUNCATE s51454__wikidata.subclassclasses;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassclasses.tsv' INTO TABLE s51454__wikidata.subclassclasses CHARACTER SET binary;
@@ -43,6 +51,9 @@ LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassvalues.tsv'
 
 TRUNCATE s51454__wikidata.superclassinstanceof;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassinstof.tsv' INTO TABLE s51454__wikidata.superclassinstanceof CHARACTER SET binary;
+
+TRUNCATE s51454__wikidata.subclasscountry;
+LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclasscountry.tsv' INTO TABLE s51454__wikidata.subclasscountry CHARACTER SET binary;
 
 TRUNCATE s51454__wikidata.subclasstotals;
 LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclasstotals.tsv' INTO TABLE s51454__wikidata.subclasstotals CHARACTER SET binary;
