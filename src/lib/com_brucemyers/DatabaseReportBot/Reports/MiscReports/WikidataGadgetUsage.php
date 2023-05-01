@@ -152,7 +152,7 @@ class WikidataGadgetUsage
                 foreach ($lines as $line) {
                     if (! preg_match('!^\s*//!', $line) && preg_match('!User:([^/]+?/[^\.]+?)\.js[^o]!u', $line, $matches)) { // skip .json
                         $gadget = str_replace(' ', '_', $matches[1]);
-                        $user_gadgets[$gadget] = true; // removes dups
+                        if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = true; // removes dups
                     }
                 }
                 
@@ -203,7 +203,7 @@ class WikidataGadgetUsage
                 foreach ($lines as $line) {
                     if (! preg_match('!^\s*//!', $line) && preg_match('!www\.wikidata\.org.*?User:([^/]+?/[^\.]+?)\.js[^o]!u', $line, $matches)) { // skip .json
                         $gadget = str_replace(' ', '_', $matches[1]);
-                        $user_gadgets[$gadget] = true; // removes dups
+                        if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = true; // removes dups
                     }
                 }
                 
