@@ -21,12 +21,15 @@ while (! feof($hndl)) {
     $link = $item->getSiteLink('enwiki');
     if (empty($link)) continue;
     if ($link['site'] != 'enwiki') continue;
+    
+    $redirect = '';
+    if ($link['redirect']) $redirect = ' &#8618;';
 
 //    $country = $item->getStatementsOfType('P17');
 //    if (empty($country)) continue;
 //    if ($country[0] != 'Q30') continue;
     
-    fwrite($whndl, "$qid\t$name\t$description\n");
+    fwrite($whndl, "$qid\t$name\t$description$redirect\n");
 }
 
 echo "Processed $count\n";
@@ -209,23 +212,34 @@ class WikidataItem
 	 * Get a site link
 	 *
 	 * @param string $site preferred site/wiki, If site not found, return enwiki or first site
-	 * @return array keys = site, title
+	 * @return array keys = site, title, redirect (bool)
 	 */
 	public function getSiteLink($site)
 	{
-		$reten = array();
+		$reten = [];
 
-		if (empty($this->data['sitelinks'])) return array();
+		if (empty($this->data['sitelinks'])) return [];
 
 		foreach ($this->data['sitelinks'] as $sitelink) {
+		    $redirect = false;
+		    
+		    if (isset($sitelink['badges'])) {
+		        foreach ($sitelink['badges'] as $badge) {
+		            if ($badge == 'Q70893996' || $badge == 'Q70894304') {
+		                $redirect = true;
+		                break;
+		            }
+		        }
+		    }
+		    
 			if (! preg_match('![a-z]{2,3}wiki!', $sitelink['site'])) continue;
-			if ($sitelink['site'] == $site) return array('site' => $site, 'title' => $sitelink['title']);
-			if ($sitelink['site'] == 'enwiki') $reten = array('site' => 'enwiki', 'title' => $sitelink['title']);
-			elseif (! isset($ret)) $ret = array('site' => $sitelink['site'], 'title' => $sitelink['title']);
+			if ($sitelink['site'] == $site) return ['site' => $site, 'title' => $sitelink['title'], 'redirect' => $redirect];
+			if ($sitelink['site'] == 'enwiki') $reten = ['site' => 'enwiki', 'title' => $sitelink['title'], 'redirect' => $redirect];
+			elseif (! isset($ret)) $ret = ['site' => $sitelink['site'], 'title' => $sitelink['title'], 'redirect' => $redirect];
 		}
 
 		if (! empty($reten)) return $reten;
 		if (isset($ret)) return $ret;
-		return array();
+		return [];
 	}
 }

@@ -303,7 +303,7 @@ class WikidataItem
 	 * Get a site link
 	 *
 	 * @param string $site preferred site/wiki, If site not found, return enwiki or first site
-	 * @return array keys = site, title
+	 * @return array keys = site, title, redirect (bool)
 	 */
 	public function getSiteLink($site)
 	{
@@ -312,9 +312,20 @@ class WikidataItem
 		if (empty($this->data['sitelinks'])) return [];
 
 		foreach ($this->data['sitelinks'] as $sitelink) {
-			if ($sitelink['site'] == $site) return ['site' => $site, 'title' => $sitelink['title']];
-			if ($sitelink['site'] == 'enwiki') $reten = ['site' => 'enwiki', 'title' => $sitelink['title']];
-			elseif (! isset($ret)) $ret = ['site' => $sitelink['site'], 'title' => $sitelink['title']];
+		    $redirect = false;
+		    
+		    if (isset($sitelink['badges'])) {
+		        foreach ($sitelink['badges'] as $badge) {
+		            if ($badge == 'Q70893996' || $badge == 'Q70894304') {
+		                $redirect = true;
+		                break;
+		            }
+		        }
+		    }
+		    
+		    if ($sitelink['site'] == $site) return ['site' => $site, 'title' => $sitelink['title'], 'redirect' => $redirect];
+		    if ($sitelink['site'] == 'enwiki') $reten = ['site' => 'enwiki', 'title' => $sitelink['title'], 'redirect' => $redirect];
+		    elseif (! isset($ret)) $ret = ['site' => $sitelink['site'], 'title' => $sitelink['title'], 'redirect' => $redirect];
 		}
 
 		if (! empty($reten)) return $reten;

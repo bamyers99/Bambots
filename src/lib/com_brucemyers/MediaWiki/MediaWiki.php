@@ -451,6 +451,7 @@ class MediaWiki extends wikipedia
                 $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvslots=main&rvprop=content&continue=');
 
                 if (isset($ret['error'])) {
+                    Logger::log("$pagenames");
                     throw new Exception('Query Error ' . $ret['error']['info']);
                 }
 
