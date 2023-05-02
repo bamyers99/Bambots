@@ -1162,6 +1162,15 @@ class TemplateParamBot
         
         Logger::log("Start autoprocess: $wiki $date");
         
+        
+        // Retrieve TemplateData; do first so fails right away if invalid templatedata
+        
+        $outfile = "$wikidir/TemplateIds.tsv";
+        Logger::log("  Start TemplateData retrieval to $outfile");
+        $retval = $this->retrieveTemplateIds($ruleconfig, $outfile);
+        
+        if (! empty($retval)) return $retval;
+        
         // Curl
         
         $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-articles.xml.bz2";
@@ -1175,14 +1184,6 @@ class TemplateParamBot
                 return "curl error ($url) " . Curl::$lastError . " responsecode:" . Curl::$lastResponseCode;
             }
         }
-        
-        // Retrieve TemplateData
-        
-        $outfile = "$wikidir/TemplateIds.tsv";
-        Logger::log("  Start TemplateData retrieval to $outfile");
-        $retval = $this->retrieveTemplateIds($ruleconfig, $outfile);
-        
-        if (! empty($retval)) return $retval;
         
         // rm data files to free up space
         
