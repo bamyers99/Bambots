@@ -1257,64 +1257,47 @@ class TemplateParamBot
         
         // Get TemplateData
         
-        $tdparams = [
-            'generator' => 'pageswithprop',
-            'gpwppropname' => 'templatedata',
-            'gpwpprop' => 'ids',
-            'gpwplimit' => 'max'
-        ];
+        $lister = new TemplateDataLister($mediawiki);
         
-        $continue = ['continue' => ''];
-        
-        while ($continue !== false) {
-            $temptdparams = array_merge($tdparams, $continue);
-            
-            $ret = $mediawiki->getTemplateData($temptdparams);
-            
-            if (isset($ret['error'])) return 'retrieveTemplateIds Get TemplateData failed ' . $ret['error'];
-            if (isset($ret['continue'])) $continue = $ret['continue'];
-            else $continue = false;
-            
-            if (! empty($ret['pages'])) {
-                foreach ($ret['pages'] as $templid => $pagedata) {
-                    $templname = str_replace('_', ' ', $pagedata['title']);
-                    if (strpos($templname, "$templateNS:") !== 0) continue;
-                    $templname = str_replace("$templateNS:", '', $templname);
-                    $templname = ucfirst($templname);
-                    if (strpos($templname, '/doc') !== false) continue;
-                    if (strpos($templname, '/sandbox') !== false) continue;
-                    if (strpos($templname, '/testcases') !== false) continue;
-                    if (strpos($templname, '/lua') !== false) continue;
-                    
-                    $templatedata = new TemplateData(null, $pagedata);
-                    $templatedata->enhanceConfig($templateParamConfig->getTemplate($templname));
-                    $paramdef = $templatedata->getParams();
-                    
-                    fwrite($hndl, "$templname\t$templid");
-                    
-                    foreach ($paramdef as $paramname => $config) {
-                        if (isset($config['deprecated'])) $validparamname = 'D';
-                        else {
-                            $validparamname = 'Y';
-                            if (isset($config['required'])) $validparamname = 'R';
-                            elseif (isset($config['suggested'])) $validparamname = 'S';
-                        }
-                        
-                        $aliases = '';
-                        if (isset($config['aliases']) && ! empty($config['aliases'])) {
-                            $aliases = '|' . implode('|', $config['aliases']);
-                        }
-                        
-                        fwrite($hndl, "\t$paramname$aliases\t$validparamname\t");
-                        
-                        if ($config['type'] == 'yesno') fwrite($hndl, 'Y');
-                        elseif (isset($config['regex'])) fwrite($hndl, "R\t" . $config['regex']);
-                        elseif (isset($config['values'])) fwrite($hndl, "V\t" . implode(';', $config['values']));
-                        else fwrite($hndl, '-');
+        while ($templatedatas = $lister->getNextBatch()) {
+            foreach ($templatedatas as $templid => $pagedata) {
+                $templname = str_replace('_', ' ', $pagedata['title']);
+                if (strpos($templname, "$templateNS:") !== 0) continue;
+                $templname = str_replace("$templateNS:", '', $templname);
+                $templname = ucfirst($templname);
+                if (strpos($templname, '/doc') !== false) continue;
+                if (strpos($templname, '/sandbox') !== false) continue;
+                if (strpos($templname, '/testcases') !== false) continue;
+                if (strpos($templname, '/lua') !== false) continue;
+                
+                $templatedata = new TemplateData(null, $pagedata);
+                $templatedata->enhanceConfig($templateParamConfig->getTemplate($templname));
+                $paramdef = $templatedata->getParams();
+                
+                fwrite($hndl, "$templname\t$templid");
+                
+                foreach ($paramdef as $paramname => $config) {
+                    if (isset($config['deprecated'])) $validparamname = 'D';
+                    else {
+                        $validparamname = 'Y';
+                        if (isset($config['required'])) $validparamname = 'R';
+                        elseif (isset($config['suggested'])) $validparamname = 'S';
                     }
                     
-                    fwrite($hndl, "\n");
+                    $aliases = '';
+                    if (isset($config['aliases']) && ! empty($config['aliases'])) {
+                        $aliases = '|' . implode('|', $config['aliases']);
+                    }
+                    
+                    fwrite($hndl, "\t$paramname$aliases\t$validparamname\t");
+                    
+                    if ($config['type'] == 'yesno') fwrite($hndl, 'Y');
+                    elseif (isset($config['regex'])) fwrite($hndl, "R\t" . $config['regex']);
+                    elseif (isset($config['values'])) fwrite($hndl, "V\t" . implode(';', $config['values']));
+                    else fwrite($hndl, '-');
                 }
+                
+                fwrite($hndl, "\n");
             }
         }
         
