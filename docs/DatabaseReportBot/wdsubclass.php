@@ -20,17 +20,18 @@
 define('PROP_SUBCLASSOF', 'P279');
 define('PROP_INSTANCEOF', 'P31');
 define('PROP_ISLISTOF', 'P360');
-define('PROP_COUNTRY', 'P17');
 
 define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
 define('DIRECT_INSTANCE_CNT', 'a');
-define('INDIRECT_INSTANCE_CNT', 'b');
+define('INDIRECT_INSTANCE_CHILD_CNT', 'b');
 define('DIRECT_CHILD_COUNT', 'c');
-define('INDIRECT_CHILD_COUNT', 'd');
 define('ISLISTOF_COUNT', 'e');
 define('CLASS_FOUND', 'f');
 define('PARENTS', 'p');
 define('INSTANCE_OF', 'i');
+
+DEFINE('MONTHLY_INCREMENT', 0x100000000);
+DEFINE('GRANDTOTAL_MASK', MONTHLY_INCREMENT - 1);
 
 $count = 0;
 $classes = [];
@@ -129,8 +130,8 @@ foreach ($classes as $classqid => $class) {
 	}
 
 	foreach ($parents as $parentqid => $dummy) {
-		$classes[$parentqid][INDIRECT_CHILD_COUNT] += $class[DIRECT_CHILD_COUNT];
-		$classes[$parentqid][INDIRECT_INSTANCE_CNT] += $class[DIRECT_INSTANCE_CNT];
+	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += $class[DIRECT_CHILD_COUNT];
+	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += (MONTHLY_INCREMENT * $class[DIRECT_INSTANCE_CNT]);
 		
 		if (isset($class[INSTANCE_OF]) && in_array($parentqid, $class[INSTANCE_OF])) {
 		    fwrite($whndl, "$classqid\t$parentqid\n");
@@ -141,6 +142,14 @@ foreach ($classes as $classqid => $class) {
 // Write totals
 fclose($whndl);
 $whndl = fopen('wdsubclasstotals.tsv', 'w');
+
+foreach ($classes as $classqid => $class) {
+    $isroot = count($class[PARENTS]) ? 'N' : 'Y';
+    $indirectchild = $class[INDIRECT_INSTANCE_CHILD_CNT] & GRANDTOTAL_MASK;
+    $indirectinstanceof = $class[INDIRECT_INSTANCE_CHILD_CNT] >> 32;
+    
+    fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$indirectchild}\t{$class[DIRECT_INSTANCE_CNT]}\t{$indirectinstanceof}\t{$class[ISLISTOF_COUNT]}\n");
+}
 
 fclose($whndl);
 
@@ -195,8 +204,8 @@ function recurse_parents($parentqid, &$parents, $classes, $depth)
  */
 function init_class()
 {
-	return [DIRECT_CHILD_COUNT => 0,  INDIRECT_CHILD_COUNT => 0, PARENTS => [], DIRECT_INSTANCE_CNT => 0,
-	    INDIRECT_INSTANCE_CNT => 0, ISLISTOF_COUNT => 0, CLASS_FOUND => false];
+    return [DIRECT_CHILD_COUNT => 0,  INDIRECT_INSTANCE_CHILD_CNT => 0, PARENTS => [], DIRECT_INSTANCE_CNT => 0,
+	    ISLISTOF_COUNT => 0, CLASS_FOUND => false];
 }
 
 /**
