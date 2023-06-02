@@ -1150,7 +1150,7 @@ END;
 			fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
 			fclose($hndl);
 	}
-
+	
 	/**
 	 * Wikidata property counts
 	 *
@@ -1192,29 +1192,29 @@ END;
 	        'Q54828449' => ['abbrev' => 'Q', 'page' => 'Template:Number_of_qualifiers_by_property', 'counts' => []],
 	        'Q54828450' => ['abbrev' => 'R', 'page' => 'Template:Number_of_references_by_property', 'counts' => []]
 	    ];
-
+	    
 	    $wdwiki = new WikidataWiki();
-
+	    
 	    // Get the property list
-
+	    
 	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20%3FpropLabel%20%3FpropDescription%20%3FpropAltLabel%20(STRAFTER(STR(%3FpropertyType)%2C%20'%23')%20AS%20%3Ftype)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%0A%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cen\"%0A%20%20}%0A}%0A";
-
+	    
 	    $sparql = new WikidataSPARQL();
-
+	    
 	    $rows = $sparql->query($query);
-
+	    
 	    $props = [];
-
+	    
 	    foreach ($rows as $row) {
 	        $propid = (int)$row['id']['value'];
-
+	        
 	        if (isset($deleted["P$propid"])) continue;
-
+	        
 	        $label = isset($row['propLabel']['value']) ? $row['propLabel']['value'] : '';
 	        $description = isset($row['propDescription']['value']) ? $row['propDescription']['value'] : '';
 	        $alias = isset($row['propAltLabel']['value']) ? $row['propAltLabel']['value'] : '';
 	        $datatype = $row['type']['value'];
-
+	        
 	        $props[$propid] = ['id' => $propid, 'label' => $label, 'description' => $description, 'alias' => $alias, 'datatype' => $datatype];
 	    }
 	    
@@ -1228,33 +1228,33 @@ END;
 	        $propid = (int)$row['id']['value'];
 	        $props[$propid]['constraints'] = array_unique(explode('|', $row['constraints']['value']));
 	    }
-	        
+	    
 	    usort($props, function ($a, $b) {
 	        if ($a['id'] > $b['id']) return 1;
 	        if ($a['id'] < $b['id']) return -1;
 	        return 0;
 	    });
-
-        // Get the usage counts
-        
-	    foreach ($constraints as &$constaint) {
-	        $counts = $wdwiki->getPage($constaint['page']);
-            preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
-            
-            foreach ($matches as $match) {
-                $constaint['counts'][$match[1]] = $match[2];
-            }
-	    }
-	    
-	    unset($constaint);
-
-        $asof_date = getdate();
-        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
-        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyCounts.html';
-        $hndl = fopen($path, 'wb');
-
-        // Header
-        fwrite($hndl, "<!DOCTYPE html>
+	        
+	        // Get the usage counts
+	        
+	        foreach ($constraints as &$constaint) {
+	            $counts = $wdwiki->getPage($constaint['page']);
+	            preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
+	            
+	            foreach ($matches as $match) {
+	                $constaint['counts'][$match[1]] = $match[2];
+	            }
+	        }
+	        
+	        unset($constaint);
+	        
+	        $asof_date = getdate();
+	        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+	        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyCounts.html';
+	        $hndl = fopen($path, 'wb');
+	        
+	        // Header
+	        fwrite($hndl, "<!DOCTYPE html>
 				<html><head>
 				<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
 				<title>Wikidata property counts</title>
@@ -1264,58 +1264,244 @@ END;
 				<h1>Wikidata property counts</h1>
 				<h3>As of $asof_date</h3>
 				");
-
+	        
+	        // Body
+	        $typeref = '<ref>Datatype key: CM = CommonsMedia, EI = ExternalId, GC = GlobeCoordinate, GS = GeoShape, M = Math, MN = MusicalNotation, MT = Monolingualtext, Q = Quantity, S = String, T = Time, TD = TabularData, U = Url, WF = WikibaseForm, WI = WikibaseItem, WL = WikibaseLexeme, WP = WikibaseProperty, WS = WikibaseSense</ref>';
+	        $wikitext = "{{Languages|en=Wikidata:Database reports/List of properties/all}}\n";
+	        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|datatype}}$typeref\n! data-sort-type=\"number\" | Counts<ref>Count type key: M = Main value, Q = Qualifier, R = Reference</ref>\n";
+	        
+	        foreach ($props as $prop) {
+	            $propid = $prop['id'];
+	            $label = $prop['label'];
+	            $description = $prop['description'];
+	            $alias = $prop['alias'];
+	            $datatype = $prop['datatype'];
+	            
+	            if (isset($type_colors[$datatype]) && ! empty($type_colors[$datatype]['color'])) $color = " style=\"background:{$type_colors[$datatype]['color']}\"";
+	            else $color = '';
+	            
+	            if (isset($type_colors[$datatype])) $datatype = $type_colors[$datatype]['abbrev'];
+	            
+	            $counts = [];
+	            
+	            foreach ($constraints as $qid => $constraint) {
+	                if ((! isset($prop['constraints']) || in_array($qid, $prop['constraints'])) && isset($constraint['counts'][$propid]) ) {
+	                    if ($constraint['counts'][$propid] != 0) $counts[$constraint['abbrev']] = $constraint['counts'][$propid];
+	                }
+	            }
+	            
+	            arsort($counts, SORT_NUMERIC);
+	            
+	            foreach ($counts as $abbrev => &$count) {
+	                $count = number_format($count, 0) . ' ' . $abbrev;
+	            }
+	            
+	            unset($count);
+	            
+	            if (empty($counts)) {
+	                $counts[] = '0';
+	            }
+	            
+	            $wikitext .= "|-$color\n|[[P:P$propid|P$propid]]||$label||$description||$datatype||";
+	            
+	            $wikitext .= implode('<br />', $counts);
+	            $wikitext .= "\n";
+	        }
+	        
+	        // Footnotes
+	        $wikitext .= "|}\n\n{{reflist}}";
+	        
+	        $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Properties]]";
+	        
+	        fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+	            '</textarea></form>');
+	        
+	        // Footer
+	        fwrite($hndl, '<br />Property count: ' . count($props));
+	        fwrite($hndl, '<br />Language: ' . $language);
+	        fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+	        fclose($hndl);
+	}
+	
+	/**
+	 * Wikidata property use completeness
+	 *
+	 * @param string $language
+	 */
+	public function WikidataPropertyUseCompleteness($language)
+	{
+	    $ranks = [
+	        'http://wikiba.se/ontology#PreferredRank' => 1,
+	        'http://wikiba.se/ontology#NormalRank' => 2,
+	        'http://wikiba.se/ontology#DeprecatedRank' => 3
+	    ];
+	    
+	    $expectedcompletes = [
+	        'Q21873886' => 'always incomplete',
+	        'Q21873974' => 'eventually complete',
+	        'Q21874050' => 'is complete',
+	        'Q47169297' => 'is complete, but new values may exist in the future',
+	        'Q60447462' => 'is complete for existing Wikidata items only',
+	        'unknown' => 'unknown'
+	    ];
+	    
+	    $wdwiki = new WikidataWiki();
+	    
+	    // Get the property list
+	    
+	    $query = <<<EOT
+SELECT (STRAFTER(STR(?prop), 'P') AS ?id) ?propLabel ?count ?rank ?pointintime ?expectedcomplete
+{
+  ?prop rdf:type wikibase:Property .
+  ?prop p:P4876 ?stmt .
+  ?stmt ps:P4876 ?count .
+  ?stmt psv:P4876 ?stmtval .
+  ?stmtval rdf:type wikibase:QuantityValue .
+  ?stmt wikibase:rank ?rank .
+  OPTIONAL {
+    ?stmt pq:P585 ?pointintime .
+    }
+  OPTIONAL {
+    ?prop wdt:P2429 ?expectedcomplete .
+    }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "$language,en"  }
+}
+ORDER BY ?prop ?pointintime
+EOT;
+	    
+	    $sparql = new WikidataSPARQL();
+	    
+	    $rows = $sparql->query($query);
+	    
+	    $proprows = [];
+	    
+	    foreach ($rows as $row) {
+	        $propid = (int)$row['id']['value'];
+	        $label = isset($row['propLabel']['value']) ? $row['propLabel']['value'] : '';
+	        $sourcecnt = (int)$row['count']['value'];
+	        $rank = $ranks[$row['rank']['value']];
+	        $pointintime = isset($row['pointintime']['value']) ? $row['pointintime']['value'] : '';
+	        $expectedcomplete = isset($row['expectedcomplete']['value']) ? $row['expectedcomplete']['value'] : '';
+	        
+	        if (! empty($pointintime) && $row['pointintime']['datatype'] == 'http://www.w3.org/2001/XMLSchema#dateTime') {
+	            $pointintime = substr($pointintime, 0, 10);
+	        } else {
+	            $pointintime = '0000-00-00';
+	        }
+	        
+	        if (! empty($expectedcomplete) && preg_match('!http://www.wikidata.org/entity/(Q\d+)!', $expectedcomplete, $matches)) {
+	            $expectedcomplete = $matches[1];
+	        } else {
+	            $expectedcomplete = 'unknown';
+	        }
+	        
+	        if (! isset($proprows[$propid])) $proprows[$propid] = [];
+	        $proprows[$propid][] = ['label' => $label, 'sourcecnt' => $sourcecnt, 'rank' => $rank, 'pointintime' => $pointintime,
+	            'expectedcomplete' => $expectedcomplete];
+	    }
+	    
+	    $props = [];
+	    
+	    foreach ($proprows as $propid => $proprow) {
+	        // sort by rank, pointintime desc, count desc
+	        usort($proprow, function($a, $b) {
+	            $arank = $a['rank'];
+	            $brank = $b['rank'];
+	            
+	            if ($arank != $brank) return $arank <=> $brank;
+	            
+	            $apit = $a['pointintime'];
+	            $bpit = $b['pointintime'];
+	            
+	            if ($apit != $bpit) return $bpit <=> $apit;
+	            
+	            $acnt = $a['sourcecnt'];
+	            $bcnt = $b['sourcecnt'];
+	            
+	            return $bcnt <=> $acnt;
+	        });
+	        
+	        $props[$propid] = ['label' => $proprow[0]['label'], 'sourcecnt' => $proprow[0]['sourcecnt'],
+	            'expectedcomplete' => $proprow[0]['expectedcomplete']];
+	    }
+	    
+	    ksort($props);
+	        
+        // Get use counts
+        
+	    $usecounts = $wdwiki->getPage('Template:Number_of_main_statements_by_property');
+        preg_match_all('!(\d+)\s*=\s*(\d+)!', $usecounts, $matches, PREG_SET_ORDER);
+        
+        foreach ($matches as $match) {
+            $propid = $match[1];
+            
+            if (isset($props[$propid])) {
+                $props[$propid]['usecnt'] = $match[2];
+            }
+        }
+        
+        // Get use dates
+        
+        $url = "https://bambots.brucemyers.com/NavelGazer.php?action=getPropMeta";
+        $propmeta = Curl::getUrlContents($url);
+        $pmlines = explode("\n", $propmeta);
+        
+        foreach ($pmlines as $pmline) {
+            if (empty($pmline)) continue;
+            
+            list($propid, $firstuse, $lastuse) = explode(',', $pmline);
+            
+            if (isset($props[$propid])) {
+                $props[$propid]['firstuse'] = $firstuse;
+                $props[$propid]['lastuse'] = $lastuse;
+            }
+        }
+        
+        $asof_date = getdate();
+        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyUseCompleteness.html';
+        $hndl = fopen($path, 'wb');
+        
+        // Header
+        fwrite($hndl, "<!DOCTYPE html>
+			<html><head>
+			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+			<title>Wikidata property use completeness</title>
+			<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+			</head><body>
+			<div style='display: table; margin: 0 auto;'>
+			<h1>Wikidata property use completeness</h1>
+			<h3>As of $asof_date</h3>
+			");
+        
         // Body
-        $typeref = '<ref>Datatype key: CM = CommonsMedia, EI = ExternalId, GC = GlobeCoordinate, GS = GeoShape, M = Math, MN = MusicalNotation, MT = Monolingualtext, Q = Quantity, S = String, T = Time, TD = TabularData, U = Url, WF = WikibaseForm, WI = WikibaseItem, WL = WikibaseLexeme, WP = WikibaseProperty, WS = WikibaseSense</ref>';
-        $wikitext = "{{Languages|en=Wikidata:Database reports/List of properties/all}}\n";
-        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|datatype}}$typeref\n! data-sort-type=\"number\" | Counts<ref>Count type key: M = Main value, Q = Qualifier, R = Reference</ref>\n";
-
-        foreach ($props as $prop) {
-            $propid = $prop['id'];
+        $wikitext = "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! Source count\n! Wikidata count\n! % complete\n! Source date\n!Expected completeness\n! First use\n! Last use\n";
+        
+        foreach ($props as $propid => $prop) {
             $label = $prop['label'];
-            $description = $prop['description'];
-            $alias = $prop['alias'];
-            $datatype = $prop['datatype'];
-
-            if (isset($type_colors[$datatype]) && ! empty($type_colors[$datatype]['color'])) $color = " style=\"background:{$type_colors[$datatype]['color']}\"";
-            else $color = '';
+            $sourcecnt = $prop['sourcecnt'];
+            $pointintime = $prop['pointintime'];
+            $usecnt = $prop['usecnt'];
+            $expectedcomplete = $expectedcompletes[$prop['expectedcomplete']];
+            $firstuse = $prop['firstuse'];
+            $lastuse = $prop['lastuse'];
             
-            if (isset($type_colors[$datatype])) $datatype = $type_colors[$datatype]['abbrev'];
-
-            $counts = [];
+            $pctcomplete = round(($usecnt / $sourcecnt) * 100, 5);
             
-            foreach ($constraints as $qid => $constraint) {
-                if ((! isset($prop['constraints']) || in_array($qid, $prop['constraints'])) && isset($constraint['counts'][$propid]) ) {
-                    if ($constraint['counts'][$propid] != 0) $counts[$constraint['abbrev']] = $constraint['counts'][$propid];
-                }
-            }
+            $sourcecntfmt = number_format($sourcecnt, 0, '', '&thinsp;');
+            $usecntfmt = number_format($usecnt, 0, '', '&thinsp;');
             
-            arsort($counts, SORT_NUMERIC);
-            
-            foreach ($counts as $abbrev => &$count) {
-                $count = number_format($count, 0) . ' ' . $abbrev;
-            }
-            
-            unset($count);
-            
-            if (empty($counts)) {
-                $counts[] = '0';
-            }
-            
-            $wikitext .= "|-$color\n|[[P:P$propid|P$propid]]||$label||$description||$datatype||";
-            
-            $wikitext .= implode('<br />', $counts);
-            $wikitext .= "\n";
+            $wikitext .= "|-\n|[[P:P$propid|P$propid]]||$label|data-sort-value=\"$sourcecnt\"|$sourcecntfmt|data-sort-value=\"$usecnt\"|$usecntfmt||$pctcomplete||$pointintime||$expectedcomplete||$firstuse||$lastuse\n";
         }
         
         // Footnotes
-        $wikitext .= "|}\n\n{{reflist}}";
-
+        $wikitext .= "|}\n\nNote: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.";
+        
         $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Properties]]";
         
         fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
             '</textarea></form>');
-
+        
         // Footer
         fwrite($hndl, '<br />Property count: ' . count($props));
         fwrite($hndl, '<br />Language: ' . $language);

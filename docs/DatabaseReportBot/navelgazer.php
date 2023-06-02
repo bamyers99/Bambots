@@ -22,6 +22,7 @@ $edits = [];
 $langs = [];
 $username = false;
 $matches = [];
+$propmeta = [];
 $edittypes = [
 	'!^wbsetclaim-create:!' => 0,
 	'!^wbcreateclaim!' => 0, // no : because matches 5 actions
@@ -125,8 +126,9 @@ while (! feof($hndl)) {
 	    $username = false;
 	} elseif (preg_match('!^/contributor/username=([^\n]+)!', $buffer, $matches)) {
 		$username = $matches[1];
-	} elseif (preg_match('!^/timestamp=(\d{4}-\d{2})!', $buffer, $matches)) {
+	} elseif (preg_match('!^/timestamp=(\d{4}-\d{2})(-\d{2})!', $buffer, $matches)) {
 		$timestamp = $matches[1];
+		$fulltimestamp = $matches[1] . $matches[2];
 	} elseif (preg_match('!^/comment=/\\* ([^\n]+)!', $buffer, $matches)) {
 	    if (++$count % 10000000 == 0) echo "Processed " . number_format($count) . "\n";
 	    if ($username === false) $username = ''; // anonymous edit
@@ -140,6 +142,10 @@ while (! feof($hndl)) {
 				    }
 
 					$typevalue = $matches[1];
+					
+					if (! isset($propmeta[$typevalue])) $propmeta[$typevalue] = ['f' => '9999-99-99', 'l' => '0000-00-00'];
+					if ($fulltimestamp < $propmeta[$typevalue]['f']) $propmeta[$typevalue]['f'] = $fulltimestamp;
+					if ($fulltimestamp > $propmeta[$typevalue]['l']) $propmeta[$typevalue]['l'] = $fulltimestamp;
 				}
 
 				$key = "a$typevalue"; // don't want a numeric key
@@ -222,6 +228,14 @@ foreach ($langs as $lang => $totals) {
         $monthtotal = $total >> 32;
         fwrite($hndl, "$lang\t$username\t$grandtotal\t$monthtotal\n");
     }
+}
+
+fclose($hndl);
+
+$hndl = fopen('navelgazerpropmeta.tsv', 'w');
+
+foreach ($propmeta as $propid => $values) {
+        fwrite($hndl, "$propid\t{$values['f']}\t{$values['l']}\n");
 }
 
 fclose($hndl);

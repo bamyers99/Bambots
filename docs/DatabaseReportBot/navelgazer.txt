@@ -46,6 +46,13 @@ CREATE TABLE s51454__wikidata.`navelgazernoncom` (
   KEY `property_id` (`property_id`)
 ) ENGINE=Aria DEFAULT CHARSET=utf8mb4
 
+CREATE TABLE s51454__wikidata.`navelgazerpropmeta` (
+  `property_id` int(11) NOT NULL,
+  `firstuse` varchar(10) NOT NULL,
+  `lastuse` varchar(10) NOT NULL,
+  KEY `property_id` (`property_id`)
+) ENGINE=Aria DEFAULT CHARSET=utf8mb4
+
 sql tools
 TRUNCATE s51454__wikidata.navelgazer;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazer.tsv' INTO TABLE s51454__wikidata.navelgazer CHARACTER SET binary;
@@ -53,6 +60,9 @@ INSERT INTO s51454__wikidata.navelgazer VALUES ('Data as of: 2018-xx-xx', -99, 0
 
 TRUNCATE s51454__wikidata.navelgazerlang;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazerlang.tsv' INTO TABLE s51454__wikidata.navelgazerlang CHARACTER SET binary;
+
+TRUNCATE s51454__wikidata.navelgazerpropmeta;
+LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazerpropmeta.tsv' INTO TABLE s51454__wikidata.navelgazerpropmeta CHARACTER SET binary;
 
 TRUNCATE s51454__wikidata.navelgazertagdef;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/changetags.tsv' INTO TABLE s51454__wikidata.navelgazertagdef CHARACTER SET binary;

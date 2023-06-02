@@ -26,8 +26,8 @@ $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'CleanupWorklistBot';
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
-//ini_set("display_errors", 1);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -44,6 +44,10 @@ switch ($action) {
 		
 	case 'getCount':
 	    getCount();
+	    exit;
+	    
+	case 'getPropMeta':
+	    getPropMeta();
 	    exit;
 }
 
@@ -263,6 +267,7 @@ function display_form($navels)
 
 		} elseif (! empty($params['property'])) {
 		    echo $navels['dataasof'] . "<sup>[2]</sup><br />\n";
+		    
 		    if ($params['property'] < 0) {
 		        if (isset($edit_types[$params['property']])) echo 'Action: ' . $edit_types[$params['property']] . "<br />\n";
 		    } else {
@@ -270,7 +275,13 @@ function display_form($navels)
 		        $term_text = htmlentities($navels['property_label'], ENT_COMPAT, 'UTF-8');
 		        echo "Property: <a href='$url' class='external'>$term_text (P{$params['property']})</a><br />\n";
 		    }
+		    
 		    echo "Total count: " . intl_num_format($navels['createtotal']) . " Last month: " . intl_num_format($navels['monthtotal']) . "<br />\n";
+		    
+		    if (! empty($navels['propmeta'])) {
+		        echo "First use: " . $navels['propmeta']['firstuse'] . " Last use: " . $navels['propmeta']['lastuse'] . "<br />\n";
+		    }
+		    
 		    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
 		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
@@ -395,6 +406,7 @@ function get_navels()
 	$wdwiki = new WikidataWiki();
 	$createtotal = 0;
 	$monthtotal = 0;
+	$propmeta = null;
 	
 	$wdwiki->cacheDeletedProperties();
 
@@ -538,7 +550,15 @@ function get_navels()
 		}
 		
 		$data = array_slice($data, 0, 100);
-
+		
+		// Get the metadata
+		$sql = 'SELECT * FROM s51454__wikidata.navelgazerpropmeta WHERE property_id = ?';
+		$sth = $dbh_wiki->prepare($sql);
+		$sth->bindValue(1, (int)$params['property']);
+		$sth->execute();
+		
+		$propmeta = $sth->fetch(PDO::FETCH_NAMED);
+		
 	} elseif (! empty($params['langadd'])) {
 	    $sparql = <<<EOT
 SELECT ?item ?c
@@ -705,7 +725,8 @@ EOT;
 	$return['tooldata'] = $tooldata;
 	$return['createtotal'] = $createtotal;
 	$return['monthtotal'] = $monthtotal;
-
+	$return['propmeta'] = $propmeta;
+	
 	return $return;
 }
 
@@ -841,6 +862,31 @@ function getCount()
     }
     
     echo $createtotal;
+}
+
+/**
+ * Get property meta data
+ */
+function getPropMeta()
+{
+    $wikiname = 'tools';
+    $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+    $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+    $wiki_host = Config::get('CleanupWorklistBot.wiki_host'); // Used for testing
+    if (empty($wiki_host)) $wiki_host = "$wikiname.labsdb";
+    
+    $dbh_wiki = new PDO("mysql:host=$wiki_host;dbname=s51454__wikidata;charset=utf8mb4", $user, $pass);
+    $dbh_wiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    header('Content-Type: text/plain');
+    
+    $sql = 'SELECT * FROM s51454__wikidata.navelgazerpropmeta ORDER BY property_id';
+    
+    $sth = $dbh_wiki->query($sql);
+    
+    while ($row = $sth->fetch(PDO::FETCH_NUM)) {
+        echo "{$row[0]},{$row[1]},{$row[2]}\n";
+    }
 }
 
 ?>
