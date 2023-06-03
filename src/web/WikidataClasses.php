@@ -247,42 +247,6 @@ function display_form($subclasses)
 				    echo "<tr><td>Parent class:</td><td>root class</td></tr>\n";
 				}
 				
-				// Display superclass instance ofs
-				if (! empty($subclasses['superclass_instofs'])) {
-				    uasort($subclasses['superclass_instofs'], function($a, $b) {
-				        return strcmp(strtolower($a), strtolower($b));
-				    });
-				        
-				    $superinstofs = [];
-			        
-			        foreach ($subclasses['superclass_instofs'] as $superinstof_qid => $term_text) {
-			            $extra = "WikidataClasses.php?id=$superinstof_qid&amp;lang=" . urlencode($params['lang']);
-			            $term_text = htmlentities($term_text, ENT_COMPAT, 'UTF-8');
-			            if ($term_text != "$superinstof_qid") $term_text = "$term_text ($superinstof_qid)";
-			            $superinstofs[] = "<a href=\"$protocol://$host$uri/$extra\">$term_text</a>";
-			        }
-			        
-			        $superinstofs = implode(', ', $superinstofs);
-			        
-			        $superinstofs_label = (count($subclasses['superclass_instofs']) == 1) ? 'Instance of super class' : 'Instance of super classes';
-			        
-			        echo "<tr><td>$superinstofs_label:</td><td>$superinstofs</td></tr>\n";
-				}
-				
-				if ($subclasses['subclassinstofcnt'] != 0) {
-				    $sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel ?isTruthy WHERE {\n" .
-				        "  ?s wdt:P31 ?stmt .\n" .
-				        "  ?stmt ps:P31 wd:Q{$params['id']} .\n" .
-				        "  ?stmt ps:P279+ wd:Q{$params['id']} .\n" .
-				        "  BIND( EXISTS { ?stmt a wikibase:BestRank } AS ?isTruthy ) .\n" .
-				        "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"{$params['lang']}\" }\n" .
-				        "}\nORDER BY ?sLabel");
-				    
-				    $sparql = "&nbsp;&nbsp;&nbsp;(<a href='$sparql' class='external'>SPARQL query</a>)";
-				    
-				    echo "<tr><td>Subclass is instance of:</td><td>" . intl_num_format($subclasses['subclassinstofcnt']) . "$sparql</td></tr>\n";
-				}
-				
 				$sparql = 'https://query.wikidata.org/#' . rawurlencode("SELECT DISTINCT ?s ?sLabel ?isTruthy WHERE {\n" .
 				    "  ?s p:P279 ?stmt .\n" .
 				    "  ?stmt ps:P279 wd:Q{$params['id']} .\n" .
@@ -734,7 +698,6 @@ function get_subclasses()
 	$children = [];
 	$class = [];
 	$pop_props = [];
-	$superclass_instofs = [];
 
 	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
 	$pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
@@ -898,32 +861,6 @@ function get_subclasses()
 		        $pop_props['Property:P' . $pid][4] = $row['enumcount'];
 		    }
 		}
-		
-		// Get super class instanceofs
-		$sql = "SELECT super_qid " .
-		  		" FROM s51454__wikidata.superclassinstanceof " .
-		  		" WHERE sub_qid = ?";
-		
-		$sth = $dbh_wiki->prepare($sql);
-		$sth->bindValue(1, $params['id']);
-		
-		$sth->execute();
-		
-		while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
-		    $superclass_instofs['Q' . $row['super_qid']] = 'Q' . $row['super_qid'];
-		}
-		
-		if (! empty($superclass_instofs)) {
-		    $instofs_ids = array_keys($superclass_instofs);
-		    $items = $wdwiki->getItemsNoCache($instofs_ids);
-		    
-		    foreach ($items as $item) {
-		        $qid = $item->getId();
-		        $term_text = $item->getLabelDescription('label', $params['lang']);
-		        
-		        if (! empty($term_text)) $superclass_instofs[$qid] = $term_text;
-		    }
-		}
 	}
 
 	// Retrieve the child classes
@@ -969,21 +906,8 @@ function get_subclasses()
 		}
 	}
 	
-	// Count instance of sub-classes
-	$sql = "SELECT count(DISTINCT sub_qid) " .
-	   	" FROM s51454__wikidata.superclassinstanceof " .
-	   	" WHERE super_qid = ?";
-	
-	$sth = $dbh_wiki->prepare($sql);
-	$sth->bindValue(1, $params['id']);
-	
-	$sth->execute();
-	$row = $sth->fetch(PDO::FETCH_NUM);
-	$subclassinstofcnt = $row[0];
-	
 	$return = array('class' => $class, 'parents' => $parents, 'children' => $children, 'dataasof' => $dataasof,
-	    'classcnt' => $classcnt, 'rootcnt' => $rootcnt, 'pop_props' => $pop_props, 'superclass_instofs' => $superclass_instofs,
-	    'subclassinstofcnt' => $subclassinstofcnt
+	    'classcnt' => $classcnt, 'rootcnt' => $rootcnt, 'pop_props' => $pop_props
 	);
 
 	$serialized = serialize($return);

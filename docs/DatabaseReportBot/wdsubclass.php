@@ -28,7 +28,6 @@ define('DIRECT_CHILD_COUNT', 'c');
 define('ISLISTOF_COUNT', 'e');
 define('CLASS_FOUND', 'f');
 define('PARENTS', 'p');
-define('INSTANCE_OF', 'i');
 
 DEFINE('MONTHLY_INCREMENT', 0x100000000);
 DEFINE('GRANDTOTAL_MASK', MONTHLY_INCREMENT - 1);
@@ -71,16 +70,6 @@ while (! feof($hndl)) {
 
 	    	fwrite($whndl, "$parentqid\t$qid\n");
 		}
-		
-		if (isset($data['claims'][PROP_INSTANCEOF]) && isset($classes[$qid])) {
-		    foreach ($data['claims'][PROP_INSTANCEOF] as $instanceof) {
-		        if (! isset($instanceof['mainsnak']['datavalue']['value']['numeric-id'])) continue;
-		        $instanceqid = (int)$instanceof['mainsnak']['datavalue']['value']['numeric-id'];
-		        
-		        if (! isset($classes[$qid][INSTANCE_OF])) $classes[$qid][INSTANCE_OF] = [];
-		        $classes[$qid][INSTANCE_OF][] = $instanceqid;
-		    }
-		}
 	}
 
 	if (isset($data['claims'][PROP_INSTANCEOF])) {
@@ -111,7 +100,6 @@ echo "Class count " . count($classes) . "\n";
 
 fclose($hndl);
 fclose($whndl);
-$whndl = fopen('wdsubclassinstof.tsv', 'w');
 
 // Calc totals
 $count = 0;
@@ -132,15 +120,10 @@ foreach ($classes as $classqid => $class) {
 	foreach ($parents as $parentqid => $dummy) {
 	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += $class[DIRECT_CHILD_COUNT];
 	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += (MONTHLY_INCREMENT * $class[DIRECT_INSTANCE_CNT]);
-		
-		if (isset($class[INSTANCE_OF]) && in_array($parentqid, $class[INSTANCE_OF])) {
-		    fwrite($whndl, "$classqid\t$parentqid\n");
-		}
 	}
 }
 
 // Write totals
-fclose($whndl);
 $whndl = fopen('wdsubclasstotals.tsv', 'w');
 
 foreach ($classes as $classqid => $class) {

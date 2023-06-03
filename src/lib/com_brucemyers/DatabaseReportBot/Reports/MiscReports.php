@@ -106,6 +106,11 @@ class MiscReports extends DatabaseReport
     		    $this->WikidataDeletedProperties();
     		    return false;
     		    break;
+    		    
+    		case 'WikidataExternalIdentifierCompleteness':
+    		    $this->WikidataExternalIdentifierCompleteness($params[1]);
+    		    return false;
+    		    break;
     	}
 
     	return true;
@@ -1324,11 +1329,11 @@ END;
 	}
 	
 	/**
-	 * Wikidata property use completeness
+	 * Wikidata external identifier completeness
 	 *
 	 * @param string $language
 	 */
-	public function WikidataPropertyUseCompleteness($language)
+	public function WikidataExternalIdentifierCompleteness($language)
 	{
 	    $ranks = [
 	        'http://wikiba.se/ontology#PreferredRank' => 1,
@@ -1371,7 +1376,7 @@ EOT;
 	    
 	    $sparql = new WikidataSPARQL();
 	    
-	    $rows = $sparql->query($query);
+	    $rows = $sparql->query(urlencode($query));
 	    
 	    $proprows = [];
 	    
@@ -1383,7 +1388,8 @@ EOT;
 	        $pointintime = isset($row['pointintime']['value']) ? $row['pointintime']['value'] : '';
 	        $expectedcomplete = isset($row['expectedcomplete']['value']) ? $row['expectedcomplete']['value'] : '';
 	        
-	        if (! empty($pointintime) && $row['pointintime']['datatype'] == 'http://www.w3.org/2001/XMLSchema#dateTime') {
+	        if (! empty($pointintime) && isset($row['pointintime']['datatype']) &&
+	            $row['pointintime']['datatype'] == 'http://www.w3.org/2001/XMLSchema#dateTime') {
 	            $pointintime = substr($pointintime, 0, 10);
 	        } else {
 	            $pointintime = '0000-00-00';
@@ -1422,7 +1428,7 @@ EOT;
 	        });
 	        
 	        $props[$propid] = ['label' => $proprow[0]['label'], 'sourcecnt' => $proprow[0]['sourcecnt'],
-	            'expectedcomplete' => $proprow[0]['expectedcomplete']];
+	            'expectedcomplete' => $proprow[0]['expectedcomplete'], 'pointintime' => $proprow[0]['pointintime']];
 	    }
 	    
 	    ksort($props);
@@ -1457,47 +1463,54 @@ EOT;
             }
         }
         
+        date_default_timezone_set('UTC');
+        
+        $current_date = date('Y-m-d H:i');
+        
         $asof_date = getdate();
         $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
-        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyUseCompleteness.html';
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataExternalIdentifierCompleteness.html';
         $hndl = fopen($path, 'wb');
         
         // Header
         fwrite($hndl, "<!DOCTYPE html>
 			<html><head>
 			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-			<title>Wikidata property use completeness</title>
+			<title>Wikidata external identifier completeness</title>
 			<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
 			</head><body>
 			<div style='display: table; margin: 0 auto;'>
-			<h1>Wikidata property use completeness</h1>
+			<h1>Wikidata external identifier completeness</h1>
 			<h3>As of $asof_date</h3>
 			");
         
         // Body
-        $wikitext = "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! Source count\n! Wikidata count\n! % complete\n! Source date\n!Expected completeness\n! First use\n! Last use\n";
+        $wikitext = "External identifier completeness.\n\n";
+        
+        $wikitext .= "Updated: <onlyinclude>$current_date (UTC)</onlyinclude>\n";
+        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! Source count\n! Wikidata count\n! % complete\n! Source date\n!Expected completeness\n! Last use\n";
         
         foreach ($props as $propid => $prop) {
             $label = $prop['label'];
             $sourcecnt = $prop['sourcecnt'];
             $pointintime = $prop['pointintime'];
-            $usecnt = $prop['usecnt'];
+            $usecnt = isset($prop['usecnt']) ? $prop['usecnt'] : 0;
             $expectedcomplete = $expectedcompletes[$prop['expectedcomplete']];
-            $firstuse = $prop['firstuse'];
-            $lastuse = $prop['lastuse'];
+            $firstuse = isset($prop['firstuse']) ? $prop['firstuse'] : '';
+            $lastuse = isset($prop['lastuse']) ? $prop['lastuse'] : '';
             
-            $pctcomplete = round(($usecnt / $sourcecnt) * 100, 5);
+            $pctcomplete = round(($usecnt / $sourcecnt) * 100, 3);
             
             $sourcecntfmt = number_format($sourcecnt, 0, '', '&thinsp;');
             $usecntfmt = number_format($usecnt, 0, '', '&thinsp;');
             
-            $wikitext .= "|-\n|[[P:P$propid|P$propid]]||$label|data-sort-value=\"$sourcecnt\"|$sourcecntfmt|data-sort-value=\"$usecnt\"|$usecntfmt||$pctcomplete||$pointintime||$expectedcomplete||$firstuse||$lastuse\n";
+            $wikitext .= "|-\n|[[P:P$propid|P$propid]]||$label||data-sort-value=\"$sourcecnt\"|$sourcecntfmt||data-sort-value=\"$usecnt\"|$usecntfmt||$pctcomplete||$pointintime||$expectedcomplete||$lastuse\n";
         }
         
         // Footnotes
         $wikitext .= "|}\n\nNote: Numbers are formatted with the ISO recommended international thousands separator 'thin space'.";
         
-        $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Properties]]";
+        $wikitext .= "\n\n[[Category:Database reports]]";
         
         fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
             '</textarea></form>');
