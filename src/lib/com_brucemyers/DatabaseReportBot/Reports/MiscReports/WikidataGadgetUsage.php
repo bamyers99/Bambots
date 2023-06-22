@@ -174,8 +174,6 @@ class WikidataGadgetUsage
             }
         }
         
-        $metawiki = new MediaWiki('https://meta.wikimedia.org/w/api.php');
-        if (false) {
         // Get the metawiki global gadgets
         $dbh_metawiki = new PDO("mysql:host=metawiki.analytics.db.svc.eqiad.wmflabs;dbname=metawiki_p;charset=utf8mb4", $user, $pass);
         $dbh_metawiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -228,7 +226,6 @@ class WikidataGadgetUsage
                     }
                 }
             }
-        }
         }
 
         // Verify that the user gadgets still exist and run linter
