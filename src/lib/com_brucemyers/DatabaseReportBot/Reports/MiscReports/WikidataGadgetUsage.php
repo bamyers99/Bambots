@@ -152,14 +152,18 @@ class WikidataGadgetUsage
                 foreach ($lines as $line) {
                     if (! preg_match('!^\s*//!', $line) && preg_match('!User:([^/]+?/[^\.]+?)\.js[^o]!u', $line, $matches)) { // skip .json
                         $gadget = str_replace(' ', '_', $matches[1]);
-                        if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = true; // removes dups
+                        $host = 'wikidata';
+                        if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
+                        
+                        if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = $host; // removes dups
                     }
                 }
                 
-                foreach (array_keys($user_gadgets) as $gadget) {
+                foreach ($user_gadgets as $gadget => $host) {
                     if (! isset($gadgets[$gadget])) {
-                        $gadgets[$gadget] = ['name' => $gadget, 'type' => 'wikidata', 'location' => 'common.js', 'numusers' => 0, 'activeusers' => 0, 'description' => '', 'usernames' => []];
-                        $script_names["User:$gadget.js"] = true;
+                        $gadgets[$gadget] = ['name' => $gadget, 'type' => 'wikidata', 'location' => 'common.js', 'numusers' => 0,
+                            'activeusers' => 0, 'description' => '', 'host' => $host, 'usernames' => []];
+                        $script_names["User:$gadget.js"] = $host;
                     }
                     
                     if (! in_array($username, $gadgets[$gadget]['usernames'])) {
@@ -171,7 +175,6 @@ class WikidataGadgetUsage
         }
         
         // Get the metawiki global gadgets
-        
         $dbh_metawiki = new PDO("mysql:host=metawiki.analytics.db.svc.eqiad.wmflabs;dbname=metawiki_p;charset=utf8mb4", $user, $pass);
         $dbh_metawiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $metawiki = new MediaWiki('https://meta.wikimedia.org/w/api.php');
@@ -201,16 +204,20 @@ class WikidataGadgetUsage
                 $lines = preg_split('/\\r?\\n/u', $script);
                 
                 foreach ($lines as $line) {
-                    if (! preg_match('!^\s*//!', $line) && preg_match('!www\.wikidata\.org.*?User:([^/]+?/[^\.]+?)\.js[^o]!u', $line, $matches)) { // skip .json
+                    if (! preg_match('!^\s*//!', $line) && preg_match('!(?:www\.wikidata\.org|meta\.wikimedia\.org).*?User:([^/]+?/[^\.]+?)\.js[^o]!u', $line, $matches)) { // skip .json
+                        $host = 'wikidata';
+                        if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
+                        
                         $gadget = str_replace(' ', '_', $matches[1]);
-                        if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = true; // removes dups
+                        if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = $host; // removes dups
                     }
                 }
                 
-                foreach (array_keys($user_gadgets) as $gadget) {
+                foreach ($user_gadgets as $gadget => $host) {
                     if (! isset($gadgets[$gadget])) {
-                        $gadgets[$gadget] = ['name' => $gadget, 'type' => 'wikidata', 'location' => 'common.js', 'numusers' => 0, 'activeusers' => 0, 'description' => '', 'usernames' => []];
-                        $script_names["User:$gadget.js"] = true;
+                        $gadgets[$gadget] = ['name' => $gadget, 'type' => 'wikidata', 'location' => 'common.js', 'numusers' => 0,
+                            'activeusers' => 0, 'description' => '', 'host' => $host, 'usernames' => []];
+                        $script_names["User:$gadget.js"] = $host;
                     }
                     
                     if (! in_array($username, $gadgets[$gadget]['usernames'])) {
@@ -220,26 +227,37 @@ class WikidataGadgetUsage
                 }
             }
         }
-        
+
         // Verify that the user gadgets still exist and run linter
         
-        $gadget_scripts = $wdwiki->getPagesWithCache(array_keys($script_names), ! $testing); // refetch if not testing
+        foreach (['wikidata', 'meta'] as $checkhost) {
+            $pages = [];
+            foreach ($script_names as $gadget => $host) {
+                if ($checkhost == $host) $pages[] = $gadget;
+            }
         
-        foreach ($gadget_scripts as $script_name => $script) {
-            preg_match('!User:([^/]+?/[^\.]+?)\.js!u', $script_name, $matches);
-            $gadget = $matches[1];
+            if ($checkhost == 'wikidata') {
+                $gadget_scripts = $wdwiki->getPagesWithCache($pages, ! $testing); // refetch if not testing
+            } else {
+                $gadget_scripts = $metawiki->getPagesWithCache($pages, ! $testing); // refetch if not testing
+            }
             
-            if ($script !== false && ! empty($script)) {
-                // 	            $linters = $this->_getUserGadgetLint($script_name);
+            foreach ($gadget_scripts as $script_name => $script) {
+                preg_match('!User:([^/]+?/[^\.]+?)\.js!u', $script_name, $matches);
+                $gadget = $matches[1];
                 
-                // 	            if (! empty($linters)) {
-                // 	            }
-                
-                continue;
+                if ($script !== false && ! empty($script)) {
+                    // 	            $linters = $this->_getUserGadgetLint($script_name);
+                    
+                    // 	            if (! empty($linters)) {
+                    // 	            }
+                    
+                    continue;
+                }
+            
+                unset($gadgets[$gadget]);
+            }
         }
-        
-        unset($gadgets[$gadget]);
-    }
     
     // Retrieve the user gadget descriptions
     
@@ -284,12 +302,6 @@ class WikidataGadgetUsage
         if ($a_count < $b_count) return 1; // descending
         if ($a_count > $b_count) return -1;
         return strcasecmp($a['name'], $b['name']);
-        
-        // common, then preferences
-        //$loc_compare = strcmp($a['location'], $b['location']);
-        //if ($loc_compare != 0) return $loc_compare;
-        
-        //return strcasecmp($a['name'], $b['name']);
     });
         
         $asof_date = getdate();
@@ -345,7 +357,8 @@ class WikidataGadgetUsage
                 } else {
                     $display_gadget = str_replace('_', ' ', $gadget);
                     if (isset($data['deprecated'])) $display_gadget = '<span style="text-decoration: line-through #DB4325;">' . $display_gadget . '</span>';
-                    $gadgetfield = "[[User:$gadget.js|$display_gadget]]";
+                    $meta = ($data['host'] == 'meta') ? 'm:' : '';
+                    $gadgetfield = "[[{$meta}User:$gadget.js|$display_gadget]]";
                 }
             }
             
