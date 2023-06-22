@@ -69,7 +69,7 @@ class WikidataGadgetUsage
             
             if (preg_match('!\*\s*([^\[|]+?)(?:\[|\|)!', $line, $matches)) {
                 $gadget = trim($matches[1]);
-                $gadgets[$gadget] = ['name' => $gadget,'type' => $type, 'location' => 'preferences'];
+                $gadgets[$gadget] = ['name' => $gadget,'type' => $type, 'location' => 'preferences', 'host' => 'wikidata'];
                 $pagenames[] = "MediaWiki:Gadget-$gadget/$language";
                 $pagenames[] = "MediaWiki:Gadget-$gadget"; // fallback
             }
@@ -174,6 +174,8 @@ class WikidataGadgetUsage
             }
         }
         
+        $metawiki = new MediaWiki('https://meta.wikimedia.org/w/api.php');
+        if (false) {
         // Get the metawiki global gadgets
         $dbh_metawiki = new PDO("mysql:host=metawiki.analytics.db.svc.eqiad.wmflabs;dbname=metawiki_p;charset=utf8mb4", $user, $pass);
         $dbh_metawiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -226,6 +228,7 @@ class WikidataGadgetUsage
                     }
                 }
             }
+        }
         }
 
         // Verify that the user gadgets still exist and run linter
@@ -325,7 +328,7 @@ class WikidataGadgetUsage
         
         date_default_timezone_set('UTC');
         $current_date = date('Y-m-d H:i');
-        $gadget_count = 0;
+        $gadget_count = ['wikidata' => 0, 'meta' => 0];
         
         $wikitext = "This is a programmatically generated summary of gadget usage. Includes gadgets enabled in [[Special:Preferences#mw-prefsection-gadgets|preferences]] or [[Special:MyPage/common.js|common.js]]. Any changes made to this page will be lost during the next update.<br />\n";
         $wikitext .= "Updated: <onlyinclude>$current_date (UTC)</onlyinclude>\n";
@@ -350,33 +353,36 @@ class WikidataGadgetUsage
             
             if ($location == 'common.js') {
                 if (! isset($data['toolpage']) && $data['numusers'] < 5) continue;
+                $metaqualifer = ($data['host'] == 'meta') ? ' (metawiki)' : '';
                 
                 if (isset($data['toolpage'])) {
                     $anchor = str_replace(' ', '_', $data['name']);
-                    $gadgetfield = "[[{$data['toolpage']}#$anchor|{$data['name']}]]";
+                    $gadgetfield = "[[{$data['toolpage']}#$anchor|{$data['name']}]]$metaqualifer";
                 } else {
                     $display_gadget = str_replace('_', ' ', $gadget);
                     if (isset($data['deprecated'])) $display_gadget = '<span style="text-decoration: line-through #DB4325;">' . $display_gadget . '</span>';
-                    $meta = ($data['host'] == 'meta') ? 'm:' : '';
-                    $gadgetfield = "[[{$meta}User:$gadget.js|$display_gadget]]";
+                    $metaprefix = ($data['host'] == 'meta') ? 'm:' : '';
+                    $gadgetfield = "[[{$metaprefix}User:$gadget.js|$display_gadget]]$metaqualifer";
                 }
             }
             
             if (empty($description)) $description = ' ';
             
             $wikitext .= "|-\n||$gadgetfield||$description\n||$location|| style=\"text-align: right;\" |$numusers|| style=\"text-align: right;\" |$activeusers\n";
-            ++$gadget_count;
+            ++$gadget_count[$data['host']];
         }
         
         $wikitext .= "|}\n\nNote: Uses [[Special:GadgetUsage]] to get preference enabled gadget totals.";
-        $wikitext .= "\n\nNote: Includes uncatalogued gadgets used by 5+ users.";
+        $wikitext .= "\n\nNote: Includes uncatalogued gadgets (not listed on [[Wikidata:Tools]] used by 5+ users.";
         $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Wikidata statistics]]\n";
         
         fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
             '</textarea></form>');
         
         // Footer
-        fwrite($hndl, '<br />Gadget count: ' . $gadget_count);
+        fwrite($hndl, '<br />Gadget count: ' . ($gadget_count['wikidata'] + $gadget_count['meta']) .
+            ' Wikidata hosted: ' . $gadget_count['wikidata'] .
+            ' Metawiki hosted: ' . $gadget_count['meta']);
         fwrite($hndl, '<br />Language: ' . $language);
         fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
         fclose($hndl);
