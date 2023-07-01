@@ -1709,10 +1709,10 @@ EOT;
             $deletedate = $prop['deldate'];
             $count = $prop['count'];
             
-            $wikitext .= "|-\n| [[Property:P$pid|P$pid]] || $label || $description || $deletedate || $count || ";
-            if (! empty($proposalpage)) echo "[[$proposalpage|Proposal]]";
+            $wikitext .= "|-\n|[[Property:P$pid|P$pid]] || $label || $description || $deletedate || $count || ";
+            if (! empty($proposalpage)) $wikitext .= "[[$proposalpage|Proposal]]";
             $wikitext .= " || ";
-            if (! empty($deletepage)) echo "[[$deletepage|Deletion]]";
+            if (! empty($deletepage)) $wikitext .= "[[$deletepage|Deletion]]";
             echo "\n";
         }
         
@@ -1721,7 +1721,7 @@ EOT;
         
         
         // Footer
-        fwrite($hndl, '<br />Deleted count: ' . count($delprops));
+        fwrite($hndl, '<br />Deleted count: ' . (count($delprops) + count($newconfig)));
         fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
         fclose($hndl);
 	}
