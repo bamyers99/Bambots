@@ -15,7 +15,8 @@
 
  Description
  ===========
- Displays presence/absence of specific properties (configurable) after the Statements heading.
+ Displays presence/absence of specific properties (configurable) after the Statements heading. Clicking a property
+ name will jump to that properties section. For absent property, clicking property name will jump to the end of the page.
 
  Usage
  =====
@@ -48,7 +49,24 @@ Bamyers99.HasProperty = {
 				if (! data.claims) return;
 				
 				var cookie = mw.cookie.get(self.cookieName);
-				if (! cookie || cookie.length == 0) return;
+				
+				if (! cookie || cookie.length == 0) {
+					var h = ' <span>';
+					
+					h += ' <a id="Bamyers99_HasProperty_editLink">Edit has property</a>';
+												
+					h += '</span>';
+					
+					$( '#claims' ).append( h );
+					
+					$( '#Bamyers99_HasProperty_editLink' ).click( function() {
+						self.displayDialog();
+						return false;
+					} );
+					
+					return;
+				}
+				
 				var aProps = cookie.split(',');
 				var oProps = {};
 				var labels = {};
@@ -92,9 +110,9 @@ Bamyers99.HasProperty = {
 						if (count) h += ', ';
 						
 						if (oProps[prop]) {
-							h += '<a href="#' + prop + '">' + label + '</a>';
+							h += '<a href="#' + prop + '">[' + label + ']</a>';
 						} else {
-							h += '<span style="text-decoration: line-through #DB4325;">' + label + '</span>';						
+							h += '<span style="text-decoration: line-through #DB4325;"><a href="#0" onclick="$(\'#footer\')[0].scrollIntoView(false); return false;">[' + label + ']</a></span>';						
 						}
 						
 						count += 1;
@@ -122,6 +140,7 @@ Bamyers99.HasProperty = {
 	 */
 	displayDialog: function() {
 		var self = this;
+		var cookie = mw.cookie.get(self.cookieName) || '';
 		var h = '<div id="Bamyers99_HasProperty_dialog">';
 
 		h += '<div id="Bamyers99_HasProperty_form">';
@@ -136,6 +155,8 @@ Bamyers99.HasProperty = {
 
 		h += '</div></div>';
 		$( '#mw-content-text' ).append( h );
+		
+		$( '#Bamyers99_HasProperty_props' ).val(cookie);
 
 		$( '#Bamyers99_HasProperty_save' ).click( function() {
 			var props = $("#Bamyers99_HasProperty_props").val();
@@ -154,7 +175,7 @@ Bamyers99.HasProperty = {
 		$( '#Bamyers99_HasProperty_dialog' ).dialog( {
 			title : 'Has Property',
 			width : 'auto',
-			position : { my: 'left top', at: 'right top', of: $( '#claims' ) },
+			position : { my: 'center top', at: 'center top', of: $( '#claims' ) },
 			open: function( event, ui ) {
 				$('#Bamyers99_HasProperty_dialog').css ( { 'font-size': '12pt', 'font-family': 'Arial,Helvetica,sans-serif' } );
 			},
