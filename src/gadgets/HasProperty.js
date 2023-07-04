@@ -53,7 +53,7 @@ Bamyers99.HasProperty = {
 				if (! cookie || cookie.length == 0) {
 					var h = ' <span>';
 					
-					h += ' <a id="Bamyers99_HasProperty_editLink">Edit has property</a>';
+					h += ' <a id="Bamyers99_HasProperty_editLink">Set has property</a>';
 												
 					h += '</span>';
 					
@@ -110,15 +110,15 @@ Bamyers99.HasProperty = {
 						if (count) h += ', ';
 						
 						if (oProps[prop]) {
-							h += '<a href="#' + prop + '">[' + label + ']</a>';
+							h += '<span style="font-size: smaller;"><a href="#' + prop + '">&darr;' + label + '&darr;</a></span>';
 						} else {
-							h += '<span style="text-decoration: line-through #DB4325;"><a href="#0" onclick="$(\'#footer\')[0].scrollIntoView(false); return false;">[' + label + ']</a></span>';						
+							h += '<span style="text-decoration: line-through #DB4325; font-size: smaller;"><a href="#0" onclick="$(\'#footer\')[0].scrollIntoView(false); return false;">&DownArrowBar;' + label + '&DownArrowBar;</a></span>';						
 						}
 						
 						count += 1;
 					}
 					
-					h += ' <a id="Bamyers99_HasProperty_editLink">Edit</a>';
+					h += ' <span style="font-size: smaller;"><a id="Bamyers99_HasProperty_editLink" title="Set properties">Set</a></span>';
 												
 					h += '</span>';
 					
