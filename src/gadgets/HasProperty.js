@@ -110,9 +110,9 @@ Bamyers99.HasProperty = {
 						if (count) h += ', ';
 						
 						if (oProps[prop]) {
-							h += '<span style="font-size: smaller;"><a href="#' + prop + '">&darr;' + label + '&darr;</a></span>';
+							h += '<span style="font-size: smaller;"><a href="#' + prop + '">&darr;' + self.gc.htmlEncode(label) + '&darr;</a></span>';
 						} else {
-							h += '<span style="text-decoration: line-through #DB4325; font-size: smaller;"><a href="#0" onclick="$(\'#footer\')[0].scrollIntoView(false); return false;">&DownArrowBar;' + label + '&DownArrowBar;</a></span>';						
+							h += '<span style="text-decoration: line-through #DB4325; font-size: smaller;"><a href="#0"  class="Bamyers99_HasProperty_notFound" data-pid="' + prop + '">&DownArrowBar;' + self.gc.htmlEncode(label) + '&DownArrowBar;</a></span>';						
 						}
 						
 						count += 1;
@@ -126,6 +126,24 @@ Bamyers99.HasProperty = {
 					
 					$( '#Bamyers99_HasProperty_editLink' ).click( function() {
 						self.displayDialog();
+						return false;
+					} );
+					
+					$( 'a.Bamyers99_HasProperty_notFound' ).click( function() {
+						var valuepid = $( this ).attr( 'data-pid' );
+			
+						$('#footer')[0].scrollIntoView(false);
+						
+						var button = $('.wikibase-addtoolbar span a').last();
+						
+						if (button) {
+							button.click();
+							
+							self.gc.waitForSelector('.wikibase-snakview-property .ui-entityselector-input', function() {
+								$('.wikibase-snakview-property .ui-entityselector-input').val( valuepid ).trigger( "input" );
+							});
+						}
+						
 						return false;
 					} );
 					

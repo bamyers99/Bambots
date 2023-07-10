@@ -267,6 +267,26 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 		.replace( /`/g, '&#39;' )
 		.replace( /</g, '&lt;' )
 		.replace( />/g, '&gt;' );
- 	}
+ 	},
+ 	
+ 	/**
+	  * wait for an element to be added to the dom
+	  * 
+	  * @param selector
+	  * @param func
+	  */
+ 	waitForSelector: function ( selector, func ) {
+		var observer = new MutationObserver(function(mutations) {
+		    if ($(selector).length) {
+				func();
+		        observer.disconnect(); 
+		    }
+		});
+		
+		observer.observe(document.body, {
+		    childList: true,
+		    subtree: true
+		});
+	}
  	
 };
