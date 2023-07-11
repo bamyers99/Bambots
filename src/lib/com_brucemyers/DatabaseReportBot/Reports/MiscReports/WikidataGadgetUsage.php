@@ -164,6 +164,7 @@ class WikidataGadgetUsage
                         if ($loader == 'mw.loader.load') {
                             if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
                             elseif (strpos($line, 'en.wikipedia.org') !== false) $host = 'enwiki';
+                            elseif (strpos($line, 'www.wikidata.org') !== false) $host = 'wikidata';
                             else {
                                 echo "Other host = $loaderdata\n";
                                 continue;
@@ -226,9 +227,18 @@ class WikidataGadgetUsage
                     
                     if ($loader == 'mw.loader.load') $loaderdata = urldecode($loaderdata);
                     
-                    if (! preg_match('!^\s*//!', $line) && preg_match('!(?:www\.wikidata\.org|meta\.wikimedia\.org).*?User:([^/]+?/[^\.]+?)\.js[^o]!u', $loaderdata, $matches)) { // skip .json
+                    if (! preg_match('!^\s*//!', $line) && preg_match('!(?:www\.wikidata\.org|meta\.wikimedia\.org|en\.wikipedia\.org).*?User:([^/]+?/[^\.]+?)\.js[^o]!u', $loaderdata, $matches)) { // skip .json
                         $host = 'wikidata';
-                        if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
+                        
+                        if ($loader == 'mw.loader.load') {
+                            if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
+                            elseif (strpos($line, 'en.wikipedia.org') !== false) $host = 'enwiki';
+                            elseif (strpos($line, 'www.wikidata.org') !== false) $host = 'wikidata';
+                            else {
+                                echo "Other host = $loaderdata\n";
+                                continue;
+                            }
+                        }
                         
                         $gadget = str_replace(' ', '_', $matches[1]);
                         if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = $host; // removes dups
