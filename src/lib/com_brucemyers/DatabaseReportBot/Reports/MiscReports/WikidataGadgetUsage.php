@@ -160,7 +160,15 @@ class WikidataGadgetUsage
                     if (! preg_match('!^\s*//!', $line) && preg_match('!User:([^/]+?/[^\.]+?)\.js[^o]!u', $loaderdata, $matches)) { // skip .json
                         $gadget = str_replace(' ', '_', $matches[1]);
                         $host = 'wikidata';
-                        if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
+                        
+                        if ($loader == 'mw.loader.load') {
+                            if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
+                            elseif (strpos($line, 'en.wikipedia.org') !== false) $host = 'enwiki';
+                            else {
+                                echo "Other host = $loaderdata\n";
+                                continue;
+                            }
+                        }
                         
                         if (strpos($gadget, '|') === false) $user_gadgets[$gadget] = $host; // removes dups
                     }
@@ -185,6 +193,7 @@ class WikidataGadgetUsage
         $dbh_metawiki = new PDO("mysql:host=metawiki.analytics.db.svc.eqiad.wmflabs;dbname=metawiki_p;charset=utf8mb4", $user, $pass);
         $dbh_metawiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $metawiki = new MediaWiki('https://meta.wikimedia.org/w/api.php');
+        $enwiki = new MediaWiki('https://en.wikipedia.org/w/api.php');
         
         $sql = "SELECT page_title FROM page WHERE page_namespace = 2 AND page_title REGEXP '/global\.js$'";
         
@@ -243,7 +252,7 @@ class WikidataGadgetUsage
 
         // Verify that the user gadgets still exist and run linter
         
-        foreach (['wikidata', 'meta'] as $checkhost) {
+        foreach (['wikidata', 'meta', 'enwiki'] as $checkhost) {
             $pages = [];
             foreach ($script_names as $gadget => $host) {
                 if ($checkhost == $host) $pages[] = $gadget;
@@ -251,8 +260,10 @@ class WikidataGadgetUsage
         
             if ($checkhost == 'wikidata') {
                 $gadget_scripts = $wdwiki->getPagesWithCache($pages, ! $testing); // refetch if not testing
-            } else {
+            } elseif ($checkhost == 'meta') {
                 $gadget_scripts = $metawiki->getPagesWithCache($pages, ! $testing); // refetch if not testing
+            } else {
+                $gadget_scripts = $enwiki->getPagesWithCache($pages, ! $testing); // refetch if not testing
             }
             
             foreach ($gadget_scripts as $script_name => $script) {
@@ -363,7 +374,10 @@ class WikidataGadgetUsage
             
             if ($location == 'common.js') {
                 if (! isset($data['toolpage']) && $data['numusers'] < 5) continue;
-                $metaqualifer = ($data['host'] == 'meta') ? ' (metawiki)' : '';
+                $metaqualifer = '';
+                
+                if ($data['host'] == 'meta') $metaqualifer = ' (metawiki)';
+                elseif ($data['host'] == 'enwiki') $metaqualifer = ' (enwiki)';
                 
                 if (isset($data['toolpage'])) {
                     $anchor = str_replace(' ', '_', $data['name']);
@@ -371,7 +385,9 @@ class WikidataGadgetUsage
                 } else {
                     $display_gadget = str_replace('_', ' ', $gadget);
                     if (isset($data['deprecated'])) $display_gadget = '<span style="text-decoration: line-through #DB4325;">' . $display_gadget . '</span>';
-                    $metaprefix = ($data['host'] == 'meta') ? 'm:' : '';
+                    $metaprefix = '';
+                    if ($data['host'] == 'meta') $metaprefix = 'm:';
+                    elseif ($data['host'] == 'enwiki') $metaprefix = 'w:en:';
                     $gadgetfield = "[[{$metaprefix}User:$gadget.js|$display_gadget]]$metaqualifer";
                 }
             }
