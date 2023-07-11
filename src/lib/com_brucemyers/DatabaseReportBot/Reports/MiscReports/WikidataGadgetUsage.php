@@ -162,9 +162,9 @@ class WikidataGadgetUsage
                         $host = 'wikidata';
                         
                         if ($loader == 'mw.loader.load') {
-                            if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
-                            elseif (strpos($line, 'en.wikipedia.org') !== false) $host = 'enwiki';
-                            elseif (strpos($line, 'www.wikidata.org') !== false) $host = 'wikidata';
+                            if (strpos($loaderdata, 'meta.wikimedia.org') !== false) $host = 'meta';
+                            elseif (strpos($loaderdata, 'en.wikipedia.org') !== false) $host = 'enwiki';
+                            elseif (strpos($loaderdata, 'www.wikidata.org') !== false || strpos($loaderdata, '//') === false) $host = 'wikidata';
                             else {
                                 echo "Other host = $loaderdata\n";
                                 continue;
@@ -231,9 +231,9 @@ class WikidataGadgetUsage
                         $host = 'wikidata';
                         
                         if ($loader == 'mw.loader.load') {
-                            if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
-                            elseif (strpos($line, 'en.wikipedia.org') !== false) $host = 'enwiki';
-                            elseif (strpos($line, 'www.wikidata.org') !== false) $host = 'wikidata';
+                            if (strpos($loaderdata, 'meta.wikimedia.org') !== false || strpos($loaderdata, '//') === false) $host = 'meta';
+                            elseif (strpos($loaderdata, 'en.wikipedia.org') !== false) $host = 'enwiki';
+                            elseif (strpos($loaderdata, 'www.wikidata.org') !== false) $host = 'wikidata';
                             else {
                                 echo "Other host = $loaderdata\n";
                                 continue;
