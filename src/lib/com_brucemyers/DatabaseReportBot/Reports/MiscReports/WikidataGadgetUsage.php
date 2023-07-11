@@ -144,7 +144,6 @@ class WikidataGadgetUsage
             foreach ($scripts as $pagename => $script) {
                 preg_match('!^User:([^/]+)/!', $pagename, $matches);
                 $username = $matches[1];
-                if ($username != 'AdamSeattle') continue;
                 $user_gadgets = [];
                 $script = preg_replace(CommonRegex::COMMENT_REGEX, '', $script);
                 $script = preg_replace('!/\*[\s\S]*?\*/!u', '', $script);
@@ -212,7 +211,13 @@ class WikidataGadgetUsage
                 $lines = preg_split('/\\r?\\n/u', $script);
                 
                 foreach ($lines as $line) {
-                    if (! preg_match('!^\s*//!', $line) && preg_match('!(?:www\.wikidata\.org|meta\.wikimedia\.org).*?User:([^/]+?/[^\.]+?)\.js[^o]!u', $line, $matches)) { // skip .json
+                    if (! preg_match('!(importScript|mw.loader.load)\s*\(\s*[\'"]([^\'"]+[\'"])!', $line, $matches)) continue; // final [\'"] for json check
+                    $loader = $matches[1];
+                    $loaderdata = $matches[2];
+                    
+                    if ($loader == 'mw.loader.load') $loaderdata = urldecode($loaderdata);
+                    
+                    if (! preg_match('!^\s*//!', $line) && preg_match('!(?:www\.wikidata\.org|meta\.wikimedia\.org).*?User:([^/]+?/[^\.]+?)\.js[^o]!u', $loaderdata, $matches)) { // skip .json
                         $host = 'wikidata';
                         if (strpos($line, 'meta.wikimedia.org') !== false) $host = 'meta';
                         
@@ -253,7 +258,6 @@ class WikidataGadgetUsage
             foreach ($gadget_scripts as $script_name => $script) {
                 preg_match('!User:([^/]+?/[^\.]+?)\.js!u', $script_name, $matches);
                 $gadget = $matches[1];
-                echo "checking $gadget\n";
                 
                 if ($script !== false && ! empty($script)) {
                     // 	            $linters = $this->_getUserGadgetLint($script_name);
@@ -264,7 +268,6 @@ class WikidataGadgetUsage
                     continue;
                 }
             
-                echo "  not found\n";
                 unset($gadgets[$gadget]);
             }
         }
