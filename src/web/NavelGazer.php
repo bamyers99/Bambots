@@ -278,6 +278,8 @@ function display_form($navels)
 		    
 		    echo "Total count: " . intl_num_format($navels['createtotal']) . " Last month: " . intl_num_format($navels['monthtotal']) . "<br />\n";
 		    
+		    echo "Total user count: " . intl_num_format($navels['total_user_cnt']) . " Users last month: " . intl_num_format($navels['month_user_cnt']) . "<br />\n";
+		    
 		    if (! empty($navels['propmeta'])) {
 		        echo "First use: " . $navels['propmeta']['firstuse'] . " Last use: " . $navels['propmeta']['lastuse'] . "<br />\n";
 		    }
@@ -407,6 +409,8 @@ function get_navels()
 	$createtotal = 0;
 	$monthtotal = 0;
 	$propmeta = null;
+	$total_user_cnt = 0;
+	$month_user_cnt = 0;
 	
 	$wdwiki->cacheDeletedProperties();
 
@@ -547,6 +551,11 @@ function get_navels()
 		    $createtotal += $row['create_count'];
 		    $monthtotal += $row['month_count'];
 		    ++$count;
+		}
+				
+		foreach ($data as $userdata) {
+		    if ($userdata[1] > 0) ++$total_user_cnt;
+		    if ($userdata[2] > 0) ++$month_user_cnt;
 		}
 		
 		$data = array_slice($data, 0, 100);
@@ -726,6 +735,8 @@ EOT;
 	$return['createtotal'] = $createtotal;
 	$return['monthtotal'] = $monthtotal;
 	$return['propmeta'] = $propmeta;
+	$return['total_user_cnt'] = $total_user_cnt;
+	$return['month_user_cnt'] = $month_user_cnt;
 	
 	return $return;
 }
