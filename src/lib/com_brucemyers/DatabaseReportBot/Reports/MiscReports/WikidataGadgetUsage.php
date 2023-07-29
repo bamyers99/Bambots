@@ -293,54 +293,68 @@ class WikidataGadgetUsage
             }
         }
     
-    // Retrieve the user gadget descriptions
-    
-    $this->_getUserGadgetDescriptons($wdwiki, $gadgets, $testing);
-    
-    // Get the configuration and add descriptions, suppress gadgets
-    
-    $config = $wdwiki->getPage('Wikidata:Database reports/Gadget usage statistics/Configuration');
-    
-    $configtable = WikitableParser::getTables($config)[0];
-    
-    foreach ($configtable['rows'] as $row) {
-        preg_match('!User:([^/]+?/[^\.]+?)\.js[^o]!u', $row[0], $matches);
-        $gadget = str_replace(' ', '_', $matches[1]);
-        $description = $row[1];
-        $status = $row[2];
+        // Retrieve the user gadget descriptions
         
-        if (! isset($gadgets[$gadget])) {
-            echo "Unknown configuration gadget = $gadget\n";
-            continue;
+        $this->_getUserGadgetDescriptons($wdwiki, $gadgets, $testing);
+        
+        // Get the configuration and add descriptions, suppress gadgets
+        
+        $config = $wdwiki->getPage('Wikidata:Database reports/Gadget usage statistics/Configuration');
+        
+        $configtable = WikitableParser::getTables($config)[0];
+        
+        foreach ($configtable['rows'] as $row) {
+            preg_match('!User:([^/]+?/[^\.]+?)\.js[^o]!u', $row[0], $matches);
+            $gadget = str_replace(' ', '_', $matches[1]);
+            $description = $row[1];
+            $status = $row[2];
+            
+            if (! isset($gadgets[$gadget])) {
+                echo "Unknown configuration gadget = $gadget\n";
+                continue;
+            }
+            
+            if ($status == 'suppress') {
+                unset($gadgets[$gadget]);
+                continue;
+            }
+            
+            if ($status == 'deprecated') $gadgets[$gadget]['deprecated'] = true;
+            
+            if (empty($gadgets[$gadget]['description'])) $gadgets[$gadget]['description'] = $description;
         }
         
-        if ($status == 'suppress') {
-            unset($gadgets[$gadget]);
-            continue;
-        }
+        // Get the user gadget active user counts
+        $this->_getUserGadgetActiveUsers($dbh_wikidata, $gadgets);
         
-        if ($status == 'deprecated') $gadgets[$gadget]['deprecated'] = true;
+        // Sort by number of uses
         
-        if (empty($gadgets[$gadget]['description'])) $gadgets[$gadget]['description'] = $description;
+        uasort($gadgets, function($a, $b) {
+            $a_count = (int)$a['numusers'];
+            $b_count = (int)$b['numusers'];
+            
+            if ($a_count < $b_count) return 1; // descending
+            if ($a_count > $b_count) return -1;
+            return strcasecmp($a['name'], $b['name']);
+        });
+        
+        $this->_writePage('all', $gadgets);
+        $this->_writePage('wikidata', $gadgets);
+        $this->_writePage('meta', $gadgets);
+        $this->_writePage('enwiki', $gadgets);
     }
-    
-    // Get the user gadget active user counts
-    $this->_getUserGadgetActiveUsers($dbh_wikidata, $gadgets);
-    
-    // Sort by number of uses
-    
-    uasort($gadgets, function($a, $b) {
-        $a_count = (int)$a['numusers'];
-        $b_count = (int)$b['numusers'];
-        
-        if ($a_count < $b_count) return 1; // descending
-        if ($a_count > $b_count) return -1;
-        return strcasecmp($a['name'], $b['name']);
-    });
-        
+
+    /**
+     * Write host specific page.
+     * 
+     * @param unknown $host
+     * @param unknown $gadgets
+     */
+    function _writePage($host, $gadgets)
+    {
         $asof_date = getdate();
         $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
-        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataGadgetUsage.html';
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . "WikidataGadgetUsage-$host.html";
         $hndl = fopen($path, 'wb');
         
         // Header
@@ -363,11 +377,29 @@ class WikidataGadgetUsage
         
         $wikitext = "This is a programmatically generated summary of gadget usage. Includes gadgets enabled in [[Special:Preferences#mw-prefsection-gadgets|preferences]] or [[Special:MyPage/common.js|common.js]]. Any changes made to this page will be lost during the next update.<br />\n";
         $wikitext .= "Updated: <onlyinclude>$current_date (UTC)</onlyinclude>\n";
+        
+        $wikitext .= "{{Start tab
+| tab-1         = All
+| link-1        = Wikidata:Database reports/Gadget usage statistics
+| tab-2         = wikidata
+| link-2        = Wikidata:Database reports/Gadget usage statistics/wikidata
+| tab-3         = metawiki
+| link-3        = Wikidata:Database reports/Gadget usage statistics/metawiki
+| tab-4         = enwiki
+| link-4        = Wikidata:Database reports/Gadget usage statistics/enwiki
+| border        = 1px solid #808080
+| off tab color = #f0f0ff
+| on tab color  = 
+| rounding      = 5em
+| tab alignment = center
+}}\n";
+        
         $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|gadget}}\n! {{I18n|description}}\n! {{I18n|enabled in}}\n! {{I18n|number of users}}\n! {{I18n|active users}}\n";
         
         foreach ($gadgets as $gadget => $data) {
+            if ($host != 'all' && $host != $data['host']) continue;
+            
             $description = $data['description'];
-            $type = $data['type'];
             $location = $data['location'];
             
             $numusers = $data['numusers'];
@@ -386,8 +418,10 @@ class WikidataGadgetUsage
                 if (! isset($data['toolpage']) && $data['numusers'] < 5) continue;
                 $metaqualifer = '';
                 
-                if ($data['host'] == 'meta') $metaqualifer = ' (metawiki)';
-                elseif ($data['host'] == 'enwiki') $metaqualifer = ' (enwiki)';
+                if ($host == 'all') {
+                    if ($data['host'] == 'meta') $metaqualifer = ' (metawiki)';
+                    elseif ($data['host'] == 'enwiki') $metaqualifer = ' (enwiki)';
+                }
                 
                 if (isset($data['toolpage'])) {
                     $anchor = str_replace(' ', '_', $data['name']);
@@ -410,7 +444,7 @@ class WikidataGadgetUsage
         
         $wikitext .= "|}\n\nNote: Uses [[Special:GadgetUsage]] to get preference enabled gadget totals.";
         $wikitext .= "\n\nNote: Includes uncatalogued gadgets (not listed on [[Wikidata:Tools]]) used by 5+ users.";
-        $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Wikidata statistics]]\n";
+        if ($host == 'all') $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Wikidata statistics]]\n";
         
         fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
             '</textarea></form>');
@@ -424,7 +458,7 @@ class WikidataGadgetUsage
         fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
         fclose($hndl);
     }
-
+    
     /**
      * Get user gadget descriptions
      *
