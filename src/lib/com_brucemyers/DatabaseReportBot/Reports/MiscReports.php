@@ -559,7 +559,7 @@ class MiscReports extends DatabaseReport
 			51410097,1214420,30387944,40245763,51435709,53296694,4293277,54749940,54835048,55914231,11085274,51605368,
 		    53724687,57988713,59825988,9652293,60401574,60523882,61176484,6242139,63283128,63688875,64502019,29607598,
 		    64187214,65375924,65556618,893030,7528496,66773904,64052555,3775042,13684882,2093563,70785885,33337151,
-		    33337156,71628171,72002912
+		    33337156,71628171,72002912,65628934,74436172
 		);
 
 		while (1 == 1) {
@@ -1713,7 +1713,7 @@ EOT;
             if (! empty($proposalpage)) $wikitext .= "[[$proposalpage|Proposal]]";
             $wikitext .= " || ";
             if (! empty($deletepage)) $wikitext .= "[[$deletepage|Deletion]]";
-            echo "\n";
+            $wikitext .= "\n";
         }
         
         fwrite($hndl, '<textarea rows="40" cols="100" name="newwikitable" id="newwikitable">' . htmlspecialchars($wikitext) .
