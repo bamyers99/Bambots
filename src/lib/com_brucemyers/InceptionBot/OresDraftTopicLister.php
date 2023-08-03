@@ -56,16 +56,14 @@ class OresDraftTopicLister
             if (! isset($revisions[$title])) continue; // deleted/non-existant
             $revids[$revisions[$title]['revid']] = $title;
         }
+        $scores = [];
 
-        $revChunks = array_chunk($revids, 100, true);
-        $scores = array();
-
-        foreach ($revChunks as $revChunk) {
-            $URL = "https://ores.wikimedia.org/v2/scores/enwiki/drafttopic/?revids=" . implode('|', array_keys($revChunk));
+        foreach ($revids as $revid => $title) {
+            $URL = "https://api.wikimedia.org/service/lw/inference/v1/models/enwiki-drafttopic:predict";
             $trys = 0;
 
             while ($trys++ < 5) {
-                $data = Curl::getUrlContents($URL);
+                $data = Curl::getUrlContents($URL, "{\"rev_id\": $revid}");
                 if ($data === false) {
                     if ($trys == 5) {
                         throw new Exception("OresDraftTopicLister Problem reading $URL (" . Curl::$lastError . ")");
@@ -84,7 +82,7 @@ class OresDraftTopicLister
                     continue;
                 }
 
-                if (! isset($data['scores'])) {
+                if (! isset($data['enwiki'])) {
                     if ($trys == 5) {
                         Logger::log(print_r($data, true));
                         throw new Exception("OresDraftTopicLister scores not set for $URL");
@@ -96,13 +94,11 @@ class OresDraftTopicLister
                 break;
             }
 
-            $data = $data['scores']['enwiki']['drafttopic']['scores'];
+            $data = $data['enwiki']['scores']["$revid"]['drafttopic']['score'];
 
-            foreach ($revChunk as $revid => $title) {
-                if (isset($data[$revid]['probability'])) {
-                    $title = str_replace('_', ' ', $title);
-                    $scores[$title] = $data[$revid]['probability'];
-                }
+            if (isset($data['probability'])) {
+                $title = str_replace('_', ' ', $title);
+                $scores[$title] = $data['probability'];
             }
         }
 

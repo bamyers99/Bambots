@@ -27,15 +27,22 @@ class Curl
 	 * Get a urls contents.
 	 *
 	 * @param string $URL
+	 * @param mixed $post_data (optional) array key => value, string
 	 * @return mixed false = error, string = contents
 	 */
-	static public function getUrlContents($URL)
+	static public function getUrlContents($URL, $post_data = null)
 	{
 	    self::$lastError = '';
 	    $ch = curl_init();
 	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 	    curl_setopt($ch, CURLOPT_URL, $URL);
 	    curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+	    
+	    if (! empty($post_data)) {
+	        curl_setopt($ch, CURLOPT_POST, true);
+	        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+	    }
+	    
 	    $contents = curl_exec($ch);
 	    if ($contents === false) self::$lastError = curl_error($ch);
 	    self::$lastResponseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
