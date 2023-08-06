@@ -1163,6 +1163,8 @@ END;
 	 */
 	public function WikidataPropertyCounts($language)
 	{
+	    static $NOVALUE = 'Q19798647';
+	    
 	    $type_colors = [
 	        'WikibaseItem' => ['color' => '', 'abbrev' => 'WI'],
 	        'CommonsMedia' => ['color' => '#faebd7', 'abbrev' => 'CM'], // antiquewhite
@@ -1193,9 +1195,10 @@ END;
 	    ];
 	    
 	    $constraints = [
-	        'Q54828448' => ['abbrev' => 'M', 'page' => 'Template:Number_of_main_statements_by_property', 'counts' => []],
-	        'Q54828449' => ['abbrev' => 'Q', 'page' => 'Template:Number_of_qualifiers_by_property', 'counts' => []],
-	        'Q54828450' => ['abbrev' => 'R', 'page' => 'Template:Number_of_references_by_property', 'counts' => []]
+	        'Q54828448' => ['abbrev' => 'M', 'page' => 'Template:Number_of_main_statements_by_property', 'rdf' => 'http://www.wikidata.org/prop/', 'counts' => []],
+	        'Q54828449' => ['abbrev' => 'Q', 'page' => 'Template:Number_of_qualifiers_by_property', 'rdf' => 'http://www.wikidata.org/prop/qualifier/', 'counts' => []],
+	        'Q54828450' => ['abbrev' => 'R', 'page' => 'Template:Number_of_references_by_property', 'rdf' => 'http://www.wikidata.org/prop/reference/', 'counts' => []],
+	        $NOVALUE => ['abbrev' => 'N', 'page' => null, 'rdf' => 'http://www.wikidata.org/prop/novalue/', 'counts' => []]
 	    ];
 	    
 	    $wdwiki = new WikidataWiki();
@@ -1240,9 +1243,15 @@ END;
 	        return 0;
 	    });
 	        
-	        // Get the usage counts
+        // Get the usage counts
+        
+	    $rdfdata = Curl::getUrlContents('https://query.wikidata.org/sparql');
+	    
+	    if ($rdfdata === false || Curl::$lastResponseCode != 200) {
+	        echo "fallback to prop count pages\n";
 	        
 	        foreach ($constraints as &$constaint) {
+	            if (empty($constaint['page'])) continue;
 	            $counts = $wdwiki->getPage($constaint['page']);
 	            preg_match_all('!(\d+)\s*=\s*(\d+)!', $counts, $matches, PREG_SET_ORDER);
 	            
@@ -1252,80 +1261,92 @@ END;
 	        }
 	        
 	        unset($constaint);
+	    } else {
 	        
-	        $asof_date = getdate();
-	        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
-	        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyCounts.html';
-	        $hndl = fopen($path, 'wb');
-	        
-	        // Header
-	        fwrite($hndl, "<!DOCTYPE html>
-				<html><head>
-				<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-				<title>Wikidata property counts</title>
-				<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
-				</head><body>
-				<div style='display: table; margin: 0 auto;'>
-				<h1>Wikidata property counts</h1>
-				<h3>As of $asof_date</h3>
-				");
-	        
-	        // Body
-	        $typeref = '<ref>Datatype key: CM = CommonsMedia, EI = ExternalId, GC = GlobeCoordinate, GS = GeoShape, M = Math, MN = MusicalNotation, MT = Monolingualtext, Q = Quantity, S = String, T = Time, TD = TabularData, U = Url, WF = WikibaseForm, WI = WikibaseItem, WL = WikibaseLexeme, WP = WikibaseProperty, WS = WikibaseSense</ref>';
-	        $wikitext = "{{Languages|en=Wikidata:Database reports/List of properties/all}}\n";
-	        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|datatype}}$typeref\n! data-sort-type=\"number\" | Counts<ref>Count type key: M = Main value, Q = Qualifier, R = Reference</ref>\n";
-	        
-	        foreach ($props as $prop) {
-	            $propid = $prop['id'];
-	            $label = $prop['label'];
-	            $description = $prop['description'];
-	            $alias = $prop['alias'];
-	            $datatype = $prop['datatype'];
+	        foreach ($constraints as &$constaint) {
+	            preg_match_all("!{$constaint['rdf']}P(\d+).*?>(\d+)</triples>!s", $rdfdata, $matches, PREG_SET_ORDER);
 	            
-	            if (isset($type_colors[$datatype]) && ! empty($type_colors[$datatype]['color'])) $color = " style=\"background:{$type_colors[$datatype]['color']}\"";
-	            else $color = '';
-	            
-	            if (isset($type_colors[$datatype])) $datatype = $type_colors[$datatype]['abbrev'];
-	            
-	            $counts = [];
-	            
-	            foreach ($constraints as $qid => $constraint) {
-	                if ((! isset($prop['constraints']) || in_array($qid, $prop['constraints'])) && isset($constraint['counts'][$propid]) ) {
-	                    if ($constraint['counts'][$propid] != 0) $counts[$constraint['abbrev']] = $constraint['counts'][$propid];
-	                }
+	            foreach ($matches as $match) {
+	                $constaint['counts'][$match[1]] = $match[2];
 	            }
-	            
-	            arsort($counts, SORT_NUMERIC);
-	            
-	            foreach ($counts as $abbrev => &$count) {
-	                $count = number_format($count, 0) . ' ' . $abbrev;
-	            }
-	            
-	            unset($count);
-	            
-	            if (empty($counts)) {
-	                $counts[] = '0';
-	            }
-	            
-	            $wikitext .= "|-$color\n|[[P:P$propid|P$propid]]||$label||$description||$datatype||";
-	            
-	            $wikitext .= implode('<br />', $counts);
-	            $wikitext .= "\n";
 	        }
 	        
-	        // Footnotes
-	        $wikitext .= "|}\n\n{{reflist}}";
-	        
-	        $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Properties]]";
-	        
-	        fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
-	            '</textarea></form>');
-	        
-	        // Footer
-	        fwrite($hndl, '<br />Property count: ' . count($props));
-	        fwrite($hndl, '<br />Language: ' . $language);
-	        fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
-	        fclose($hndl);
+	        unset($constaint);
+	    }
+        
+        $asof_date = getdate();
+        $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
+        $path = Config::get(DatabaseReportBot::HTMLDIR) . 'drb' . DIRECTORY_SEPARATOR . 'WikidataPropertyCounts.html';
+        $hndl = fopen($path, 'wb');
+        
+        // Header
+        fwrite($hndl, "<!DOCTYPE html>
+			<html><head>
+			<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+			<title>Wikidata property counts</title>
+			<link rel='stylesheet' type='text/css' href='../css/cwb.css' />
+			</head><body>
+			<div style='display: table; margin: 0 auto;'>
+			<h1>Wikidata property counts</h1>
+			<h3>As of $asof_date</h3>
+			");
+        
+        // Body
+        $typeref = '<ref>Datatype key: CM = CommonsMedia, EI = ExternalId, GC = GlobeCoordinate, GS = GeoShape, M = Math, MN = MusicalNotation, MT = Monolingualtext, Q = Quantity, S = String, T = Time, TD = TabularData, U = Url, WF = WikibaseForm, WI = WikibaseItem, WL = WikibaseLexeme, WP = WikibaseProperty, WS = WikibaseSense</ref>';
+        $wikitext = "{{Languages|en=Wikidata:Database reports/List of properties/all}}\n";
+        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|datatype}}$typeref\n! data-sort-type=\"number\" | Counts<ref>Count type key: M = Main value, Q = Qualifier, R = Reference, N = Novalue</ref>\n";
+        
+        foreach ($props as $prop) {
+            $propid = $prop['id'];
+            $label = $prop['label'];
+            $description = $prop['description'];
+            $alias = $prop['alias'];
+            $datatype = $prop['datatype'];
+            
+            if (isset($type_colors[$datatype]) && ! empty($type_colors[$datatype]['color'])) $color = " style=\"background:{$type_colors[$datatype]['color']}\"";
+            else $color = '';
+            
+            if (isset($type_colors[$datatype])) $datatype = $type_colors[$datatype]['abbrev'];
+            
+            $counts = [];
+            
+            foreach ($constraints as $qid => $constraint) {
+                if (($qid == $NOVALUE || ! isset($prop['constraints']) || in_array($qid, $prop['constraints'])) && isset($constraint['counts'][$propid]) ) {
+                    if ($constraint['counts'][$propid] != 0) $counts[$constraint['abbrev']] = $constraint['counts'][$propid];
+                }
+            }
+            
+            arsort($counts, SORT_NUMERIC);
+            
+            foreach ($counts as $abbrev => &$count) {
+                $count = number_format($count, 0) . ' ' . $abbrev;
+            }
+            
+            unset($count);
+            
+            if (empty($counts)) {
+                $counts[] = '0';
+            }
+            
+            $wikitext .= "|-$color\n|[[P:P$propid|P$propid]]||$label||$description||$datatype||";
+            
+            $wikitext .= implode('<br />', $counts);
+            $wikitext .= "\n";
+        }
+        
+        // Footnotes
+        $wikitext .= "|}\n\n{{reflist}}";
+        
+        $wikitext .= "\n\n[[Category:Database reports]]\n[[Category:Properties]]";
+        
+        fwrite($hndl, '<form><textarea rows="40" cols="100" name="wikitable" id="wikitable">' . htmlspecialchars($wikitext) .
+            '</textarea></form>');
+        
+        // Footer
+        fwrite($hndl, '<br />Property count: ' . count($props));
+        fwrite($hndl, '<br />Language: ' . $language);
+        fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
+        fclose($hndl);
 	}
 	
 	/**
