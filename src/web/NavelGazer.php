@@ -313,6 +313,13 @@ function display_form($navels)
 		    echo "<b>Label, description, alias, sitelink additions for '{$params['langadd']}'";
 		    if (! empty($navels['property_label'])) echo ' (' . $navels['property_label'] . ')';
 		    echo "</b><br />\n";
+		    
+		    echo "Note: Totals only include edits that use the standard comment format. ie. Added [en] label: some label<br />\n";
+		    
+		    echo "Total count: " . intl_num_format($navels['createtotal']) . " Last month: " . intl_num_format($navels['monthtotal']) . "<br />\n";
+		    
+		    echo "Total user count: " . intl_num_format($navels['total_user_cnt']) . " Users last month: " . intl_num_format($navels['month_user_cnt']) . "<br />\n";
+		    
 		    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
 		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count (rank)</th><th>Last month (rank)</th><th>Property additions</th></tr></thead><tbody>\n";
@@ -354,6 +361,11 @@ function display_form($navels)
 	    echo "<b>Tool usage for '{$navels['property_label']}'</b>";
 	    if (! empty($navels['langdata'])) echo ' (' . htmlentities($navels['langdata']) . ')';
 	    echo "<br />\n";
+	    
+	    echo "Total count: " . intl_num_format($navels['createtotal']) . " Last month: " . intl_num_format($navels['monthtotal']) . "<br />\n";
+	    
+	    echo "Total user count: " . intl_num_format($navels['total_user_cnt']) . " Users last month: " . intl_num_format($navels['month_user_cnt']) . "<br />\n";
+	    
 	    if (count($navels['data']) == 100) echo "Top 100<br />\n";
 
 	    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count (rank)</th><th>Last month (rank)</th><th>Property additions</th></tr></thead><tbody>\n";
@@ -655,6 +667,25 @@ EOT;
             $prevcnt = $row[3];
         }
         unset($row);
+        
+        // Compute totals
+        
+        $sql = 'SELECT create_count, month_count ' .
+            ' FROM s51454__wikidata.navelgazerlang ' .
+            ' WHERE `language` = ?';
+        
+        $sth = $dbh_wiki->prepare($sql);
+        $sth->bindValue(1, $params['langadd']);
+        
+        $sth->execute();
+        
+        while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+            $createtotal += $row['create_count'];
+            $monthtotal += $row['month_count'];
+            ++$total_user_cnt;
+            if ($row['month_count'] > 0) ++$month_user_cnt;
+        }
+        
 
     } elseif ($params['toolid'] != '') {
         $toolid = (int)$params['toolid'];
@@ -725,6 +756,24 @@ EOT;
             $prevcnt = $row[3];
         }
         unset($row);
+        
+        // Compute totals
+        $sql = 'SELECT total_count, month_count ' .
+            ' FROM s51454__wikidata.navelgazertag ' .
+            ' WHERE `tag_id` = ?';
+        
+        $sth = $dbh_wiki->prepare($sql);
+        $sth->bindValue(1, $toolid);
+        
+        $sth->execute();
+        
+        while ($row = $sth->fetch(PDO::FETCH_NAMED)) {
+            $createtotal += $row['total_count'];
+            $monthtotal += $row['month_count'];
+            ++$total_user_cnt;
+            if ($row['month_count'] > 0) ++$month_user_cnt;
+        }
+        
     }
 
 	$return['data'] = $data;
