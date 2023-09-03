@@ -201,6 +201,26 @@ function display_form($navels)
 			        unset($navels['data'][$key]);
 			    }
 			}
+			
+			if (! empty($misc) || ! empty($navels['tooldata']) || ! empty($navels['langdata'])) {
+			    echo "<div class='toc'><center>Contents</center>";
+			    echo "<ul>";
+			    
+			    if (! empty($misc)) {
+			        echo "<li><a href='#otherdata'>Other actions</a></li>";
+			    }
+			    
+			    if (! empty($navels['tooldata'])) {
+			        echo "<li><a href='#tooldata'>Tool usage</a></li>";
+			    }
+			    
+			    if (! empty($navels['langdata'])) {
+			        echo "<li><a href='#langdata'>Label, description, alias, sitelink additions</a></li>";
+			    }
+			    
+			    echo "</ul>";
+			    echo "</div>";
+			}
 
 			echo "<h3>Property additions</h3>";
 			echo "<table class='wikitable tablesorter'><thead><tr><th>Property</th><th>Datatype</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
@@ -227,7 +247,7 @@ function display_form($navels)
 			echo "</table>\n";
 
 			if (! empty($misc)) {
-			    echo "<h3>Other actions</h3>";
+			    echo "<a name='otherdata'><h3>Other actions</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Action</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($misc as $row) {
@@ -241,7 +261,7 @@ function display_form($navels)
 			}
 
 			if (! empty($navels['tooldata'])) {
-			    echo '<h3>Tool usage</h3>';
+			    echo "<a name='tooldata'><h3>Tool usage</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Tool</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['tooldata'] as $row) {
@@ -254,7 +274,7 @@ function display_form($navels)
 			}
 
 			if (! empty($navels['langdata'])) {
-			    echo '<h3>Label, description, alias, sitelink additions</h3>';
+			    echo "<a name='langdata'><h3>Label, description, alias, sitelink additions</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Language</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['langdata'] as $row) {
