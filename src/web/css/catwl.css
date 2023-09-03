@@ -88,3 +88,10 @@ a.external {
 acronym, .ultooltip {
 	border-bottom: #000 1px dotted
 }
+
+.toc {
+	border: 1px solid #000;
+	background-color: #f9f9f9;
+	display: table;
+	padding-right: 5px;
+}
