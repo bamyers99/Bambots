@@ -327,6 +327,9 @@ class WikidataGadgetUsage
         // Get the user gadget active user counts
         $this->_getUserGadgetActiveUsers($dbh_wikidata, $gadgets);
         
+        // Get creation dates
+        $this->_getUserGadgetCreation($wdwiki, $gadgets);
+        
         // Sort by number of uses
         
         uasort($gadgets, function($a, $b) {
@@ -394,7 +397,11 @@ class WikidataGadgetUsage
 | tab alignment = center
 }}\n";
         
-        $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|gadget}}\n! {{I18n|description}}\n! {{I18n|enabled in}}\n! {{I18n|number of users}}\n! {{I18n|active users}}\n";
+        if ($host == 'wikidata') {
+            $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|gadget}}\n! {{I18n|description}}\n! {{I18n|enabled in}}\n! {{I18n|created}}\n! {{I18n|number of users}}\n! {{I18n|active users}}\n";
+        } else {
+            $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|gadget}}\n! {{I18n|description}}\n! {{I18n|enabled in}}\n! {{I18n|number of users}}\n! {{I18n|active users}}\n";
+        }
         
         foreach ($gadgets as $gadget => $data) {
             if ($host != 'all' && $host != $data['host']) continue;
@@ -438,7 +445,15 @@ class WikidataGadgetUsage
             
             if (empty($description)) $description = ' ';
             
-            $wikitext .= "|-\n||$gadgetfield||$description\n||$location|| style=\"text-align: right;\" |$numusers|| style=\"text-align: right;\" |$activeusers\n";
+            if ($host == 'wikidata') {
+                $created = ' ';
+                if (isset($data['created'])) $created = $data['created'];
+                
+                $wikitext .= "|-\n||$gadgetfield||$description\n||$location||$created|| style=\"text-align: right;\" |$numusers|| style=\"text-align: right;\" |$activeusers\n";
+            } else {
+                $wikitext .= "|-\n||$gadgetfield||$description\n||$location|| style=\"text-align: right;\" |$numusers|| style=\"text-align: right;\" |$activeusers\n";
+            }
+            
             ++$gadget_count[$data['host']];
         }
         
@@ -570,6 +585,30 @@ class WikidataGadgetUsage
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * Get wikidata gadget creation date
+     * 
+     * @param $wdwiki
+     * @param array $gadgets
+     */
+    function _getUserGadgetCreation($wdwiki, &$gadgets)
+    {
+        
+        foreach ($gadgets as $gadget => $data) {
+            if ($data['location'] != 'common.js' || $data['host'] != 'wikidata') continue;
+            
+            $params = [
+                'titles' => "User:$gadget.js",
+                'rvlimit' => 1,
+                'rvdir' => 'newer'
+            ];
+            
+            $ret = $wdwiki->getProp('revisions', $params);
+            
+            $gadgets[$gadgets]['created'] = substr($ret['query']['pages'][0]['revisions']['timestamp'], 0, 10);
         }
     }
 }
