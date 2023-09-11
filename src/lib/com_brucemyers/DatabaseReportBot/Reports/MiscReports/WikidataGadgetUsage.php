@@ -608,7 +608,7 @@ class WikidataGadgetUsage
             
             $ret = $wdwiki->getProp('revisions', $params);
             
-            $gadgets[$gadgets]['created'] = substr($ret['query']['pages'][0]['revisions']['timestamp'], 0, 10);
+            $gadgets[$gadget]['created'] = substr($ret['query']['pages'][0]['revisions']['timestamp'], 0, 10);
         }
     }
 }
