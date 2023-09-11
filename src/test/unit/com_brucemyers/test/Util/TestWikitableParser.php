@@ -18,10 +18,20 @@
 namespace com_brucemyers\test\Util;
 
 use com_brucemyers\Util\WikitableParser;
+use com_brucemyers\MediaWiki\WikidataWiki;
 use UnitTestCase;
 
 class TestWikitableParser extends UnitTestCase
 {
+    
+    public function testComplexTable()
+    {
+        $wdwiki = new WikidataWiki();
+        $config = $wdwiki->getPage('Wikidata:Database reports/Gadget usage statistics/Configuration');
+        
+        $configtable = WikitableParser::getTables($config)[0];
+        print_r($configtable);
+    }
 
     public function testGetTables()
     {

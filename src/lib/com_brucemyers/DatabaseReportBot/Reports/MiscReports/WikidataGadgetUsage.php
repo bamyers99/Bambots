@@ -341,19 +341,20 @@ class WikidataGadgetUsage
             return strcasecmp($a['name'], $b['name']);
         });
         
-        $this->_writePage('all', $gadgets);
-        $this->_writePage('wikidata', $gadgets);
-        $this->_writePage('meta', $gadgets);
-        $this->_writePage('enwiki', $gadgets);
+        $this->_writePage('all', $gadgets, $language);
+        $this->_writePage('wikidata', $gadgets, $language);
+        $this->_writePage('meta', $gadgets, $language);
+        $this->_writePage('enwiki', $gadgets, $language);
     }
 
     /**
      * Write host specific page.
      * 
-     * @param unknown $host
-     * @param unknown $gadgets
+     * @param string $host
+     * @param array $gadgets
+     * @param string $language
      */
-    function _writePage($host, $gadgets)
+    function _writePage($host, $gadgets, $language)
     {
         $asof_date = getdate();
         $asof_date = $asof_date['month'] . ' '. $asof_date['mday'] . ', ' . $asof_date['year'];
@@ -596,7 +597,6 @@ class WikidataGadgetUsage
      */
     function _getUserGadgetCreation($wdwiki, &$gadgets)
     {
-        
         foreach ($gadgets as $gadget => $data) {
             if ($data['location'] != 'common.js' || $data['host'] != 'wikidata') continue;
             
@@ -608,7 +608,9 @@ class WikidataGadgetUsage
             
             $ret = $wdwiki->getProp('revisions', $params);
             
-            $gadgets[$gadget]['created'] = substr($ret['query']['pages'][0]['revisions']['timestamp'], 0, 10);
+            $ret = reset($ret['query']['pages']);
+            
+            $gadgets[$gadget]['created'] = substr($ret['revisions'][0]['timestamp'], 0, 10);
         }
     }
 }
