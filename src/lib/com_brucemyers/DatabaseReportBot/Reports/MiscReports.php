@@ -1455,17 +1455,33 @@ EOT;
 	    ksort($props);
 	        
         // Get use counts
-        
-	    $usecounts = $wdwiki->getPage('Template:Number_of_main_statements_by_property');
-        preg_match_all('!(\d+)\s*=\s*(\d+)!', $usecounts, $matches, PREG_SET_ORDER);
-        
-        foreach ($matches as $match) {
-            $propid = $match[1];
+	    $rdfdata = Curl::getUrlContents('https://query.wikidata.org/sparql');
+	    
+	    if ($rdfdata === false || Curl::$lastResponseCode != 200) {
+	        echo "fallback to prop count pages\n";
+	        
+    	    $usecounts = $wdwiki->getPage('Template:Number_of_main_statements_by_property');
+            preg_match_all('!(\d+)\s*=\s*(\d+)!', $usecounts, $matches, PREG_SET_ORDER);
             
-            if (isset($props[$propid])) {
-                $props[$propid]['usecnt'] = $match[2];
+            foreach ($matches as $match) {
+                $propid = $match[1];
+                
+                if (isset($props[$propid])) {
+                    $props[$propid]['usecnt'] = $match[2];
+                }
             }
-        }
+	    } else {
+	        preg_match_all("!http://www.wikidata.org/prop/P(\d+).*?>(\d+)</triples>!s", $rdfdata, $matches, PREG_SET_ORDER);
+	        
+	        foreach ($matches as $match) {
+	            $propid = $match[1];
+	            
+	            if (isset($props[$propid])) {
+	                $props[$propid]['usecnt'] = $match[2];
+	            }
+	        }
+	        
+	    }
         
         // Get use dates
         
