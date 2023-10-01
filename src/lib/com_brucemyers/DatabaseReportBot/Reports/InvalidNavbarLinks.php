@@ -74,14 +74,6 @@ class InvalidNavbarLinks extends DatabaseReport
 				'exclude_templates' => []
 			],
 
-			'BS-map' => [
-				'children' => ['BS-map'],
-				'name_param' => 'navbar',
-				'exclude_empty' => ['title'],
-				'exclude_values' => [],
-				'exclude_templates' => ['Arbatsko-Pokrovskaya Line','Filyovskaya Line','Kalininskaya Line','Kaluzhsko-Rizhskaya Line']
-			],
-
 			'Election table' => [
 				'children' => ['Election table', 'Election Table', 'Electiontable'],
 				'name_param' => 1,

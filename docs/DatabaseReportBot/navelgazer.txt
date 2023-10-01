@@ -21,7 +21,7 @@ CREATE TABLE s51454__wikidata.`navelgazerlang` (
 CREATE TABLE s51454__wikidata.`navelgazertagdef` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `displayname` varchar(255) NOT NULL,
+  `displayname` varchar(255) NOT NULL charset utf8mb4,
   `description` varchar(2047) NOT NULL charset utf8mb4,
   `defcount` int(11) UNSIGNED NOT NULL,
   UNIQUE INDEX `tagdef_id` (`id`),
