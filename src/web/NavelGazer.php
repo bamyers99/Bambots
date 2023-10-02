@@ -247,7 +247,7 @@ function display_form($navels)
 			echo "</table>\n";
 
 			if (! empty($misc)) {
-			    echo "<a name='otherdata'><h3>Other actions</h3>";
+			    echo "<a name='otherdata' /><h3>Other actions</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Action</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($misc as $row) {
@@ -261,7 +261,7 @@ function display_form($navels)
 			}
 
 			if (! empty($navels['tooldata'])) {
-			    echo "<a name='tooldata'><h3>Tool usage</h3>";
+			    echo "<a name='tooldata' /><h3>Tool usage</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Tool</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['tooldata'] as $row) {
@@ -274,7 +274,7 @@ function display_form($navels)
 			}
 
 			if (! empty($navels['langdata'])) {
-			    echo "<a name='langdata'><h3>Label, description, alias, sitelink additions</h3>";
+			    echo "<a name='langdata' /><h3>Label, description, alias, sitelink additions</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Language</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['langdata'] as $row) {
