@@ -492,7 +492,11 @@ class Categories {
 					'type' => 'no-date',
 					'display' => 'Template call duplicate arguments'
 			],
-			'Pages with reference errors' => [ // Tracks subcats of Pages with citation errors
+	        'Pages with broken anchors' => [
+	                'type' => 'no-date',
+					'group' => 'Links'
+	        ],
+	        'Pages with reference errors' => [ // Tracks subcats of Pages with citation errors
 					'type' => 'no-date',
 					'group' => 'References',
 					'display' => 'Reference errors'
@@ -722,8 +726,10 @@ class Categories {
 		    $dbh_tools->beginTransaction();
 
 		    foreach ($members as $page) {
-		        if ($page['ns'] != 0) continue;
-		        $isth->execute([$page['title'], $catid]);
+		        if ($page['ns'] != 0 && $page['ns'] != 1) continue;
+		        $pagetitle = $page['title'];
+		        if ($page['ns'] == 1) $pagetitle = substr($pagetitle, 5);
+		        $isth->execute([$pagetitle, $catid]);
 		    }
 
 		    $dbh_tools->commit();

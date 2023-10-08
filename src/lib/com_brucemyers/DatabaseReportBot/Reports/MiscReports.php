@@ -1537,11 +1537,22 @@ EOT;
             $lastuse = isset($prop['lastuse']) ? $prop['lastuse'] : '';
             
             $pctcomplete = round(($usecnt / $sourcecnt) * 100, 3);
+            $decimalpos = strpos($pctcomplete, '.');
+            
+            if ($decimalpos !== false) {
+                list($wholepct, $fractionpct) = explode('.', $pctcomplete);
+                $paddingcnt = 3 - strlen($fractionpct);
+            } else {
+                $paddingcnt = 3;
+                $pctcomplete .= '&thinsp;';
+            }
+            
+            for (; $paddingcnt > 0; --$paddingcnt) $pctcomplete .= '&numsp;';
             
             $sourcecntfmt = number_format($sourcecnt, 0, '', '&thinsp;');
             $usecntfmt = number_format($usecnt, 0, '', '&thinsp;');
             
-            $wikitext .= "|-\n|[[P:P$propid|P$propid]]||$label||data-sort-value=\"$sourcecnt\"|$sourcecntfmt||data-sort-value=\"$usecnt\"|$usecntfmt||$pctcomplete||$pointintime||$expectedcomplete||$lastuse\n";
+            $wikitext .= "|-\n|[[P:P$propid|P$propid]]||$label||data-sort-value=\"$sourcecnt\" style=\"text-align: right;\" |$sourcecntfmt||data-sort-value=\"$usecnt\" style=\"text-align: right;\" |$usecntfmt||style=\"text-align: right;\" |$pctcomplete||$pointintime||$expectedcomplete||$lastuse\n";
         }
         
         // Footnotes
