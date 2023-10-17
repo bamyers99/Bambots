@@ -494,7 +494,8 @@ class Categories {
 			],
 	        'Pages with broken anchors' => [
 	                'type' => 'no-date',
-					'group' => 'Links'
+					'group' => 'Links',
+					'display' => 'Pages with broken anchors (see article talk page, remove when fixed)'
 	        ],
 	        'Pages with reference errors' => [ // Tracks subcats of Pages with citation errors
 					'type' => 'no-date',

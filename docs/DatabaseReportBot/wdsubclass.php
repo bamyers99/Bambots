@@ -22,11 +22,9 @@ define('PROP_INSTANCEOF', 'P31');
 define('PROP_ISLISTOF', 'P360');
 
 define('MIN_ORPHAN_DIRECT_INST_CNT', 5);
-define('DIRECT_INSTANCE_CNT', 'a');
+define('DIRECT_CHILD_INSTANCE_CNT', 'a');
 define('INDIRECT_INSTANCE_CHILD_CNT', 'b');
-define('DIRECT_CHILD_COUNT', 'c');
-define('ISLISTOF_COUNT', 'e');
-define('CLASS_FOUND', 'f');
+define('CLASS_FOUND_ISLISTOF_COUNT', 'e');
 define('PARENTS', 'p');
 
 DEFINE('MONTHLY_INCREMENT', 0x100000000);
@@ -41,7 +39,7 @@ $whndl = fopen('wdsubclassclasses.tsv', 'w');
 $hndl = fopen('php://stdin', 'r');
 
 while (! feof($hndl)) {
-	if (++$count % 100000 == 0) echo "Processed $count\n";
+	if (++$count % 1000000 == 0) echo "Processed $count\n";
 	$buffer = fgets($hndl);
 	if (empty($buffer)) continue;
 	$buffer = substr($buffer, 30); // /mediawiki/page/revision/text=
@@ -61,12 +59,12 @@ while (! feof($hndl)) {
 	    	$parentqid = (int)$parent['mainsnak']['datavalue']['value']['numeric-id'];
 
 	    	if (! isset($classes[$qid])) $classes[$qid] = init_class();
-	    	$classes[$qid][CLASS_FOUND] = true;
+	    	$classes[$qid][CLASS_FOUND_ISLISTOF_COUNT] = MONTHLY_INCREMENT;
 	    	$classes[$qid][PARENTS][] = $parentqid;
 
 	    	if (! isset($classes[$parentqid])) $classes[$parentqid] = init_class();
-	    	++$classes[$parentqid][DIRECT_CHILD_COUNT];
-	    	$classes[$parentqid][CLASS_FOUND] = true;
+	    	++$classes[$parentqid][DIRECT_CHILD_INSTANCE_CNT];
+	    	$classes[$parentqid][CLASS_FOUND_ISLISTOF_COUNT] = MONTHLY_INCREMENT;
 
 	    	fwrite($whndl, "$parentqid\t$qid\n");
 		}
@@ -78,7 +76,7 @@ while (! feof($hndl)) {
 			$instanceqid = (int)$instanceof['mainsnak']['datavalue']['value']['numeric-id'];
 
 			if (! isset($classes[$instanceqid])) $classes[$instanceqid] = init_class();
-			++$classes[$instanceqid][DIRECT_INSTANCE_CNT];
+			$classes[$instanceqid][DIRECT_CHILD_INSTANCE_CNT] += MONTHLY_INCREMENT;
 
 			processvalues($instanceqid, $data);
 		}
@@ -90,7 +88,7 @@ while (! feof($hndl)) {
 			$classqid = (int)$islistof['mainsnak']['datavalue']['value']['numeric-id'];
 
 	    	if (! isset($classes[$classqid])) $classes[$classqid] = init_class();
-	    	++$classes[$classqid][ISLISTOF_COUNT];
+	    	++$classes[$classqid][CLASS_FOUND_ISLISTOF_COUNT];
 		}
 	}
 }
@@ -105,9 +103,12 @@ fclose($whndl);
 $count = 0;
 
 foreach ($classes as $classqid => $class) {
-	if (++$count % 100000 == 0) echo "Processed $count\n";
-
-	if (! $class[CLASS_FOUND] && $class[DIRECT_INSTANCE_CNT] < MIN_ORPHAN_DIRECT_INST_CNT) {
+	if (++$count % 1000000 == 0) echo "Processed $count\n";
+	$directchildcnt = $class[DIRECT_CHILD_INSTANCE_CNT] & GRANDTOTAL_MASK;
+	$directinstancecnt = $class[DIRECT_CHILD_INSTANCE_CNT] >> 32;
+	$classfound = $class[CLASS_FOUND_ISLISTOF_COUNT] >> 32;
+	
+	if (! $classfound && $directinstancecnt < MIN_ORPHAN_DIRECT_INST_CNT) {
 		unset($classes[$classqid]); // No need to report because other report catches these.
 		continue;
 	}
@@ -118,8 +119,8 @@ foreach ($classes as $classqid => $class) {
 	}
 
 	foreach ($parents as $parentqid => $dummy) {
-	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += $class[DIRECT_CHILD_COUNT];
-	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += (MONTHLY_INCREMENT * $class[DIRECT_INSTANCE_CNT]);
+	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += $directchildcnt;
+	    $classes[$parentqid][INDIRECT_INSTANCE_CHILD_CNT] += (MONTHLY_INCREMENT * $directinstancecnt);
 	}
 }
 
@@ -130,8 +131,11 @@ foreach ($classes as $classqid => $class) {
     $isroot = count($class[PARENTS]) ? 'N' : 'Y';
     $indirectchild = $class[INDIRECT_INSTANCE_CHILD_CNT] & GRANDTOTAL_MASK;
     $indirectinstanceof = $class[INDIRECT_INSTANCE_CHILD_CNT] >> 32;
+    $directchildcnt = $class[DIRECT_CHILD_INSTANCE_CNT] & GRANDTOTAL_MASK;
+    $directinstancecnt = $class[DIRECT_CHILD_INSTANCE_CNT] >> 32;
+    $islistofcnt = $class[CLASS_FOUND_ISLISTOF_COUNT] & GRANDTOTAL_MASK;
     
-    fwrite($whndl, "$classqid\t$isroot\t{$class[DIRECT_CHILD_COUNT]}\t{$indirectchild}\t{$class[DIRECT_INSTANCE_CNT]}\t{$indirectinstanceof}\t{$class[ISLISTOF_COUNT]}\n");
+    fwrite($whndl, "$classqid\t$isroot\t$directchildcnt\t$indirectchild\t$directinstancecnt\t$indirectinstanceof\t$islistofcnt\n");
 }
 
 fclose($whndl);
@@ -187,8 +191,8 @@ function recurse_parents($parentqid, &$parents, $classes, $depth)
  */
 function init_class()
 {
-    return [DIRECT_CHILD_COUNT => 0,  INDIRECT_INSTANCE_CHILD_CNT => 0, PARENTS => [], DIRECT_INSTANCE_CNT => 0,
-	    ISLISTOF_COUNT => 0, CLASS_FOUND => false];
+    return [DIRECT_CHILD_INSTANCE_CNT => 0,  INDIRECT_INSTANCE_CHILD_CNT => 0, PARENTS => [],
+        CLASS_FOUND_ISLISTOF_COUNT => 0];
 }
 
 /**
