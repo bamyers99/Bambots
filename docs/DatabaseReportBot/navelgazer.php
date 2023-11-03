@@ -214,6 +214,7 @@ foreach ($edits as $username => $totals) {
         $key = substr($key, 1);
         $grandtotal = $total & GRANDTOTAL_MASK;
         $monthtotal = $total >> 32;
+        $username = str_replace('\\', '\\\\', $username);
         fwrite($hndl, "$username\t$key\t$grandtotal\t$monthtotal\n");
     }
 }
@@ -226,6 +227,7 @@ foreach ($langs as $lang => $totals) {
     foreach ($totals as $username => $total) {
         $grandtotal = $total & GRANDTOTAL_MASK;
         $monthtotal = $total >> 32;
+        $username = str_replace('\\', '\\\\', $username);
         fwrite($hndl, "$lang\t$username\t$grandtotal\t$monthtotal\n");
     }
 }
