@@ -50,6 +50,7 @@ CREATE TABLE s51454__wikidata.`navelgazerpropmeta` (
   `property_id` int(11) NOT NULL,
   `firstuse` varchar(10) NOT NULL,
   `lastuse` varchar(10) NOT NULL,
+  `grand_total` int(11) NOT NULL,
   KEY `property_id` (`property_id`)
 ) ENGINE=Aria DEFAULT CHARSET=utf8mb4
 

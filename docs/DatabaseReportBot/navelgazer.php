@@ -143,7 +143,7 @@ while (! feof($hndl)) {
 
 					$typevalue = $matches[1];
 					
-					if (! isset($propmeta[$typevalue])) $propmeta[$typevalue] = ['f' => '9999-99-99', 'l' => '0000-00-00'];
+					if (! isset($propmeta[$typevalue])) $propmeta[$typevalue] = ['f' => '9999-99-99', 'l' => '0000-00-00', 'uc' => 0];
 					if ($fulltimestamp < $propmeta[$typevalue]['f']) $propmeta[$typevalue]['f'] = $fulltimestamp;
 					if ($fulltimestamp > $propmeta[$typevalue]['l']) $propmeta[$typevalue]['l'] = $fulltimestamp;
 				}
@@ -234,10 +234,56 @@ foreach ($langs as $lang => $totals) {
 
 fclose($hndl);
 
+// Get use counts
+$ch = curl_init();
+
+curl_setopt($ch, CURLOPT_HEADER, 0);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_USERAGENT, 'Windows / Firefox 99: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:65.0) Gecko/20100101 Firefox/99.0');
+curl_setopt($ch, CURLOPT_URL, 'https://query.wikidata.org/sparql');
+
+$rdfdata = curl_exec($ch);
+
+$responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+if ($rdfdata === false || $responseCode != 200) {
+    echo "fallback to prop count pages\n";
+    
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Windows / Firefox 99: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:65.0) Gecko/20100101 Firefox/99.0');
+    curl_setopt($ch, CURLOPT_URL, 'https://www.wikidata.org/wiki/Template:Number_of_main_statements_by_property');
+    
+    $usecounts = curl_exec($ch);
+    
+    preg_match_all('!(\d+)\s*=\s*(\d+)!', $usecounts, $matches, PREG_SET_ORDER);
+    
+    foreach ($matches as $match) {
+        $propid = $match[1];
+        
+        if (isset($propmeta[$propid])) {
+            $propmeta[$propid]['uc'] = $match[2];
+        }
+    }
+} else {
+    preg_match_all("!http://www.wikidata.org/prop/P(\d+).*?>(\d+)</triples>!s", $rdfdata, $matches, PREG_SET_ORDER);
+    
+    foreach ($matches as $match) {
+        $propid = $match[1];
+        
+        if (isset($propmeta[$propid])) {
+            $propmeta[$propid]['uc'] = $match[2];
+        }
+    }
+    
+}
+
 $hndl = fopen('navelgazerpropmeta.tsv', 'w');
 
 foreach ($propmeta as $propid => $values) {
-        fwrite($hndl, "$propid\t{$values['f']}\t{$values['l']}\n");
+        fwrite($hndl, "$propid\t{$values['f']}\t{$values['l']}\t{$values['uc']}\n");
 }
 
 fclose($hndl);

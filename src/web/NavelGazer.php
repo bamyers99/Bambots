@@ -296,7 +296,25 @@ function display_form($navels)
 		        echo "Property: <a href='$url' class='external'>$term_text (P{$params['property']})</a><br />\n";
 		    }
 		    
-		    echo "Total count: " . intl_num_format($navels['createtotal']) . " Last month: " . intl_num_format($navels['monthtotal']) . "<br />\n";
+		    $grand_total = $navels['createtotal'];
+		    if (! empty($navels['propmeta'])) {
+		        $grand_total = $navels['propmeta']['grand_total'];
+		    }
+		    
+		    $unknown = $grand_total - $navels['createtotal'];
+		    if ($unknown > 0) {
+		        $navels['data'][] = ['unknown', $unknown, 0];
+		        
+		        usort($navels['data'], function ($a, $b) { //desc
+		            $at = (int)$a[1];
+		            $bt = (int)$b[1];
+		            if ($at < $bt) return 1;
+		            if ($at > $bt) return -1;
+		            return 0;
+		        });
+		    }
+		    
+		    echo "Total count: " . intl_num_format($grand_total) . " Last month: " . intl_num_format($navels['monthtotal']) . "<br />\n";
 		    
 		    echo "Total user count: " . intl_num_format($navels['total_user_cnt']) . " Users last month: " . intl_num_format($navels['month_user_cnt']) . "<br />\n";
 		    
@@ -304,13 +322,15 @@ function display_form($navels)
 		        echo "First use: " . $navels['propmeta']['firstuse'] . " Last use: " . $navels['propmeta']['lastuse'] . "<br />\n";
 		    }
 		    
-		    if (count($navels['data']) == 100) echo "Top 100<br />\n";
+		    if (count($navels['data']) >= 100) echo "Top 100<br />\n";
 
 		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 		    foreach ($navels['data'] as $row) {
 		        if (empty($row[0])) {
 		            $col1 = 'anonymous';
+		        } elseif ($row[0] == 'unknown') {
+		            $col1 = 'unknown';
 		        } else {
 		            $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
 		            $url = "/NavelGazer.php?username=" . urlencode($row[0]);
