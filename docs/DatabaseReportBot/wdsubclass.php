@@ -32,11 +32,35 @@ DEFINE('GRANDTOTAL_MASK', MONTHLY_INCREMENT - 1);
 
 $count = 0;
 $classes = [];
-$values = [];
-$valuecounts = [];
 
 $whndl = fopen('wdsubclassclasses.tsv', 'w');
 $hndl = fopen('php://stdin', 'r');
+$config = file_get_contents('../replica.my.cnf');
+preg_match("!password='([^']+)'!", $config, $matches);
+$pass = $matches[1];
+$dbh = new PDO("mysql:host=tools.db.svc.wikimedia.cloud;dbname=s51454__wikidata;charset=utf8mb4", 's51454', $pass);
+$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$dbh->exec('TRUNCATE tempscvalcnt');
+$dbh->exec('TRUNCATE tempscvalscnt');
+$dbh->exec('TRUNCATE tempscvals');
+
+$sql = 'INSERT INTO tempscvalcnt VALUES (?,1) ON DUPLICATE KEY UPDATE valcount = valcount + 1';
+$sth_tempscvalcnt_upsert = $dbh->prepare($sql);
+
+$sql = 'INSERT INTO tempscvalscnt (ckey,valcount) VALUES (?,?) ON DUPLICATE KEY UPDATE valcount = VALUE(valcount)';
+$sth_tempscvalscnt_upsert = $dbh->prepare($sql);
+
+$sql = 'SELECT valcount FROM tempscvalscnt WHERE ckey = ?';
+$sth_tempscvalscnt_query = $dbh->prepare($sql);
+
+$sql = 'SELECT count(*) FROM tempscvals WHERE ckey = ?';
+$sth_tempscvals_query = $dbh->prepare($sql);
+
+$sql = 'DELETE FROM tempscvals WHERE ckey = ?';
+$sth_tempscvals_delete = $dbh->prepare($sql);
+
+$sql = 'INSERT INTO tempscvals VALUES (?,?,1) ON DUPLICATE KEY UPDATE valcount = valcount + 1';
+$sth_tempscvals_upsert = $dbh->prepare($sql);
 
 while (! feof($hndl)) {
 	if (++$count % 1000000 == 0) echo "Processed $count\n";
@@ -143,24 +167,50 @@ fclose($whndl);
 // Write value counts
 $whndl = fopen('wdsubclassvalues.tsv', 'w');
 
-foreach ($values as $key => $valuevalues) {
-    list($classqid, $pid, $qualpid) = explode('-', $key);
+$sql = 'SELECT * FROM tempscvalscnt';
+$sth = $dbh->query($sql);
+$sth->setFetchMode(PDO::FETCH_NUM);
 
-    if ($valuevalues === false) { // > 50 values
+$sql = 'SELECT valueid, valcount FROM tempscvals WHERE ckey = ?';
+$sth2 = $dbh->prepare($sql);
+
+while ($row = $sth->fetch()) {
+    $key = $row[0];
+    $count = $row[1];
+    list($classqid, $pid, $qualpid) = explode('-', $key);
+    
+    if ($count > 50) {
         fwrite($whndl, "$classqid\t$pid\t$qualpid\t0\t0\n");
     } else {
-        foreach ($valuevalues as $vkey => $count) {
+        $sth2->bindParam(1, $key);
+        $sth2->execute();
+        $sth2->setFetchMode(PDO::FETCH_NUM);
+        
+        while ($row2 = $sth2->fetch()) {
+            $vkey = $row2[0];
+            $count = $row2[1];
             fwrite($whndl, "$classqid\t$pid\t$qualpid\t$vkey\t$count\n");
         }
     }
 }
 
-foreach ($valuecounts as $key => $count) {
+$sql = 'SELECT * FROM tempscvalcnt';
+$sth = $dbh->query($sql);
+$sth->setFetchMode(PDO::FETCH_NUM);
+
+while ($row = $sth->fetch()) {
+    $key = $row[0];
+    $count = $row[1];
     list($classqid, $pid, $qualpid) = explode('-', $key);
     if ($count > 9) fwrite($whndl, "$classqid\t$pid\t$qualpid\tC\t$count\n");
 }
 
 fclose($whndl);
+
+$dbh->exec('TRUNCATE tempscvalcnt');
+$dbh->exec('TRUNCATE tempscvalscnt');
+$dbh->exec('TRUNCATE tempscvals');
+
 echo "Finished\n";
 
 /**
@@ -203,15 +253,18 @@ function init_class()
  */
 function processvalues($classqid, $data)
 {
-    global $values, $valuecounts;
+    global $sth_tempscvalcnt_upsert, $sth_tempscvalscnt_query, $sth_tempscvalscnt_upsert, $sth_tempscvals_upsert,
+        $sth_tempscvals_query, $sth_tempscvals_delete;
+    
+    return;
 
     foreach ($data['claims'] as $pid => $claims) {
         if ($pid == PROP_INSTANCEOF || $pid == PROP_SUBCLASSOF) continue;
         $pid = substr($pid, 1);
 
         $ckey = "$classqid-$pid-0";
-        if (! isset($valuecounts[$ckey])) $valuecounts[$ckey] = 0;
-        ++$valuecounts[$ckey];
+        $sth_tempscvalcnt_upsert->bindParam(1, $ckey);
+        $sth_tempscvalcnt_upsert->execute();
 
         foreach ($claims as $claim) {
             $mainsnak = $claim['mainsnak'];
@@ -219,12 +272,35 @@ function processvalues($classqid, $data)
             if ($mainsnak['snaktype'] == 'value' && $mainsnak['datavalue']['type'] == 'wikibase-entityid' && $mainsnak['datavalue']['value']['entity-type'] == 'item') {
                 $valueid = $mainsnak['datavalue']['value']['numeric-id'];
 
-                if (! isset($values[$ckey])) $values[$ckey] = [$valueid => 0];
-
-                if ($values[$ckey] !== false) {
-                    if (! isset($values[$ckey][$valueid])) $values[$ckey][$valueid] = 0;
-                    if (count($values[$ckey]) == 50) $values[$ckey] = false; // limit to 50
-                    else ++$values[$ckey][$valueid];
+                $valcount = 0;
+                $sth_tempscvalscnt_query->bindParam(1, $ckey);
+                $sth_tempscvalscnt_query->execute();
+                
+                if ($row = $sth_tempscvalscnt_query->fetch(PDO::FETCH_NUM)) {
+                    $valcount = $row[0];
+                }
+                
+                if ($valcount <= 50) {
+                    $sth_tempscvals_upsert->bindParam(1, $ckey);
+                    $sth_tempscvals_upsert->bindParam(2, $valueid);
+                    $sth_tempscvals_upsert->execute();
+                    
+                    $sth_tempscvals_query->bindParam(1, $ckey);
+                    $sth_tempscvals_query->execute();
+                    $row = $sth_tempscvals_query->fetch(PDO::FETCH_NUM);
+                    
+                    $valcount2 = $row[0];
+                    
+                    if ($valcount2 != $valcount) {
+                        $sth_tempscvalscnt_upsert->bindParam(1, $ckey);
+                        $sth_tempscvalscnt_upsert->bindParam(2, $valcount2);
+                        $sth_tempscvalscnt_upsert->execute();
+                        
+                        if ($valcount2 == 51) {
+                            $sth_tempscvals_delete->bindParam(1, $ckey);
+                            $sth_tempscvals_delete->execute();
+                        }
+                    }
                 }
             }
 
@@ -233,24 +309,47 @@ function processvalues($classqid, $data)
                     $qualpid = substr($qualpid, 1);
 
                     $qkey = "$classqid-$pid-$qualpid";
-                    if (! isset($valuecounts[$qkey])) $valuecounts[$qkey] = 0;
-                    ++$valuecounts[$qkey];
+                    $sth_tempscvalcnt_upsert->bindParam(1, $qkey);
+                    $sth_tempscvalcnt_upsert->execute();
 
                     foreach ($qualifiers as $qualifier) {
                         if ($qualifier['snaktype'] != 'value' || $qualifier['datavalue']['type'] != 'wikibase-entityid' ||
                             $qualifier['datavalue']['value']['entity-type'] != 'item') continue;
                         $valueid = $qualifier['datavalue']['value']['numeric-id'];
 
-                        if (! isset($values[$qkey])) $values[$qkey] = [$valueid => 0];
-
-                        if ($values[$qkey] !== false) {
-                            if (! isset($values[$qkey][$valueid])) $values[$qkey][$valueid] = 0;
-                            if (count($values[$qkey]) == 50) $values[$qkey] = false; // limit to 50
-                            else ++$values[$qkey][$valueid];
+                        $valcount = 0;
+                        $sth_tempscvalscnt_query->bindParam(1, $qkey);
+                        $sth_tempscvalscnt_query->execute();
+                        
+                        if ($row = $sth_tempscvalscnt_query->fetch(PDO::FETCH_NUM)) {
+                            $valcount = $row[0];
+                        }
+                        
+                        if ($valcount <= 50) {
+                            $sth_tempscvals_upsert->bindParam(1, $qkey);
+                            $sth_tempscvals_upsert->bindParam(2, $valueid);
+                            $sth_tempscvals_upsert->execute();
+                            
+                            $sth_tempscvals_query->bindParam(1, $qkey);
+                            $sth_tempscvals_query->execute();
+                            $row = $sth_tempscvals_query->fetch(PDO::FETCH_NUM);
+                            
+                            $valcount2 = $row[0];
+                            
+                            if ($valcount2 != $valcount) {
+                                $sth_tempscvalscnt_upsert->bindParam(1, $qkey);
+                                $sth_tempscvalscnt_upsert->bindParam(2, $valcount2);
+                                $sth_tempscvalscnt_upsert->execute();
+                                
+                                if ($valcount2 == 51) {
+                                    $sth_tempscvals_delete->bindParam(1, $qkey);
+                                    $sth_tempscvals_delete->execute();
+                                }
+                            }
                         }
                     }
                 }
-            }
+            } // qualifiers
         }
     }
 }
