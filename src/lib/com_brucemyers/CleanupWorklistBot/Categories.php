@@ -377,12 +377,17 @@ class Categories {
 					'group' => 'Content',
 					'display' => 'Style editing needed'
 			],
-			'Wikipedia articles that are too technical' => [
-					'type' => 'from-monthly',
-					'group' => 'Clarity',
-					'display' => 'Too technical'
-			],
-			'Wikipedia articles with plot summary needing attention' => [
+	        'Wikipedia articles that are too technical' => [
+	                'type' => 'from-monthly',
+	                'group' => 'Clarity',
+	                'display' => 'Too technical'
+	        ],
+	        'Wikipedia articles that may have off-topic sections' => [
+	                'type' => 'from-monthly',
+	                'group' => 'Content',
+	                'display' => 'Off-topic sections'
+	        ],
+	        'Wikipedia articles with plot summary needing attention' => [
 					'type' => 'from-monthly',
 					'group' => 'Content',
 					'display' => 'Plot summary needs attention'
