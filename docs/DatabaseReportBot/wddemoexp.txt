@@ -1,0 +1,37 @@
+
+CREATE TABLE s51454__wikidata.`deex_human` (
+  `qid` int(11) unsigned NOT NULL,
+  `gender` TINYINT,
+  `birth_decade` SMALLINT,
+  `age` TINYINT unsigned,
+  PRIMARY KEY (`qid`),
+) ENGINE=Aria DEFAULT CHARSET=utf8
+
+CREATE TABLE s51454__wikidata.`deex_human_property` (
+  `qid` int(11) unsigned NOT NULL,
+  `type` TINYINT NOT NULL,
+  `value` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`qid`, `type`, `value`),
+) ENGINE=Aria DEFAULT CHARSET=utf8
+
+CREATE TABLE s51454__wikidata.`deex_property` (
+  `type` TINYINT NOT NULL,
+  `parent` int(11) unsigned NOT NULL,
+  `value` int(11) unsigned NOT NULL,
+  KEY `qidpid` (`type`, `value`, `parent`)
+) ENGINE=Aria DEFAULT CHARSET=utf8
+
+sql tools
+TRUNCATE s51454__wikidata.subclassclasses;
+LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassclasses.tsv' INTO TABLE s51454__wikidata.subclassclasses CHARACTER SET binary;
+
+TRUNCATE s51454__wikidata.subclassvalues;
+LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclassvalues.tsv' INTO TABLE s51454__wikidata.subclassvalues CHARACTER SET binary;
+
+TRUNCATE s51454__wikidata.subclasstotals;
+LOAD DATA LOCAL INFILE '/data/project/bambots/Bambots/data/wdsubclasstotals.tsv' INTO TABLE s51454__wikidata.subclasstotals CHARACTER SET binary;
+SELECT COUNT(*) FROM s51454__wikidata.subclasstotals WHERE root = 'Y';
+INSERT INTO s51454__wikidata.subclasstotals VALUES (0,'N',5000,100,2018,0101,0); class_count,root_cnt,year,month/day
+
+cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
+rm *
