@@ -50,6 +50,8 @@ Bamyers99.CoordGlobe = {
 		'Q6604': 'charon',
 		'Q844672': 'churyumov',
 		'Q7548': 'deimos',
+		'Q2265762': 'didymos',
+		'Q25387442': 'dimorphos',
 		'Q15040': 'dione',
 		'Q2': 'earth',
 		'Q3303': 'enceladus',
