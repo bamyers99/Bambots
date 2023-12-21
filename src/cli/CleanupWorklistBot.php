@@ -66,7 +66,12 @@ try {
 		    case 'skipCatLoad':
 		    	$skipCatLoad = true;
 		    	break;
-
+		    	
+		    case 'calcStats':
+		        calcStats();
+		        exit;
+		        break;
+		        
 		    default:
 		    	echo 'Unknown action = ' . $action;
 				exit;
@@ -168,35 +173,48 @@ function calcMemberCatType($wiki)
     $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
     $dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $user, $pass);
     $dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+    
     $data = $wiki->getpage('User:CleanupWorklistBot/Master');
     $masterconfig = new MasterRuleConfig($data);
-
+    
     $projects = [];
-
+    
     foreach ($masterconfig->ruleConfig as $wikiproject => $category) {
         $project = $wikiproject;
         if (strpos($wikiproject, 'WikiProject_') === 0) {
             $project = substr($project, 12);
         }
-
+        
         if (empty($category)) $category = $project;
-
+        
         $projects[$wikiproject] = $category;
     }
-
+    
     $results = $dbh_tools->query('SELECT `name` FROM project');
-
+    
     while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
         $project = $row['name'];
-
+        
         if (isset($projects[$project])) {
             $member_cat_type = _test_category($wiki, $projects[$project]);
-
+            
             $sth = $dbh_tools->prepare("UPDATE project SET member_cat_type = ? WHERE `name` = ?");
             $sth->execute([$member_cat_type, $project]);
         }
     }
+}
+
+
+/**
+ * Write the wikipedia stats page
+ */
+function calcStats()
+{
+    $tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
+    $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+    $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+    
+    CleanupWorklistBot::writeWikiStats($tools_host, $user, $pass);
 }
 
 /**
