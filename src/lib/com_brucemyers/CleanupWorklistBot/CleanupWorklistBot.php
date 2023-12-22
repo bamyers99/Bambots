@@ -203,8 +203,6 @@ class CleanupWorklistBot
     {
         $wikitext = '';
         
-        $resultwriter = new WikiResultWriter($wiki);
-
     	$dbh_tools = new PDO("mysql:host=$tools_host;dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $user, $pass);
     	$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $results = $dbh_tools->query('SELECT * FROM `project` WHERE wiki_too_big = 1 ORDER BY `name`');
@@ -238,6 +236,7 @@ class CleanupWorklistBot
         $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
         $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
         $wiki->login($username, $password);
+        $resultwriter = new WikiResultWriter($wiki);
         
         $resultwriter->writeResults($pagename, $wikitext, $comment);
     }
