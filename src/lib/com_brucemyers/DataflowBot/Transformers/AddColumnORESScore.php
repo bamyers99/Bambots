@@ -114,17 +114,15 @@ class AddColumnORESScore extends AddColumn
 	public function process(FlowReader $reader, FlowWriter $writer)
 	{
 		$firstrow = true;
-		$firstrow2 = true;
 		$column = (int)$this->paramValues['lookupcol'] - 1;
 		if ($column < 0) return "Invalid Article name column # {$this->paramValues['lookupcol']}";
 		$curl = $this->serviceMgr->getCurl();
 		$wiki = $this->paramValues['wiki'];
-		$model = $this->paramValues['model'];
-		$max_records = 100;
+		$max_records = 1;
 
 		while ($rows = $reader->readRecords($max_records)) {
-			$revids = array();
-
+		    $revid = false;
+		    
 			// Gather the pagenames
 			foreach ($rows as $key => $row) {
 				if ($firstrow) {
@@ -138,16 +136,18 @@ class AddColumnORESScore extends AddColumn
 
 				if ($column >= count($row)) return "Invalid Article name column # {$this->paramValues['lookupcol']}";
 
-				$revids[] = $row[$column];
+				$revid = $row[$column];
 			}
+			
+			if ($revid === false) continue;
 
-			$URL = "https://ores.wikimedia.org/v2/scores/$wiki/$model/?revids=" . implode('|', $revids);
+			$URL = "https://api.wikimedia.org/service/lw/inference/v1/models/$wiki-articlequality:predict";
 			//Logger::log($URL);
 
 			$trys = 0;
 
 			while ($trys++ < 5) {
-				$data = $curl::getUrlContents($URL);
+			    $data = $curl::getUrlContents($URL, "{\"rev_id\": $revid}");
 				if ($data === false) {
 					if ($trys == 5) return "Problem reading $URL (" . Curl::$lastError . ")";
 					sleep($trys * 60);
@@ -162,10 +162,10 @@ class AddColumnORESScore extends AddColumn
 					continue;
 				}
 
-				if (! isset($data['scores'])) {
+				if (! isset($data[$wiki])) {
 					if ($trys == 5) {
 						Logger::log(print_r($data, true));
-						return "scores not set for $URL";
+						return "$wiki not set for $URL";
 					}
 					sleep($trys * 60);
 					continue;
@@ -177,17 +177,10 @@ class AddColumnORESScore extends AddColumn
 			// Process each page
 
 			foreach ($rows as $key => $row) {
-				if ($firstrow2) {
-					$firstrow2 = false;
-					if ($this->isFirstRowHeaders()) {
-						continue;
-					}
-				}
-
-				if (! isset($data['scores'][$wiki][$model]['scores'][$row[$column]]['prediction'])) {
+				if (! isset($data[$wiki]['scores'][$revid]['articlequality']['score']['prediction'])) {
 					$value = 'GA';
 				} else {
-					$value = $data['scores'][$wiki][$model]['scores'][$row[$column]]['prediction'];
+				    $value = $data[$wiki]['scores'][$revid]['articlequality']['score']['prediction'];
 				}
 
 				$retval = $this->insertColumn($rows[$key], $value);
