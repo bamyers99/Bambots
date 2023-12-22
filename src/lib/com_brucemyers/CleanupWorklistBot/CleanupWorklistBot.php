@@ -202,11 +202,6 @@ class CleanupWorklistBot
     static public function writeWikiStats($tools_host, $user, $pass)
     {
         $wikitext = '';
-        $url = Config::get(MediaWiki::WIKIURLKEY);
-        $wiki = new MediaWiki($url);
-        $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
-        $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
-        $wiki->login($username, $password);
         
         $resultwriter = new WikiResultWriter($wiki);
 
@@ -235,8 +230,14 @@ class CleanupWorklistBot
         	$wikitext .= $line;
         }
         
-        $pagename = 'User:CleanupWorklistBot/Stats';
+        $pagename = 'User:DataflowBot/CleanupStats';
         $comment = 'Project count: ' . count($results);
+        
+        $url = Config::get(MediaWiki::WIKIURLKEY);
+        $wiki = new MediaWiki($url);
+        $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+        $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+        $wiki->login($username, $password);
         
         $resultwriter->writeResults($pagename, $wikitext, $comment);
     }
