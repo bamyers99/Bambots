@@ -139,7 +139,10 @@ class AddColumnORESScore extends AddColumn
 				$revid = $row[$column];
 			}
 			
-			if ($revid === false) continue;
+			if ($revid === false) {
+			    $writer->writeRecords($rows);
+			    continue;
+			}
 
 			$URL = "https://api.wikimedia.org/service/lw/inference/v1/models/$wiki-articlequality:predict";
 			//Logger::log($URL);
