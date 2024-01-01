@@ -26,6 +26,7 @@ use com_brucemyers\Util\CommonRegex;
 use com_brucemyers\Util\ShellExec;
 use com_brucemyers\Util\TemplateParamParser;
 use com_brucemyers\Util\Config;
+use com_brucemyers\Util\Logger;
 use PDO;
 
 class WikidataGadgetUsage
@@ -94,10 +95,15 @@ class WikidataGadgetUsage
         
         $text = Curl::getUrlContents('https://www.wikidata.org/wiki/Special:GadgetUsage');
         
-        // <tr><td>AuthorityControl</td><td data-sort-value="Infinity">Default</td><td data-sort-value="Infinity">Default</td></tr>
-        // <tr><td>labelLister</td><td>3,921</td><td>1,056</td></tr>
+        // <tr><td><a href="/wiki/Special:Gadgets#gadget-AuthorityControl" title="Special:Gadgets">AuthorityControl</a></td><td data-sort-value="Infinity">Default</td><td data-sort-value="Infinity">Default</td></tr>
+        // <tr><td><a href="/wiki/Special:Gadgets#gadget-labelLister" title="Special:Gadgets">labelLister</a></td><td>5,236</td><td>1,276</td></tr><tr>
         
-        preg_match_all('!<tr><td>([^<]+?)</td><td[^>]*?>([^<]+?)</td><td[^>]*?>([^<]+?)</td></tr>!u', $text, $matches, PREG_SET_ORDER);
+        preg_match_all('!<tr><td><a[^>]+?>([^<]+?)</a></td><td[^>]*?>([^<]+?)</td><td[^>]*?>([^<]+?)</td></tr>!u', $text, $matches, PREG_SET_ORDER);
+        
+        if (count($matches) == 0) {
+            Logger::log('Special:GadgetUsage not parsed');
+            exit;
+        }
         
         foreach ($matches as $match) {
             $gadget = str_replace('_', ' ', $match[1]);
