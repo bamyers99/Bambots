@@ -32,12 +32,6 @@ $GLOBALS['botname'] = 'CleanupWorklistBot';
 require $clidir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
     $activerules = array(
-    	"SGpedians'_notice_board" => 'Singapore',
-    	'WikiProject_Beer/Pub_Taskforce' => 'Pubs',
-    	'WikiProject_Biophysics' => '',
-        'WikiProject_Michigan' => '',
-    	'WikiProject_Physics' => 'physics',
-    	'WikiProject_Protected_areas' => ''
         );
 
 try {
@@ -90,7 +84,7 @@ try {
         $parts = explode('=>', Config::get(CleanupWorklistBot::CUSTOMRULE), 2);
         $key = str_replace(' ', '_', trim($parts[0]));
         $value = (count($parts) > 1) ? str_replace(' ', '_', trim($parts[1])) : '';
-    	$rules = [$key => $value];
+        $rules = [$key => ['category' => $value, 'member_cat_type' => 0, 'assessment_project' => '']];
     }
     else {
         $data = $wiki->getpage('User:CleanupWorklistBot/Master');

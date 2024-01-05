@@ -66,7 +66,7 @@ class CleanupWorklistBot
             $member_cat_type = (int)$row['member_cat_type'];
 
             if (isset($ruleconfigs[$project])) {
-                $ruleconfigs[$project] = ['category' => $ruleconfigs[$project], 'member_cat_type' => $member_cat_type];
+                $ruleconfigs[$project]['member_cat_type'] = $member_cat_type;
             }
         }
 
@@ -93,13 +93,9 @@ class CleanupWorklistBot
         // Generate each projects reports.
 
         foreach ($ruleconfigs as $project => $attribs) {
-            if (is_array($attribs)) {
-                $category = $attribs['category'];
-                $member_cat_type = $attribs['member_cat_type'];
-            } else {
-                $category = $attribs;
-                $member_cat_type = 0;
-            }
+            $category = $attribs['category'];
+            $member_cat_type = $attribs['member_cat_type'];
+            $assessment_project = $attribs['assessment_project'];
 
         	if (! empty($startProject) && $project != $startProject) continue;
             $startProject = '';
@@ -114,13 +110,18 @@ class CleanupWorklistBot
         	if (empty($category)) $category = $project;
 
         	try {
-        	    $page_count = $project_pages->load($category, $member_cat_type, $project);
+        	    list($page_count, $assessment_count) = $project_pages->load($category, $member_cat_type, $project, $assessment_project);
 
 	        	if ($page_count < 10 && $project != 'Bhubaneswar') {
 	        		$errorrulsets[] = $project . ' (< 10 pages in project)';
 	        		Logger::log($project . ' (< 10 pages in project)');
 	        		Config::set(self::CURRENTPROJECT, '', true);
 	        		continue;
+	        	}
+	        	
+	        	if ($assessment_count == 0) {
+	        	    $errorrulsets[] = $project . ' (assessments not found)';
+	        	    Logger::log($project . ' (assessments not found)');
 	        	}
 
 	        	$repgen->generateReports($project, $isWikiProject, $page_count, $member_cat_type);

@@ -46,19 +46,19 @@ class TestProjectPages extends UnitTestCase
     	$project_pages = new ProjectPages($mediawiki, $user, $pass, $tools_host);
 
     	$category = 'Michigan';
-    	$page_count = $project_pages->load($category, 0);
+    	list($page_count, $assessment_count) = $project_pages->load($category, 0, $category, '');
     	$this->assertEqual($page_count, 4, "Wrong page count for $category $page_count != 4");
 
     	$category = 'India';
-    	$page_count = $project_pages->load($category, 1);
+    	list($page_count, $assessment_count) = $project_pages->load($category, 1, $category, '');
     	$this->assertEqual($page_count, 1, "Wrong page count for $category $page_count != 1");
 
     	$category = 'Good_article_nominees';
-    	$page_count = $project_pages->load($category, 2);
+    	list($page_count, $assessment_count) = $project_pages->load($category, 2, $categoryv);
     	$this->assertEqual($page_count, 1, "Wrong page count for $category $page_count != 1");
 
     	$category = 'Featured articles';
-    	$page_count = $project_pages->load($category, 3);
+    	list($page_count, $assessment_count) = $project_pages->load($category, 3, $category, '');
     	$this->assertEqual($page_count, 2, "Wrong page count for $category $page_count != 2");
     }
 }

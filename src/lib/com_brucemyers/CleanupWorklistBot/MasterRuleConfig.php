@@ -33,13 +33,23 @@ class MasterRuleConfig
         $data = preg_replace(RuleSet::WIKI_TEMPLATE_REGEX, '', $data);
         $data = preg_replace(CommonRegex::CATEGORY_REGEX, '', $data);
         $lines = preg_split('/\\r?\\n/', $data);
+        
         foreach ($lines as $line) {
             $line = trim($line);
             if (empty($line)) continue;
             $parts = explode('=>', $line, 2);
             $key = str_replace(' ', '_', trim($parts[0]));
             $value = (count($parts) > 1) ? str_replace(' ', '_', trim($parts[1])) : '';
-            $this->ruleConfig[$key] = $value;
+            
+            $parts = explode('@=', $key, 2);
+            $key = trim($parts[0]);
+            $assessment_project = (count($parts) > 1) ? trim($parts[1]) : '';
+            
+            $parts = explode('@=', $value, 2);
+            $value = trim($parts[0]);
+            $assessment_project = (count($parts) > 1) ? trim($parts[1]) : $assessment_project;
+            
+            $this->ruleConfig[$key] = ['category' => $value, 'member_cat_type' => 0, 'assessment_project' => $assessment_project];
         }
     }
 }

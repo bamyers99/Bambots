@@ -118,6 +118,19 @@ function cat_test($project, $category_override)
 			$category_override = $test_category;
     	}
     }
+    
+    // Check assessment project
+    $mediawiki = new MediaWiki('https://en.wikipedia.org/w/api.php');
+    
+    $ret = $mediawiki->getList('projectpages', [
+        'wppprojects' => str_replace('_', ' ', $project),
+        'wpplimit' => 1
+    ]);
+    
+    $assessment_project_found = true;
+    
+    if (! isset($ret['query']) || ! isset($ret['query']['projects']) || empty($ret['query']['projects'])) $assessment_project_found = false;
+    
 
     $output = '';
 
@@ -130,6 +143,8 @@ function cat_test($project, $category_override)
 		$project_members = htmlspecialchars($result['project_members']);
 		$output .= "Project articles category: <a href='https://en.wikipedia.org/wiki/Category:$project_cat'>$project_members</a><br />";
 		$output .= 'Project member category type: ' . $result['member_cat_type'] . '<br />';
+		
+		if (! $assessment_project_found) $output .= 'Assessment information (class, importance) not found, contact bot admin for assistance.<br />';
 	} else {
 		$output .= 'Project articles category: <span style="font-style: italic;">Not found</span><br />';
 	}

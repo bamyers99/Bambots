@@ -60,11 +60,13 @@ class ProjectPages
      * @return int Pages loaded
      * @throws Exception
      */
-    public function load($category, $member_cat_type, $project)
+    public function load($category, $member_cat_type, $project, $assessment_project)
     {
     	$category = str_replace('_', ' ', $category);
     	$project = str_replace('_', ' ', $project);
-
+    	$assessment_project = str_replace('_', ' ', $assessment_project);
+    	if (empty($assessment_project)) $assessment_project = $project;
+    	
     	// Load the pages
     	$dbh_tools = new PDO("mysql:host={$this->tools_host};dbname=s51454__CleanupWorklistBot;charset=utf8mb4", $this->user, $this->pass);
    		$dbh_tools->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -110,6 +112,7 @@ class ProjectPages
     	}
     	
     	$assessments_loaded = false;
+    	$assessment_count = 0;
     	
     	// If < 10 pages found, use WikiProject assessements
     	if ($page_count < 10) {
@@ -119,11 +122,12 @@ class ProjectPages
     	    $continue = '';
     	    
     	    while ($continue !== false) {
-    	        $members = $this->getAssessmentChunk($project, $continue);
+    	        $members = $this->getAssessmentChunk($assessment_project, $continue);
     	        $dbh_tools->beginTransaction();
     	        
     	        foreach ($members as $attribs) {
     	            ++$page_count;
+    	            ++$assessment_count;
     	            $isth->execute([$attribs['pt'], $attribs['i'], $attribs['c']]);
     	        }
     	        
@@ -147,10 +151,11 @@ class ProjectPages
     	else $continue = '';
 
     	while ($continue !== false) {
-    	    $members = $this->getAssessmentChunk($project, $continue);
+    	    $members = $this->getAssessmentChunk($assessment_project, $continue);
     	    $dbh_tools->beginTransaction();
 
     	    foreach ($members as $attribs) {
+    	        ++$assessment_count;
      	        $isth->execute([$attribs['c'], $attribs['i'], $attribs['pt']]);
     	    }
 
@@ -159,7 +164,7 @@ class ProjectPages
 
     	$dbh_tools = null;
 
-    	return $page_count;
+    	return [$page_count, $assessment_count];
     }
 
     /**
