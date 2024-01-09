@@ -38,8 +38,8 @@ class MasterRuleConfig
             $line = trim($line);
             if (empty($line)) continue;
             $parts = explode('=>', $line, 2);
-            $key = str_replace(' ', '_', trim($parts[0]));
-            $value = (count($parts) > 1) ? str_replace(' ', '_', trim($parts[1])) : '';
+            $key = trim($parts[0]);
+            $value = (count($parts) > 1) ? trim($parts[1]) : '';
             
             $parts = explode('@=', $key, 2);
             $key = trim($parts[0]);
@@ -48,6 +48,9 @@ class MasterRuleConfig
             $parts = explode('@=', $value, 2);
             $value = trim($parts[0]);
             $assessment_project = (count($parts) > 1) ? trim($parts[1]) : $assessment_project;
+            
+            $key = str_replace(' ', '_', $key);
+            $value = str_replace(' ', '_', $value);
             
             $this->ruleConfig[$key] = ['category' => $value, 'member_cat_type' => 0, 'assessment_project' => $assessment_project];
         }

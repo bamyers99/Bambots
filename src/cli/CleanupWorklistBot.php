@@ -82,9 +82,21 @@ try {
     if ($ruletype == 'active') $rules = $activerules;
     elseif ($ruletype == 'custom') {
         $parts = explode('=>', Config::get(CleanupWorklistBot::CUSTOMRULE), 2);
-        $key = str_replace(' ', '_', trim($parts[0]));
-        $value = (count($parts) > 1) ? str_replace(' ', '_', trim($parts[1])) : '';
-        $rules = [$key => ['category' => $value, 'member_cat_type' => 0, 'assessment_project' => '']];
+        $key = trim($parts[0]);
+        $value = (count($parts) > 1) ? trim($parts[1]) : '';
+        
+        $parts = explode('@=', $key, 2);
+        $key = trim($parts[0]);
+        $assessment_project = (count($parts) > 1) ? trim($parts[1]) : '';
+        
+        $parts = explode('@=', $value, 2);
+        $value = trim($parts[0]);
+        $assessment_project = (count($parts) > 1) ? trim($parts[1]) : $assessment_project;
+        
+        $key = str_replace(' ', '_', $key);
+        $value = str_replace(' ', '_', $value);
+        
+        $rules = [$key => ['category' => $value, 'member_cat_type' => 0, 'assessment_project' => $assessment_project]];
     }
     else {
         $data = $wiki->getpage('User:CleanupWorklistBot/Master');
