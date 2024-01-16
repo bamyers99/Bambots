@@ -33,6 +33,9 @@ ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
+echo 'This tool has been retired.';
+exit;
+
 $uihelper = new UIHelper();
 $params = array();
 
