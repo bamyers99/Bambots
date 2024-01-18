@@ -256,6 +256,7 @@ class CategoryLinksDiff
 		$sortedrevs = array();
 
 		foreach ($revisions as $pagename => $rev) {
+		    $pagename = (string)$pagename;
 			$nsname = MediaWiki::getNamespaceName($pagename);
 			$ns = (string)$rev[0];
 			array_shift($rev);
