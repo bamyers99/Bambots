@@ -537,7 +537,8 @@ function get_navels()
     				$pid = $item->getId();
     				$pid = substr($pid, 1);
     				$property_label = $item->getLabelDescription('label', $params['lang']);
-
+    				$property_label = preg_replace('/(\x{200e}|\x{200f})/u', '', $property_label); // strip ltr marker
+    				
     				if (! empty($property_label)) $data[$pid][3] = $property_label;
     				$data[$pid][4] = $item->getDatatype();
     			}
