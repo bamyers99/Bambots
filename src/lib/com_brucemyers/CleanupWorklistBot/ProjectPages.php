@@ -115,7 +115,7 @@ class ProjectPages
     	$assessment_count = 0;
     	
     	// If < 10 pages found, use WikiProject assessements
-    	if ($page_count < 10) {
+    	if ($page_count < 10 && $assessment_project != 'None') {
     	    $dbh_tools->exec('TRUNCATE page');
     	    $page_count = 0;
     	    $assessments_loaded = true;
@@ -147,7 +147,7 @@ class ProjectPages
     	// Get article assessments
     	$isth = $dbh_tools->prepare('UPDATE IGNORE page SET class = ?, importance = ? WHERE page_title = ?');
     	
-    	if ($assessments_loaded) $continue = false;
+    	if ($assessments_loaded || $assessment_project == 'None') $continue = false;
     	else $continue = '';
 
     	while ($continue !== false) {

@@ -112,14 +112,14 @@ class CleanupWorklistBot
         	try {
         	    list($page_count, $assessment_count) = $project_pages->load($category, $member_cat_type, $project, $assessment_project);
 
-	        	if ($page_count < 10 && $project != 'Bhubaneswar') {
+	        	if ($page_count < 10) {
 	        		$errorrulsets[] = $project . ' (< 10 pages in project)';
 	        		Logger::log($project . ' (< 10 pages in project)');
 	        		Config::set(self::CURRENTPROJECT, '', true);
 	        		continue;
 	        	}
 	        	
-	        	if ($assessment_count == 0) {
+	        	if ($assessment_count == 0 && $assessment_project != 'None') {
 	        	    $errorrulsets[] = $project . ' (assessments not found)';
 	        	    Logger::log($project . ' (assessments not found)');
 	        	}
