@@ -247,42 +247,67 @@ function display_form($navels)
 			echo "</table>\n";
 
 			if (! empty($misc)) {
+			    $propaddcnttot = 0;
+			    $propaddcntmth = 0;
+			    
 			    echo "<h3 id='otherdata'>Other actions</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Action</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($misc as $row) {
+			        $propaddcnttot += $row[1];
+			        $propaddcntmth += $row[2];
 			        $url = "/NavelGazer.php?property=P" . $row[0];
 			        $term_text = $edit_types[$row[0]];
 			        echo "<tr><td><a href='$url'>$term_text (P{$row[0]})</a></td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 			        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 			    }
 
-			    echo "</tbody></table>\n";
+			    echo "</tbody>\n";
+			    echo "<tfoot><tr><td>Total</td><td style='text-align:right'>" . intl_num_format($propaddcnttot) .
+			    "</td><td style='text-align:right'>" . intl_num_format($propaddcntmth) . "</td></tr></tfoot>\n";
+			    echo "</table>\n";
 			}
 
 			if (! empty($navels['tooldata'])) {
+			    $propaddcnttot = 0;
+			    $propaddcntmth = 0;
+			    
 			    echo "<h3 id='tooldata'>Tool usage</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Tool</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['tooldata'] as $row) {
+			        $propaddcnttot += $row[2];
+			        $propaddcntmth += $row[3];
 			        $url = "/NavelGazer.php?toolid=" . $row[0];
 			        echo "<tr><td><a href='$url'>{$row[1]}</a></td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) .
 			        "</td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) . "</td></tr>\n";
 			    }
 
-			    echo "</tbody></table>\n";
+			    echo "</tbody>\n";
+			    echo "<tfoot><tr><td>Total</td><td style='text-align:right'>" . intl_num_format($propaddcnttot) .
+			    "</td><td style='text-align:right'>" . intl_num_format($propaddcntmth) . "</td></tr></tfoot>\n";
+			    echo "</table>\n";
 			}
 
 			if (! empty($navels['langdata'])) {
+			    $propaddcnttot = 0;
+			    $propaddcntmth = 0;
+			    
 			    echo "<h3 id='langdata'>Label, description, alias, sitelink additions</h3>";
 			    echo "<table class='wikitable tablesorter'><thead><tr><th>Language</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
 			    foreach ($navels['langdata'] as $row) {
+			        $propaddcnttot += $row[1];
+			        $propaddcntmth += $row[2];
+			        
 			        echo "<tr><td>{$row[0]}</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) .
 			        "</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) . "</td></tr>\n";
 			    }
 
-			    echo "</tbody></table>\n";
+			    echo "</tbody>\n";
+			    echo "<tfoot><tr><td>Total</td><td style='text-align:right'>" . intl_num_format($propaddcnttot) .
+			    "</td><td style='text-align:right'>" . intl_num_format($propaddcntmth) . "</td></tr></tfoot>\n";
+			    echo "</table>\n";
 			}
 
 		} elseif (! empty($params['property'])) {
