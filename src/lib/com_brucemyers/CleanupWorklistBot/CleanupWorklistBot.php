@@ -145,7 +145,7 @@ class CleanupWorklistBot
 		$totaltime .= $restarted;
 
         $this->_writeHtmlStatus(count($ruleconfigs), $totaltime, $errorrulsets, $asof_date, $outputdir);
-        CleanupWorklistBot::writeWikiStats($tools_host, $user, $pass);
+        if (count($ruleconfigs) > 100) CleanupWorklistBot::writeWikiStats($tools_host, $user, $pass);
 
         $this->_backupHistory($tools_host, $user, $pass, $errorrulsets);
     }
@@ -220,6 +220,9 @@ class CleanupWorklistBot
         	$sth->execute([$project]);
         	
         	$histrow = $sth->fetch(PDO::FETCH_ASSOC);
+        	
+        	if ($histrow === false) continue;
+        	
         	$project_pages = $histrow['total_articles'];
         	$cleanup_pages = $histrow['cleanup_articles'];
         	$issue_count = $histrow['issues'];

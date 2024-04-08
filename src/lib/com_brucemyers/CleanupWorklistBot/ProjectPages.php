@@ -91,6 +91,7 @@ class ProjectPages
     	} elseif ($member_cat_type == 4) {
     	    $categories = [];
     	    $this->traverseCats($categories, $category, 10);
+    	    $categories = array_keys($categories);
     	} else {
     	    $categories = [$category];
     	}
@@ -275,7 +276,7 @@ class ProjectPages
         
         foreach ($searchcats as $cat) {
             if (isset($foundcats[$cat])) continue;
-            if (count($foundcats) >= 500) return;
+            if (count($foundcats) >= 2000) return;
             $foundcats[$cat] = true;
             if ($depth) $nextcats[] = $cat;
         }
