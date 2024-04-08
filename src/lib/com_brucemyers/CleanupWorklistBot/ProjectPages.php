@@ -88,6 +88,9 @@ class ProjectPages
     	            $categories[] = $catinfo['title'];
     	        }
     	    }
+    	} elseif ($member_cat_type == 4) {
+    	    $categories = [];
+    	    $this->traverseCats($categories, $category, 10);
     	} else {
     	    $categories = [$category];
     	}
@@ -191,6 +194,7 @@ class ProjectPages
 
             case 2: // x (talk namespace)
             case 3: // x (article namespace)
+            case 4: // traverse subcats (article namespace)
                 $params['cmtitle'] = "Category:$category";
                 break;
         }
@@ -212,7 +216,8 @@ class ProjectPages
                 }
                 break;
 
-            case 3:// x (article namespace)
+            case 3: // x (article namespace)
+            case 4: // traverse subcats (article namespace)
                 foreach ($ret['query']['categorymembers'] as $page) {
                     if ($page['ns'] != 0) continue;
                     $result[] = $page['title'];
@@ -253,4 +258,48 @@ class ProjectPages
 
         return $result;
     }
+    
+    
+    /**
+     * Traverse a category tree
+     *
+     * @param array $foundcats in/out
+     * @param mixed $searchcats
+     * @param int $depth
+     */
+    function traverseCats(&$foundcats, $searchcats, $depth)
+    {
+        if (! is_array($searchcats)) $searchcats = (array)$searchcats;
+        
+        $nextcats = [];
+        
+        foreach ($searchcats as $cat) {
+            if (isset($foundcats[$cat])) continue;
+            if (count($foundcats) >= 500) return;
+            $foundcats[$cat] = true;
+            if ($depth) $nextcats[] = $cat;
+        }
+        
+        if (! count($nextcats)) return;
+        
+        
+        $subcats = [];
+        
+        foreach ($nextcats as $nextcat) {
+            $ret = $this->mediawiki->getList('categorymembers', ['cmtitle' => "Category:$nextcat", 'cmtype' => 'subcat', 'cmlimit' => '500']);
+            
+            if (isset($ret['query']['categorymembers'])) {
+                foreach ($ret['query']['categorymembers'] as $cm) {
+                    $cat = substr($cm['title'], 9);
+                    if (isset($foundcats[$cat])) continue;
+                    $subcats[] = $cat;
+                }
+            }
+        }
+        
+        if (! count($subcats)) return;
+        
+        $this->traverseCats($foundcats, $subcats, $depth - 1);
+    }
+    
 }
