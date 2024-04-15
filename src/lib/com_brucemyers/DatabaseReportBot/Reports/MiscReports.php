@@ -1205,7 +1205,7 @@ END;
 	    
 	    // Get the property list
 	    
-	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20%3FpropLabel%20%3FpropDescription%20%3FpropAltLabel%20(STRAFTER(STR(%3FpropertyType)%2C%20'%23')%20AS%20%3Ftype)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%0A%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cen\"%0A%20%20}%0A}%0A";
+	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20%3FpropLabel%20%3FpropDescription%20(STRAFTER(STR(%3FpropertyType)%2C%20'%23')%20AS%20%3Ftype)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%0A%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cen\"%0A%20%20}%0A}%0A";
 	    
 	    $sparql = new WikidataSPARQL();
 	    
@@ -1220,10 +1220,9 @@ END;
 	        
 	        $label = isset($row['propLabel']['value']) ? $row['propLabel']['value'] : '';
 	        $description = isset($row['propDescription']['value']) ? $row['propDescription']['value'] : '';
-	        $alias = isset($row['propAltLabel']['value']) ? $row['propAltLabel']['value'] : '';
 	        $datatype = $row['type']['value'];
 	        
-	        $props[$propid] = ['id' => $propid, 'label' => $label, 'description' => $description, 'alias' => $alias, 'datatype' => $datatype];
+	        $props[$propid] = ['id' => $propid, 'label' => $label, 'description' => $description, 'datatype' => $datatype];
 	    }
 	    
 	    // Get the scope constraints
@@ -1300,7 +1299,6 @@ END;
             $propid = $prop['id'];
             $label = $prop['label'];
             $description = $prop['description'];
-            $alias = $prop['alias'];
             $datatype = $prop['datatype'];
             
             if (isset($type_colors[$datatype]) && ! empty($type_colors[$datatype]['color'])) $color = " style=\"background:{$type_colors[$datatype]['color']}\"";
