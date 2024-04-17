@@ -193,15 +193,16 @@ class InceptionBot
         $this->_dropRedirects($mediawiki, $updatedpages);
         Logger::log('Updated page count w/o redirects = ' . count($updatedpages));
 
-        $lister = new OresDraftTopicLister($mediawiki);
-        try {
-            $oresscores = $lister->getScores(array_merge($newestpages, $updatedpages));
-            Logger::log('Ores scores = ' . count($oresscores));
-        } catch (Exception $e) {
-            Logger::log('OresDraftTopicLister error, continuing. Error = ' . $e->getMessage());
-            $oresscores = [];
-        }
-
+//         $lister = new OresDraftTopicLister($mediawiki);
+//         try {
+//             $oresscores = $lister->getScores(array_merge($newestpages, $updatedpages));
+//             Logger::log('Ores scores = ' . count($oresscores));
+//         } catch (Exception $e) {
+//             Logger::log('OresDraftTopicLister error, continuing. Error = ' . $e->getMessage());
+//             $oresscores = [];
+//         }
+        $oresscores = [];
+        
         // relogin - credentials may have expired
         $mediawiki->login(null, null);
 
