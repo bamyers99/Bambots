@@ -27,7 +27,7 @@ case $1 in
 		shift 3
 		
 		JOBNAME="${JOBNAME1}-launch"
-		COMMAND="php $SCRIPT_DIR/ksub.php $JOBNAME1 $COMMAND1 $@"
+		COMMAND="php $SCRIPT_DIR/ksub.php $JOBNAME1 \"$COMMAND1\" $@"
 		set -- --cpu 250m
 		;;
 		
