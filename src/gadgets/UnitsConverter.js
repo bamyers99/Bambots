@@ -43,6 +43,12 @@ Bamyers99.UnitsConverter = {
 		'Q48013': [{'mult':28.34952, 'unit': 'Q41803'}], // ounce -> gram
 		'Q11570': [{'mult':2.204622, 'unit': 'Q100995'}], // kilogram -> pound
 		'Q100995': [{'mult':0.453592, 'unit': 'Q11570'}], // pound -> kilogram
+		'Q469356': [{'mult':0.892857, 'unit': 'Q667419'}, // short ton -> long ton
+		           {'mult':0.90718474, 'unit': 'Q191118'}], // short ton -> tonne
+		'Q667419': [{'mult':1.12, 'unit': 'Q469356'}, // long ton -> short ton
+		           {'mult':1.0160469088, 'unit': 'Q191118'}], // long ton -> tonne
+		'Q191118': [{'mult':1.102311311, 'unit': 'Q469356'}, // tonne -> short ton
+		           {'mult':0.9842065276, 'unit': 'Q667419'}], // tonne -> long ton
 		// dimensions
 		'Q174789': [{'mult':0.03937, 'unit': 'Q218593'}], // millimeter -> inch
 		'Q174728': [{'mult':0.3937, 'unit': 'Q218593'}], // centimetre -> inch
