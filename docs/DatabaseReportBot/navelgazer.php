@@ -124,6 +124,8 @@ while (! feof($hndl)) {
 	    $username = false;
 	} elseif (preg_match('!^/contributor/@deleted!', $buffer)) {
 	    $username = false;
+	} elseif (preg_match('!^/contributor/username=~2!', $buffer)) { // temporary user
+	    $username = false;
 	} elseif (preg_match('!^/contributor/username=([^\n]+)!', $buffer, $matches)) {
 		$username = $matches[1];
 	} elseif (preg_match('!^/timestamp=(\d{4}-\d{2})(-\d{2})!', $buffer, $matches)) {
