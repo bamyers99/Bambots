@@ -322,7 +322,7 @@ Bamyers99.UnitsConverter = {
 					if (fromCurUnit != toCurUnit && currencies[toCurUnit].rates[fromYear]) {
 						val = hit.amount / fromRate * currencies[toCurUnit].rates[fromYear];
 						val = Math.round(val);
-						val = mw.language.commafy( val, '#,##0' );
+						val = mw.language.convertNumber( val );
 						
 						h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
 						if ( hit.pity ) h += ' approximate (' + fromYear + ')';
@@ -338,7 +338,7 @@ Bamyers99.UnitsConverter = {
 					
 					if (! isNaN(val)) {
 					    val = Math.round(val);
-					    val = mw.language.commafy( val, '#,##0' );
+					    val = mw.language.convertNumber( val );
 					
 					    h += '<br />(' + val + ' <span class="wb-unit">' + self.gc.htmlEncode( toLabel ) + '</span>';
 					    if ( hit.pity ) h += ' approximate (' + toYear + ')';
