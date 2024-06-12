@@ -20,6 +20,7 @@ use com_brucemyers\TemplateParamBot\TemplateParamConfig;
 use com_brucemyers\Util\HttpUtil;
 use com_brucemyers\Util\L10N;
 use com_brucemyers\Util\CommonRegex;
+use com_brucemyers\Util\Logger;
 
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
@@ -44,6 +45,9 @@ switch ($action) {
 	case 'getLoadStatus':
 		getLoadStatus();
 		exit;
+		
+	case 'rejectbot':
+	    exit;
 }
 
 // Redirect to get the results so have a bookmarkable url
@@ -94,6 +98,16 @@ function display_form()
 				ei.html(value);
 				$('#expanderbody' + id).toggle();
 			}
+
+			$( document ).ready(function() {
+				$( 'a[data-payload]' ).click( function() {
+					var todo = $( this ).attr( 'href' );
+					var payload = $( this ).attr( 'data-payload' );
+					payload = payload.replace('rejectbot', todo);
+					window.location = payload;
+					return false;
+				} );
+			});
 		</script>
 	</head>
 	<body>
@@ -109,15 +123,9 @@ function display_form()
 			echo "<option value='$wikiname'$selected>$wikititle</option>";
 		}
         ?></select></td></tr>
-        <tr><td><b><?php echo htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') ?></b> <input name='template' id='testfield1' type='text' size='30' value='<?php echo htmlentities($params['template'], ENT_COMPAT, 'UTF-8') ?>' /></td></tr>
+        <tr><td><b><?php echo htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') ?></b> <input autofocus name='template' id='testfield1' type='text' size='30' value='<?php echo htmlentities($params['template'], ENT_COMPAT, 'UTF-8') ?>' /></td></tr>
         <tr><td><input type="submit" value="<?php echo htmlentities($l10n->get('submit', true), ENT_COMPAT, 'UTF-8') ?>" /></td></tr>
         </table></form>
-
-        <script type="text/javascript">
-            if (document.getElementById) {
-                document.getElementById('testfield1').focus();
-            }
-        </script>
     <?php
 	$asof = $wikis[$params['wiki']]['lastdumpdate'];
 	echo '<div>' . htmlentities($l10n->get('asofdate', true), ENT_COMPAT, 'UTF-8') . ' ' . substr($asof, 0, 4) . "-" . substr($asof, 4, 2) .
@@ -349,23 +357,23 @@ EOT;
 		$parmpageslink = '';
 		if ($pagelinks) {
 		    if (! $isexcluded || $validparamname[0] != 'Y') {
-				$extra = "TemplateParam.php?action=paramlinks&wiki=" . urlencode($params['wiki']) .
+				$extra = "TemplateParam.php?action=rejectbot&wiki=" . urlencode($params['wiki']) .
 					"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
-				$parmpageslink .= " <a href='$protocol://$host$uri/$extra'>(" .
+				$parmpageslink .= " <a href='paramlinks' data-payload='$protocol://$host$uri/$extra'>(" .
 					str_replace(' ', '&nbsp;', htmlentities($l10n->get('pagelinks'), ENT_COMPAT, 'UTF-8')) . ")</a>";
 			}
 
 			if ($missinglink) {
-				$extra = "TemplateParam.php?action=missing&wiki=" . urlencode($params['wiki']) .
+				$extra = "TemplateParam.php?action=rejectbot&wiki=" . urlencode($params['wiki']) .
 				"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
-				$parmpageslink .= " <a href='$protocol://$host$uri/$extra'>(" .
+				$parmpageslink .= " <a href='missing' data-payload='$protocol://$host$uri/$extra'>(" .
 				str_replace(' ', '&nbsp;', htmlentities($l10n->get('missing'), ENT_COMPAT, 'UTF-8')) . ")</a>";
 			}
 
 			if ($errorslink) {
-				$extra = "TemplateParam.php?action=errors&wiki=" . urlencode($params['wiki']) .
+				$extra = "TemplateParam.php?action=rejectbot&wiki=" . urlencode($params['wiki']) .
 					"&template=" . urlencode($tmplname) . "&param=" . urlencode($param['param_name']);
-				$parmpageslink .= " <a href='$protocol://$host$uri/$extra'>(" .
+				$parmpageslink .= " <a href='errors' data-payload='$protocol://$host$uri/$extra'>(" .
 					str_replace(' ', '&nbsp;', htmlentities($l10n->get('errors'), ENT_COMPAT, 'UTF-8')) . ")</a>";
 			}
 		}
@@ -394,10 +402,10 @@ EOT;
 
 				$valuepageslink = '';
 				if ($pagelinks && ! $isexcluded) {
-					$extra = 'TemplateParam.php?action=valuelinks&wiki=' . urlencode($params['wiki']) .
+					$extra = 'TemplateParam.php?action=rejectbot&wiki=' . urlencode($params['wiki']) .
 						'&template=' . urlencode($tmplname) . '&param=' . urlencode($param['param_name']).
 						'&value=' . urlencode($uniques[$x]);
-					$valuepageslink = " <a href='$protocol://$host$uri/$extra'>(page&nbsp;links)</a>";
+					$valuepageslink = " <a href='valuelinks' data-payload='$protocol://$host$uri/$extra'>(page&nbsp;links)</a>";
 				}
 
 				$uniquedata .= "$val&nbsp;&nbsp;$count$valuepageslink<br />";
@@ -429,9 +437,9 @@ EOT;
 	echo '</tbody></table>';
 	echo '<div>' . htmlentities($l10n->get('validnamekey', true), ENT_COMPAT, 'UTF-8') . '</div>';
 
-	$extra = "TemplateParam.php?action=invalidlinks&wiki=" . urlencode($params['wiki']) .
+	$extra = "TemplateParam.php?action=rejectbot&wiki=" . urlencode($params['wiki']) .
 		"&template=" . urlencode($tmplname);
-	$parmpageslink = "<a href='$protocol://$host$uri/$extra'>" .
+	$parmpageslink = "<a href='invalidlinks' data-payload='$protocol://$host$uri/$extra'>" .
 		str_replace(' ', '&nbsp;', htmlentities('Invalid parameter page list', ENT_COMPAT, 'UTF-8')) . "</a>";
 	echo "<div>$parmpageslink</div>";
 
