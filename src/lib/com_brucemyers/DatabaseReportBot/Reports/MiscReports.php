@@ -1182,7 +1182,8 @@ END;
 	        'WikibaseProperty' => ['color' => '', 'abbrev' => 'WP'],
 	        'TabularData' => ['color' => '', 'abbrev' => 'TD'],
 	        'GlobeCoordinate' => ['color' => 'lavender', 'abbrev' => 'GC'],
-	        'WikibaseForm' => ['color' => '', 'abbrev' => 'WF']
+	        'WikibaseForm' => ['color' => '', 'abbrev' => 'WF'],
+	        'EntitySchema' => ['color' => '', 'abbrev' => 'ES']
 	    ];
 	    
 	    $deleted = [
@@ -1291,7 +1292,7 @@ END;
 			");
         
         // Body
-        $typeref = '<ref>Datatype key: CM = CommonsMedia, EI = ExternalId, GC = GlobeCoordinate, GS = GeoShape, M = Math, MN = MusicalNotation, MT = Monolingualtext, Q = Quantity, S = String, T = Time, TD = TabularData, U = Url, WF = WikibaseForm, WI = WikibaseItem, WL = WikibaseLexeme, WP = WikibaseProperty, WS = WikibaseSense</ref>';
+        $typeref = '<ref>Datatype key: CM = CommonsMedia, EI = ExternalId, ES = EntitySchema, GC = GlobeCoordinate, GS = GeoShape, M = Math, MN = MusicalNotation, MT = Monolingualtext, Q = Quantity, S = String, T = Time, TD = TabularData, U = Url, WF = WikibaseForm, WI = WikibaseItem, WL = WikibaseLexeme, WP = WikibaseProperty, WS = WikibaseSense</ref>';
         $wikitext = "{{Languages|en=Wikidata:Database reports/List of properties/all}}\n";
         $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! ID\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|datatype}}$typeref\n! data-sort-type=\"number\" | Counts<ref>Count type key: M = Main value, Q = Qualifier, R = Reference, N = Novalue</ref>\n";
         
