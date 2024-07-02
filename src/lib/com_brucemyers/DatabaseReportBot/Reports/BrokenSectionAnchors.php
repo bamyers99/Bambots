@@ -135,7 +135,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		$results = array();
 		$hndl = fopen($tempfile, 'r');
 
-		$sql = 'SELECT COUNT(*) as linkcount FROM pagelinks WHERE pl_namespace = 0 AND pl_title = ? GROUP BY pl_namespace';
+		$sql = 'SELECT COUNT(*) as linkcount FROM pagelinks, linktarget WHERE pl_target_id = lt_id AND lt_namespace = 0 AND lt_title = ? GROUP BY lt_namespace';
     	$dbh_enwiki = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $user, $pass);
     	$dbh_enwiki->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$sth = $dbh_enwiki->prepare($sql);
