@@ -19,6 +19,7 @@ namespace com_brucemyers\DatabaseReportBot\Reports\MiscReports;
 
 use com_brucemyers\Util\FileCache;
 use com_brucemyers\MediaWiki\AllPagesLister;
+use com_brucemyers\MediaWiki\WikidataSPARQL;
 use com_brucemyers\MediaWiki\WikidataWiki;
 use com_brucemyers\Util\WikitableParser;
 use com_brucemyers\Util\Config;
@@ -71,7 +72,9 @@ class WikidataEntitySchemaDirectory
             $lang = $row[4];
             
             if (isset($schemas[$id])) {
-                $schemas[$id] = ['id' => $id, 'classprop' => $classprop, 'cats' => $cats, 'status' => $status, 'lang' => $lang, 'imports' => [], 'importedby' => []];
+                $schemas[$id] = ['id' => $id, 'classprop' => $classprop, 'cats' => $cats, 'status' => $status, 'lang' => $lang, 'imports' => [], 'importedby' => [], 
+                    'classes' => []
+                ];
             }
         }
         
@@ -88,6 +91,24 @@ class WikidataEntitySchemaDirectory
             $schemas[$id]['data'] = $schemadatum;
             
             if (empty(trim($schemadatum->getSchemaText()))) $schemas[$id]['cats'] = 'Empty schema';
+        }
+        
+        // Retrieve the class list (P12861)
+        $query = "SELECT%20(STRAFTER(STR(%3Fitem)%2C%20'entity%2F')%20AS%20%3Fitemid)%20%3FitemLabel%20(STRAFTER(STR(%3Fvalue)%2C%20'E')%20as%20%3Fschema)%0A{%0A%20%20%3Fitem%20wdt%3AP12861%20%3Fvalue%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cen\"%20%20}%0A}%0A";
+        
+        $sparql = new WikidataSPARQL();
+        
+        $rows = $sparql->query($query);
+        
+        $props = [];
+        
+        foreach ($rows as $row) {
+            $id = (int)$row['schema']['value'];
+            $itemid = $row['itemid']['value'];
+            if ($itemid[0] == 'P') $itemid = 'Property:' . $itemid;
+            $itemlabel = $row['itemLabel']['value'];
+            
+            $schemas["E$id"]['classes'][] = ['id' => $itemid, 'label' => $itemlabel];
         }
         
         // Retrieve the labels for items and properties
@@ -247,7 +268,7 @@ class WikidataEntitySchemaDirectory
                     }
                 }
                 
-                $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|alias}}\n! {{I18n|class}}/{{I18n|property}}\n! {{I18n|dependencies}}\n";
+                $wikitext .= "{| class=\"wikitable sortable\"\n|-\n! {{I18n|label}}\n! {{I18n|description}}\n! {{I18n|alias}}\n! {{I18n|class}}/{{I18n|property}}\n! {{P|12861}}\n! {{I18n|dependencies}}\n";
                 
                 foreach ($catdata['schemas'] as $schema) {
                     $id = $schema['data']->getId();
@@ -278,7 +299,7 @@ class WikidataEntitySchemaDirectory
                                 
                                 if (! empty($label)) {
                                     if ($type == 'status') $attrib = str_replace($match, "<i>$label</i>", $attrib);
-                                    else $attrib = str_replace($match, "[[$labelid|$label]] ($match)", $attrib);
+                                    else $attrib = str_replace($match, "[[$labelid|$label]]", $attrib);
                                 }
                             }
                         }
@@ -300,6 +321,14 @@ class WikidataEntitySchemaDirectory
                         else $importedby[] = "<b>Missing schema ($import)<b>";
                     }
                     
+                    $classes = [];
+                    
+                    foreach ($schema['classes'] as $class) {
+                        $classes[] = "[[{$class['id']}|{$class['label']}]]";
+                    }
+                    
+                    $classes = implode(', ', $classes);
+                    
                     $depenencies = [];
                     
                     if (! empty($imports)) {
@@ -312,7 +341,7 @@ class WikidataEntitySchemaDirectory
                     
                     $depenencies = implode('<br />', $depenencies);
                     
-                    $wikitext .= "|-\n|[[EntitySchema:$id|{$schema['label']}]] ($id) {$cpcs['status']} $lang ||$description ||$aliases ||{$cpcs['classprop']} ||$depenencies\n";
+                    $wikitext .= "|-\n|[[EntitySchema:$id|{$schema['label']}]] ($id) {$cpcs['status']} $lang ||$description ||$aliases ||{$cpcs['classprop']} ||$classes ||$depenencies\n";
                     
                     if (isset($schema['error'])) {
                         $error = $schema['error'];
