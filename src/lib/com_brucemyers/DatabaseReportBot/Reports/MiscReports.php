@@ -1223,18 +1223,18 @@ END;
 	        $description = isset($row['propDescription']['value']) ? $row['propDescription']['value'] : '';
 	        $datatype = $row['type']['value'];
 	        
-	        $props[$propid] = ['id' => $propid, 'label' => $label, 'description' => $description, 'datatype' => $datatype];
+	        $props[$propid] = ['id' => $propid, 'label' => $label, 'description' => $description, 'datatype' => $datatype, 'constraints' => []];
 	    }
 	    
 	    // Get the scope constraints
 	    
-	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20(GROUP_CONCAT(CONCAT('Q'%2C%20STRAFTER(STR(%3Fconstraint)%2C%20'Q'))%3B%20SEPARATOR%20%3D%20'|')%20AS%20%3Fconstraints)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20%3Fprop%20wdt%3AP2302%20wd%3AQ53869507%20.%0A%20%20%3Fprop%20p%3AP2302%20[pq%3AP5314%20%3Fconstraint]%20.%0A}%0AGROUP%20BY%20%3Fprop";
+	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20(CONCAT('Q'%2C%20STRAFTER(STR(%3Fconstraint)%2C%20'Q'))%20AS%20%3Fconstraints)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20%3Fprop%20p%3AP2302%20[pq%3AP5314%20%3Fconstraint]%20.%0A}%0A";
 	    
 	    $rows = $sparql->query($query);
 	    
 	    foreach ($rows as $row) {
 	        $propid = (int)$row['id']['value'];
-	        $props[$propid]['constraints'] = array_unique(explode('|', $row['constraints']['value']));
+	        $props[$propid]['constraints'][$row['constraints']['value']] = true;
 	    }
 	    
 	    usort($props, function ($a, $b) {
@@ -1310,7 +1310,7 @@ END;
             $counts = [];
             
             foreach ($constraints as $qid => $constraint) {
-                if (($qid == $NOVALUE || ! isset($prop['constraints']) || in_array($qid, $prop['constraints'])) && isset($constraint['counts'][$propid]) ) {
+                if (($qid == $NOVALUE || isset($prop['constraints'][$qid])) && isset($constraint['counts'][$propid]) ) {
                     if ($constraint['counts'][$propid] != 0) $counts[$constraint['abbrev']] = $constraint['counts'][$propid];
                 }
             }
