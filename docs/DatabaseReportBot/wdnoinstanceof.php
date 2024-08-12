@@ -44,7 +44,7 @@ class WikidataItem
 {
 	const TYPE_INSTANCE_OF = 'P31';
 	
-	static public $preferred_langs = array('en','de','es','fr','it','pt','nl','pl');
+	static public $preferred_langs = array('mul','en','de','es','fr','it','pt','nl','pl');
 	static $entity_types = array(
 			'item' => 'Q',
 			'property' => 'P'

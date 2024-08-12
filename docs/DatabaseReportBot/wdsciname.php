@@ -54,7 +54,7 @@ class WikidataItem
     const TYPE_INSTANCE_OF = 'P31';
     const TYPE_TAXON_NAMES = 'P225';
     
-	static public $preferred_langs = ['en','de','es','fr','it','pt'];
+	static public $preferred_langs = ['mul','en','de','es','fr','it','pt'];
 
 	static public $quantity_units = [
 	    'Q573' => 'day',

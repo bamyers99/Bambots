@@ -37,7 +37,7 @@ class WikidataItem
 	const TYPE_AUTHCTRL_MusicBrainz = 'P434';
 	const TYPE_OFFICIAL_WEBSITE = 'P856';
 
-	static public $preferred_langs = ['en','de','es','fr','it','pt'];
+	static public $preferred_langs = ['mul','en','de','es','fr','it','pt'];
 
 	const INSTANCE_OF_DISAMBIGUATION = 'Q4167410';
 
@@ -262,7 +262,7 @@ class WikidataItem
 	}
 
 	/**
-	 * Get an items label or description in a specific language. If language not found, return en or first language.
+	 * Get an items label or description in a specific language. If language not found, return mul, en or first language.
 	 *
 	 * @param string $type label or description
 	 * @param string $lang preferred language code
