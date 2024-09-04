@@ -296,8 +296,9 @@ EOT;
 	echo '<div><b>' . htmlentities($l10n->get('template', true), ENT_COMPAT, 'UTF-8') .
 	   "</b>: <a class=\"external\" href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $lctmplname)) . "\">" .
 	   htmlentities($lctmplname, ENT_COMPAT, 'UTF-8') . "</a>";
-	   echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['page_count']) . '</div>';
-	   echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['instance_count']) . '</div>';
+	echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['page_count']) . '</div>';
+	echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['instance_count']) . '</div>';
+	echo "<div><b>Note: 'page links', 'missing', 'errors' links have been obfuscated to prevent bots, crawlers from accessing. Links must be left clicked with Javascript enabled.</b></div>";
 
 	$wikitext .= $l10n->get('template', true) . ": [[$templateNS:$lctmplname|$lctmplname]]<br />\n";
 	$wikitext .= $l10n->get('pagecount', true) . ": {$results['info']['page_count']}<br />\n";
