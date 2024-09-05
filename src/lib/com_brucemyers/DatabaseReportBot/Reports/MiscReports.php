@@ -1245,9 +1245,9 @@ END;
 	        
         // Get the usage counts
         
-	    $rdfdata = Curl::getUrlContents('https://query.wikidata.org/sparql');
+	    $rdfdata = $this->_retrievePropertyCounts();
 	    
-	    if ($rdfdata === false || Curl::$lastResponseCode != 200) {
+	    if ($rdfdata === false) {
 	        echo "fallback to prop count pages\n";
 	        
 	        foreach ($constraints as &$constaint) {
@@ -1267,7 +1267,9 @@ END;
 	            preg_match_all("!{$constaint['rdf']}P(\d+).*?>(\d+)</triples>!s", $rdfdata, $matches, PREG_SET_ORDER);
 	            
 	            foreach ($matches as $match) {
-	                $constaint['counts'][$match[1]] = $match[2];
+	                $propid = (int)$match[1];
+	                if (! isset($constaint['counts'][$propid])) $constaint['counts'][$propid] = 0;
+	                $constaint['counts'][$propid] += $match[2];
 	            }
 	        }
 	        
@@ -1346,6 +1348,20 @@ END;
         fwrite($hndl, '<br />Language: ' . $language);
         fwrite($hndl, "</div><br /><div style='display: table; margin: 0 auto;'>Author: <a href='https://en.wikipedia.org/wiki/User:Bamyers99'>Bamyers99</a></div></body></html>");
         fclose($hndl);
+	}
+	
+	/**
+	 * Retrieve property usage counts from both SPARQL graphs
+	 * 
+	 * @return boolean|string
+	 */
+	function _retrievePropertyCounts()
+	{
+	    $rdfdata = Curl::getUrlContents('https://query-main.wikidata.org/sparql');
+	    if ($rdfdata === false || Curl::$lastResponseCode != 200) return false;
+	    $rdfdata2 = Curl::getUrlContents('https://query-scholarly.wikidata.org/sparql');
+	    if ($rdfdata2 === false || Curl::$lastResponseCode != 200) return false;
+	    return $rdfdata . $rdfdata2;
 	}
 	
 	/**
@@ -1454,9 +1470,9 @@ EOT;
 	    ksort($props);
 	        
         // Get use counts
-	    $rdfdata = Curl::getUrlContents('https://query.wikidata.org/sparql');
+	    $rdfdata = $this->_retrievePropertyCounts();
 	    
-	    if ($rdfdata === false || Curl::$lastResponseCode != 200) {
+	    if ($rdfdata === false) {
 	        echo "fallback to prop count pages\n";
 	        
     	    $usecounts = $wdwiki->getPage('Template:Number_of_main_statements_by_property');
@@ -1476,7 +1492,8 @@ EOT;
 	            $propid = $match[1];
 	            
 	            if (isset($props[$propid])) {
-	                $props[$propid]['usecnt'] = $match[2];
+	                if (! isset($props[$propid]['usecnt'])) $props[$propid]['usecnt'] = 0;
+	                $props[$propid]['usecnt'] += $match[2];
 	            }
 	        }
 	        
