@@ -237,25 +237,17 @@ foreach ($langs as $lang => $totals) {
 fclose($hndl);
 
 // Get use counts
-$ch = curl_init();
 
-curl_setopt($ch, CURLOPT_HEADER, 0);
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($ch, CURLOPT_USERAGENT, 'Windows / Firefox 99: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:65.0) Gecko/20100101 Firefox/99.0');
-curl_setopt($ch, CURLOPT_URL, 'https://query.wikidata.org/sparql');
+$rdfdata = _retrievePropertyCounts();
 
-$rdfdata = curl_exec($ch);
-
-$responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-
-if ($rdfdata === false || $responseCode != 200) {
+if ($rdfdata === false) {
     echo "fallback to prop count pages\n";
     
+    $ch = curl_init();
     curl_setopt($ch, CURLOPT_HEADER, 0);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Windows / Firefox 99: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:65.0) Gecko/20100101 Firefox/99.0');
+    curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
     curl_setopt($ch, CURLOPT_URL, 'https://www.wikidata.org/wiki/Template:Number_of_main_statements_by_property');
     
     $usecounts = curl_exec($ch);
@@ -276,7 +268,8 @@ if ($rdfdata === false || $responseCode != 200) {
         $propid = $match[1];
         
         if (isset($propmeta[$propid])) {
-            $propmeta[$propid]['uc'] = $match[2];
+            if (! isset($propmeta[$propid]['uc'])) $propmeta[$propid]['uc'] = 0;
+            $propmeta[$propid]['uc'] += $match[2];
         }
     }
     
@@ -290,6 +283,40 @@ foreach ($propmeta as $propid => $values) {
 
 fclose($hndl);
 exit;
+
+/**
+ * Retrieve property usage counts from both SPARQL graphs
+ */
+function _retrievePropertyCounts()
+{
+    $ch = curl_init();
+    
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
+    curl_setopt($ch, CURLOPT_URL, 'https://query-main.wikidata.org/sparq');
+    
+    $rdfdata = curl_exec($ch);
+    
+    $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    
+    if ($rdfdata === false || $responseCode != 200) return false;
+    
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
+    curl_setopt($ch, CURLOPT_URL, 'https://query-scholarly.wikidata.org/sparql');
+    
+    $rdfdata2 = curl_exec($ch);
+    
+    $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    
+    if ($rdfdata2 === false || $responseCode != 200) return false;
+    
+    return $rdfdata . $rdfdata2;
+}
 
 /**
  * Parse revision change text for non-standard comments.
