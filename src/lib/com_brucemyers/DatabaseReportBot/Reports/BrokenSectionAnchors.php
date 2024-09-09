@@ -118,7 +118,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		fclose($hndl);
 
 		// Load the view counts
-		$viewcounts = array();
+		$viewcounts = [];
 		$hndl = fopen($this->getWikiviewsPath(), 'r');
 		if ($hndl === false) throw new Exception('wikiviews not found');
 
@@ -132,7 +132,7 @@ class BrokenSectionAnchors extends DatabaseReport
 
 		fclose($hndl);
 
-		$results = array();
+		$results = [];
 		$hndl = fopen($tempfile, 'r');
 
 		$sql = 'SELECT COUNT(*) as linkcount FROM pagelinks, linktarget WHERE pl_target_id = lt_id AND lt_namespace = 0 AND lt_title = ? GROUP BY lt_namespace';
@@ -191,7 +191,7 @@ class BrokenSectionAnchors extends DatabaseReport
 				$fragment = str_replace('_', ' ', $fragment);
 				$source = str_replace('_', ' ', $source);
 				$target = str_replace('_', ' ', $target);
-				$results[$source] = array("[[$source]]", "[[$target#$fragment]]", $incomingcnt, $viewcount, max($viewcount, $incomingcnt));
+				$results[$source] = ["[{{fullurl:$source|redirect=no}} $source]", "[[$target#$fragment]]", $incomingcnt, $viewcount, max($viewcount, $incomingcnt)];
 			}
 		}
 
@@ -227,7 +227,7 @@ class BrokenSectionAnchors extends DatabaseReport
 				'groups' => array());
 
 		// Group by target page
-		$targets = array();
+		$targets = [];
 
 		foreach ($results as $result) {
 			$target = explode('#', $result[1], 2);
@@ -245,7 +245,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		});
 
 		$targettmp = array_slice($targets, 0, 1000, true);
-		$targets = array();
+		$targets = [];
 
 		foreach ($targettmp as $target => $result) {
 			$redirs = array();
@@ -254,7 +254,7 @@ class BrokenSectionAnchors extends DatabaseReport
 				$section = substr($section[1], 0, -2);
 				$redirs[] = $redir[0] . "#$section";
 			}
-			$targets[] = array(implode('<br />', $redirs), "[[$target]]", count($result), '', '');
+			$targets[] = [implode('<br />', $redirs), "[[$target]]", count($result), '', ''];
 		}
 
 		$curredirs = array_keys($results);
@@ -262,7 +262,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		// Calculate the new broken redirs
 		$newredirs = array_diff($curredirs, $prevredirs);
 
-		$newest = array();
+		$newest = [];
 
 		foreach ($newredirs as $source) {
 			$newest[] = $results[$source];
