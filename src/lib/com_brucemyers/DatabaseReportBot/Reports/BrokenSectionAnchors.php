@@ -244,7 +244,7 @@ class BrokenSectionAnchors extends DatabaseReport
 			return 0;
 		});
 
-		$targettmp = array_slice($targets, 0, 1000, true);
+		$targettmp = array_slice($targets, 0, 500, true);
 		$targets = [];
 
 		foreach ($targettmp as $target => $result) {
@@ -270,7 +270,7 @@ class BrokenSectionAnchors extends DatabaseReport
 		}
 
 		$groups['groups']['Newest'] = $newest;
-		$groups['groups']['Older (partial list)'] = array_slice($results, 0, 1000);
+		$groups['groups']['Older (partial list)'] = array_slice($results, 0, 500);
 		$groups['groups']['Grouped by target page (partial list)'] = $targets;
 
 		// Save the previous redirs
