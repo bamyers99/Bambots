@@ -269,7 +269,7 @@ class BrokenSectionAnchors extends DatabaseReport
 			unset($results[$source]);
 		}
 
-		$groups['groups']['Newest'] = $newest;
+		$groups['groups']['Newest'] = array_slice($newest, 0, 2000);
 		$groups['groups']['Older (partial list)'] = array_slice($results, 0, 500);
 		$groups['groups']['Grouped by target page (partial list)'] = $targets;
 
