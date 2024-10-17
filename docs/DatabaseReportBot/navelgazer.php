@@ -248,7 +248,7 @@ if ($rdfdata === false) {
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
-    curl_setopt($ch, CURLOPT_URL, 'https://www.wikidata.org/wiki/Template:Number_of_main_statements_by_property');
+    curl_setopt($ch, CURLOPT_URL, 'https://www.wikidata.org/w/index.php?title=Template:Number_of_main_statements_by_property&action=raw&ctype=text');
     
     $usecounts = curl_exec($ch);
     
@@ -295,7 +295,7 @@ function _retrievePropertyCounts()
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_USERAGENT, 'WMFLabs tools.bambots');
-    curl_setopt($ch, CURLOPT_URL, 'https://query-main.wikidata.org/sparq');
+    curl_setopt($ch, CURLOPT_URL, 'https://query-main.wikidata.org/sparql');
     
     $rdfdata = curl_exec($ch);
     
