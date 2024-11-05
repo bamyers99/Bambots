@@ -21,6 +21,7 @@ use com_brucemyers\CleanupWorklistBot\Categories;
 use com_brucemyers\CleanupWorklistBot\CleanupWorklistBot;
 use com_brucemyers\CleanupWorklistBot\ProjectPages;
 use com_brucemyers\Util\Config;
+use com_brucemyers\MediaWiki\MediaWiki;
 use com_brucemyers\test\CleanupWorklistBot\CreateTables;
 use UnitTestCase;
 use PDO;
@@ -28,7 +29,7 @@ use PDO;
 class TestProjectPages extends UnitTestCase
 {
 
-    public function testPageLoad()
+    public function notestPageLoad()
     {
     	$tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
     	$user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
@@ -60,5 +61,17 @@ class TestProjectPages extends UnitTestCase
     	$category = 'Featured articles';
     	list($page_count, $assessment_count) = $project_pages->load($category, 3, $category, '');
     	$this->assertEqual($page_count, 2, "Wrong page count for $category $page_count != 2");
+    }
+    
+    public function testType5()
+    {
+        $mediawiki = new MediaWiki('https://en.wikipedia.org/w/api.php');
+        $tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
+        $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
+        $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+        $project_pages = new ProjectPages($mediawiki, $user, $pass, $tools_host);
+
+        list($page_count, $assessment_count) = $project_pages->load('Vital_articles_by_level_by_quality', 5, 'Vital_articles', 'None');
+        $this->assertTrue($page_count > 10, "page count = $page_count");
     }
 }

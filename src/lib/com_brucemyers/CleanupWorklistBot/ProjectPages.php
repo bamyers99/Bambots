@@ -88,7 +88,7 @@ class ProjectPages
     	            $categories[] = $catinfo['title'];
     	        }
     	    }
-    	} elseif ($member_cat_type == 4) {
+    	} elseif ($member_cat_type == 4 | $member_cat_type == 5) {
     	    $categories = [];
     	    $this->traverseCats($categories, $category, 10);
     	    $categories = array_keys($categories);
@@ -196,6 +196,7 @@ class ProjectPages
             case 2: // x (talk namespace)
             case 3: // x (article namespace)
             case 4: // traverse subcats (article namespace)
+            case 5: // traverse subcats (talk namespace)
                 $params['cmtitle'] = "Category:$category";
                 break;
         }
@@ -211,6 +212,7 @@ class ProjectPages
             case 0: // articles by quality (subcats, talk namespace)
             case 1: // WikiProject x articles (talk namespace)
             case 2: // x (talk namespace)
+            case 5: // traverse subcats (talk namespace)
                 foreach ($ret['query']['categorymembers'] as $page) {
                     if ($page['ns'] != 1) continue;
                     $result[] = substr($page['title'], 5);
