@@ -173,10 +173,6 @@ class Categories {
 					'group' => 'Links',
 					'display' => 'Dead external links {{dead link}}'
 			],
-			'Articles with disproportional geographic scope' => [
-					'type' => 'from-monthly',
-					'display' => 'Disproportional geographic scope'
-			],
 			'Articles with disputed statements' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality',
@@ -293,7 +289,7 @@ class Categories {
 					'type' => 'from-monthly',
 					'group' => 'Content'
 			],
-			'NPOV disputes' => [
+			'Wikipedia neutral point of view disputes' => [
 					'type' => 'from-monthly',
 					'group' => 'Neutrality'
 			],
@@ -459,7 +455,7 @@ class Categories {
 					'group' => 'Clarity',
 					'display' => 'Expert attention needed'
 			],
-			'Animals cleanup' => [
+			'Animal articles needing cleanup' => [
 					'type' => 'no-date',
 					'group' => 'Content'
 			],
