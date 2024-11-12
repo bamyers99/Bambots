@@ -88,7 +88,7 @@ class ProjectPages
     	            $categories[] = $catinfo['title'];
     	        }
     	    }
-    	} elseif ($member_cat_type == 4 | $member_cat_type == 5) {
+    	} elseif ($member_cat_type == 4 || $member_cat_type == 5) {
     	    $categories = [];
     	    $this->traverseCats($categories, $category, 10);
     	    $categories = array_keys($categories);
