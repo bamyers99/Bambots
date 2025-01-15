@@ -308,7 +308,7 @@ function display_data()
 					$idurl = 'https://viaf.org/viaf/$1/';
 					$searchtype = 'names';
 					if ($is_person == 'Y') $searchtype = 'personalNames';
-					$searchurl= "https://viaf.org/viaf/search?query=local.$searchtype+all+%22$1%22&sortKeys=holdingscount&recordSchema=BriefVIAF";
+					$searchurl= "https://viaf.org/en/viaf/search?field=local.$searchtype&index=viaf&searchTerms=$1";
 					break;
 
 				case 'ISNI':
