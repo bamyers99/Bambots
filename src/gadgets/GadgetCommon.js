@@ -44,8 +44,10 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 
         var protocalDomain = '',
         	jsonp = '';
-        if ( lang !== 'wikidata' ) {
-        	protocalDomain = 'https://' + lang + '.wikipedia.org';
+		
+		if ( lang !== 'wikidata' ) {
+			if (lang == 'commons') protocalDomain = 'https://commons.wikimedia.org';
+        	else protocalDomain = 'https://' + lang + '.wikipedia.org';
         	jsonp = 'callback=?';
         }
 
