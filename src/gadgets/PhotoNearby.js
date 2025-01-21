@@ -15,8 +15,7 @@
 
  Description
  ===========
- If no {{P|18}} statement and has {{P|625}}, displays above the Statements heading the number of images on commons within a certain radius (default: 500 meters),
- plus a link to WikiShootMe.
+ Checks commons for a nearby photo if no {{P|18}} statement and has {{P|625}}. Displays above the Statements heading. Defaults to a 500 meter radius. Displays a link to WikiShootMe.
 
  Usage
  =====
@@ -81,6 +80,7 @@ Bamyers99.PhotoNearby = {
 					
 					if ( data.query && data.query.geosearch ) {
 						imageCount = data.query.geosearch.length;
+						if (imageCount == 10) imageCount = '' + imageCount + '+';
 					}
 				
 					var h = '<div>';
