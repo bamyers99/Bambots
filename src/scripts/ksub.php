@@ -125,7 +125,7 @@ function build_yaml($jobname, $command, $opts = [])
                     'containers' => [
                         [
                             'name' => $jobname,
-                            'image' => 'docker-registry.tools.wmflabs.org/toolforge-php74-sssd-base:latest',
+                            'image' => 'docker-registry.tools.wmflabs.org/toolforge-php82-sssd-base:latest',
                             'workingDir' => '/data/project/bambots',
                             'command' => ['/bin/sh', '-c', '--', "$command 1>>$jobname.out 2>>$jobname.err"],
                             'env' => [['name' => 'HOME', 'value' => '/data/project/bambots']],

@@ -55,4 +55,4 @@ case $1 in
 		;;
 esac
 
-toolforge-jobs run $JOBNAME --command "$SCRIPT_DIR/ksub execute $WD $COMMAND" --image tf-php74 $@
+toolforge-jobs run $JOBNAME --command "$SCRIPT_DIR/ksub execute $WD $COMMAND" --image php8.2 $@
