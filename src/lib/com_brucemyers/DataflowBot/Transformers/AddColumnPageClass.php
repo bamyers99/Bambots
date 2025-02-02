@@ -260,8 +260,7 @@ class AddColumnPageClass extends AddColumn
 			arsort($classes, SORT_NUMERIC);
 		}
 
-		$class = each($classes);
-		$class = $class['key'];
+		$class = key($classes);
 
 		if ($this->paramValues['valuetype'] == 'text') return $class;
 
