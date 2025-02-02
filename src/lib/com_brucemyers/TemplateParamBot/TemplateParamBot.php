@@ -1173,7 +1173,8 @@ class TemplateParamBot
         
         // Curl
         
-        $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-articles.xml.bz2";
+        if ($wiki == 'enwiki') $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-meta-current.xml.bz2";
+        else $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-articles.xml.bz2";
         $outfile = "$wikidir/pages-articles.xml.bz2";
         
         if (! file_exists($outfile)) {
