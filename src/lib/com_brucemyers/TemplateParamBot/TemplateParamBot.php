@@ -1365,7 +1365,7 @@ class TemplateParamBot
         $rowsfound = true;
         
         while ($rowsfound) {
-            $sth = $dbh_tools->query("SELECT wikiname FROM dumpfiles WHERE lastdump > lastextract AND filename = 'pages-articles.xml.bz2'");
+            $sth = $dbh_tools->query("SELECT wikiname FROM dumpfiles WHERE lastdump > lastextract AND filename IN ('pages-articles.xml.bz2','pages-meta-current.xml.bz2')");
             $rows = $sth->fetchAll(PDO::FETCH_ASSOC);
             $rowsfound = false;
             
@@ -1380,7 +1380,7 @@ class TemplateParamBot
                 // Set last extract to end of month, so don't extract 20ths dump
                 $dbh_tools = $this->serviceMgr->getDBConnection('tools', 's51454__CategoryWatchlistBot');
                 $date = date('Y-m-') . '28 23:59:59'; // 28th of month
-                $sth = $dbh_tools->prepare("UPDATE dumpfiles SET lastextract = ? WHERE wikiname = ? AND filename = 'pages-articles.xml.bz2'");
+                $sth = $dbh_tools->prepare("UPDATE dumpfiles SET lastextract = ? WHERE wikiname = ? AND filename IN ('pages-articles.xml.bz2','pages-meta-current.xml.bz2')");
                 $sth->execute([$date, $wikiname]);
             }
         }
