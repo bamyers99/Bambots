@@ -238,20 +238,20 @@ class DataflowBot
 Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Weekly page views as of: @@Pop1000Pg#year@@-@@Pop1000Pg#month@@-@@Pop1000Pg#day@@
 EOT;
 		$components = array (
-// 				array (
-// 						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\TopPageViews',
-// 						'params' => array (
-// 							'wiki' => 'en.wikipedia.org',
-// 							'daysago' => '5',
-// 							'checkdays' => '3'
-// 						)
-// 				),
-				array (
-						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\Popular1000Pages',
-						'params' => array (
-							'pagename' => 'User:HostBot/Top_1000_report'
-						)
-				),
+ 				array (
+ 						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\TopPageViews',
+ 						'params' => array (
+ 							'wiki' => 'en.wikipedia.org',
+ 							'daysago' => '2',
+ 							'checkdays' => '7'
+ 						)
+ 				),
+//				array (
+//						'class' => 'com_brucemyers\\DataflowBot\\Extractors\\Popular1000Pages',
+//						'params' => array (
+//							'pagename' => 'User:HostBot/Top_1000_report'
+//						)
+//				),
 				array ( // filter before redirects
 						'class' => 'com_brucemyers\\DataflowBot\\Transformers\\FilterColumn',
 						'params' => array (

@@ -72,7 +72,7 @@ class Categories {
 			'Articles needing additional references' => [
 					'type' => 'from-monthly',
 					'group' => 'References',
-					'display' => 'Unsourced passages need footnotes {{refimprove}}'
+					'display' => 'Unsourced passages need footnotes {{More citations needed}}'
 			],
 			'Articles needing cleanup' => [
 					'type' => 'from-monthly',
