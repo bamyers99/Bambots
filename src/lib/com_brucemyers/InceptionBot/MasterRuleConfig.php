@@ -29,9 +29,9 @@ class MasterRuleConfig
     public function __construct($data)
     {
         $data = preg_replace(CommonRegex::COMMENT_REGEX, '', $data);
+        $data = preg_replace(CommonRegex::NOINCLUDE_REGEX, '', $data);
         $data = preg_replace(RuleSet::WIKI_TEMPLATE_REGEX, '', $data);
         $data = preg_replace(CommonRegex::CATEGORY_REGEX, '', $data);
-        $data = preg_replace(CommonRegex::NOINCLUDE_REGEX, '', $data);
         
         $lines = preg_split('/\\r?\\n/', $data);
         
