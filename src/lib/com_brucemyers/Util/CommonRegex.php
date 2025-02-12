@@ -27,4 +27,5 @@ class CommonRegex
     const CATEGORY_REGEX = '/\\[\\[\s*Category\s*:([^\\]]*+)\\]\\]/usi';
     const REDIRECT_REGEX = '!#REDIRECT\s*:?\s*\\[\\[!usi';
     const BR_REGEX = '!<\s*br\s*/?\s*>!usi';
+    const NOINCLUDE_REGEX = '!<\s*noinclude\s*>.*?<\s*/noinclude\s*>!usi';
 }
