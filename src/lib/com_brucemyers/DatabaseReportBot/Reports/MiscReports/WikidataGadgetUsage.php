@@ -130,7 +130,7 @@ class WikidataGadgetUsage
         
         // Get the user gadgets
         
-        $sql = "SELECT page_title FROM page WHERE page_namespace = 2 AND page_title REGEXP '/(common|vector|monobook)\.js$'";
+        $sql = "SELECT page_title FROM page WHERE page_namespace = 2 AND page_title REGEXP '/(common|vector|monobook|vector-2022)\.js$'";
         
         $sth = $dbh_wikidata->query($sql);
         $pagenames = [];
