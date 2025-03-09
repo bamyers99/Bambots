@@ -15,6 +15,8 @@
  limitations under the License.
  
  https://github.com/wikimedia/Wikibase/blob/master/lib/i18n/en.json
+ https://github.com/wikimedia/mediawiki-extensions-WikibaseLexeme/blob/master/i18n/en.json
+ https://github.com/wikimedia/mediawiki-extensions-EntitySchema/blob/master/i18n/en.json
  */
 
 $count = 0;
@@ -33,11 +35,11 @@ $edittypes = [
     '!^wbsetsitelink-add!' => -4, // no : because matches multiple actions
 	'!^wbmergeitems-from:!' => -5,
     '!^add-form:!' => -6,
-    '!^wbeditentity-create-form:!' => -6,
+    '!^wbeditentity-create-form!' => -6,
     '!^add-form-representations:!' => -7,
     '!^add-form-grammatical-features:!' => -8,
     '!^add-sense:!' => -9,
-    '!^wbeditentity-create-sense:!' => -9,
+    '!^wbeditentity-create-sense!' => -9,
     '!^add-sense-glosses:!' => -10,
     '!^wbsetreference-add:!' => -11,
     '!^wbsetreference:!' => -11,
@@ -81,8 +83,18 @@ $edittypes = [
     '!^update-sense-elements:!' => -36,
     '!^remove-sense-glosses:!' => -37,
     '!^wbremovequalifiers-remove:!' => -38,
-    '!^wbeditentity-create-lexeme:!' => -39,
-    '!^wblmergelexemes-from:!' => -40
+    '!^wbeditentity-create-lexeme!' => -39,
+    '!^wblmergelexemes-from:!' => -40,
+    '!^wbsetclaim-update-rank!' => -41,
+    '!^entityschema-summary-newschema-nolabel!' => -42,
+    '!^entityschema-summary-update !' => -43,
+    '!^entityschema-summary-update-schema-text!' => -44,
+    '!^entityschema-summary-update-schema-namebadge!' => -45,
+    '!^entityschema-summary-update-schema-label!' => -46,
+    '!^entityschema-summary-update-schema-description!' => -47,
+    '!^entityschema-summary-update-schema-aliases!' => -48,
+    '!^entityschema-summary-undo!' => -49,
+    '!^entityschema-summary-restore!' => -50
 ];
 
 DEFINE('MONTHLY_INCREMENT', 0x100000000);

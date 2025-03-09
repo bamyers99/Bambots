@@ -102,7 +102,17 @@ function display_form($navels)
 	    -37 => 'Lexeme: gloss deletions',
 	    -38 => 'Qualifier deletions',
 	    -39 => 'Lexeme: creations',
-	    -40 => 'Lexeme: merges'
+	    -40 => 'Lexeme: merges',
+	    -41 => 'Rank changes',
+	    -42 => 'Schema: creations',
+	    -43 => 'Schema: changes',
+	    -44 => 'Schema: text changes',
+	    -45 => 'Schema: label, description or alias changes',
+	    -46 => 'Schema: label changes',
+	    -47 => 'Schema: description changes',
+	    -48 => 'Schema: alias changes',
+	    -49 => 'Schema: undos',
+	    -50 => 'Schema: restores'
 	);
 
 	asort($edit_types);
