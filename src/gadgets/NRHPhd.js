@@ -65,7 +65,20 @@ Bamyers99.NRHPhd = {
 					return false;
 				} );
 				
-				if (stmtID == '') return;
+				var missingHeritage = false;
+				
+				if (stmtID == '') {
+					$.each( data.claims['P649'] || {}, function ( index, claim ) {
+						stmtID = '#' + $.escapeSelector(claim.id);
+						stmtClaim = {};
+
+						return false;
+					} );
+					
+					if (stmtID == '') return;
+					
+					missingHeritage = true;
+				}
 				
 				await self.until(() => $(stmtID + ' .wikibase-edittoolbar-container').length > 0 );
 
@@ -80,7 +93,7 @@ Bamyers99.NRHPhd = {
 		        var qid = mw.config.get( 'wgPageName' ).toUpperCase();
 		        
 		        newElement.addEventListener('click', () => {
-		          	self.displayDialog(stmtID, stmtClaim, qid);
+		          	self.displayDialog(stmtID, stmtClaim, qid, missingHeritage);
 					return false;
 		        } );
 					
@@ -273,7 +286,7 @@ Bamyers99.NRHPhd = {
 	/**
 	 * Display the dialog
 	 */
-	displayDialog: function(stmtID, stmtClaim, qid) {
+	displayDialog: function(stmtID, stmtClaim, qid, missingHeritage) {
 		var self = this;
 		var h = '<div id="Bamyers99_NRHPhd_dialog">';
 
@@ -304,10 +317,17 @@ Bamyers99.NRHPhd = {
 //			}
 			
 			// Click edit link
-			var button = $(stmtID + ' .wikibase-toolbar-button-edit a').last();
+			var button;
+			
+			if (missingHeritage) {
+				button = true;
+				stmtID = '#new';
+			} else {
+				button = $(stmtID + ' .wikibase-toolbar-button-edit a').last();
+			}
 			
 			if (button) {
-				button.click();
+				if (! missingHeritage) button.click();
 				
 				await self.until(() => $(stmtID + ' .wikibase-statementview-mainsnak-container :focus').length > 0);
 				 {		
