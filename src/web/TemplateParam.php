@@ -410,7 +410,8 @@ EOT;
 				} else {
 				    $searchparmname = '';
 				    if (! is_numeric($param['param_name'])) $searchparmname = "{$param['param_name']} ";
-				    $extra = urlencode("hastemplate:\"$lctmplname\" insource:\"$searchparmname{$uniques[$x]}\"");
+				    $searchunique = str_replace($uniques[$x], '"', '');
+				    $extra = urlencode("hastemplate:\"$lctmplname\" insource:\"$searchparmname$searchunique\"");
 				    $valuepageslink = " <a class=\"external\" href='https://$domain/w/index.php?search=$extra'>(page&nbsp;search)</a>";
 				}
 
