@@ -298,10 +298,10 @@ Bamyers99.NRHPhd = {
 			
 			// Verify qids match
 			
-			if (qid != data.qid) {
-				alert(`qid mismatch ${qid} != ${data.qid}`);
-				return;
-			}
+//			if (qid != data.qid) {
+//				alert(`qid mismatch ${qid} != ${data.qid}`);
+//				return;
+//			}
 			
 			// Click edit link
 			var button = $(stmtID + ' .wikibase-toolbar-button-edit a').last();

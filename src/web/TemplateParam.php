@@ -407,6 +407,11 @@ EOT;
 						'&template=' . urlencode($tmplname) . '&param=' . urlencode($param['param_name']).
 						'&value=' . urlencode($uniques[$x]);
 					$valuepageslink = " <a href='valuelinks' data-payload='$protocol://$host$uri/$extra'>(page&nbsp;links)</a>";
+				} else {
+				    $searchparmname = '';
+				    if (! is_numeric($param['param_name'])) $searchparmname = "{$param['param_name']} ";
+				    $extra = urlencode("hastemplate:\"$lctmplname\" insource:\"$searchparmname{$uniques[$x]}\"");
+				    $valuepageslink = " <a class=\"external\" href='https://$domain/w/index.php?search=$extra'>(page&nbsp;search)</a>";
 				}
 
 				$uniquedata .= "$val&nbsp;&nbsp;$count$valuepageslink<br />";
