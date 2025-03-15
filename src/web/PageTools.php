@@ -321,7 +321,7 @@ function display_data()
 					if ($is_person == 'N') continue 2;
 					$definition = 'Open Researcher and Contributor ID';
 					$idurl = 'https://orcid.org/$1';
-					$searchurl= 'https://orcid.org/orcid-search/quick-search/?searchQuery=$1';
+					$searchurl= 'https://orcid.org/orcid-search/search?searchQuery=$1';
 					break;
 
 				case 'LCCN':
