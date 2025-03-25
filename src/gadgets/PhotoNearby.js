@@ -35,6 +35,7 @@ else {
 }
 
 Bamyers99.PhotoNearby = {
+	userAgent: 'PhotoNearby/1.0 (User:Bamyers99)',
 
 	/**
 	 * Init
@@ -47,6 +48,7 @@ Bamyers99.PhotoNearby = {
 		).done( function() {
 			
 			self.gc = Bamyers99.GadgetCommon;
+			
 			mw.hook( 'wikibase.entityPage.entityLoaded' ).add( function ( data ) {
 				'use strict';
 				
@@ -92,7 +94,7 @@ Bamyers99.PhotoNearby = {
 					
 					$( '#toc' ).before( h );
 					
-				});
+				}, self.userAgent);
 	
 			} );
 		} );

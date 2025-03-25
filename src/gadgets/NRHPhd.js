@@ -34,6 +34,7 @@ Bamyers99.NRHPhd = {
 		  const poll = (done) => (predFn() ? done() : setTimeout(() => poll(done), 250));
 		  return new Promise(poll);
 	},
+	userAgent: 'NRHPhd/1.0 (User:Bamyers99)',
 
 	/**
 	 * Init
@@ -42,11 +43,11 @@ Bamyers99.NRHPhd = {
 		var self = this ;
 
 		$.when(
-			$.ajax( { url: 'https://www.wikidata.org/w/index.php?title=User:Bamyers99/GadgetCommon.js&action=raw&ctype=text/javascript', dataType: 'script', cache: true } ),
+//			$.ajax( { url: 'https://www.wikidata.org/w/index.php?title=User:Bamyers99/GadgetCommon.js&action=raw&ctype=text/javascript', dataType: 'script', cache: true } ),
 			mw.loader.using([ 'jquery.ui' ])
 		).done( function() {
 			
-			self.gc = Bamyers99.GadgetCommon;
+//			self.gc = Bamyers99.GadgetCommon;
 			mw.hook( 'wikibase.entityPage.entityLoaded' ).add( async function ( data ) {
 				'use strict';
 				

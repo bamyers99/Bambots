@@ -53,6 +53,7 @@ Bamyers99.ClassSuggester = {
 		pt: 'instância de'
 	},
 	suggestTimeout: 30000, // 30 seconds
+	userAgent: 'ClassSuggester/1.0 (User:Bamyers99)',
 
 	/**
 	 * Init
@@ -336,10 +337,10 @@ Bamyers99.ClassSuggester = {
 						} );
 
 						self.displayDialog( { type: 'suggestions', data: instanceofs } );
-					} );
-				} );
-			} );
-		} );
+					}, self.userAgent );
+				}, self.userAgent );
+			}, self.userAgent );
+		}, self.userAgent );
 	},
 
 	/**
@@ -428,7 +429,7 @@ Bamyers99.ClassSuggester = {
 			var userlang = mw.config.get( 'wgUserLanguage' );
 			var proplabel = self.instanceOfLabel[userlang] ? self.instanceOfLabel[userlang] : self.propInstanceof;
 
-			self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, valueqid, function( success, msg ) {
+			self.gc.wdCreateClaimEntityValue(self.qid, self.propInstanceof, valueqid, self.userAgent, function( success, msg ) {
 				msg = success ? 'Claim created. <a href="/wiki/' + self.qid + '">Reload page</a>' : msg;
 				$( '#Bamyers99_ClassSuggester_msg' ).html( msg );
 

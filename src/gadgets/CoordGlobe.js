@@ -95,6 +95,7 @@ Bamyers99.CoordGlobe = {
 		'Q313': 'venus',
 		'Q3030': 'vesta'
 	},
+	userAgent: 'CoordGlobe/1.0 (User:Bamyers99)',
 
 	/**
 	 * Init
@@ -185,7 +186,7 @@ Bamyers99.CoordGlobe = {
 			var selectedQid = $("#Bamyers99_CoordGlobe_select").val();
 			
 			// Get the current claim
-			self.gc.wdGetClaim(claimId, function( success, data ) {
+			self.gc.wdGetClaim(claimId, self.userAgent, function( success, data ) {
 				if (! success) {
 					$( '#Bamyers99_CoordGlobe_msg' ).html( data );
 					return;
@@ -199,7 +200,7 @@ Bamyers99.CoordGlobe = {
 
 				data.mainsnak.datavalue.value.globe = 'http://www.wikidata.org/entity/' + selectedQid;
 	
-				self.gc.wdSetClaim(self.qid, JSON.stringify(data), function( success, msg ) {
+				self.gc.wdSetClaim(self.qid, JSON.stringify(data), self.userAgent, function( success, msg ) {
 					msg = success ? 'Globe set. <a href="/wiki/' + self.qid + '">Reload page</a>' : msg;
 					$( '#Bamyers99_CoordGlobe_msg' ).html( msg );
 	

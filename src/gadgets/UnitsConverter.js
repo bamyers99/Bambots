@@ -83,6 +83,7 @@ Bamyers99.UnitsConverter = {
 	},
 	propPointInTime: 'P585',
 	defaultCurISO: 'EUR',
+	userAgent: 'UnitsConverter/1.0 (User:Bamyers99)',
 
 	/**
 	 * Init
@@ -225,6 +226,8 @@ Bamyers99.UnitsConverter = {
 					toUnits[self.unitConverts[propHits[i].unit][x].unit] = '';
 			}
 		}
+		
+		if ($.isEmptyObject(toUnits)) return;
 
 		var opts = {
 			action: 'wbgetentities',
@@ -349,7 +352,7 @@ Bamyers99.UnitsConverter = {
 				$claimview.find( '.wikibase-snakview-value' ).append( h );
 
 			});
-		});
+		}, self.userAgent);
 	},
 
 	/**

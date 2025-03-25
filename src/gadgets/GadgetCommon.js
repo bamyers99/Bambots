@@ -17,7 +17,7 @@
 var Bamyers99 = Bamyers99 || {};
 
 Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
-
+	
 	/**
 	 * Execute a MediaWiki API query
 	 *
@@ -28,7 +28,7 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 	 * 		action : optional, default = 'query'
 	 * @param function callback
 	 */
-	mwApiQuery: function( opts, callback ) {
+	mwApiQuery: function( opts, callback, userAgent = 'Gadget/1.0 (User:Bamyers99)' ) {
 		opts = $.extend( { action: 'query' }, opts);
 		var lang = opts.lang || 'en';
 		delete opts.lang;
@@ -53,6 +53,7 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 
         $.ajax({
         	  type: 'POST',
+			  headers: { 'Api-User-Agent': userAgent },
         	  dataType: "json",
         	  url: protocalDomain + '/w/api.php?' + jsonp,
         	  data: opts,
@@ -66,9 +67,10 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 	 * @param entityId
 	 * @param propId
 	 * @param propValueEntityId
+	 * @param userAgent
 	 * @param callback(bool success, string errormsg) (optional)
 	 */
-	wdCreateClaimEntityValue: function( entityId, propId, propValueEntityId, callback ) {
+	wdCreateClaimEntityValue: function( entityId, propId, propValueEntityId, userAgent, callback) {
 		var self = this;
 
 		var opts = {
@@ -156,11 +158,11 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 							} else {
 								if ( callback ) callback( false, 'Error: "' + data.error.code + '": ' + data.error.info );
 							}
-						} );
-					} );
-				} );
+						}, userAgent );
+					}, userAgent );
+				}, userAgent );
 			} );
-		} );
+		}, userAgent );
 	},
 
 	/**
@@ -168,9 +170,10 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 	 *
 	 * @param entityId
 	 * @param claim json formatted claim
+	 * @param userAgent
 	 * @param callback(bool success, string errormsg) (optional)
 	 */
-	wdSetClaim: function( entityId, claim, callback ) {
+	wdSetClaim: function( entityId, claim, userAgent, callback ) {
 		var self = this;
 
 		var opts = {
@@ -223,18 +226,19 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 					} else {
 						if ( callback ) callback( false, 'Error: "' + data.error.code + '": ' + data.error.info );
 					}
-				} );
-			} );
-		} );
+				}, userAgent );
+			}, userAgent );
+		}, userAgent );
 	},
 
 	/**
 	 * Get a claim
 	 *
 	 * @param claimId
+	 * @param userAgent
 	 * @param callback(bool success, string errormsg or object json claim)
 	 */
-	wdGetClaim: function( claimId, callback ) {
+	wdGetClaim: function( claimId, userAgent, callback) {
 		var self = this;
 
 		var opts = {
@@ -252,7 +256,7 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
 			$.each( result.claims, function( propid, claims ) {
 				callback( true, claims[0]);
 			} );
-		} );
+		}, userAgent );
 	},
 
 	/**

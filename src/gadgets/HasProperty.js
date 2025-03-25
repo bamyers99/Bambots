@@ -30,6 +30,7 @@ var Bamyers99 = Bamyers99 || {};
 
 Bamyers99.HasProperty = {
 	cookieName: 'Bamyers99HasProperty',
+	userAgent: 'HasProperty/1.0 (User:Bamyers99)',
 
 	/**
 	 * Init
@@ -43,6 +44,7 @@ Bamyers99.HasProperty = {
 		).done( function() {
 			
 			self.gc = Bamyers99.GadgetCommon;
+			
 			mw.hook( 'wikibase.entityPage.entityLoaded' ).add( function ( data ) {
 				'use strict';
 				
@@ -147,7 +149,7 @@ Bamyers99.HasProperty = {
 						return false;
 					} );
 					
-				});
+				}, self.userAgent);
 	
 			} );
 		} );
