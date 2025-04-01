@@ -346,8 +346,7 @@ class WikidataEntitySchemaDirectory
                     if (isset($schema['error'])) {
                         $error = $schema['error'];
                         $errmsg = sprintf("line %d column %d %s", $error['line'], $error['charpos'], $error['msg']);
-                        $editor = "<b>View schema in:</b> [http://wikishape.weso.es/wikidataSchemaInfo?id=$id WikiShape Viewer] wikishape.weso.es";
-                        $wikitext .= "|-\n|colspan='5'| &nbsp;&nbsp;&nbsp;&rdsh; <b>Schema validation error</b>: $errmsg $editor\n";
+                        $wikitext .= "|-\n|colspan='5'| &nbsp;&nbsp;&nbsp;&rdsh; <b>Schema validation error</b>: $errmsg\n";
                     }
                 }
                 
