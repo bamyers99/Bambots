@@ -357,7 +357,7 @@ function display_form($navels)
 		        echo "First use: " . $navels['propmeta']['firstuse'] . " Last use: " . $navels['propmeta']['lastuse'] . "<br />\n";
 		    }
 		    
-		    if (count($navels['data']) >= 100) echo "Top 100<br />\n";
+		    if (count($navels['data']) >= 100) echo "Top 100 total<br />\n";
 
 		    echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Total count</th><th>Last month</th></tr></thead><tbody>\n";
 
@@ -376,7 +376,28 @@ function display_form($navels)
 		    }
 
 		    echo "</tbody></table>\n";
-
+		    
+		    if (count($navels['data']) >= 100) {
+		        echo "<br />Top 100 last month<br />\n";
+		        echo "<table class='wikitable tablesorter'><thead><tr><th>Username</th><th>Last month</th><th>Total count</th></tr></thead><tbody>\n";
+		        
+		        foreach ($navels['month_data'] as $row) {
+		            if (empty($row[0])) {
+		                $col1 = 'anonymous';
+		            } elseif ($row[0] == 'unknown') {
+		                $col1 = 'unknown';
+		            } else {
+		                $user_encoded = htmlentities($row[0], ENT_COMPAT, 'UTF-8');
+		                $url = "/NavelGazer.php?username=" . urlencode($row[0]);
+		                $col1 = "<a href='$url'>$user_encoded</a>";
+		            }
+		            echo "<tr><td>$col1</td><td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) .
+		            "</td><td style='text-align:right' data-sort-value='$row[1]'>" . intl_num_format($row[1]) . "</td></tr>\n";
+		        }
+		        
+		        echo "</tbody></table>\n";
+		    }
+		    
 		    $host  = $_SERVER['HTTP_HOST'];
 		    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 		    $extra = "NavelGazer.php?action=getCSV&property=P" . urlencode($params['property']);
@@ -498,6 +519,7 @@ function get_navels()
 	$propmeta = null;
 	$total_user_cnt = 0;
 	$month_user_cnt = 0;
+	$month_data = [];
 	
 	$wdwiki->cacheDeletedProperties();
 
@@ -646,7 +668,17 @@ function get_navels()
 		    if ($userdata[2] > 0) ++$month_user_cnt;
 		}
 		
-		$data = array_slice($data, 0, 100);
+		$tdata = array_slice($data, 0, 100);
+		
+		usort($data, function ($a, $b) {
+		    $amonth = (int)$a[2];
+		    $bmonth = (int)$b[2];
+		    return -($amonth <=> $bmonth); // desc
+		});
+		
+		$month_data = array_slice($data, 0, 100);
+		
+		$data = $tdata;
 		
 		// Get the metadata
 		$sql = 'SELECT * FROM s51454__wikidata.navelgazerpropmeta WHERE property_id = ?';
@@ -862,6 +894,7 @@ EOT;
 	$return['propmeta'] = $propmeta;
 	$return['total_user_cnt'] = $total_user_cnt;
 	$return['month_user_cnt'] = $month_user_cnt;
+	$return['month_data'] = $month_data;
 	
 	return $return;
 }
