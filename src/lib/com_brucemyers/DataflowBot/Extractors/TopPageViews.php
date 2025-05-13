@@ -136,9 +136,9 @@ class TopPageViews extends Extractor
 				if ($ns_name != '') continue;
 				if ($page == 'Main_Page') continue;
 
-				if (! isset($pageviews[$page])) $pageviews[$page] = array('cnt' => 0);
+				if (! isset($pageviews[$page])) $pageviews[$page] = array('cnt' => 0, 'views' => 0);
 				++$pageviews[$page]['cnt'];
-				$pageviews[$page]['views'] = $views;
+				$pageviews[$page]['views'] += $views;
 			}
 		}
 
@@ -146,7 +146,6 @@ class TopPageViews extends Extractor
 		$writer->writeRecords($rows);
 
 		foreach ($pageviews as $page => $pageview) {
-			if ($pageview['cnt'] != $checkdays) continue;
 			$rows = array(array($page, $pageview['views']));
 			$writer->writeRecords($rows);
 		}
