@@ -310,9 +310,6 @@ class Categories {
 					'type' => 'from-monthly',
 					'group' => 'Clarity'
 			],
-			'Suspected copyright infringements without a source' => [
-					'type' => 'from-monthly'
-			],
 			'Uncategorized' => [
 					'type' => 'from-monthly'
 			],
