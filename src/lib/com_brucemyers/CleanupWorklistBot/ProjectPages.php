@@ -92,6 +92,8 @@ class ProjectPages
     	    $categories = [];
     	    $this->traverseCats($categories, $category, 10);
     	    $categories = array_keys($categories);
+    	} elseif ($member_cat_type == 6) {
+    	    $categories = [];
     	} else {
     	    $categories = [$category];
     	}
