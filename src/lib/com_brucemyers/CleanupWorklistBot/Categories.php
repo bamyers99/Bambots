@@ -474,12 +474,12 @@ class Categories
             'subcats' => 'only',
             'group' => 'References'
         ],
-/*        'CS1 maintenance' => [
-            'type' => 'no-date',
-            'subcats' => 'only',
-            'group' => 'References'
-        ],
-*/
+//        'CS1 maintenance' => [
+//            'type' => 'no-date',
+//            'subcats' => 'only',
+//            'group' => 'References'
+//        ],
+//
         'Harv and Sfn multiple-target errors' => [
             'type' => 'no-date',
             'group' => 'References'
