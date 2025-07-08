@@ -688,7 +688,7 @@ class ReportGenerator
 				);
 			</script>
 			<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of {$asof_date}{$page_title}.</p>
-			<p>Of the $project_pages articles (includes DABs and redirects) in this project $cleanup_pages or $artcleanpct% are marked for cleanup, with $issue_count issues in total.</p>
+			<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct% are marked for cleanup, with $issue_count issues in total.</p>
 			<p>Listings: Alphabetic <b>&bull;</b> <a href=\"$bycaturl\">By category</a> <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
 			<table id='myTable' class='wikitable'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
 				<th>Oldest</th><th class='unsortable'>Issues</th></tr></thead><tbody>
@@ -730,7 +730,7 @@ class ReportGenerator
 				);
 			</script>
 			<p>Cleanup listing for <a href=\"$projecturl\">{$wikiproject}{$project_title}</a> as of {$asof_date}{$page_title}.</p>
-			<p>Of the $project_pages articles (includes DABs and redirects) in this project $cleanup_pages or $artcleanpct% are marked for cleanup, with $issue_count issues in total.</p>
+			<p>Of the $project_pages articles in this project $cleanup_pages or $artcleanpct% are marked for cleanup, with $issue_count issues in total.</p>
 			<p>Listings: <a href=\"$alphaurl\">Alphabetic</a> <b>&bull;</b> By category <b>&bull;</b> <a href=\"$csvurl\">CSV</a> <b>&bull;</b> <a href=\"$histurl\">History</a></p>
 			<p>... represents the current issue name. Issue names are abbreviated category names.</p>
     		");

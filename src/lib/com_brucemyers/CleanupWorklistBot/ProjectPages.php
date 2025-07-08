@@ -132,7 +132,7 @@ class ProjectPages
     	        $dbh_tools->beginTransaction();
     	        
     	        foreach ($members as $attribs) {
-    	            ++$page_count;
+    	            if ($attribs['c'] != 'Redirect') ++$page_count;
     	            ++$assessment_count;
     	            $isth->execute([$attribs['pt'], $attribs['i'], $attribs['c']]);
     	        }
@@ -161,6 +161,7 @@ class ProjectPages
     	    $dbh_tools->beginTransaction();
 
     	    foreach ($members as $attribs) {
+    	        if ($attribs['c'] == 'Redirect') --$page_count;
     	        ++$assessment_count;
      	        $isth->execute([$attribs['c'], $attribs['i'], $attribs['pt']]);
     	    }
