@@ -297,7 +297,10 @@ function dumpLivingPeople()
     $dbh = new PDO("mysql:host=$wiki_host;dbname=enwiki_p;charset=utf8mb4", $username, $password);
     $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $sql = "SELECT page_title FROM page, categorylinks WHERE cl_from = page_id AND cl_to = 'Living_people' AND cl_type='page'";
+    $sql = "SELECT page_title FROM page " .
+        " JOIN categorylinks ON cl_from = page_id " .
+        " JOIN linktarget ON lt_namespace = 14 AND lt_title = 'Living_people' AND cl_target_id = lt_id " .
+        " WHERE cl_from = page_id AND cl_type='page'";
     $stmt = $dbh->query($sql);
     $stmt->setFetchMode(PDO::FETCH_NUM);
 
