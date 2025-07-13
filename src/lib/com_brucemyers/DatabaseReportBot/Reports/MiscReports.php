@@ -341,8 +341,9 @@ class MiscReports extends DatabaseReport
 
 		// Retrieve with prefix WikiProject_
 
-		$sql = "SELECT page_id, page_title, GROUP_CONCAT(cl_to SEPARATOR '#') FROM page " .
+		$sql = "SELECT page_id, page_title, GROUP_CONCAT(lt_title SEPARATOR '#') FROM page " .
 			" LEFT JOIN categorylinks ON cl_from = page_id " .
+			" LEFT JOIN linktarget ON cl_target_id = lt_id AND lt_namespace = 14 " .
 			" WHERE page_namespace = 4 AND page_title LIKE 'WikiProject\_%' AND page_title NOT LIKE '%/%' " .
 			" AND page_is_redirect = 0 " .
 			" GROUP BY page_title " .
@@ -394,9 +395,11 @@ class MiscReports extends DatabaseReport
 
 		// Retrieve by category
 
-		$sql = "SELECT page_id, page_title FROM page, categorylinks " .
+		$sql = "SELECT page_id, page_title " .
+		    " FROM page, categorylinks " .
+		  	" JOIN linktarget ON lt_namespace = 14 AND lt_title = ? AND cl_target_id = lt_id " .
 			" WHERE page_namespace = 4 AND page_title NOT LIKE '%/%' " .
-			" AND cl_from = page_id AND cl_to = ? " .
+			" AND cl_from = page_id " .
 			" AND page_is_redirect = 0 ";
 		$sth = $dbh_wiki->prepare($sql);
 
@@ -520,8 +523,9 @@ class MiscReports extends DatabaseReport
 		$sql = "CREATE TABLE s51454__wikidata.deadpeople (page_id int unsigned NOT NULL, deathyear int unsigned NOT NULL)";
 		$dbh_tools->exec($sql);
 
-		$sql = "SELECT cl_from, LEFT(cl_to, 4) AS year " .
-			" FROM enwiki_p.categorylinks WHERE cl_to = ?";
+		$sql = "SELECT cl_from, LEFT(lt_title, 4) AS year " .
+			" FROM enwiki_p.categorylinks " .
+			" JOIN linktarget ON lt_namespace = 14 AND lt_title = ? AND cl_target_id = lt_id ";
 		$sth = $dbh_wiki->prepare($sql);
 		$isth = $dbh_tools->prepare( 'INSERT INTO s51454__wikidata.deadpeople VALUES (?,?)' );
 
@@ -576,9 +580,10 @@ class MiscReports extends DatabaseReport
 			}
 			$page_ids = implode(',', array_keys($pages));
 
-			$sql = "SELECT cl_from, LEFT(cl_to, 4) AS year " .
+			$sql = "SELECT cl_from, LEFT(lt_title, 4) AS year " .
 					" FROM enwiki_p.categorylinks " .
-					" WHERE cl_from IN ($page_ids) AND cl_to REGEXP '^[[:digit:]]{4}_births$'";
+					" JOIN linktarget ON lt_namespace = 14 AND lt_title REGEXP '^[[:digit:]]{4}_births$' AND cl_target_id = lt_id " .
+					" WHERE cl_from IN ($page_ids)";
 
 			$sth = $dbh_wiki->query($sql);
 
