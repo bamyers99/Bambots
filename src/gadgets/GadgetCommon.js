@@ -43,19 +43,19 @@ Bamyers99.GadgetCommon = Bamyers99.GadgetCommon || {
         }
 
         var protocalDomain = '',
-        	jsonp = '';
+        	origin = '';
 		
 		if ( lang !== 'wikidata' ) {
 			if (lang == 'commons') protocalDomain = 'https://commons.wikimedia.org';
         	else protocalDomain = 'https://' + lang + '.wikipedia.org';
-        	jsonp = 'callback=?';
+        	origin = 'origin=*';
         }
 
         $.ajax({
         	  type: 'POST',
 			  headers: { 'Api-User-Agent': userAgent },
         	  dataType: "json",
-        	  url: protocalDomain + '/w/api.php?' + jsonp,
+        	  url: protocalDomain + '/w/api.php?' + origin,
         	  data: opts,
         	  success: callback
         	});
