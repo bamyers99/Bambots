@@ -94,7 +94,7 @@ class WikidataEntitySchemaDirectory
         }
         
         // Retrieve the class list (P12861)
-        $query = "SELECT%20(STRAFTER(STR(%3Fitem)%2C%20'entity%2F')%20AS%20%3Fitemid)%20%3FitemLabel%20(STRAFTER(STR(%3Fvalue)%2C%20'E')%20as%20%3Fschema)%0A{%0A%20%20%3Fitem%20wdt%3AP12861%20%3Fvalue%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cen\"%20%20}%0A}%0A";
+        $query = "SELECT%20(STRAFTER(STR(%3Fitem)%2C%20'entity%2F')%20AS%20%3Fitemid)%20%3FitemLabel%20(STRAFTER(STR(%3Fvalue)%2C%20'E')%20as%20%3Fschema)%0A{%0A%20%20%3Fitem%20wdt%3AP12861%20%3Fvalue%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cmul%2Cen\"%20%20}%0A}%0A";
         
         $sparql = new WikidataSPARQL();
         
