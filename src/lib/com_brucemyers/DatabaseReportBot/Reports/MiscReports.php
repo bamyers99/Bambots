@@ -1212,7 +1212,7 @@ END;
 	    
 	    // Get the property list
 	    
-	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20%3FpropLabel%20%3FpropDescription%20(STRAFTER(STR(%3FpropertyType)%2C%20'%23')%20AS%20%3Ftype)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%0A%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cen\"%0A%20%20}%0A}%0A";
+	    $query = "SELECT%20(STRAFTER(STR(%3Fprop)%2C%20'P')%20AS%20%3Fid)%20%3FpropLabel%20%3FpropDescription%20(STRAFTER(STR(%3FpropertyType)%2C%20'%23')%20AS%20%3Ftype)%0AWHERE%0A{%0A%20%20%3Fprop%20wikibase%3ApropertyType%20%3FpropertyType%20.%0A%20%20SERVICE%20wikibase%3Alabel%20{%0A%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20\"$language%2Cmul%2Cen\"%0A%20%20}%0A}%0A";
 	    
 	    $sparql = new WikidataSPARQL();
 	    
