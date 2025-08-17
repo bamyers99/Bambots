@@ -1,34 +1,34 @@
 - name: wiki-project-list
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php DatabaseReportBot.php MiscReports WikiProjectList
-  image: php8.2
+  image: php8.4
   schedule: "17 22 1 * *"
   emails: onfailure
   cpu: 250m
 
 - name: age-anomaly
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php DatabaseReportBot.php MiscReports AgeAnomaly
-  image: php8.2
+  image: php8.4
   schedule: "17 2 2 * *"
   emails: onfailure
   cpu: 250m
   
 - name: most-edited
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php DataflowBot.php
-  image: php8.2
+  image: php8.4
   schedule: "10 1 * * sun"
   emails: onfailure
   cpu: 250m
   
 - name: popular-low-quality
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php DataflowBot.php PopularLowQuality
-  image: php8.2
+  image: php8.4
   schedule: "17 3 * * tue"
   emails: onfailure
   cpu: 250m
   
 - name: inception-bot-launch
   command: bin/ksub execute /data/project/bambots/Bambots/src/cli php /data/project/bambots/bin/ksub.php inception-bot "cd /data/project/bambots/Bambots/src/cli; php InceptionBot.php" --cpu 1000m --emails onfailure 
-  image: php8.2
+  image: php8.4
   schedule: "00 19 * * *"
   emails: none
   cpu: 250m
