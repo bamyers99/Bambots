@@ -41,6 +41,10 @@ $instanceofIgnores = array('Q13406463','Q11266439'); // Wikimedia list article, 
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
+if (empty($_SERVER['HTTP_USER_AGENT']) || preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
+    http_response_code(404);
+}
+
 $params = [];
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
@@ -65,7 +69,7 @@ switch ($action) {
 get_params();
 
 // Redirect to get the results so have a bookmarkable url
-if (isset($_POST['id']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
+if (isset($_POST['id'])) {
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 	$extra = 'WikidataClasses.php?id=Q' . $params['id'] . '&lang=' . urlencode($params['lang']);
