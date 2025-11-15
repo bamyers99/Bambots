@@ -1312,6 +1312,7 @@ END;
             
             if (isset($type_colors[$datatype]) && ! empty($type_colors[$datatype]['color'])) $color = " style=\"background:{$type_colors[$datatype]['color']}\"";
             else $color = '';
+            $color = '';
             
             if (isset($type_colors[$datatype])) $datatype = $type_colors[$datatype]['abbrev'];
             
