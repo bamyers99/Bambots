@@ -235,6 +235,7 @@ class DataflowBot
 	function _configPopularLowQuality() {
 		$header = <<<EOT
 ==Lowest quality high-popularity articles==
+{{Shortcut|WP:POPULARSTUBS}}
 Last updated: {{subst:CURRENTYEAR}}-{{subst:CURRENTMONTH}}-{{subst:CURRENTDAY2}} {{subst:CURRENTTIME}} (UTC)<br />Weekly page views as of: @@TPV#year@@-@@TPV#month@@-@@TPV#day@@
 EOT;
 		$components = array (

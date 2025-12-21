@@ -244,6 +244,7 @@ class WikidataEntitySchemaDirectory
         $current_date = date('Y-m-d H:i');
         
         $wikitext = "This is a programmatically generated directory of EntitySchemas. Any changes made to this page will be lost during the next update. To configure how this page is generated see the [[Wikidata:Database reports/EntitySchema directory/Configuration|Configuration]].<br />\n";
+        $wikitext .= "How to check entities against a Schema using the ShEx2 Simple Online Validator: [[Wikidata:WikiProject Schemas/Tutorial|Tutorial]]<br />\n";
         $wikitext .= "Updated: <onlyinclude>$current_date (UTC)</onlyinclude>\n";
         
         // Sort the categories
