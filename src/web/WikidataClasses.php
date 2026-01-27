@@ -180,6 +180,21 @@ function display_form($subclasses)
 		            	$("#id").val(suggestion.data.id);
 		            }
 		        });
+		        
+				$( 'a[data-payload]' ).click( function() {
+					var todo = $( this ).attr( 'href' );
+					var payload = $( this ).attr( 'data-payload' );
+					payload = payload.replace('rejectbot', todo);
+					window.location = payload;
+					return false;
+				} );
+				$( 'a[data-payload]' ).auxclick( function() {
+					var todo = $( this ).attr( 'href' );
+					var payload = $( this ).attr( 'data-payload' );
+					payload = payload.replace('rejectbot', todo);
+					window.location = payload;
+					return false;
+				} );
 		        }
 			);
 		</script>
@@ -327,11 +342,11 @@ EOT;
 					"<th>Indirect subclasses</th><th>Direct instances</th><th>Indirect instances</th></tr></thead><tbody>\n";
 
 				foreach ($subclasses['children'] as $row) {
-					$extra = "WikidataClasses.php?id=Q" . $row[0] . "&amp;lang=" . urlencode($params['lang']);
+					$extra = "WikidataClasses.php?id=rejectbot" . "&amp;lang=" . urlencode($params['lang']);
 					$classurl = "$protocol://$host$uri/$extra";
 					$wdurl = "https://www.wikidata.org/wiki/Q" . $row[0];
 					$term_text = htmlentities($row[1], ENT_COMPAT, 'UTF-8');
-					echo "<tr><td><a href='$classurl'>$term_text</a></td><td data-sort-value='$row[0]'><a class='external' href='$wdurl'>Q{$row[0]}</a></td>" .
+					echo "<tr><td><a href='Q{$row[0]}' data-payload='$classurl'>$term_text</a></td><td data-sort-value='$row[0]'><a class='external' href='$wdurl'>Q{$row[0]}</a></td>" .
 						"<td style='text-align:right' data-sort-value='$row[2]'>" . intl_num_format($row[2]) .
 						"</td><td style='text-align:right' data-sort-value='$row[3]'>" . intl_num_format($row[3]) .
 						"</td><td style='text-align:right' data-sort-value='$row[4]'>" . intl_num_format($row[4]) .

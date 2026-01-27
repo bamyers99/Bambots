@@ -71,24 +71,18 @@ function display_pages($user, $days)
 	</head>
 	<body>
         <h2>User New Pages</h2>
-        <form action="UserNewPages.php" ><table class="form">
-        <tr><td><b>Username</b> <input name="user" type="text" size="10" id="testfield1" value="<?php echo $user ?>" /></td></tr>
-        <tr><td><b>Days</b> <input name="days" type="text" size="10" value="<?php echo $days ?>" /> 60 days max</td></tr>
+        <form action="rejectbot" onsubmit="this.action='UserNewPages' + '.php'; return true;"><table class="form">
+        <tr><td><b>Username</b> <input name="user" type="text" size="10" id="testfield1" autofocus="1" value="<?php echo htmlentities($user, ENT_COMPAT, 'UTF-8') ?>" /></td></tr>
+        <tr><td><b>Days</b> <input name="days" type="text" size="10" value="<?php echo htmlentities($days, ENT_COMPAT, 'UTF-8') ?>" /> 60 days max</td></tr>
         <tr><td><input type="submit" value="Submit" /></td></tr>
         </table></form>
-
-        <script type="text/javascript">
-            if (document.getElementById) {
-                document.getElementById('testfield1').focus();
-            }
-        </script>
     <?php
 
-    if (! empty($user) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
+    if (isset($_POST['user']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
         display_articles($user, $days);
     }
 
-    ?></body></html><?php
+    ?><br />Note: Javascript must be enabled to use this page.<br /><div style="display: table; margin: 0 auto;"><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
 
 /**

@@ -107,6 +107,13 @@ function display_form()
 					window.location = payload;
 					return false;
 				} );
+				$( 'a[data-payload]' ).auxclick( function() {
+					var todo = $( this ).attr( 'href' );
+					var payload = $( this ).attr( 'data-payload' );
+					payload = payload.replace('rejectbot', todo);
+					window.location = payload;
+					return false;
+				} );
 			});
 		</script>
 	</head>
@@ -298,7 +305,7 @@ EOT;
 	   htmlentities($lctmplname, ENT_COMPAT, 'UTF-8') . "</a>";
 	echo '<div><b>' . htmlentities($l10n->get('pagecount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['page_count']) . '</div>';
 	echo '<div><b>' . htmlentities($l10n->get('transclusioncount', true), ENT_COMPAT, 'UTF-8') . '</b>: ' . intl_num_format($results['info']['instance_count']) . '</div>';
-	echo "<div><b>Note: 'page links', 'missing', 'errors' links have been obfuscated to prevent bots, crawlers from accessing. Links must be left clicked with Javascript enabled.</b></div>";
+	echo "<div><b>Note: 'page links', 'missing', 'errors' links have been obfuscated to prevent bots, crawlers from accessing. Javascript must be enabled.</b></div>";
 
 	$wikitext .= $l10n->get('template', true) . ": [[$templateNS:$lctmplname|$lctmplname]]<br />\n";
 	$wikitext .= $l10n->get('pagecount', true) . ": {$results['info']['page_count']}<br />\n";

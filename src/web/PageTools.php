@@ -75,24 +75,18 @@ function display_form()
 	<body>
 		<div style="display: table; margin: 0 auto; width: 1000px">
 		<h2>Page Tools<?php echo $title ?></h2>
-        <form action="PageTools.php" method="post">
-        <b><acronym title="&lt;language&gt;wiki, wikidata">Wiki</acronym></b> <input name="wiki" type="text" size="6" value="<?php echo $params['wiki'] ?>" />
-        <b>Page</b> <input name="page" id="testfield1" type="text" size="25" value="<?php echo $params['page'] ?>" />
+        <form action="rejectbot" method="post" onsubmit="this.action='PageTools' + '.php'; return true;">
+        <b><acronym title="&lt;language&gt;wiki, wikidata">Wiki</acronym></b> <input name="wiki" type="text" size="6" value="<?php echo htmlentities($params['wiki'], ENT_COMPAT, 'UTF-8') ?>" />
+        <b>Page</b> <input name="page" id="testfield1" type="text" size="25" autofocus="1" value="<?php echo htmlentities($params['page'], ENT_COMPAT, 'UTF-8') ?>" />
         <input type="submit" value="Submit" />
         </form>
 
-        <script type="text/javascript">
-            if (document.getElementById) {
-                document.getElementById('testfield1').focus();
-            }
-        </script>
-
     <?php
-    if (! empty($params['page']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
+    if (! empty($_POST['page']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
         display_data();
     }
 
-    ?></div><br /><div style="display: table; margin: 0 auto;"><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
+    ?></div><br />Note: Javascript must be enabled to use this page.<br /><div style="display: table; margin: 0 auto;"><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
 
 /**
