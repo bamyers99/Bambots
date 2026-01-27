@@ -191,12 +191,22 @@ function display_form($subclasses)
 					window.location = payload;
 					return false;
 				} );
+				
 				$( 'a[data-payload]' ).on('auxclick', function() {
 					var todo = $( this ).attr( 'href' );
 					if (todo.includes('.php')) return true;
 					var payload = $( this ).attr( 'data-payload' );
 					payload = payload.replace('rejectbot', todo);
-					$( this ).attr( 'href' ) = payload;
+					$( this ).attr( 'href', payload);
+					return true;
+				} );
+				
+				$( 'a[data-payload]' ).on('contextmenu', function() {
+					var todo = $( this ).attr( 'href' );
+					if (todo.includes('.php')) return true;
+					var payload = $( this ).attr( 'data-payload' );
+					payload = payload.replace('rejectbot', todo);
+					$( this ).attr( 'href', payload);
 					return true;
 				} );
 		        }
