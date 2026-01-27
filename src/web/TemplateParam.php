@@ -105,14 +105,14 @@ function display_form()
 					var payload = $( this ).attr( 'data-payload' );
 					payload = payload.replace('rejectbot', todo);
 					window.location = payload;
-					return false;
+					return true;
 				} );
 				$( 'a[data-payload]' ).on('auxclick', function() {
 					var todo = $( this ).attr( 'href' );
 					var payload = $( this ).attr( 'data-payload' );
 					payload = payload.replace('rejectbot', todo);
 					window.location = payload;
-					return false;
+					return true;
 				} );
 			});
 		</script>
