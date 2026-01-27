@@ -184,15 +184,19 @@ function display_form($subclasses)
 				$( 'a[data-payload]' ).click( function() {
 					var todo = $( this ).attr( 'href' );
 					var payload = $( this ).attr( 'data-payload' );
-					payload = payload.replace('rejectbot', todo);
+					
+					if (todo.includes('.php')) payload = todo;
+					else payload = payload.replace('rejectbot', todo);
+
 					window.location = payload;
-					return true;
+					return false;
 				} );
 				$( 'a[data-payload]' ).on('auxclick', function() {
 					var todo = $( this ).attr( 'href' );
+					if (todo.includes('.php')) return true;
 					var payload = $( this ).attr( 'data-payload' );
 					payload = payload.replace('rejectbot', todo);
-					window.location = payload;
+					$( this ).attr( 'href' ) = payload;
 					return true;
 				} );
 		        }
