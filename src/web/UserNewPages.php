@@ -71,7 +71,7 @@ function display_pages($user, $days)
 	</head>
 	<body>
         <h2>User New Pages</h2>
-        <form action="rejectbot" onsubmit="this.action='UserNewPages' + '.php'; return true;"><table class="form">
+        <form action="rejectbot" method="post" onsubmit="this.action='UserNewPages' + '.php'; return true;"><table class="form">
         <tr><td><b>Username</b> <input name="user" type="text" size="10" id="testfield1" autofocus="1" value="<?php echo htmlentities($user, ENT_COMPAT, 'UTF-8') ?>" /></td></tr>
         <tr><td><b>Days</b> <input name="days" type="text" size="10" value="<?php echo htmlentities($days, ENT_COMPAT, 'UTF-8') ?>" /> 60 days max</td></tr>
         <tr><td><input type="submit" value="Submit" /></td></tr>

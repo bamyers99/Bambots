@@ -41,16 +41,6 @@ $params = array();
 
 get_params();
 
-// Redirect to get the results so have a bookmarkable url
-if (! empty($_POST['page']) && isset($_SERVER['HTTP_USER_AGENT']) && ! preg_match(BOT_REGEX, $_SERVER['HTTP_USER_AGENT'])) {
-	$host  = $_SERVER['HTTP_HOST'];
-	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-	$extra = 'PageTools.php?wiki=' . urlencode($params['wiki']) . '&page=' . urlencode($params['page']);
-	$protocol = HttpUtil::getProtocol();
-	header("Location: $protocol://$host$uri/$extra", true, 302);
-	exit;
-}
-
 display_form();
 
 /**

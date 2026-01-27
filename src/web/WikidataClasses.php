@@ -188,7 +188,7 @@ function display_form($subclasses)
 					window.location = payload;
 					return false;
 				} );
-				$( 'a[data-payload]' ).auxclick( function() {
+				$( 'a[data-payload]' ).on('auxclick', function() {
 					var todo = $( this ).attr( 'href' );
 					var payload = $( this ).attr( 'data-payload' );
 					payload = payload.replace('rejectbot', todo);
