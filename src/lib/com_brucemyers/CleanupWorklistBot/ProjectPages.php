@@ -125,19 +125,23 @@ class ProjectPages
     	    $dbh_tools->exec('TRUNCATE page');
     	    $page_count = 0;
     	    $assessments_loaded = true;
-    	    $continue = '';
+    	    $asmt_projects = explode('|', $assessment_project);
     	    
-    	    while ($continue !== false) {
-    	        $members = $this->getAssessmentChunk($assessment_project, $continue);
-    	        $dbh_tools->beginTransaction();
+    	    foreach ($asmt_projects as $asmt_project) {
+    	        $continue = '';
     	        
-    	        foreach ($members as $attribs) {
-    	            if ($attribs['c'] != 'Redirect') ++$page_count;
-    	            ++$assessment_count;
-    	            $isth->execute([$attribs['pt'], $attribs['i'], $attribs['c']]);
-    	        }
-    	        
-    	        $dbh_tools->commit();
+        	    while ($continue !== false) {
+        	        $members = $this->getAssessmentChunk($asmt_project, $continue);
+        	        $dbh_tools->beginTransaction();
+        	        
+        	        foreach ($members as $attribs) {
+        	            if ($attribs['c'] != 'Redirect') ++$page_count;
+        	            ++$assessment_count;
+        	            $isth->execute([$attribs['pt'], $attribs['i'], $attribs['c']]);
+        	        }
+        	        
+        	        $dbh_tools->commit();
+        	    }
     	    }
     	}
 
@@ -153,20 +157,25 @@ class ProjectPages
     	// Get article assessments
     	$isth = $dbh_tools->prepare('UPDATE IGNORE page SET class = ?, importance = ? WHERE page_title = ?');
     	
-    	if ($assessments_loaded || $assessment_project == 'None') $continue = false;
-    	else $continue = '';
-
-    	while ($continue !== false) {
-    	    $members = $this->getAssessmentChunk($assessment_project, $continue);
-    	    $dbh_tools->beginTransaction();
-
-    	    foreach ($members as $attribs) {
-    	        if ($attribs['c'] == 'Redirect') --$page_count;
-    	        ++$assessment_count;
-     	        $isth->execute([$attribs['c'], $attribs['i'], $attribs['pt']]);
-    	    }
-
-    	    $dbh_tools->commit();
+    	if (! $assessments_loaded && $assessment_project != 'None') {
+    	    $asmt_projects = explode('|', $assessment_project);
+    	        
+        	foreach ($asmt_projects as $asmt_project) {
+        	    $continue = '';
+        	    
+        	    while ($continue !== false) {
+        	        $members = $this->getAssessmentChunk($asmt_project, $continue);
+            	    $dbh_tools->beginTransaction();
+        
+            	    foreach ($members as $attribs) {
+            	        if ($attribs['c'] == 'Redirect') --$page_count;
+            	        ++$assessment_count;
+             	        $isth->execute([$attribs['c'], $attribs['i'], $attribs['pt']]);
+            	    }
+        
+            	    $dbh_tools->commit();
+            	}
+        	}
     	}
 
     	$dbh_tools = null;
