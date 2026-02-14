@@ -159,6 +159,8 @@ class ProjectPages
     	
     	if (! $assessments_loaded && $assessment_project != 'None') {
     	    $asmt_projects = explode('|', $assessment_project);
+    	    $asmt_proj_count = count($asmt_projects);
+    	    $redirects = [];
     	        
         	foreach ($asmt_projects as $asmt_project) {
         	    $continue = '';
@@ -168,7 +170,10 @@ class ProjectPages
             	    $dbh_tools->beginTransaction();
         
             	    foreach ($members as $attribs) {
-            	        if ($attribs['c'] == 'Redirect') --$page_count;
+            	        if ($attribs['c'] == 'Redirect') {
+            	            if ($asmt_proj_count == 1 || ! in_array($attribs['pt'], $redirects)) --$page_count;
+            	            if ($asmt_proj_count > 1) $redirects[] = $attribs['pt'];
+            	        }
             	        ++$assessment_count;
              	        $isth->execute([$attribs['c'], $attribs['i'], $attribs['pt']]);
             	    }
