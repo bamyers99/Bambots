@@ -1,0 +1,1 @@
+find /public/dumps/public/wikidatawiki/20251101 -type f -name 'wikidatawiki-20251101-stub-meta-history[1-9]*.xml.gz' -exec sh -c 'gunzip -c "$1" | xml2-0.5/xml2' sh '{}' ';' | grep '^/mediawiki/page/revision/\(contributor\|comment=\|timestamp=\|id=\)' | php navelgazer.php

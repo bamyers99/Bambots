@@ -507,7 +507,7 @@ function display_form($navels)
 }
 ?>
         <br /><div><sup>1</sup><a href='https://en.wiktionary.org/wiki/navel-gazing'>navel–gazing</a> (Wiktionary)</div>
-        <div><sup>2</sup>Data derived from database dump wikidatawiki-stub-meta-history.xml revision comments and wikidatawiki-change_tag.sql tag usage</div>
+        <div><sup>2</sup>Data derived from <a href='https://wikitech.wikimedia.org/wiki/Data_Platform/Data_Lake/Edits/MediaWiki_history_dumps'>MediaWiki history dumps</a></div>
         <div><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://www.wikidata.org/wiki/User:Bamyers99">Bamyers99</a></div></div></body></html><?php
 }
 
