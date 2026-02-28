@@ -135,7 +135,7 @@ fclose($hndl);
 $hndl = fopen('php://stdin', 'r');
 
 while (! feof($hndl)) {
-	$buffer = fgets($hndl);
+    $buffer = rtrim(fgets($hndl), "\n");
 	if (empty($buffer)) continue;
 	$buffer = explode("\t", $buffer);
 	
@@ -148,7 +148,7 @@ while (! feof($hndl)) {
 	$fulltimestamp = $matches[1] . $matches[2];
 	
 	$username = $buffer[EVENT_USER_TEXT];
-	if ($buffer[EVENT_USER_IS_PERMANENT] == 'false') $username = ''; // anonymous edit
+	if ($buffer[EVENT_USER_IS_PERMANENT] != 'true') $username = ''; // anonymous edit
 	
 	if (! preg_match('!^/\\* ([^\n]+)!', $buffer[EVENT_COMMENT], $matches)) continue;
 	
