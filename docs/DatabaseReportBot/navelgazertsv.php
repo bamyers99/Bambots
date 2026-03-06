@@ -218,20 +218,24 @@ while (! feof($hndl)) {
 			// Tool
 			$tags = explode(',', $buffer[REVISION_TAGS]);
 			
+			$toolid = 0;
+			
 			foreach ($tags as $tag) {
-			    if (isset($tool_list[$tag])) $toolid = $tool_list[$tag];
-			    else $toolid = 0;
-			    
-			    if (! isset($tools[$username])) $tools[$username] = [];
-			    if (! isset($tools[$username][$toolid])) $tools[$username][$toolid] = 0; // grand total lower 32 bits, month total upper 32 bits
-			    
-			    $tools[$username][$toolid] += 1;
-			    
-			    if ($timestamp == $prevmonth) {
-			        $tools[$username][$toolid] += MONTHLY_INCREMENT;
+			    if (isset($tool_list[$tag])) {
+			        $toolid = $tool_list[$tag];
+			        break;
 			    }
 			}
-
+			
+			if (! isset($tools[$username])) $tools[$username] = [];
+			if (! isset($tools[$username][$toolid])) $tools[$username][$toolid] = 0; // grand total lower 32 bits, month total upper 32 bits
+			
+			$tools[$username][$toolid] += 1;
+			
+			if ($timestamp == $prevmonth) {
+			    $tools[$username][$toolid] += MONTHLY_INCREMENT;
+			}
+			
 			break;
 		}
 	}
