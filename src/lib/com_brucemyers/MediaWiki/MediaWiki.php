@@ -296,12 +296,12 @@ class MediaWiki extends wikipedia
      * Get multiple revisions text
      *
      * @param $revids array Revision ids
-     * @return array pagetitle=>array(namespace, revid, revision text, revid, revision text) second revid is optional
+     * @return array pagetitle=>array(namespace, revid, revision text, revid, revision text, ...) second revid is optional
      */
     public function getRevisionsText($revids)
     {
-        if (empty($revids)) return array();
-        $revs = array();
+        if (empty($revids)) return [];
+        $revs = [];
         $revChunks = array_chunk($revids, Config::get(self::WIKIPAGEINCREMENT));
 
         foreach ($revChunks as $revChunk) {
@@ -321,10 +321,13 @@ class MediaWiki extends wikipedia
        			$pagetext = (isset($page['revisions'][0]['slots']['main']['*'])) ? $page['revisions'][0]['slots']['main']['*'] : '';
          		$revs[$pagetitle] = array($ns, $page['revisions'][0]['revid'], $pagetext);
 
-       			if (isset($page['revisions'][1])) {
-         			$revs[$pagetitle][] = $page['revisions'][1]['revid'];
-       				$pagetext = (isset($page['revisions'][1]['slots']['main']['*'])) ? $page['revisions'][1]['slots']['main']['*'] : '';
+         		$nextrev = 1;
+         		
+         		while (isset($page['revisions'][$nextrev])) {
+         		    $revs[$pagetitle][] = $page['revisions'][$nextrev]['revid'];
+         		    $pagetext = (isset($page['revisions'][$nextrev]['slots']['main']['*'])) ? $page['revisions'][$nextrev]['slots']['main']['*'] : '';
          			$revs[$pagetitle][] = $pagetext;
+         			++$nextrev;
         		}
         	}
         }

@@ -105,7 +105,7 @@ class CategoryLinksDiff
     		$sth = null;
     	}
 
-    	// Calc category tress for QueryCats::CATEGORY_COUNT_RECALC and QueryCats::CATEGORY_COUNT_UNKNOWN
+    	// Calc category trees for QueryCats::CATEGORY_COUNT_RECALC and QueryCats::CATEGORY_COUNT_UNKNOWN
     	$dbh_tools2 = $this->serviceMgr->getDBConnection('tools');
     	$querycats = new QueryCats($wiki, $dbh_tools2);
 

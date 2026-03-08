@@ -68,15 +68,10 @@ LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazerpropmeta.tsv'
 TRUNCATE s51454__wikidata.navelgazertagdef;
 LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/changetags.tsv' INTO TABLE s51454__wikidata.navelgazertagdef CHARACTER SET binary;
 
+TRUNCATE s51454__wikidata.navelgazertag;
+LOAD DATA LOCAL INFILE '/data/project/bambots/navelgazer/navelgazertag.tsv' INTO TABLE s51454__wikidata.navelgazertag CHARACTER SET binary;
+
 jsub -N DatabaseReportBot -wd /data/project/bambots/Bambots/src/cli -mem 512m php DatabaseReportBot.php MiscReports dumpChangeTags
-jsub -cwd bzip2 -9 navelgazerrev.tsv
-curl https://dumps.wikimedia.org/wikidatawiki/20220701/wikidatawiki-20220701-change_tag.sql.gz >wikidatawiki-20220701-change_tag.sql.gz&
-screen gunzip -c *change_tag.sql.gz | ./mysqlparse - - | awk -f changetag.awk - >changetag.tsv&
-sort -k 1,1 changetag.tsv >changetag.tsv.sorted&
-bunzip2 navelgazerrev.tsv.bz2
-sort -k 1,1 navelgazerrev.tsv >navelgazerrev.tsv.sorted&
-join -a 2 -t $'\t' -o '2.2,1.2' --nocheck-order changetag.tsv.sorted navelgazerrev.tsv.sorted >userchangetag.tsv&
-php loadchangetags.php "dbusername" "dbpassword"
 
 cd /data/project/bambots/Bambots/cache/CleanupWorklistBot
 rm *

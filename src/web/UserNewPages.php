@@ -82,7 +82,7 @@ function display_pages($user, $days)
         display_articles($user, $days);
     }
 
-    ?><br />Note: Javascript must be enabled to use this page.<br /><div style="display: table; margin: 0 auto;"><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
+    ?><br /><div style="display: table; margin: 0 auto;">Note: Javascript must be enabled to use this page.<br /><a href="/privacy.html">Privacy Policy</a> <b>&bull;</b> Author: <a href="https://en.wikipedia.org/wiki/User:Bamyers99" class='novisited'>Bamyers99</a></div></body></html><?php
 }
 
 /**
