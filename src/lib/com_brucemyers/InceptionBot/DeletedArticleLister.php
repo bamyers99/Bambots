@@ -17,6 +17,8 @@
 
 namespace com_brucemyers\InceptionBot;
 
+use com_brucemyers\MediaWiki\MediaWiki;
+
 class DeletedArticleLister
 {
     protected $mediawiki;
@@ -56,7 +58,6 @@ class DeletedArticleLister
         
         $revs = $this->mediawiki->getProp('revisions', $params);
         
-        
         // Get 3 revisions that cover the month, each revision has 14 days
         $revtimes = [
             "$month-13T00:00:00Z",
@@ -66,12 +67,26 @@ class DeletedArticleLister
         $revids = [];
         $nextrev = 0;
         
-        foreach ($revs['query']['pages'][0]['revisions'] as $rev) {
-            if ($rev['timestamp'] > $revtimes[$nextrev]) {
-                $revids[] = $rev['revid'];
-                ++$nextrev;
-                if ($nextrev == 3) break;
+        foreach ($revs['query']['pages'] as $page) {
+            foreach ($page['revisions'] as $rev) {
+                if ($rev['timestamp'] > $revtimes[$nextrev]) {
+                    $revids[] = $rev['revid'];
+                    ++$nextrev;
+                    if ($nextrev == 3) break;
+                }
             }
+        }
+        
+        if (empty($revids) && count($revs) > 0) {
+            $lastrev = 0;
+            
+            foreach ($revs['query']['pages'] as $page) {
+                foreach ($page['revisions'] as $rev) {
+                    $lastrev = $rev['revid'];
+                }
+            }
+            
+            $revids[] = $lastrev;
         }
         
         // Get the revisions text links
@@ -90,6 +105,8 @@ class DeletedArticleLister
                 
                 foreach ($parsedlinks as $links) {
                     foreach (array_keys($links) as $title) {
+                        $ns = MediaWiki::getNamespaceId(MediaWiki::getNamespaceName($title));
+                        if ($ns != 0 && $ns != 118) continue;
                         $pagelinks[$title] = true; // removes dups
                     }
                 }

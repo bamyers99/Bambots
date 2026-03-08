@@ -24,6 +24,8 @@ $webdir = dirname(__FILE__);
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'InceptionBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
@@ -41,6 +43,7 @@ display_pages($project, $month);
 function display_pages($project, $month)
 {
     $prevmonth = date("Y-m", strtotime('-1 month', strtotime($month . '-01')));
+    $nextmonth = date("Y-m", strtotime('+1 month', strtotime($month . '-01')));
     
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -64,7 +67,7 @@ function display_pages($project, $month)
 	          text-align: center;
            }
            table tr.altrow td {
-	          background: #f8f8f8;
+	          background: #e8e8e8;
            }
            td {
                 padding: 0 10px;
@@ -76,7 +79,10 @@ function display_pages($project, $month)
         <form action="rejectbot" method="post" onsubmit="this.action='DeletedNewPages' + '.php'; return true;"><table class="form">
         <tr><td><b>Project</b> <input name="project" type="text" size="20" id="testfield1" autofocus="1" value="<?php echo htmlentities($project, ENT_COMPAT, 'UTF-8') ?>" /></td></tr>
         <tr><td><b>Month</b> <input name="month" type="text" size="10" id="testfield2" value="<?php echo htmlentities($month, ENT_COMPAT, 'UTF-8') ?>" /> format: YYYY-MM</td></tr>
-        <tr><td><input type="submit" value="Submit" /> <input type="submit" value="Previous Month" onclick="const inputField = document.getElementById('testfield2'); inputField.value='<?php echo $prevmonth ?>'; return true;" /></td></tr>
+        <tr><td><input type="submit" value="Submit" />
+        <input type="submit" value="Previous Month" onclick="const inputField = document.getElementById('testfield2'); inputField.value='<?php echo $prevmonth ?>'; return true;" />
+        <input type="submit" value="Next Month" onclick="const inputField = document.getElementById('testfield2'); inputField.value='<?php echo $nextmonth ?>'; return true;" />
+        </td></tr><tr><td>Note: Submit must be pressed to get initial results.</td></tr>
         </table></form>
     <?php
 
@@ -116,13 +122,15 @@ function display_articles($project, $month)
 
     $pages = $lister->getRedLinks($project, $month);
     
+    ksort($pages);
+    
     foreach ($pages as $title => $hasdraft) {
         $urlencodedtitle = urlencode(str_replace(' ', '_', $title));
         $htmltitle = htmlspecialchars($title);
         $class = '';
         if ($line++ % 2 == 1) $class = ' class="altrow"';
         
-        echo "<tr$class><td><a href='https://en.wikipedia.org/wiki/$urlencodedtitle'>$htmltitle</a></td><td>";
+        echo "<tr$class><td><a style='color:red' href='https://en.wikipedia.org/wiki/$urlencodedtitle'>$htmltitle</a></td><td>";
         
         if ($hasdraft) {
             $drafttitle = "Draft:$title";
