@@ -127,11 +127,11 @@ class MediaWiki extends wikipedia
 
     	// Get a login token
     	$post = array('meta' => 'tokens', 'type' => 'login');
-    	$ret = $this->query('?action=query&format=php', $post);
+    	$ret = $this->query('?action=query&format=json', $post);
     	$token = $ret['query']['tokens']['logintoken'];
 
     	$post = array('lgname' => $username, 'lgpassword' => $password, 'lgtoken' => $token);
-        $ret = $this->query('?action=login&format=php', $post);
+        $ret = $this->query('?action=login&format=json', $post);
 
         if ($ret['login']['result'] != 'Success') {
             throw new Exception('Login Error ' . print_r($ret, true));
@@ -174,14 +174,14 @@ class MediaWiki extends wikipedia
 
 		if (isset($post['format']) && $post['format'] == 'json') $retval = json_decode($ret, true);
 		else {
-    		$retval = unserialize($ret);
-    		if ($retval === false) {
+    		$retval = json_decode($ret, true);
+    		if (is_null($retval)) {
     			$origret = $ret;
     			// Patch the last 8 bytes because of garbage chars if $ret length = 32767
     			$ret = substr_replace($ret, "\";}}}}}}", -8, 8);
-    			$retval = unserialize($ret);
-    			if ($retval === false) {
-    				throw new Exception("unserialize failed = $origret - $ret");
+    			$retval = json_decode($ret, true);
+    			if (is_null($retval)) {
+    				throw new Exception("json_decode failed = $origret - $ret");
     			}
     		}
 		}
@@ -223,7 +223,7 @@ class MediaWiki extends wikipedia
     		$tmaxlag='&maxlag='.$maxlag;
     	}
 
-    	$ret = $this->query('?action=edit&format=php'.$tmaxlag,$params);
+    	$ret = $this->query('?action=edit&format=json' . $tmaxlag, $params);
 
     	if (isset($ret['error'])) {
     		if ($repeat < 5) {
@@ -264,7 +264,7 @@ class MediaWiki extends wikipedia
         	}
 
         	foreach ($chunkedNames as $pagenames) {
-        	    $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) .
+        	    $ret = $this->query('?action=query&format=json&prop=revisions&titles=' . urlencode($pagenames) .
         		'&rvslots=main&rvprop=timestamp|flags|comment|user|ids&continue=');
 
             	if (isset($ret['error'])) {
@@ -306,7 +306,7 @@ class MediaWiki extends wikipedia
 
         foreach ($revChunks as $revChunk) {
         	$revids = implode('|', $revChunk);
-        	$ret = $this->query('?action=query&format=php&prop=revisions&revids=' . $revids . '&rvslots=main&rvprop=ids|content&continue=');
+        	$ret = $this->query('?action=query&format=json&prop=revisions&revids=' . $revids . '&rvslots=main&rvprop=ids|content&continue=');
 
         	if (isset($ret['error'])) {
         		throw new Exception('Query Error ' . $ret['error']['info']);
@@ -347,7 +347,7 @@ class MediaWiki extends wikipedia
         $revs = array();
 
         foreach ($revids as $revid) {
-        	$ret = $this->query("?action=parse&format=php&oldid=$revid&prop=categories");
+        	$ret = $this->query("?action=parse&format=json&oldid=$revid&prop=categories");
 
         	if (isset($ret['error'])) {
         		Logger::log('MediaWiki->getRevisionsCategories Error ' . $ret['error']['info']);
@@ -378,7 +378,7 @@ class MediaWiki extends wikipedia
 
     	$post = array('prop' => 'categories', 'title' => $pagetitle, 'text' => $text, 'contentformat' => 'text/x-wiki',
     		'contentmodel' => 'wikitext');
-    	$ret = $this->query("?action=parse&format=php", $post);
+    	$ret = $this->query("?action=parse&format=json", $post);
 
         if (isset($ret['error'])) {
         	Logger::log('MediaWiki->parseCategoriesFromText Error ' . $ret['error']['info']);
@@ -402,7 +402,7 @@ class MediaWiki extends wikipedia
      */
     public function getPageLead($pagetitle, $sentences = 1, $characters = 0, $plaintext = false)
     {
-    	$query = '?action=query&format=php&prop=extracts&exintro=&titles='  . urlencode($pagetitle);
+    	$query = '?action=query&format=json&prop=extracts&exintro=&titles='  . urlencode($pagetitle);
 
     	if ($characters > 0) $query .= "&exchars=$characters";
     	else {
@@ -451,7 +451,7 @@ class MediaWiki extends wikipedia
             }
 
             foreach ($chunkedNames as $pagenames) {
-                $ret = $this->query('?action=query&format=php&prop=revisions&titles=' . urlencode($pagenames) . '&rvslots=main&rvprop=content&continue=');
+                $ret = $this->query('?action=query&format=json&prop=revisions&titles=' . urlencode($pagenames) . '&rvslots=main&rvprop=content&continue=');
 
                 if (isset($ret['error'])) {
                     Logger::log("$pagenames");
@@ -547,7 +547,7 @@ class MediaWiki extends wikipedia
 
         foreach ($pageChunks as $pageChunk) {
             $pageids = implode('|', $pageChunk);
-            $ret = $this->query("?action=query&format=php$revisions&pageids=" . urlencode($pageids) . '&continue=');
+            $ret = $this->query("?action=query&format=json$revisions&pageids=" . urlencode($pageids) . '&continue=');
 
             if (isset($ret['error'])) {
                 throw new Exception('Query Error ' . $ret['error']['info']);
@@ -679,7 +679,7 @@ class MediaWiki extends wikipedia
         	$addparams .= "&$key=" . urlencode($value);
         }
 
-        $ret = $this->query("?action=query&format=php&list=$listtype" . $addparams);
+        $ret = $this->query("?action=query&format=json&list=$listtype" . $addparams);
 
         if (isset($ret['error'])) {
         	throw new Exception("$listtype Error " . $ret['error']['info']);
@@ -712,7 +712,7 @@ class MediaWiki extends wikipedia
             $addparams .= "&$key=" . urlencode($value);
         }
         
-        $ret = $this->query("?action=query&format=php&prop=$proptype" . $addparams);
+        $ret = $this->query("?action=query&format=json&prop=$proptype" . $addparams);
         
         if (isset($ret['error'])) {
             throw new Exception("$proptype Error " . $ret['error']['info'] . "\n". print_r($params, true));
@@ -744,7 +744,7 @@ class MediaWiki extends wikipedia
             $addparams .= "&$key=" . urlencode($value);
         }
         
-        $ret = $this->query("?action=templatedata&format=php" . $addparams);
+        $ret = $this->query("?action=templatedata&format=json" . $addparams);
         
         if (isset($ret['error'])) {
             throw new Exception("getTemplateData Error " . $ret['error']['info'] . "\n". print_r($params, true));
@@ -909,7 +909,7 @@ class MediaWiki extends wikipedia
      */
     public function resolvePageTitle($pagetitle)
     {
-        $query = '?action=query&format=php&redirects=1&titles='  . urlencode($pagetitle);
+        $query = '?action=query&format=json&redirects=1&titles='  . urlencode($pagetitle);
 
         $ret = $this->query($query);
 
@@ -935,7 +935,7 @@ class MediaWiki extends wikipedia
      */
     public function getRevisionInfo($revid)
     {
-        $query = '?action=query&format=php&prop=revisions&revids=' . $revid;
+        $query = '?action=query&format=json&prop=revisions&revids=' . $revid;
 
         $ret = $this->query($query);
 
@@ -960,7 +960,7 @@ class MediaWiki extends wikipedia
      */
     public function getCSRFToken()
     {
-        $x = $this->query('?action=query&meta=tokens&format=php');
+        $x = $this->query('?action=query&meta=tokens&format=json');
         return $x['query']['tokens']['csrftoken'];
     }
 
@@ -972,7 +972,7 @@ class MediaWiki extends wikipedia
      */
     public function getLastRevID($pagetitle)
     {
-        $x = $this->query("?action=query&prop=info&titles=$pagetitle&format=php");
+        $x = $this->query("?action=query&prop=info&titles=$pagetitle&format=json");
         foreach ($x['query']['pages'] as $ret) {
             return $ret['lastrevid'];
         }

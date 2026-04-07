@@ -122,7 +122,7 @@ class UIHelper
 
 			$mediawiki = $this->serviceMgr->getMediaWiki($domain, false);
 
-			$query = '?action=templatedata&format=php&titles=' . urlencode("$templateprefix:" . $lctemplate . '|' .
+			$query = '?action=templatedata&format=json&titles=' . urlencode("$templateprefix:" . $lctemplate . '|' .
 			    "$templateprefix:" . $params['template']);
 
 			$ret = $mediawiki->query($query);

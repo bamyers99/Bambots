@@ -65,7 +65,7 @@ class TriagePageLister
         	$addparams .= "&$key=" . urlencode($value);
         }
 
-        $ret = $this->mediawiki->query("?action=pagetriagelist&format=php" . $addparams);
+        $ret = $this->mediawiki->query("?action=pagetriagelist&format=json" . $addparams);
 
         if (isset($ret['error'])) {
             Logger::log(print_r($addparams, true));

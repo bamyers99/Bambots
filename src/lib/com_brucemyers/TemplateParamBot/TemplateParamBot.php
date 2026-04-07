@@ -171,7 +171,7 @@ class TemplateParamBot
         	$templname = $template['name'];
         	$lctemplate = lcfirst($template['name']);
         	
-        	$query = '?action=templatedata&format=php&titles=' . urlencode($ruleconfig['templateNS'] . ':' . $lctemplate . '|' .
+        	$query = '?action=templatedata&format=json&titles=' . urlencode($ruleconfig['templateNS'] . ':' . $lctemplate . '|' .
         	    $ruleconfig['templateNS'] . ':' . $templname);
 
         	$ret = $mediawiki->query($query);

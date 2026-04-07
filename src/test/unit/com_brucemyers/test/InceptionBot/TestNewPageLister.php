@@ -30,7 +30,7 @@ class TestNewPageLister extends UnitTestCase
         $mediawiki = new MediaWiki($url);
 
         $earliestTimestamp = date('Ymd') . '000000'; // Beginning of today
-        $latestTimestamp = date('Ymd') . '120000';
+        $latestTimestamp = date('Ymd') . '230000';
         $lister = new NewPageLister($mediawiki, $earliestTimestamp, $latestTimestamp);
 
         $allpages = array();

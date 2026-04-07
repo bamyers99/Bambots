@@ -71,7 +71,7 @@ class TestProjectPages extends UnitTestCase
         $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
         $project_pages = new ProjectPages($mediawiki, $user, $pass, $tools_host);
 
-        list($page_count, $assessment_count) = $project_pages->load('Vital_articles_by_level_by_quality', 5, 'Vital_articles', 'None');
+        list($page_count, $assessment_count) = $project_pages->load('Vital_articles_by_level_and_quality', 5, 'Vital_articles', 'None');
         $this->assertTrue($page_count > 10, "page count = $page_count");
     }
 }

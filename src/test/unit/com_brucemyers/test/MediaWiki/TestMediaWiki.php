@@ -75,7 +75,7 @@ class TestMediaWiki extends UnitTestCase
     	$password = Config::get(MediaWiki::WIKIPASSWORDKEY);
     	$this->wiki->login($username, $password);
 
-        $x = $this->wiki->query('?action=query&meta=userinfo&uiprop=blockinfo|hasmsg|groups|rights&format=php');
+        $x = $this->wiki->query('?action=query&meta=userinfo&uiprop=blockinfo|hasmsg|groups|rights&format=json');
    		print_r($x);
 
    		$token = $this->wiki->getedittoken();
@@ -86,7 +86,7 @@ class TestMediaWiki extends UnitTestCase
     	$test = 'abc';
     	$i = 0;
 
-    	$result |= ord( $answer{$i} ) ^ ord( $test{$i} );
+    	$result |= ord( $answer[$i] ) ^ ord( $test[$i] );
     	echo $result;
     }
 
@@ -129,5 +129,19 @@ class TestMediaWiki extends UnitTestCase
     	$origpagename = 'Apple';
     	$newpagename = MediaWiki::getLinkSafePagename($origpagename);
     	$this->assertEqual($newpagename, $origpagename, 'Pagename must not change 4');
+    }
+    
+    public function notestPHPvsJSON()
+    {
+        $query = '?action=query&format=php&prop=revisions&titles=' . urlencode('User:InceptionBot') . '&rvslots=main&rvprop=content&continue=';
+        $retphp = $this->wiki->http->get($this->wiki->url . $query);
+        $retphp = unserialize($retphp);
+        print_r($retphp); echo "\n";
+        
+        $query = '?action=query&format=json&prop=revisions&titles=' . urlencode('User:InceptionBot') . '&rvslots=main&rvprop=content&continue=';
+        $retjson = $this->wiki->http->get($this->wiki->url . $query);
+        $retjson = json_decode($retjson, true);
+        print_r($retjson); echo "\n";
+        
     }
 }

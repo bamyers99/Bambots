@@ -98,7 +98,7 @@ class WikidataWiki extends MediaWiki
      */
     public function getPropertySuggestions($qid, $language)
     {
-        $query = "?action=wbsgetsuggestions&format=php&entity=$qid&limit=10&language=$language&include=all";
+        $query = "?action=wbsgetsuggestions&format=json&entity=$qid&limit=10&language=$language&include=all";
 
         $ret = $this->query($query);
 
@@ -184,7 +184,7 @@ class WikidataWiki extends MediaWiki
         $search = urlencode($search);
         $language = urlencode($language);
 
-        $ret = $this->query("?action=wbsearchentities&format=php&search=$search&language=$language" . $addparams);
+        $ret = $this->query("?action=wbsearchentities&format=json&search=$search&language=$language" . $addparams);
 
         if (isset($ret['error'])) {
             throw new Exception("getWBSearchEntities Error " . $ret['error']['info'] . "\n". print_r($params, true));
