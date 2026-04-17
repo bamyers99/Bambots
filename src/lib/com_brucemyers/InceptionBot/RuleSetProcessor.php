@@ -80,7 +80,7 @@ class RuleSetProcessor
 
         switch ($rule['type']) {
             case 'regex':
-                if (preg_match($rule['regex'], $data, $matches, PREG_OFFSET_CAPTURE)) {
+                if (@preg_match($rule['regex'], $data, $matches, PREG_OFFSET_CAPTURE)) {
                     $score = $rule['score'];
 
                     if ($this->ledeEnd === null) {
@@ -147,7 +147,7 @@ class RuleSetProcessor
         // Check the inhibitors
         if ($score != 0) {
             foreach ($rule['inhibitors'] as $inhibitor) {
-                if (preg_match($inhibitor, $data)) {
+                if (@preg_match($inhibitor, $data)) {
                     $score = 0;
                     break;
                 }
