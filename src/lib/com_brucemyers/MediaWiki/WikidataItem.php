@@ -98,24 +98,32 @@ class WikidataItem
 	 * @param string $property_id Property id
 	 * @return array string Statements
 	 */
-	public function getStatementsOfType($property_id)
+	public function getStatementsOfType($property_id, $truthy = false)
 	{
-		$statements = [];
-
-		if (! isset($this->data['claims']) || ! isset($this->data['claims'][$property_id])) return $statements;
-
-		foreach ($this->data['claims'][$property_id] as $claim) {
-			if ($claim['type'] == 'statement' && $claim['mainsnak']['snaktype'] == 'value') {
-				$type = $claim['mainsnak']['datavalue']['type'];
-				$value= $claim['mainsnak']['datavalue']['value'];
-
-				$statements[] = $this->decodeValue($type, $value);
-			}
-		}
-
-		return $statements;
+	    $allstatements = [];
+	    $preferredstatements = [];
+	    $normalstatements = [];
+	    
+	    if (! isset($this->data['claims']) || ! isset($this->data['claims'][$property_id])) return $allstatements;
+	    
+	    foreach ($this->data['claims'][$property_id] as $claim) {
+	        if ($claim['type'] == 'statement' && $claim['mainsnak']['snaktype'] == 'value') {
+	            $type = $claim['mainsnak']['datavalue']['type'];
+	            $value= $claim['mainsnak']['datavalue']['value'];
+	            
+	            $decodedvalue = $this->decodeValue($type, $value);
+	            
+	            if (! $truthy) $allstatements[] = $decodedvalue;
+	            elseif ($claim['rank'] == self::RANK_NORMAL) $normalstatements[] = $decodedvalue;
+	            elseif ($claim['rank'] == self::RANK_PREFERRED) $preferredstatements[] = $decodedvalue;
+	        }
+	    }
+	    
+	    if (! $truthy) return $allstatements;
+	    if (! empty($preferredstatements)) return $preferredstatements;
+	    return $normalstatements;
 	}
-
+	
 	/**
 	 * Decode a value
 	 *
@@ -221,6 +229,14 @@ class WikidataItem
 			    return "$amount$lower_upper$unit";
 			    break;
 
+			case 'globecoordinate':
+			    return $value['latitude'] . ',' . $value['longitude'];
+			    break;
+
+			case 'monolingualtext':
+			    return $value['text'] . ' (' . $value['language'] . ')';
+			    break;
+
 			default:
 				Logger::log("WikidataItem::decodeValue unknown value type='$type' value=$value");
 				break;
@@ -234,33 +250,50 @@ class WikidataItem
 	 * @param int $occurrence
 	 * @return array(propid => array(values))
 	 */
-	public function getStatementQualifiers($property_id, $occurrence)
+	public function getStatementQualifiers($property_id, $occurrence, $truthy = false)
 	{
-		$occurrence = (int)$occurrence;
-		$qualifiers = [];
-
-		if (! isset($this->data['claims']) || ! isset($this->data['claims'][$property_id])) return $qualifiers;
-		if (count($this->data['claims'][$property_id]) < $occurrence + 1) return $qualifiers;
-
-		$claim = $this->data['claims'][$property_id][$occurrence];
-
-		if (! isset($claim['qualifiers'])) return $qualifiers;
-
-		foreach ($claim['qualifiers'] as $key => $values) {
-			foreach ($values as $val) {
-				if ($val['snaktype'] == 'value') {
-					$type = $val['datavalue']['type'];
-					$value= $val['datavalue']['value'];
-
-					if (! isset($qualifiers[$key])) $qualifiers[$key] = [];
-					$qualifiers[$key][] = $this->decodeValue($type, $value);
-				}
-			}
-		}
-
-		return $qualifiers;
+	    $occurrence = (int)$occurrence;
+	    $qualifiers = [];
+	    
+	    $allclaims = [];
+	    $preferredclaims = [];
+	    $normalclaims = [];
+	    
+	    if (! isset($this->data['claims']) || ! isset($this->data['claims'][$property_id])) return $qualifiers;
+	    
+	    foreach ($this->data['claims'][$property_id] as $claim) {
+	        if ($claim['type'] == 'statement' && $claim['mainsnak']['snaktype'] == 'value') {
+	            if (! $truthy) $allclaims[] = $claim;
+	            elseif ($claim['rank'] == self::RANK_NORMAL) $normalclaims[] = $claim;
+	            elseif ($claim['rank'] == self::RANK_PREFERRED) $preferredclaims[] = $claim;
+	        }
+	    }
+	    
+	    if (! $truthy) $theclaims = $allclaims;
+	    elseif (! empty($preferredclaims)) $theclaims = $preferredclaims;
+	    else $theclaims = $normalclaims;
+	    
+	    if (count($theclaims) < $occurrence + 1) return $qualifiers;
+	    
+	    $claim = $theclaims[$occurrence];
+	    
+	    if (! isset($claim['qualifiers'])) return $qualifiers;
+	    
+	    foreach ($claim['qualifiers'] as $key => $values) {
+	        foreach ($values as $val) {
+	            if ($val['snaktype'] == 'value') {
+	                $type = $val['datavalue']['type'];
+	                $value= $val['datavalue']['value'];
+	                
+	                if (! isset($qualifiers[$key])) $qualifiers[$key] = [];
+	                $qualifiers[$key][] = $this->decodeValue($type, $value);
+	            }
+	        }
+	    }
+	    
+	    return $qualifiers;
 	}
-
+	
 	/**
 	 * Get an items label or description in a specific language. If language not found, return mul, en or first language.
 	 *
