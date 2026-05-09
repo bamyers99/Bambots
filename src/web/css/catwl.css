@@ -91,6 +91,22 @@ a.external {
 	padding-right: 5px;
 }
 
+.autocomplete-suggestions {
+	border: 1px solid var(--border-color-base, #a2a9b1);
+	background-color: var(--background-color-neutral, #eaecf0);
+}
+.autocomplete-suggestion {
+	padding: 2px 5px;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.autocomplete-suggestion:hover {
+	background-color: var(--background-color-interactive--hover, #dadde3);
+}
+.autocomplete-suggestion:active {
+	background-color: var(--background-color-interactive--active, #c8ccd1);
+}
+
 :root {
 	/* can use light or dark user agent colors but defaults to light if browser doesn't specify */
 	color-scheme: light dark;
