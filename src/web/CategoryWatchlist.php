@@ -108,7 +108,7 @@ function display_form()
                 text-align: center;
             }
 			table tr td.tabborderr {
-				border-right: 2px solid #aaa;
+				border-right: 2px solid var(--border-color-base, #a2a9b1);
 			}
 		</style>
     	<script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>

@@ -19,6 +19,7 @@
 <head>
     <title>BamBots</title>
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light dark" />
 </head>
 <body>
 <h1>BamBots</h1>

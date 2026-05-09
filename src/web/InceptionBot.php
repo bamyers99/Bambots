@@ -57,6 +57,7 @@ function rule_display($rulename, $testpage, $results = null)
     <head>
 	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	    <meta name="robots" content="noindex, nofollow" />
+        <meta name="color-scheme" content="light dark" />
 	    <title>New Page Search Rule Test</title>
 	    <style>
 	        li {

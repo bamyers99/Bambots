@@ -84,7 +84,7 @@ function display_form()
     	<link rel='stylesheet' type='text/css' href='css/catwl.css' />
 	    <style>
 			table tr td.tabborderr {
-				border-right: 2px solid #aaa;
+				border-right: 2px solid var(--border-color-base, #a2a9b1);
 				padding: 0px 5px;
 			}
 		</style>

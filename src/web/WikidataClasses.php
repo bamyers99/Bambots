@@ -120,10 +120,6 @@ function display_form($subclasses)
     	<script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
 		<script type='text/javascript' src='js/jquery.tablesorter.min.js'></script>
 		<script type='text/javascript' src='js/jquery.autocomplete.min.js'></script>
-		<style>
-            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; }
-            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; cursor: pointer; }
-		</style>
 	</head>
 	<body>
 		<script type='text/javascript'>

@@ -1,16 +1,15 @@
-@CHARSET "UTF-8";
 body {
 	background: #ade6c4;
 }
 
 table.form {
-	background: #fff;
-	border:1px solid #ccc;
-	color: #333;
-	margin-bottom: 10px;
-	border-radius: 10px;
+	border: 1px solid var(--border-color-base, #a2a9b1);
+	background-color: var(--background-color-neutral-subtle, #f8f9fa);
+	margin: 1em 0;
+	border-radius: 4px;
 	padding: 5px;
 }
+
 th.form {
 	background: #f2f2f2;
 	border:1px solid #bbb;
@@ -18,66 +17,62 @@ th.form {
 	border-left: 1px solid #fff;
 	text-align: center;
 }
+
 td.form {
 	padding: 0 10px;
 }
 
 table.wikitable {
-	margin: 1em 1em 1em 0;
-	background-color: #f9f9f9;
-	border: 1px #aaa solid;
-	border-collapse: collapse;
-	color: black;
+	background-color: var(--background-color-neutral-subtle, #f8f9fa);
+	color: var(--color-base,#202122);
+	margin: 1em 0;
+	border: 1px solid var(--border-color-base, #a2a9b1);
+	border-collapse: collapse
 }
+
 table.wikitable > tr > th,
 table.wikitable > tr > td,
 table.wikitable > * > tr > th,
 table.wikitable > * > tr > td {
-	border: 1px #aaa solid;
-	padding: 0.2em;
+	border: 1px solid var(--border-color-base, #a2a9b1);
+	padding: 0.2em 0.4em;
 }
+
 table.wikitable > tr > th,
 table.wikitable > * > tr > th {
-	background-color: #f2f2f2;
+	background-color: var(--background-color-neutral, #eaecf0);
+	color: var(--color-base, #202122);
 	text-align: center;
 }
+
 table.wikitable > caption {
 	font-weight: bold;
 }
 
 table.wikitable th.header { 
-    background-image: url(../img/cwb/ts_bg.gif);
-    cursor: pointer;
-    font-weight: bold;
-    background-repeat: no-repeat;
-    background-position: center right;
-    padding-right: 20px;
-    border-right: 1px solid #dad9c7;
-    margin-left: -1px;
+	background-image: url(../img/cwb/sort_both.svg);
+	cursor: pointer;
+	background-repeat: no-repeat;
+	background-position: center right;
+	padding-right: 21px;
 }
 
 table.wikitable th.headerSortUp {
-    background-image: url(../img/cwb/ts_desc.gif);
-    background-color: #d2d2d2;
+	background-image: url(../img/cwb/sort_up.svg);
+	background-color: var(--background-color-interactive--active, #c8ccd1);
 }
 
 table.wikitable th.headerSortDown {
-    background-image: url(../img/cwb/ts_asc.gif);
-    background-color: #d2d2d2;
+	background-image: url(../img/cwb/sort_down.svg);
+	background-color: var(--background-color-interactive--active, #c8ccd1);
 }
 
 a:link {
-	color: #00e;
 	text-decoration: none
 }
-a:visited {
- 	color: #70f;
-}
+
 a:hover, a:focus {
  	text-decoration: underline;
-}
-a:visited.novisited {
-	color: #00e;
 }
 
 a.external {
@@ -85,13 +80,53 @@ a.external {
     padding-right: 13px;
 }
 
-acronym, .ultooltip {
-	border-bottom: #000 1px dotted
+.ultooltip {
+	border-bottom: currentcolor 1px dotted;
 }
 
 .toc {
-	border: 1px solid #000;
-	background-color: #f9f9f9;
+	border: 1px solid var(--border-color-base, #a2a9b1);
+	background-color: var(--background-color-neutral, #eaecf0);
 	display: table;
 	padding-right: 5px;
+}
+
+:root {
+	/* can use light or dark user agent colors but defaults to light if browser doesn't specify */
+	color-scheme: light dark;
+	/* same colors as on Wikipedia */
+	--color-base: #202122;
+	--background-color-neutral: #eaecf0;
+	--background-color-neutral-subtle: #f8f9fa;
+	--border-color-base: #a2a9b1;
+	--background-color-interactive: #eaecf0;
+	--background-color-interactive--hover: #dadde3;
+	--background-color-interactive--active: #c8ccd1;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-base: #eaecf0;
+		--background-color-neutral: #27292d;
+		--background-color-neutral-subtle: #202122;
+		--border-color-base: #72777d;
+		--background-color-interactive: #27292d;
+		--background-color-interactive--hover: #404244;
+		--background-color-interactive--active: #54595d;
+	}
+	table.wikitable th.header { 
+		background-image: url(../img/cwb/sort_both_inverted.svg);
+	}
+
+	table.wikitable th.headerSortUp {
+		background-image: url(../img/cwb/sort_up_inverted.svg);
+	}
+
+	table.wikitable th.headerSortDown {
+		background-image: url(../img/cwb/sort_down_inverted.svg);
+	}
+	/* Remove green background on dark mode */
+	body {
+		background-color: revert;
+	}
 }
