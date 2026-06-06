@@ -102,7 +102,7 @@ function build_yaml($jobname, $command, $opts = [])
         'app.kubernetes.io/name' => $jobname,
         'jobs.toolforge.org/filelog' => 'yes',
         'jobs.toolforge.org/emails' => $opts['emails'] ?? 'none',
-        'jobs.toolforge.org/mount-storage' => 'all',
+        'toolforge.org/mount-storage' => 'all',
     ];
     
     $cpulimit = $opts['cpu'] ?? '500m';
