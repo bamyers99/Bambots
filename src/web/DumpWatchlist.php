@@ -22,7 +22,7 @@ use com_brucemyers\Util\HttpUtil;
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
-$GLOBALS['botname'] = 'PageTools';
+$GLOBALS['botname'] = 'CategoryWatchlistBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
 define('COOKIE_QUERYID', 'dumpwl:queryid');
 

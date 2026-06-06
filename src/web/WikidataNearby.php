@@ -21,7 +21,7 @@ use com_brucemyers\MediaWiki\WikidataSPARQL;
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
-$GLOBALS['botname'] = 'PageTools';
+$GLOBALS['botname'] = 'CleanupWorklistBot';
 define('BOT_REGEX', '!(?:spider|bot[\s_+:,\.\;\/\\\-]|[\s_+:,\.\;\/\\\-]bot)!i');
 define('CACHE_PREFIX_WDNEAR', 'WDNEAR:');
 

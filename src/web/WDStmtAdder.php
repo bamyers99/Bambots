@@ -26,7 +26,7 @@ use com_brucemyers\Util\UUID;
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
-$GLOBALS['botname'] = 'PageTools';
+$GLOBALS['botname'] = 'CleanupWorklistBot';
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ini_set("display_errors", 1);
 
