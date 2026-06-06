@@ -24,7 +24,7 @@ use com_brucemyers\InceptionBot\OresDraftTopicLister;
 $webdir = dirname(__FILE__);
 // Marker so include files can tell if they are called directly.
 $GLOBALS['included'] = true;
-$GLOBALS['botname'] = 'InceptionBot';
+$GLOBALS['botname'] = 'PageTools';
 
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
