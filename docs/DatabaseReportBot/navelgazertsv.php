@@ -19,6 +19,7 @@
  https://github.com/wikimedia/mediawiki-extensions-EntitySchema/blob/master/i18n/en.json
  https://dumps.wikimedia.org/other/mediawiki_history/
  https://wikitech.wikimedia.org/wiki/Data_Platform/Data_Lake/Edits/MediaWiki_history_dumps
+ https://gerrit.wikimedia.org/r/plugins/gitiles/analytics/refinery/+/refs/heads/master/hql/mediawiki/history/create_mediawiki_history_table.hql
  */
 
 $count = 0;
@@ -103,14 +104,16 @@ $edittypes = [
 DEFINE('MONTHLY_INCREMENT', 0x100000000);
 DEFINE('GRANDTOTAL_MASK', MONTHLY_INCREMENT - 1);
 
-DEFINE('EVENT_ENTITY', 1); // string (revision)
-DEFINE('EVENT_TYPE', 2); // string (create)
-DEFINE('EVENT_TIMESTAMP', 3); // string
-DEFINE('EVENT_COMMENT', 4); // string
-DEFINE('EVENT_USER_TEXT', 8); // string
-DEFINE('EVENT_USER_IS_PERMANENT', 20); // boolean
-DEFINE('REVISION_IS_IDENTITY_REVERTED', 70); // boolean
-DEFINE('REVISION_TAGS', 75); // array<string>
+DEFINE('EVENT_ENTITY', 2); // string (revision)
+DEFINE('EVENT_TYPE', 3); // string (create)
+DEFINE('EVENT_TIMESTAMP', 4); // string
+DEFINE('EVENT_COMMENT', 5); // string
+DEFINE('EVENT_USER_TEXT', 9); // string
+DEFINE('EVENT_USER_IS_PERMANENT', 21); // boolean
+DEFINE('REVISION_IS_IDENTITY_REVERTED', 72); // boolean
+DEFINE('REVISION_TAGS', 77); // array<string>
+
+DEFINE('FIELD_COUNT', 78);
 
 /* wbsetlabel-add:1|he */
 /* wbsetdescription-add:1|yo */
@@ -138,6 +141,11 @@ while (! feof($hndl)) {
     $buffer = rtrim(fgets($hndl), "\n");
 	if (empty($buffer)) continue;
 	$buffer = explode("\t", $buffer);
+	
+	if (count($buffer) != FIELD_COUNT) {
+	    echo "Field count != " . FIELD_COUNT . "\n";
+	    exit;
+	}
 	
 	if ($buffer[EVENT_ENTITY] != 'revision') continue;
 	if ($buffer[EVENT_TYPE] != 'create') continue;
