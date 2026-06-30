@@ -145,7 +145,7 @@ class CleanupWorklistBot
 		$totaltime .= $restarted;
 
         $this->_writeHtmlStatus(count($ruleconfigs), $totaltime, $errorrulsets, $asof_date, $outputdir);
-        if (count($ruleconfigs) > 100) CleanupWorklistBot::writeWikiStats($tools_host, $user, $pass);
+        if (count($ruleconfigs) > 100) CleanupWorklistBot::writeWikiStats($tools_host, $user, $pass, $outputdir);
 
         $this->_backupHistory($tools_host, $user, $pass, $errorrulsets);
     }
@@ -200,7 +200,7 @@ class CleanupWorklistBot
     /**
      * Write the wikipedia stats page
      */
-    static public function writeWikiStats($tools_host, $user, $pass)
+    static public function writeWikiStats($tools_host, $user, $pass, $outputdir)
     {
         $wikitext = '';
         
@@ -235,14 +235,22 @@ class CleanupWorklistBot
         $pagename = 'User:DataflowBot/CleanupStats';
         $comment = 'Project count: ' . count($results);
         
-        $url = Config::get(MediaWiki::WIKIURLKEY);
-        $wiki = new MediaWiki($url);
-        $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
-        $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
-        $wiki->login($username, $password);
-        $resultwriter = new WikiResultWriter($wiki);
+        $wikitext = "$pagename\n$comment\n$wikitext";
         
-        $resultwriter->writeResults($pagename, $wikitext, $comment);
+        $path = $outputdir . 'CleanupStats.txt';
+        $hndl = fopen($path, 'wb');
+        
+        fwrite($hndl, $wikitext);
+        fclose($hndl);
+        
+//         $url = Config::get(MediaWiki::WIKIURLKEY);
+//         $wiki = new MediaWiki($url);
+//         $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
+//         $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
+//         $wiki->login($username, $password);
+//         $resultwriter = new WikiResultWriter($wiki);
+        
+//         $resultwriter->writeResults($pagename, $wikitext, $comment);
     }
 
     /**
@@ -307,6 +315,8 @@ EOT;
     	$subject = 'CleanupWorklistBot backup';
     	if (! empty($errorrulsets)) $subject .= ' - ERROR';
     	$attach = array($backupFile);
-    	$email->sendEmail('admin@brucemyers.com', Config::get(self::ERROREMAIL), $subject, 'DB backup', $attach);
+    	
+    	$message = "DB backup\nhttps://bambots.brucemyers.com/cwb/CleanupStats.txt";
+    	$email->sendEmail('admin@brucemyers.com', Config::get(self::ERROREMAIL), $subject, $message, $attach);
     }
 }

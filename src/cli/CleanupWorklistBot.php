@@ -219,8 +219,9 @@ function calcStats()
     $tools_host = Config::get(CleanupWorklistBot::TOOLS_HOST);
     $user = Config::get(CleanupWorklistBot::LABSDB_USERNAME);
     $pass = Config::get(CleanupWorklistBot::LABSDB_PASSWORD);
+    $outputDir = Config::get(CleanupWorklistBot::HTMLDIR);
     
-    CleanupWorklistBot::writeWikiStats($tools_host, $user, $pass);
+    CleanupWorklistBot::writeWikiStats($tools_host, $user, $pass, $outputDir);
 }
 
 /**
