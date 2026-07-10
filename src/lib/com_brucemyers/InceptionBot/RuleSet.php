@@ -37,12 +37,14 @@ class RuleSet
     const OPTION_REGEX = '!^##(\w+\s*=?[^#]*)##$!';
     const DEFAULT_SCORE = 10;
 
-    public $errors = array();
-    public $rules = array();
+    public $errors = [];
+    public $rules = [];
     public $name;
     public $minScore = self::DEFAULT_SCORE;
-    public $options = array();
-    public $optiontypes = array('SuppressNS' => array('values' => array('Category', 'Draft', 'Template'), 'separator' => '|'));
+    public $options = [];
+    public $optiontypes = ['SuppressNS' => ['values' => ['Category', 'Draft', 'Template'], 'separator' => '|'],
+        'MaxDays' => []
+    ];
 
     /**
      * Constructor
@@ -75,7 +77,7 @@ class RuleSet
                 $score = $matches[1];
                 if (empty($score)) $score = self::DEFAULT_SCORE;
                 $regex = '/\\{\\{' . $matches[2] . '.*?\\}\\}/ui';
-                $this->rules[] = array('type' => 'regex', 'score' => $score, 'regex' => $regex, 'valid' => true, 'inhibitors' => array());
+                $this->rules[] = ['type' => 'regex', 'score' => $score, 'regex' => $regex, 'valid' => true, 'inhibitors' => []];
 
             } elseif (preg_match(self::OPTION_REGEX, $line, $matches)) {
                 $this->parseOption($line, $matches);
@@ -187,7 +189,7 @@ class RuleSet
             if (! $valid) $this->errors[] = 'Invalid pattern in rule: ' . $line;
         }
 
-        $rule = array('type' => $type, 'score' => $score, 'regex' => $regex, 'valid' => $valid, 'inhibitors' => array());
+        $rule = ['type' => $type, 'score' => $score, 'regex' => $regex, 'valid' => $valid, 'inhibitors' => []];
 
         if ($size) {
             $rule['type'] = 'size';

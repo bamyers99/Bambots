@@ -31,6 +31,7 @@ class TestRuleSet extends UnitTestCase
                         comment -->
         @@40@@
         ##SuppressNS=Category|Template|Draft##
+        ##MaxDays=7##
         $$NZ-stub$$
         -5 $$AU-stub$$
         20  /$SIZE>2500/
@@ -55,6 +56,8 @@ EOT;
         $this->assertEqual($errorcnt, 0, 'Parse error');
         $this->assertTrue(isset($ruleset->options['SuppressNS']), 'Missing option SuppressNS');
         $this->assertEqual($ruleset->options['SuppressNS'], array('Category','Template','Draft'), 'SuppressNS option value mismatch');
+        $this->assertTrue(isset($ruleset->options['MaxDays']), 'Missing option MaxDays');
+        $this->assertEqual($ruleset->options['MaxDays'], '7', 'MaxDays != 7');
         if ($errorcnt) print_r($ruleset->errors);
 
         // Check inhibitors
@@ -81,7 +84,7 @@ EOT;
 
         $ruleset = new RuleSet('test', $rules);
         $errorcnt = count($ruleset->errors);
-        $realerrors = 7;
+        $realerrors = 9;
         $this->assertEqual($errorcnt, $realerrors);
         if ($errorcnt != $realerrors) print_r($ruleset->errors);
         //print_r($ruleset->rules);

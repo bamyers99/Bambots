@@ -218,10 +218,25 @@ class InceptionBot
             $rulesetresult = [];
             $processor = new RuleSetProcessor($ruleset);
             if (count($ruleset->errors)) $errorrulsets[] = $rulename;
+            
+            // Limit existing by max days
+            $overMaxDays = [];
+            
+            if (isset($ruleset->options['MaxDays'])) {
+                $max_days = (int)($ruleset->options['MaxDays']);
+                if ($max_days < 7) $max_days = 7;
+                
+                $maxTimestamp = gmdate('Ymd', strtotime("-$max_days days")) . '000000';
+                
+                foreach ($allpages as &$newpage) {
+                    if (strcmp(str_replace(['-',':','T','Z'], '', $newpage['timestamp']), $maxTimestamp) < 0) $overMaxDays[] = $newpage['title'];
+                }
+                unset($newpage);
+            }
 
             // Retrieve the existing results
             $deletedexistingcnt = 0;
-            $existing = $this->_getExistingResults($rulename, $pagenames, $deletedexistingcnt, $oldtitles);
+            $existing = $this->_getExistingResults($rulename, $pagenames, $deletedexistingcnt, $oldtitles, $overMaxDays);
 
             foreach ($allpages as &$newpage) {
                 $title = $newpage['title'];
@@ -295,9 +310,10 @@ class InceptionBot
      * @param $allpages array Pagenames to keep
      * @param $deletedcnt int (write only) Deleted existing results count
      * @param $oldtitles array Old page titles
+     * @param $overMaxDays Pagenames to delete
      * @return array Existing results
      */
-    protected function _getExistingResults($rulename, &$allpages, &$deletedcnt, &$oldtitles)
+    protected function _getExistingResults($rulename, $allpages, &$deletedcnt, $oldtitles, $overMaxDays)
     {
         $deletedcnt = 0;
         $results = $this->mediawiki->getpage("User:AlexNewArtBot/{$rulename}SearchResult");
@@ -307,7 +323,7 @@ class InceptionBot
         foreach ($results as $sectionno => $section) {
             foreach ($section as $lineno => $line) {
                 $title = $line['title'];
-                if (! in_array($title, $allpages) && ! in_array($title, $oldtitles)) {
+                if ((! in_array($title, $allpages) && ! in_array($title, $oldtitles)) || in_array($title, $overMaxDays)) {
                     unset($results[$sectionno][$lineno]);
                     ++$deletedcnt;
                 }
