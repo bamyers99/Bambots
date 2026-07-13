@@ -26,19 +26,23 @@ $webdir = dirname(__FILE__);
 $GLOBALS['included'] = true;
 $GLOBALS['botname'] = 'InceptionBot';
 
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+//ini_set("display_errors", 1);
+
 require $webdir . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 $action = @ $_REQUEST['action'];
 $rulename = @ $_REQUEST['rulename'];
 $testpage = @ $_REQUEST['testpage'];
+$custom_rules = @ $_REQUEST['custom_rules'];
 
 switch ($action) {
 	case 'test':
-		rule_test($rulename, $testpage);
+	    rule_test($rulename, $testpage, $custom_rules);
 		break;
 
 	default:
-		rule_display($rulename, $testpage);
+	    rule_display($rulename, $testpage, $custom_rules);
 		break;
 }
 
@@ -49,7 +53,7 @@ switch ($action) {
  * @param $testpage string (Optional) Page to test the rules against
  * @param $results string (Optional) Test results to display
  */
-function rule_display($rulename, $testpage, $results = null)
+function rule_display($rulename, $testpage, $custom_rules, $results = null)
 {
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -67,9 +71,10 @@ function rule_display($rulename, $testpage, $results = null)
 	</head>
 	<body>
         <h2>New Page Search Rule Test</h2>
-        <form action="InceptionBot.php" ><table class="form">
+        <form action="InceptionBot.php" method="post"><table class="form">
         <tr><td><b>Rule Page Name</b> <input name="action" type="hidden" value="test" /><input name="rulename" type="text" size="10" id="testfield1" value="<?php echo $rulename ?>" /> ex. Architecture</td></tr>
-        <tr><td><b>Test Page Name (optional)</b> <input name="testpage" type="text" size="15" value="<?php echo $testpage ?>" /> ex. Grouted roof<?php echo ''?></td></tr>
+        <tr><td><b>Test Page Name (optional)</b> <input name="testpage" type="text" size="15" value="<?php echo $testpage ?>" /> ex. Grouted roof</td></tr>
+        <tr><td><b>Custom Rules (optional)</b> <textarea name="custom_rules" rows="5" cols="50"><?php echo $custom_rules ?></textarea> Rule Page Name is ignored</td></tr>
         <tr><td><input type="submit" value="Submit" /></td></tr>
         </table></form>
 
@@ -94,28 +99,33 @@ function rule_display($rulename, $testpage, $results = null)
  * @param $rulename string New page search rule name
  * @param $testpage string (Optional) Page to test the rules against
  */
-function rule_test($rulename, $testpage)
+function rule_test($rulename, $testpage, $custom_rules)
 {
-    if (empty($rulename)) {
-        rule_display($rulename, $testpage);
+    if (empty($rulename) && empty($custom_rules)) {
+        rule_display($rulename, $testpage, $custom_rules);
         return;
     }
-    $testpage = str_replace('_', ' ', $testpage);
-    $prefix = 'User:AlexNewArtBot/';
-    $fullrulename = $rulename;
-    if (strpos($fullrulename, $prefix) === false) $fullrulename = $prefix . $rulename;
-
+    
     $url = Config::get(MediaWiki::WIKIURLKEY);
     $wiki = new MediaWiki($url);
     $username = Config::get(MediaWiki::WIKIUSERNAMEKEY);
     $password = Config::get(MediaWiki::WIKIPASSWORDKEY);
     $wiki->login($username, $password);
-
-    $ruledata = $wiki->getPage($fullrulename);
+    
+    if (! empty($custom_rules)) {
+        $ruledata = $custom_rules;
+    } else {
+        $testpage = str_replace('_', ' ', $testpage);
+        $prefix = 'User:AlexNewArtBot/';
+        $fullrulename = $rulename;
+        if (strpos($fullrulename, $prefix) === false) $fullrulename = $prefix . $rulename;
+        
+        $ruledata = $wiki->getPage($fullrulename);
+    }
 
     if (empty($ruledata)) {
         $results = 'Rule page ' . htmlentities($rulename, ENT_COMPAT, 'UTF-8') . ' not found.';
-        rule_display($rulename, $testpage, $results);
+        rule_display($rulename, $testpage, $custom_rules, $results);
         return;
     }
 
@@ -165,5 +175,5 @@ function rule_test($rulename, $testpage)
         }
     }
 
-    rule_display($rulename, $testpage, $results);
+    rule_display($rulename, $testpage, $custom_rules, $results);
 }
