@@ -61,11 +61,10 @@ class Logger
     	fwrite($hndl, $output);
     	fclose($hndl);
 
-        // Set the other user read mode to the parent directories read mode.
+        // Set the other user mode to the parent directories mode.
         $dirmode = fileperms(dirname(self::$filepath));
-        $readmode = '0';
-        if ($dirmode & 0x0004) $readmode = '4';
-        $mode = octdec("64$readmode");
+        $otherperm = $dirmode & 0x0006;
+        $mode = octdec("64$otherperm");
         chmod(self::$filepath, $mode);
     }
 
