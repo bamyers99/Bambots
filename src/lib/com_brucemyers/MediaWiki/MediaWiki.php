@@ -256,8 +256,8 @@ class MediaWiki extends wikipedia
         foreach ($pageChunks as $pageChunk) {
         	$pagenames = implode('|', $pageChunk);
 
-        	if (strlen($pagenames) > 7000) {
-        	    $chunks = array_chunk($pageChunk, floor(strlen($pagenames) / 7000));
+        	if (strlen(urlencode($pagenames)) > 7000) {
+        	    $chunks = array_chunk($pageChunk, floor(strlen(urlencode($pagenames)) / 7000));
         	    $chunkedNames = [];
         	    
         	    foreach ($chunks as $chunk) {
@@ -447,8 +447,8 @@ class MediaWiki extends wikipedia
         foreach ($pageChunks as $pageChunk) {
             $pagenames = implode('|', $pageChunk);
 
-            if (strlen($pagenames) > 7000) {
-                $chunks = array_chunk($pageChunk, floor(strlen($pagenames) / 7000));
+            if (strlen(urlencode($pagenames)) > 7000) {
+                $chunks = array_chunk($pageChunk, floor(strlen(urlencode($pagenames)) / 7000));
                 $chunkedNames = [];
                 
                 foreach ($chunks as $chunk) {
