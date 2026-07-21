@@ -257,8 +257,12 @@ class MediaWiki extends wikipedia
         	$pagenames = implode('|', $pageChunk);
 
         	if (strlen($pagenames) > 7000) {
-        	    $chunks = array_chunk($pageChunk, ceil(count($pageChunk) / 2));
-        	    $chunkedNames = [implode('|', $chunks[0]), implode('|', $chunks[1])];
+        	    $chunks = array_chunk($pageChunk, floor(strlen($pagenames) / 7000));
+        	    $chunkedNames = [];
+        	    
+        	    foreach ($chunks as $chunk) {
+        	        $chunkedNames[] = implode('|', $chunk);
+        	    }
         	} else {
         	    $chunkedNames = [$pagenames];
         	}
@@ -444,8 +448,12 @@ class MediaWiki extends wikipedia
             $pagenames = implode('|', $pageChunk);
 
             if (strlen($pagenames) > 7000) {
-                $chunks = array_chunk($pageChunk, ceil(count($pageChunk) / 2));
-                $chunkedNames = [implode('|', $chunks[0]), implode('|', $chunks[1])];
+                $chunks = array_chunk($pageChunk, floor(strlen($pagenames) / 7000));
+                $chunkedNames = [];
+                
+                foreach ($chunks as $chunk) {
+                    $chunkedNames[] = implode('|', $chunk);
+                }
             } else {
                 $chunkedNames = [$pagenames];
             }
