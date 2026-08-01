@@ -89,6 +89,8 @@ class DatabaseReportBot
     		'user' => $this->user,
     		'pass' => $this->pass
     	);
+    	
+    	$table_syntax = ['|', '-', '}'];
 
     	$classname = "com_brucemyers\\DatabaseReportBot\\Reports\\$reportname";
     	$report = new $classname();
@@ -171,15 +173,22 @@ class DatabaseReportBot
 
 				foreach ($group as $row) {
 					$output .= "|- $rowstyle\n";
-					$output .= "| $rowcnt\n";
+					$output .= "|$rowcnt\n";
+					
 					foreach ($row as $colnum => $column) {
-						$output .= "| ";
-						if ($column !== '') {
-							if ($colnum == 0 && $linktemplate !== false) $output .= "{{{$linktemplate}|1=$column}}";
-							else $output .= $column;
-						}
-						$output .= "\n";
+					    $output .= "|";
+					    
+					    if ($column !== '') {
+					        $firstchar = $column[0];
+					        if (in_array($firstchar, $table_syntax)) $output .= " ";
+					        
+					        if ($colnum == 0 && $linktemplate !== false) $output .= "{{{$linktemplate}|1=$column}}";
+					        else $output .= $column;
+					    }
+					    
+					    $output .= "\n";
 					}
+					
 					++$rowcnt;
 				}
 
@@ -201,15 +210,22 @@ class DatabaseReportBot
 
 				foreach ($rowchunk as $row) {
 					$output .= "|- $rowstyle\n";
-					$output .= "| $rowcnt\n";
+					$output .= "|$rowcnt\n";
+					
 					foreach ($row as $colnum => $column) {
-						$output .= "| ";
+					    $output .= "|";
+					    
 						if ($column !== '') {
-							if ($colnum == 0 && $linktemplate !== false) $output .= "{{{$linktemplate}|1=$column}}";
+						    $firstchar = $column[0];
+						    if (in_array($firstchar, $table_syntax)) $output .= " ";
+						    
+						    if ($colnum == 0 && $linktemplate !== false) $output .= "{{{$linktemplate}|1=$column}}";
 							else $output .= $column;
 						}
+						
 						$output .= "\n";
 					}
+					
 					++$rowcnt;
 				}
 

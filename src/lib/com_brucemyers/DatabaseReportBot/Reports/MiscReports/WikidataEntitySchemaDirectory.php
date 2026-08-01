@@ -42,7 +42,8 @@ class WikidataEntitySchemaDirectory
         // Get the schema list
         $schemas = [];
         $deleted = [
-            'E363' => true
+            'E363' => true,
+            'E491' => true
         ];
         
         $lister = new AllPagesLister($wdwiki, '640');
