@@ -208,9 +208,9 @@ class ReportGenerator
 			    $blps[] = $title;
 			}
 
-			$data_line = "<tr><td><a href=\"$arturl\">" . htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td><td data-sort-value='$impsort'>{$art[self::KEY_IMP]}</td>
-				<td data-sort-value='$clssort'>{$art[self::KEY_CLS]}</td><td align='right'>$icount</td>
-				<td data-sort-value='{$consolidated['earliestsort']}'>{$consolidated['earliest']}</td><td>$cats</td></tr>\n";
+			$data_line = "<tr><td><a href=\"$arturl\">" . htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td><td data-sort-value='$impsort'>{$art[self::KEY_IMP]}</td>" .
+				"<td data-sort-value='$clssort'>{$art[self::KEY_CLS]}</td><td align='right'>$icount</td>" .
+				"<td data-sort-value='{$consolidated['earliestsort']}'>{$consolidated['earliest']}</td><td>$cats</td></tr>\n";
 			fwrite($alphahndl, $data_line);
 			$page_size += strlen($data_line);
 
@@ -311,10 +311,10 @@ class ReportGenerator
 		            $blp = $art[self::KEY_BLP] ? ' (BLP)' : '';
 
 		            $data_line = "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-		                htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>
-						<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>
-						<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
-						<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
+		                htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>" .
+						"<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>" .
+						"<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>" .
+						"<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
 
 		            $page_size += strlen($data_line);
 
@@ -396,9 +396,8 @@ class ReportGenerator
 			$newarts = array_diff_key($curclean, $prevclean);
 			$artcount = count($newarts);
 			fwrite($bycathndl, "<a name='New articles'></a><h3>New articles ($artcount)</h3>\n");
-			fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>
-				<th class='unsortable'>Issues</th></tr></thead><tbody>\n
-				");
+			fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>" .
+				"<th class='unsortable'>Issues</th></tr></thead><tbody>\n");
 
 			foreach ($newarts as $title => &$art) {
 				$consolidated = $this->_consolidateCats($art[self::KEY_ISSUES], true);
@@ -407,10 +406,10 @@ class ReportGenerator
 				$impsort = CreateTables::$IMPORTANCES[$art[self::KEY_IMP]];
 				$blp = $art[self::KEY_BLP] ? ' (BLP)' : '';
 				fwrite($bycathndl, "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-					htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>
-					<td data-sort-value='{$impsort}'>{$art[self::KEY_IMP]}</td>
-					<td data-sort-value='{$clssort}'>{$art[self::KEY_CLS]}</td>
-					<td>{$artcats}</td></tr>\n");
+					htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>" .
+					"<td data-sort-value='{$impsort}'>{$art[self::KEY_IMP]}</td>" .
+					"<td data-sort-value='{$clssort}'>{$art[self::KEY_CLS]}</td>" .
+					"<td>{$artcats}</td></tr>\n");
 			}
 			unset($art);
 
@@ -419,14 +418,13 @@ class ReportGenerator
 			$resarts = array_diff_key($prevclean, $curclean);
 			$artcount = count($resarts);
 			fwrite($bycathndl, "<a name='Resolved articles'></a><h3>Resolved articles ($artcount)</h3>\n");
-			fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>
-					<th class='unsortable'>Issues</th></tr></thead><tbody>\n
-					");
+			fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>" .
+					"<th class='unsortable'>Issues</th></tr></thead><tbody>\n");
 
 			foreach ($resarts as $title => &$fields) {
 				fwrite($bycathndl, "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-					htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
-					<td>{$fields[0]}</td><td>{$fields[1]}</td><td>{$fields[4]}</td></tr>\n");
+					htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>" .
+					"<td>{$fields[0]}</td><td>{$fields[1]}</td><td>{$fields[4]}</td></tr>\n");
 			}
 			unset($fields);
 
@@ -441,9 +439,8 @@ class ReportGenerator
 
 		    $artcount = count($blps);
 		    fwrite($bycathndl, "<a name='BLPs'></a><h3>BLPs ($artcount)</h3>\n");
-		    fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>
-				<th class='unsortable'>Issues</th></tr></thead><tbody>\n
-				");
+		    fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th>" .
+				"<th class='unsortable'>Issues</th></tr></thead><tbody>\n");
 
 		    foreach ($blps as $title) {
 		        $art = $titles[$title];
@@ -451,10 +448,10 @@ class ReportGenerator
 		        $artcats = implode(', ', $keycats);
 
 		        $data_line = "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-		  		            htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>
-						<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>
-						<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
-						<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
+		  		            htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a></td>" .
+						"<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>" .
+						"<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>" .
+						"<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
 
 		  		fwrite($bycathndl, $data_line);
 		    }
@@ -514,18 +511,18 @@ class ReportGenerator
     					if (! isset($anchors[$cat])) fwrite($bycathndl, "<a name='$cat'></a>");
     					else foreach ($anchors[$cat] as $anchorname) fwrite($bycathndl, "<a name='$anchorname'></a>");
     					fwrite($bycathndl, "<h3>$cat ($artcount)</h3>\n");
-    					fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>
-    					   <th>Oldest</th><th class='unsortable'>Issues</th></tr></thead><tbody>\n");
+    					fwrite($bycathndl, "<table class='wikitable tablesorter'><thead><tr><th>Article</th><th>Importance</th><th>Class</th><th>Count</th>" .
+    					   "<th>Oldest</th><th class='unsortable'>Issues</th></tr></thead><tbody>\n");
     					$need_cat_heading = false;
 					}
 
 					$blp = $art[self::KEY_BLP] ? ' (BLP)' : '';
 
 					$data_line = "<tr><td><a href=\"$wikiprefix" . urlencode(str_replace(' ', '_', $title)) . "\">" .
-						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>
-						<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>
-						<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>
-						<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
+						htmlentities($title, ENT_COMPAT, 'UTF-8') . "</a>$blp</td>" .
+						"<td data-sort-value='{$art[self::KEY_IMPSORT]}'>{$art[self::KEY_IMP]}</td>" .
+						"<td data-sort-value='{$art[self::KEY_CLSSORT]}'>{$art[self::KEY_CLS]}</td><td align='right'>{$art[self::KEY_ICOUNT]}</td>" .
+						"<td data-sort-value='{$art[self::KEY_EARLIESTSORT]}'>{$art[self::KEY_EARLIEST]}</td><td>{$artcats}</td></tr>\n";
 
 					$page_size += strlen($data_line);
 					fwrite($bycathndl, $data_line);
