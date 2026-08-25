@@ -47,6 +47,11 @@ class Categories
             'group' => 'Content',
             'display' => 'Potentially dated statements'
         ],
+        'Articles containing suspected AI-generated texts' => [
+            'type' => 'from-monthly',
+            'group' => 'Content',
+            'display' => 'Suspected AI-generated text'
+        ],
         'Articles lacking in-text citations' => [
             'type' => 'from-monthly',
             'group' => 'References',
