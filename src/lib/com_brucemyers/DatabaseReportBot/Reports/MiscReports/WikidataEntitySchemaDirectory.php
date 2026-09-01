@@ -114,7 +114,7 @@ class WikidataEntitySchemaDirectory
         
         // Retrieve the labels for items and properties
         $labelids = [];
-        $skip_validate = ['E67','E80','E81','E133','E263','E342','E473','E487'];
+        $skip_validate = ['E67','E80','E81','E133','E263','E342','E473','E487','E532'];
         
         foreach ($schemas as $id => $schema) {
             if (! isset($schema['classprop'])) continue; // New schema
@@ -286,27 +286,30 @@ class WikidataEntitySchemaDirectory
                     $cpcs = ['classprop' => '', 'cats' => '', 'status' => ''];
                     
                     foreach (['classprop' => $schema['classprop'], 'status' => $schema['status']] as $type => $attrib) {
-                        $attrib = explode(',', $attrib);
-                        $attrib = array_map('trim', $attrib);
-                        $attrib = implode(', ', $attrib);
+                        $attribs = explode(',', $attrib);
+                        $attribs = array_map('trim', $attribs);
                         
-                        preg_match_all('!(?:Q\d+|P\d+)!', $attrib, $matches);
-                        
-                        foreach ($matches[0] as $match) {
-                            if ($match[0] == 'P') $labelid = "Property:$match";
-                            else $labelid = $match;
+                        foreach ($attribs as &$attrib) {
+                            preg_match_all('!(?:Q\d+|P\d+)!', $attrib, $matches);
                             
-                            if (isset($labeldata[$match])) {
-                                $label = $labeldata[$match]->getLabelDescription('label', $language);
+                            foreach ($matches[0] as $match) {
+                                if ($match[0] == 'P') $labelid = "Property:$match";
+                                else $labelid = $match;
                                 
-                                if (! empty($label)) {
-                                    if ($type == 'status') $attrib = str_replace($match, "<i>$label</i>", $attrib);
-                                    else $attrib = str_replace($match, "[[$labelid|$label]]", $attrib);
+                                if (isset($labeldata[$match])) {
+                                    $label = $labeldata[$match]->getLabelDescription('label', $language);
+                                    
+                                    if (! empty($label)) {
+                                        if ($type == 'status') $attrib = str_replace($match, "<i>$label</i>", $attrib);
+                                        else $attrib = str_replace($match, "[[$labelid|$label]]", $attrib);
+                                    }
                                 }
                             }
                         }
                         
-                        $cpcs[$type] = $attrib;
+                        unset($attrib);
+                        
+                        $cpcs[$type] = implode(', ', $attribs);
                     }
                     
                     // Calc dependencies
