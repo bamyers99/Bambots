@@ -88,7 +88,8 @@ Bamyers99.PhotoNearby = {
 					var h = '<div>';
 					
 					h += '<span>Commons images: ' + imageCount +
-						' <a href="https://wikishootme.toolforge.org/#lat=' + latitude + '&lng=' + longitude + '&zoom=18">WikiShootMe</a></span>';
+						' <a href="https://wikishootme.toolforge.org/#lat=' + latitude + '&lng=' + longitude + '&zoom=18">WikiShootMe</a>' +
+						' | <a href="https://wikimap.toolforge.org/?wp=false&cluster=false&zoom=18&lat=' + latitude + '&lon=' + longitude + '">WikiMap</a></span>';
 												
 					h += '</div>';
 					
