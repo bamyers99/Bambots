@@ -31,6 +31,7 @@ class WMDumpWatchlist
 
     public function process()
     {
+        $extract_dirs = ['mediawiki_content_current' => 'extracts', 'mediawiki_content_history' => 'extracts', 'mediawiki_history' => 'analytics'];
         $serviceMgr = new ServiceManager();
 
         $asof_date = time();
@@ -39,13 +40,8 @@ class WMDumpWatchlist
         // Determine dump day
         $dateinfo = getdate($asof_date);
 
-        if ($dateinfo['mday'] < 20) {
-            $dumpday = 1;
-            $current_reporttype = '1';
-        } else {
-            $dumpday = 20;
-            $current_reporttype = '2';
-        }
+        $dumpday = 1;
+        $current_reporttype = '1';
 
         $sqlmonth = $dateinfo['mon'];
         if ($sqlmonth < 10) $sqlmonth = "0$sqlmonth";
@@ -65,80 +61,56 @@ class WMDumpWatchlist
 
         while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
             $wikiname = $row['wikiname'];
-            if (! isset($stalefiles[$wikiname])) $stalefiles[$wikiname] = [];
-            $stalefiles[$wikiname][$row['filename']] = $row;
+            $filename = $row['filename'];
+            
+            if (! isset($stalefiles[$wikiname])) $stalefiles[$wikiname] = ['dumps' => [], 'extracts' => [], 'analytics' => []];
+            
+            if (isset($extract_dirs[$filename])) $stalefiles[$wikiname][$extract_dirs[$filename]][$filename] = $row;
+            else $stalefiles[$wikiname]['dumps'][$filename] = $row;
         }
 
         // Retrieve dump statuses
-
-        foreach ($stalefiles as $wikiname => &$filerecs) {
-            $url = "https://dumps.wikimedia.org/$wikiname/{$dateinfo['year']}{$sqlmonth}{$sqlday}/report.json";
-            $retval = Curl::getUrlContents($url);
-            $responseCode = Curl::$lastResponseCode;
-
-            if ($retval === false || ($responseCode != 200 && $responseCode != 404)) {
-                $errormsg = ($retval === false) ? Curl::$lastError : "HTTP status: $responseCode";
-
-                $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lasterror = ? WHERE wikiname = ?');
-                $sth->bindParam(1, $errormsg);
-                $sth->bindParam(2, $wikiname);
-                $sth->execute();
-
-                unset($stalefiles[$wikiname]);
-                continue;
-            }
-
-            if ($responseCode == 404) continue;
-
-            $retval = json_decode($retval, true)['jobs'];
-
-            $fileprefixlen = strlen("$wikiname-{$dateinfo['year']}{$sqlmonth}{$sqlday}-");
-            $validfilenames = [];
-
-            foreach ($retval as $statfiles) {
-                if (! isset($statfiles['files'])) continue;
-
-                foreach ($statfiles['files'] as $filename => $statfile) {
-                    $filename = substr($filename, $fileprefixlen);
-
-                    $validfilenames[$filename] = true;
-
-                    if (isset($statfile['size']) && isset($statfile['url'])) {
-                        foreach ($filerecs as &$filerec) {
-                            if ($filename == $filerec['filename']) {
-                                $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lastdump = ?, filesize = ? WHERE wikiname = ? AND filename = ?');
-                                $sth->bindParam(1, $mysql_asof_date);
-                                $sth->bindParam(2, $statfile['size']);
-                                $sth->bindParam(3, $wikiname);
-                                $sth->bindParam(4, $filename);
-                                $sth->execute();
-
-                                $filerec['done'] = true;
-                                break;
-                            }
-                        }
-
-                        unset($filerec);
-                    }
+        
+        foreach ($stalefiles as $wikiname => &$dirs) {
+            
+            foreach ($dirs as $dir_type => &$filerecs) {
+                $validfilenames = [];
+                
+                switch ($dir_type) {
+                    case 'dumps':
+                        $continue = $this->process_dumps($wikiname, $dateinfo, $sqlmonth, $sqlday, $stalefiles, $validfilenames, $dbh_tools, $filerecs, $mysql_asof_date);
+                        if ($continue) continue 2;
+                        break;
+                        
+                    case 'extracts':
+                        $this->process_extracts($wikiname, $dateinfo, $sqlmonth, $sqlday, $dbh_tools, $filerecs, $mysql_asof_date);
+                        continue 2;
+                        break;
+                        
+                    case 'analytics':
+                        $this->process_analytics($wikiname, $dateinfo, $sqlmonth, $dbh_tools, $filerecs, $mysql_asof_date);
+                        continue 2;
+                        break;
                 }
-            }
-
-            // Error out file not founds
-            foreach ($filerecs as $filerec) {
-                $filename = $filerec['filename'];
-
-                if (! isset($validfilenames[$filename])) {
-                    $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lasterror = ? WHERE wikiname = ? AND filename = ?');
-                    $errormsg = 'File not found';
-                    $sth->bindParam(1, $errormsg);
-                    $sth->bindParam(2, $wikiname);
-                    $sth->bindParam(3, $filename);
-                    $sth->execute();
+                
+                // Error out file not founds
+                foreach ($filerecs as $filerec) {
+                    $filename = $filerec['filename'];
+    
+                    if (! isset($validfilenames[$filename])) {
+                        $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lasterror = ? WHERE wikiname = ? AND filename = ?');
+                        $errormsg = 'File not found';
+                        $sth->bindParam(1, $errormsg);
+                        $sth->bindParam(2, $wikiname);
+                        $sth->bindParam(3, $filename);
+                        $sth->execute();
+                    }
                 }
             }
         }
 
         unset($filerecs);
+        unset($dirs);
 
         if (! empty($stalefiles)) {
             // Update last dump date on queries
@@ -159,8 +131,11 @@ class WMDumpWatchlist
 
                     $filekey = "$wikiname\t$filename";
                     $usedfiles[$filekey] = true;
+                    $dir_type = 'dumps';
+                    if (isset($extract_dirs[$filename])) $dir_type = $extract_dirs[$filename];
+                    
 
-                    if (isset($stalefiles[$wikiname][$filename]['done']) && ($reporttype == 'B' || $reporttype == $current_reporttype)) {
+                    if (isset($stalefiles[$wikiname][$dir_type][$filename]['done']) && ($reporttype == 'B' || $reporttype == $current_reporttype)) {
                         $sth = $dbh_tools->prepare('UPDATE dumpquerys SET lastdump = ? WHERE id = ?');
                         $sth->bindParam(1, $mysql_asof_date);
                         $sth->bindParam(2, $row['id']);
@@ -198,7 +173,152 @@ class WMDumpWatchlist
             $dbh_tools->exec("DELETE FROM dumpquerys WHERE id = $id");
         }
     }
-
+    
+    /**
+     * Process dump type
+     * 
+     * returns boolean true: php continue
+     */
+    function process_dumps($wikiname, $dateinfo, $sqlmonth, $sqlday, &$stalefiles, &$validfilenames, $dbh_tools, &$filerecs, $mysql_asof_date)
+    {
+        $url = "https://dumps.wikimedia.org/$wikiname/{$dateinfo['year']}{$sqlmonth}{$sqlday}/report.json";
+        $retval = Curl::getUrlContents($url);
+        $responseCode = Curl::$lastResponseCode;
+        
+        if ($retval === false || ($responseCode != 200 && $responseCode != 404)) {
+            $errormsg = ($retval === false) ? Curl::$lastError : "HTTP status: $responseCode";
+            
+            $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lasterror = ? WHERE wikiname = ?');
+            $sth->bindParam(1, $errormsg);
+            $sth->bindParam(2, $wikiname);
+            $sth->execute();
+            
+            unset($stalefiles[$wikiname]);
+            return true;
+        }
+        
+        if ($responseCode == 404) return true;
+        
+        $retval = json_decode($retval, true)['jobs'];
+        
+        $fileprefixlen = strlen("$wikiname-{$dateinfo['year']}{$sqlmonth}{$sqlday}-");
+        
+        foreach ($retval as $statfiles) {
+            if (! isset($statfiles['files'])) continue;
+            
+            foreach ($statfiles['files'] as $filename => $statfile) {
+                $filename = substr($filename, $fileprefixlen);
+                
+                $validfilenames[$filename] = true;
+                
+                if (isset($statfile['size']) && isset($statfile['url'])) {
+                    foreach ($filerecs as &$filerec) {
+                        if ($filename == $filerec['filename']) {
+                            $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lastdump = ?, filesize = ? WHERE wikiname = ? AND filename = ?');
+                            $sth->bindParam(1, $mysql_asof_date);
+                            $sth->bindParam(2, $statfile['size']);
+                            $sth->bindParam(3, $wikiname);
+                            $sth->bindParam(4, $filename);
+                            $sth->execute();
+                            
+                            $filerec['done'] = true;
+                            break;
+                        }
+                    }
+                    
+                    unset($filerec);
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Process extract type
+     */
+    function process_extracts($wikiname, $dateinfo, $sqlmonth, $sqlday, $dbh_tools, &$filerecs, $mysql_asof_date)
+    {
+        foreach ($filerecs as &$filerec) {
+            $filename = $filerec['filename'];
+            $url = "https://dumps.wikimedia.org/other/$filename/$wikiname/{$dateinfo['year']}-{$sqlmonth}-{$sqlday}/xml/bzip2/SHA256SUMS";
+            $retval = Curl::getUrlContents($url);
+            $responseCode = Curl::$lastResponseCode;
+            
+            if ($retval === false || ($responseCode != 200 && $responseCode != 404)) {
+                $errormsg = ($retval === false) ? Curl::$lastError : "HTTP status: $responseCode";
+                
+                $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lasterror = ? WHERE wikiname = ? AND filename = ?');
+                $sth->bindParam(1, $errormsg);
+                $sth->bindParam(2, $wikiname);
+                $sth->bindParam(3, $filename);
+                $sth->execute();
+                
+                continue;
+            }
+            
+            if ($responseCode == 404) continue;
+            
+            $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lastdump = ?, filesize = ? WHERE wikiname = ? AND filename = ?');
+            $sth->bindParam(1, $mysql_asof_date);
+            $sth->bindParam(2, 'unknown');
+            $sth->bindParam(3, $wikiname);
+            $sth->bindParam(4, $filename);
+            $sth->execute();
+            
+            $filerec['done'] = true;
+        }
+    }
+    
+    /**
+     * Process analytic type
+     */
+    function process_analytics($wikiname, $dateinfo, $sqlmonth, $dbh_tools, &$filerecs, $mysql_asof_date)
+    {
+        foreach ($filerecs as &$filerec) {
+            $filename = $filerec['filename'];
+            
+            // Subtract one month for correct date
+            $year = $dateinfo['year'];
+            $month = $sqlmonth;
+            
+            if ($month == '01') {
+                $year = intval($year) - 1;
+                $month = '12';
+            } else {
+                $month = intval($month) - 1;
+                if ($month < 10) $month = "0$month";
+            }
+            
+            $url = "https://dumps.wikimedia.org/other/$filename/$year-$month/$wikiname/";
+            $retval = Curl::getUrlContents($url);
+            $responseCode = Curl::$lastResponseCode;
+            
+            if ($retval === false || ($responseCode != 200 && $responseCode != 404)) {
+                $errormsg = ($retval === false) ? Curl::$lastError : "HTTP status: $responseCode";
+                
+                $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lasterror = ? WHERE wikiname = ? AND filename = ?');
+                $sth->bindParam(1, $errormsg);
+                $sth->bindParam(2, $wikiname);
+                $sth->bindParam(3, $filename);
+                $sth->execute();
+                
+                continue;
+            }
+            
+            if ($responseCode == 404) continue;
+            
+            $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lastdump = ?, filesize = ? WHERE wikiname = ? AND filename = ?');
+            $sth->bindParam(1, $mysql_asof_date);
+            $sth->bindParam(2, 'unknown');
+            $sth->bindParam(3, $wikiname);
+            $sth->bindParam(4, $filename);
+            $sth->execute();
+            
+            $filerec['done'] = true;
+        }
+    }
+    
     /**
      * Purge unused files
      *

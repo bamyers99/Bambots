@@ -95,8 +95,6 @@ function display_form()
 		        	form['wn'+x].value = '';
 		        	form['fn'+x].value = '';
 		        	form['rt'+x][0].checked = true;
-		        	form['rt'+x][1].checked = false;
-		        	form['rt'+x][2].checked = false;
 		        }
 			}
 		</script>
@@ -106,15 +104,11 @@ function display_form()
 		<h2><a href="DumpWatchlist.php<?php if (! empty($options['hash'])) echo "?query={$options['hash']}" ?>" class="novisited">Wikimedia Dump Watchlist</a></h2>
         <form action="DumpWatchlist.php" method="post"><table class="form">
         <tr><td>&nbsp;</td><td><b>Wiki</b> (e.g. enwiki)</td>
-        	<td style="text-align:center;"><b>Filename</b> (e.g. pages-articles.xml.bz2)</td><td style="text-align:center;"><b>Dump day(s)</b></td><td style="text-align:center;"><b>Last dump</b></td><td><b>Filesize</b></td></tr>
+        	<td style="text-align:center;"><b>Filename</b> (e.g. pages-articles.xml.bz2; mediawiki_content_current; mediawiki_content_history; mediawiki_history)</td><td style="text-align:center;"><b>Dump day(s)</b></td><td style="text-align:center;"><b>Last dump</b></td><td><b>Filesize</b></td></tr>
         <?php
         	for ($x=1; $x <= 10; ++$x) {
-				$checkedRTB = '';
 				$checkedRT1 = '';
-				$checkedRT20 = '';
 				if ($params["rt$x"] == '1') $checkedRT1 = " checked='1'";
-				elseif ($params["rt$x"] == '2') $checkedRT20 = " checked='1'";
-				else $checkedRTB = " checked='1'";
 
 				$wikiname = $params["wn$x"];
 				$filename = $params["fn$x"];
@@ -137,7 +131,7 @@ function display_form()
 				echo "<tr><td><b>$x</b></td><td><input name='wn$x' type='text' size='15' value='" .
 				    htmlentities($wikiname, ENT_COMPAT, 'UTF-8') . "' /></td><td><input name='fn$x' type='text' size='30' value='" .
 				    htmlentities($filename, ENT_COMPAT, 'UTF-8') . "' /></td>" .
-        			"<td class='tabborderr'>1st<input type='radio' name='rt$x' value='1'$checkedRT1 />&nbsp;&nbsp;20th<input type='radio' name='rt$x' value='2'$checkedRT20 />&nbsp;&nbsp;Both<input type='radio' name='rt$x' value='B'$checkedRTB /></td><td class='tabborderr'>$lastdump</td><td>$filesize</td></tr>";
+        			"<td class='tabborderr'>1st<input type='radio' name='rt$x' value='1'$checkedRT1 /></td><td class='tabborderr'>$lastdump</td><td>$filesize</td></tr>";
 			}
         	?>
         <tr><td colspan='4'><input type="submit" value="Save" />&nbsp;&nbsp;&nbsp;<input type="submit" value="New" onclick="clearForm(this.form);return false;"/></td></tr>
@@ -182,7 +176,7 @@ function get_params()
 	$files = [];
 	$filecnt = 0;
 
-	$reporttypes = ['1','2','B'];
+	$reporttypes = ['1'];
 
 	for ($x=1; $x <= 10; ++$x) {
 	    $fieldname = "wn$x";
