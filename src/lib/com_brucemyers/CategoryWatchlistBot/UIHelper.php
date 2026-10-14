@@ -204,13 +204,14 @@ class UIHelper
 	 * Get dump watchlist results
 	 *
 	 * @param array $params
+	 * @param string $hash hash override
 	 * @return array Results, keys = errors -[], results - []
 	 */
-	public function getDumpResults($params)
+	public function getDumpResults($params, $hash = '')
 	{
 	    $errors = [];
 	    $serialized = serialize($params);
-	    $hash = md5($serialized);
+	    if (empty($hash)) $hash = md5($serialized);
 	    $accessdate = MySQLDate::toMySQLDate(time());
 
 	    // See if we have a query record
@@ -551,7 +552,7 @@ class UIHelper
 		if (! ($row = $sth->fetch(PDO::FETCH_ASSOC))) return false;
 
 		$params = unserialize($row['params']);
-		$results = $this->getDumpResults($params);
+		$results = $this->getDumpResults($params, $query);
 
 		$host  = $_SERVER['HTTP_HOST'];
 		$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');

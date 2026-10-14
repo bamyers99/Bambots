@@ -71,7 +71,7 @@ function display_form()
 	global $uihelper, $params, $options;
 
 	if (isset($options['query'])) {
-	    $results = $uihelper->getDumpResults($params)['results'];
+	    $results = $uihelper->getDumpResults($params, $options['hash'])['results'];
 	}
 
     ?>
