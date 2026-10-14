@@ -259,9 +259,11 @@ class WMDumpWatchlist
             
             if ($responseCode == 404) continue;
             
+            $filesize = 'unknown';
+            
             $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lastdump = ?, filesize = ? WHERE wikiname = ? AND filename = ?');
             $sth->bindParam(1, $mysql_asof_date);
-            $sth->bindParam(2, 'unknown');
+            $sth->bindParam(2, $filesize);
             $sth->bindParam(3, $wikiname);
             $sth->bindParam(4, $filename);
             $sth->execute();
@@ -308,9 +310,11 @@ class WMDumpWatchlist
             
             if ($responseCode == 404) continue;
             
+            $filesize = 'unknown';
+            
             $sth = $dbh_tools->prepare('UPDATE dumpfiles SET lastdump = ?, filesize = ? WHERE wikiname = ? AND filename = ?');
             $sth->bindParam(1, $mysql_asof_date);
-            $sth->bindParam(2, 'unknown');
+            $sth->bindParam(2, $filesize);
             $sth->bindParam(3, $wikiname);
             $sth->bindParam(4, $filename);
             $sth->execute();

@@ -104,7 +104,7 @@ function display_form()
 		<h2><a href="DumpWatchlist.php<?php if (! empty($options['hash'])) echo "?query={$options['hash']}" ?>" class="novisited">Wikimedia Dump Watchlist</a></h2>
         <form action="DumpWatchlist.php" method="post"><table class="form">
         <tr><td>&nbsp;</td><td><b>Wiki</b> (e.g. enwiki)</td>
-        	<td style="text-align:center;"><b>Filename</b> (e.g. pages-articles.xml.bz2; mediawiki_content_current; mediawiki_content_history; mediawiki_history)</td><td style="text-align:center;"><b>Dump day(s)</b></td><td style="text-align:center;"><b>Last dump</b></td><td><b>Filesize</b></td></tr>
+        	<td style="text-align:center;"><b>Filename</b> (e.g. pages-articles.xml.bz2; mediawiki_content_current; mediawiki_content_history; mediawiki_history)</td><td style="text-align:center;"><b>Dump day</b></td><td style="text-align:center;"><b>Last dump</b></td><td><b>Filesize</b></td></tr>
         <?php
         	for ($x=1; $x <= 10; ++$x) {
 				$checkedRT1 = '';
