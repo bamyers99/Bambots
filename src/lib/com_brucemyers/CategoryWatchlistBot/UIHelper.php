@@ -587,10 +587,15 @@ class UIHelper
 		    $filename = htmlentities($file['filename'], ENT_COMPAT, 'UTF-8');
 		    $lastdump = 'waiting';
 		    $filesize = 'waiting';
+		    
 		    if (! is_null($file['lastdump'])) $lastdump = $file['lastdump'];
+		    
 		    if (! is_null($file['filesize'])) {
-		        $filesize = Convert::formatBytes($file['filesize']);
-		        $filesize = $filesize[0] . ' ' . $filesize[1] . 'B';
+		        if ($file['filesize'] == 'unknown') $filesize = 'unknown';
+		        else {
+		          $filesize = Convert::formatBytes($file['filesize']);
+		          $filesize = $filesize[0] . ' ' . $filesize[1] . 'B';
+		        }
 		    }
 
 			$summary .= "<tr><td>$wikiname</td><td>$filename</td><td>$lastdump</td><td>$filesize</td></tr>\n";

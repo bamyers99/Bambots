@@ -121,10 +121,15 @@ function display_form()
 				    $lastdump = 'waiting';
 				    $filesize = 'waiting';
 				    $file = $results[$resultkey];
+				    
 				    if (! is_null($file['lastdump'])) $lastdump = $file['lastdump'];
+				    
 				    if (! is_null($file['filesize'])) {
-				        $filesize = Convert::formatBytes($file['filesize']);
-				        $filesize = $filesize[0] . ' ' . $filesize[1] . 'B';
+				        if ($file['filesize'] == 'unknown') $filesize = 'unknown';
+				        else {
+				            $filesize = Convert::formatBytes($file['filesize']);
+				            $filesize = $filesize[0] . ' ' . $filesize[1] . 'B';
+				        }
 				    }
 				}
 
