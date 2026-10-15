@@ -1162,7 +1162,6 @@ class TemplateParamBot
         
         Logger::log("Start autoprocess: $wiki $date");
         
-        
         // Retrieve TemplateData; do first so fails right away if invalid templatedata
         
         $outfile = "$wikidir/TemplateIds.tsv";
@@ -1171,39 +1170,75 @@ class TemplateParamBot
         
         if (! empty($retval)) return $retval;
         
-        // Curl
+        // rm data files to free up space
         
-        if ($wiki == 'enwiki') $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-meta-current.xml.bz2";
-        else $url = "https://dumps.wikimedia.org/$wiki/$date/$wiki-$date-pages-articles.xml.bz2";
-        $outfile = "$wikidir/pages-articles.xml.bz2";
+        $command = "rm $datadir/$wiki-*";
+        system($command);
         
-        if (! file_exists($outfile)) {
+        // Retrieve the chunk file list
+        
+        $chunk_date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6);
+        
+        $url = "https://dumps.wikimedia.org/other/mediawiki_content_current/$wiki/$chunk_date/xml/bzip2/SHA256SUMS";
+        $retval = Curl::getUrlContents($url);
+        
+        if (! $retval || ! empty(Curl::$lastError) || Curl::$lastResponseCode < 200 || Curl::$lastResponseCode >= 300) {
+            return "curl error ($url) " . Curl::$lastError . " responsecode:" . Curl::$lastResponseCode;
+        }
+        
+        $data = preg_split('/\r?\n/', $retval);
+        $chunks = [];
+        
+        foreach ($data as $line) {
+            if (empty($line)) continue;
+            $parts = preg_split('!\s+!', $line);
+            $chunks[] = $parts[1];
+        }
+        
+        $x = 1;
+        
+        foreach ($chunks as $chunk) {
+            // Curl chunk
+            
+            $url = "https://dumps.wikimedia.org/other/mediawiki_content_current/$wiki/$chunk_date/xml/bzip2/$chunk";
+            $outfile = "$wikidir/pages-articles.xml.bz2";
+            
             Logger::log("  Start curl $url");
             $retval = Curl::saveUrlContents($url, $outfile);
             
             if (! $retval || ! empty(Curl::$lastError) || Curl::$lastResponseCode < 200 || Curl::$lastResponseCode >= 300) {
                 return "curl error ($url) " . Curl::$lastError . " responsecode:" . Curl::$lastResponseCode;
             }
+            
+            // Parse page template parameters
+            
+            $command = "cd $wikidir; bunzip2 -c pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - {$wiki}TemplateParams$x {$wiki}TemplateTotals$x";
+            Logger::log("  $command");
+            system($command);
+            
+            $command = "cd $wikidir; rm pages-articles.xml.bz2";
+            system($command);
+            
+            ++$x;
         }
         
-        // rm data files to free up space
+        // Concatenate parameters
         
-        $command = "rm $datadir/$wiki-*";
+        $command = "cd $wikidir; cat {$wiki}TemplateParams* > {$wiki}allTemplateParams";
         Logger::log("  $command");
         system($command);
         
-        // Parse page template parameters
-        
-        $command = "cd $wikidir; bunzip2 -c pages-articles.xml.bz2 | ./MWDumpTemplateParser -v - {$wiki}TemplateParams {$wiki}TemplateTotals";
-        Logger::log("  $command");
+        $command = "cd $wikidir; rm {$wiki}TemplateParams*";
         system($command);
         
-        $command = "cd $wikidir; rm pages-articles.xml.bz2";
-        system($command);
+        // Compute combined totals
+        
+        $filelist = glob("$wikidir/{$wiki}TemplateTotals*");
+        $this->combineTotals($filelist, "$wikidir/{$wiki}TemplateTotals");
         
         // Sort the parameters
         
-        $command = "cd $wikidir; bash -c \"LC_ALL=C sort -n -k 1,1 -k 2,2 {$wiki}TemplateParams >{$wiki}TemplateParams.sorted\"";
+        $command = "cd $wikidir; bash -c \"LC_ALL=C sort -n -k 1,1 -k 2,2 {$wiki}allTemplateParams >{$wiki}TemplateParams.sorted\"";
         Logger::log("  $command");
         system($command);
         
@@ -1216,15 +1251,12 @@ class TemplateParamBot
         // Move the data files to the data directory
         
         $command = "mv $wikidir/{$wiki}TemplateParams.sorted $datadir/$wiki-$date-TemplateParams";
-        Logger::log("  $command");
         system($command);
         
         $command = "mv $wikidir/{$wiki}TemplateTotals $datadir/$wiki-$date-TemplateTotals";
-        Logger::log("  $command");
         system($command);
         
         $command = "mv $wikidir/{$wiki}TemplateOffsets $datadir/$wiki-$date-TemplateOffsets";
-        Logger::log("  $command");
         system($command);
         
         // Load the template info into the database
@@ -1236,10 +1268,89 @@ class TemplateParamBot
         
         // Cleanup
         
-        $command = "cd $wikidir; rm {$wiki}TemplateParams; rm TemplateIds.tsv";
+        $command = "cd $wikidir; rm {$wiki}allTemplateParams TemplateIds.tsv {$wiki}TemplateTotals*";
         system($command);
         
         return '';
+    }
+    
+    /**
+     * 
+     * @param unknown $filelist
+     * @param unknown $outputpath
+     */
+    function combineTotals($filelist, $outputpath)
+    {
+        $parameters = [];
+        
+        foreach ($filelist as $totalsfilepath) {
+            
+            $rhndl = fopen($totalsfilepath, 'r');
+            
+            while (! feof($rhndl)) {
+                $buffer = fgets($rhndl);
+                $buffer = rtrim($buffer, "\n");
+                if (empty($buffer)) continue;
+                
+                $type = $buffer[0];
+                
+                if ($type == 'T') {
+                    $parts = explode("\t", $buffer);
+                    $tmplid = substr($parts[0], 1);
+                    $pagecnt = $parts[1];
+                    $instancecnt = $parts[2];
+                    $tmplname = $parts[3];
+                    
+                    if (! isset($parameters[$tmplid])) $parameters[$tmplid] = ['tn' => $tmplname, 'pc' => 0, 'ic' => 0, 'p' => []];
+                    $parameters[$tmplid]['pc'] += $pagecnt;
+                    $parameters[$tmplid]['ic'] += $instancecnt;
+                    
+                } else { // P
+                    $parts = explode("\t", $buffer);
+                    $paramname = substr($parts[0], 1);
+                    $valuecnt = $parts[1];
+                    
+                    $partcnt = count($parts);
+                    $uniquevalues = [];
+                    
+                    if ($partcnt > 2) {
+                        for ($x = 2; $x < $partcnt; $x += 2) {
+                            $uniquevalues[$parts[$x]] = intval($parts[$x+1]);
+                        }
+                    }
+                    
+                    if (! isset($parameters[$tmplid]['p'][$paramname])) $parameters[$tmplid]['p'][$paramname] = ['vc' => 0, 'uv' => []];
+                    $parameters[$tmplid]['p'][$paramname]['vc'] += $valuecnt;
+                    
+                    foreach ($uniquevalues as $uniquevalue => $uniquevaluecnt) {
+                        if (! isset($parameters[$tmplid]['p'][$paramname]['uv'][$uniquevalue])) $parameters[$tmplid]['p'][$paramname]['uv'][$uniquevalue] = 0;
+                        $parameters[$tmplid]['p'][$paramname]['uv'][$uniquevalue] += $uniquevaluecnt;
+                    }
+                }
+            }
+            
+            fclose($rhndl);
+        }
+        
+        $whndl = fopen($outputpath, 'w');
+        
+        foreach ($parameters as $tmplid => $data) {
+            fwrite($whndl, "T$tmplid\t{$data['pc']}\t{$data['ic']}\t{$data['tn']}\n");
+            
+            foreach ($data['p'] as $paramname => $params) {
+                fwrite($whndl, "P$paramname\t{$params['vc']}");
+                
+                if (count($params['uv'])> 50) $params['uv'] = array_slice($params['uv'], 0, 50); // Max 50 unique values
+                
+                foreach ($params['uv'] as $uniquevalue => $uniquevaluecnt) {
+                    fwrite($whndl, "\t$uniquevalue\t$uniquevaluecnt");
+                }
+                
+                fwrite($whndl, "\n");
+            }
+        }
+        
+        fclose($whndl);
     }
     
     /**
@@ -1365,7 +1476,7 @@ class TemplateParamBot
         $rowsfound = true;
         
         while ($rowsfound) {
-            $sth = $dbh_tools->query("SELECT wikiname FROM dumpfiles WHERE lastdump > lastextract AND filename IN ('pages-articles.xml.bz2','pages-meta-current.xml.bz2')");
+            $sth = $dbh_tools->query("SELECT wikiname FROM dumpfiles WHERE lastdump > lastextract AND filename IN ('mediawiki_content_current')");
             $rows = $sth->fetchAll(PDO::FETCH_ASSOC);
             $rowsfound = false;
             
@@ -1380,7 +1491,7 @@ class TemplateParamBot
                 // Set last extract to end of month, so don't extract 20ths dump
                 $dbh_tools = $this->serviceMgr->getDBConnection('tools', 's51454__CategoryWatchlistBot');
                 $date = date('Y-m-') . '28 23:59:59'; // 28th of month
-                $sth = $dbh_tools->prepare("UPDATE dumpfiles SET lastextract = ? WHERE wikiname = ? AND filename IN ('pages-articles.xml.bz2','pages-meta-current.xml.bz2')");
+                $sth = $dbh_tools->prepare("UPDATE dumpfiles SET lastextract = ? WHERE wikiname = ? AND filename IN ('mediawiki_content_current')");
                 $sth->execute([$date, $wikiname]);
             }
         }
