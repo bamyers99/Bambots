@@ -832,6 +832,7 @@ class MediaWiki extends wikipedia
 		if (count($parts) == 1) return '';
 
 		$namespace = str_replace('_', ' ', $parts[0]);
+		$namespace = ucfirst($namespace);
 
 		if ($namespace == 'Talk') return $namespace;
 
