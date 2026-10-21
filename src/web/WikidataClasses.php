@@ -1051,6 +1051,7 @@ function perform_suggest($lang, $page, $callback, $userlang)
 
 	    if (! empty($ret['query']['pages'])) {
 	        foreach ($ret['query']['pages'] as $qp) {
+	            if (! isset($qp['pageprops'])) continue;
 	            $qid = $qp['pageprops']['wikibase_item'];
 	            $qids[$qid] = true; // removes dups
 	            $cats[$cat]['qids'][] = $qid;
